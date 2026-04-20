@@ -1,12 +1,14 @@
 {
-  "name": "Ателие",
-  "short_name": "Ателие",
-  "description": "Дневник за керамика — рецепти, материали, тестове",
-  "start_url": "./index.html",
+  "name": "Глина · by Crafty Place",
+  "short_name": "Глина",
+  "description": "Керамично приложение за изделия, рецепти, материали, тестове и профили на изпичане",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f0e6",
-  "theme_color": "#8b5e3c",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
+  "background_color": "#F3F2EF",
+  "theme_color": "#F3F2EF",
+  "lang": "bg",
   "icons": [
     {
       "src": "./icons/icon-192.png",
