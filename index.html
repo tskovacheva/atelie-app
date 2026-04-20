@@ -43,12 +43,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Jost',
 h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 /* splash */
-#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .4s ease;}
+@keyframes splashFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .45s ease;}
+#splash>*{animation:splashFadeIn .5s ease both;}
+#splash>*:nth-child(2){animation-delay:.08s;}
 #splash.hide{opacity:0;pointer-events:none;}
-#splash .sp-ic{width:96px;height:96px;border-radius:24px;background:var(--primary);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
-#splash .sp-ic svg{width:58px;height:58px;}
-#splash .sp-t{font-family:'Tenor Sans',sans-serif;font-size:32px;color:var(--text);letter-spacing:.01em;}
-#splash .sp-s{font-family:'Jost',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+#splash .sp-ic{width:104px;height:104px;border-radius:26px;background:var(--primary);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(123,141,134,.25);}
+#splash .sp-ic svg{width:62px;height:62px;}
+#splash .sp-t{font-family:'Tenor Sans',sans-serif;font-size:34px;color:var(--text);letter-spacing:.01em;}
+#splash .sp-s{font-family:'Jost',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;}
 
 /* shell */
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
@@ -271,10 +274,26 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* empty */
-.empty{padding:52px 18px;text-align:center;}
-.empty-k{font-family:'Tenor Sans',sans-serif;font-size:56px;color:var(--bg3);font-weight:300;margin-bottom:14px;}
-.empty-t{font-family:'Tenor Sans',sans-serif;font-size:19px;color:var(--tx2);}
-.empty-s{font-size:11px;color:var(--tx3);margin-top:7px;}
+.empty{padding:56px 18px;text-align:center;}
+.empty-k{font-family:'Tenor Sans',sans-serif;font-size:54px;color:var(--primary-soft);font-weight:300;margin-bottom:16px;line-height:1;}
+.empty-t{font-family:'Tenor Sans',sans-serif;font-size:19px;color:var(--text);letter-spacing:.005em;}
+.empty-s{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+/* focus (accessibility) */
+.ic-btn:focus-visible,.nb:focus-visible,.fab:focus-visible,.tb:focus-visible,.fchip:focus-visible,.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+.li:focus-visible,.pc:focus-visible,.lib-card:focus-visible{outline:2px solid var(--primary);outline-offset:-2px;border-radius:var(--radius);}
+
+/* placeholder */
+::placeholder{color:var(--muted);opacity:.7;}
+.srch::placeholder{color:var(--muted);opacity:.75;}
+
+/* selection */
+::selection{background:var(--primary-soft);color:var(--text);}
+
+/* subtle scrollbar (webkit) */
+.notif-panel::-webkit-scrollbar,.mo-sh::-webkit-scrollbar,.det::-webkit-scrollbar{width:6px;}
+.notif-panel::-webkit-scrollbar-thumb,.mo-sh::-webkit-scrollbar-thumb,.det::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;}
+.notif-panel::-webkit-scrollbar-track,.mo-sh::-webkit-scrollbar-track,.det::-webkit-scrollbar-track{background:transparent;}
 </style>
 </head>
 <body>
@@ -464,27 +483,27 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <nav id="nav">
   <button class="nb on" onclick="show('pieces')" id="nb-pieces">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 8c0 0 1-1 8-1s8 1 8 1l-1 8c0 1-1 2-2 2H7c-1 0-2-1-2-2z"/><path d="M3 8h18"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18"/><path d="M5 10c0 5 3 8 7 8s7-3 7-8"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>
     <span>Изделия</span><div class="nb-dot"></div>
   </button>
   <button class="nb" onclick="show('recipes')" id="nb-recipes">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M6 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/><path d="M9 12h6M9 16h4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M6 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/><path d="M9 12h6M9 16h4"/></svg>
     <span>Рецепти</span><div class="nb-dot"></div>
   </button>
   <button class="nb" onclick="show('materials')" id="nb-materials">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="1"/><circle cx="6" cy="12" r="1"/><circle cx="18" cy="12" r="1"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="1"/><circle cx="6" cy="12" r="1"/><circle cx="18" cy="12" r="1"/></svg>
     <span>Материали</span><div class="nb-dot"></div>
   </button>
   <button class="nb" onclick="show('tests')" id="nb-tests">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5z"/><path d="M9 3v5h10M9 13h6M9 17h4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5z"/><path d="M9 3v5h10M9 13h6M9 17h4"/></svg>
     <span>Тестове</span><div class="nb-dot"></div>
   </button>
   <button class="nb" onclick="show('fp')" id="nb-fp">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
     <span>Изпичания</span><div class="nb-dot"></div>
   </button>
   <button class="nb" onclick="show('lib')" id="nb-lib">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     <span>Библиотека</span><div class="nb-dot"></div>
   </button>
 </nav>
@@ -495,7 +514,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <!-- DETAIL: Изделие -->
 <div class="det" id="det-piece">
   <div style="position:relative">
-    <div class="det-hero" id="dpi-hero"><div class="empty-k" style="font-size:70px;opacity:.25">К</div></div>
+    <div class="det-hero" id="dpi-hero"><svg viewBox="0 0 64 64" width="96" height="96" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.35"><rect x="12" y="24" width="40" height="4" rx="2" fill="#7B8D86"/><path d="M16 30 Q16 44 32 44 Q48 44 48 30" stroke="#7B8D86" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="32" y1="44" x2="32" y2="50" stroke="#7B8D86" stroke-width="2" stroke-linecap="round"/><line x1="26" y1="52" x2="38" y2="52" stroke="#7B8D86" stroke-width="2.5" stroke-linecap="round"/></svg></div>
     <button class="det-back" onclick="closeDet('det-piece')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
   </div>
   <div class="det-body">
@@ -790,7 +809,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.2.1';
+const APP_VERSION = 'v1.2.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1068,7 +1087,7 @@ function render(s){
   updateNotifBadge();
 }
 
-function K(sz=48){return `<span style="font-family:'Tenor Sans',sans-serif;font-size:${sz}px;color:var(--bg3);font-weight:300;opacity:.3;">К</span>`;}
+function K(sz=48){var s=sz;return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.4"><rect x="12" y="24" width="40" height="4" rx="2" fill="var(--primary)"/><path d="M16 30 Q16 44 32 44 Q48 44 48 30" stroke="var(--primary)" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="32" y1="44" x2="32" y2="50" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/><line x1="26" y1="52" x2="38" y2="52" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round"/></svg>`;}
 function dr(l,v){return v?`<div class="dr"><span class="dr-l">${l}</span><span class="dr-v">${v}</span></div>`:'';}
 
 // PIECES
