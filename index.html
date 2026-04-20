@@ -5,25 +5,50 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f7f0e6">
-<meta name="apple-mobile-web-app-title" content="Ателие">
-<title>Ателие</title>
+<meta name="theme-color" content="#F3F2EF">
+<meta name="apple-mobile-web-app-title" content="Глина">
+<title>Глина · by Crafty Place</title>
 <link rel="manifest" href="./app.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f7f0e6;--bg2:#ede3d3;--bg3:#e3d5c0;--surf:#fdfaf5;
-  --bdr:rgba(120,80,40,0.13);--bdr2:rgba(120,80,40,0.25);
-  --tx:#1e1308;--tx2:#5c3d1e;--tx3:#9a7050;
-  --acc:#8b5e3c;--acc2:#6b3f1f;
-  --ok:#3a6b4a;--okbg:#e6f2eb;
-  --warn:#a06820;--warnbg:#f5edda;
-  --err:#8b2a1a;--errbg:#f5e6e3;
-  --r:14px;--rs:9px;
+  /* New design system (Iteration 1) */
+  --bg:#F3F2EF;
+  --surface:#FFFFFF;
+  --text:#2F3437;
+  --muted:#6E767B;
+  --primary:#7B8D86;
+  --primary-soft:#DCE4E0;
+  --accent:#B86F52;
+  --radius:12px;
+  --shadow:0 2px 8px rgba(0,0,0,0.04);
+  /* Legacy aliases — remapped to new palette so old rules keep working */
+  --bg2:#E8E7E4;
+  --bg3:#DCDBD7;
+  --surf:var(--surface);
+  --bdr:rgba(47,52,55,0.08);
+  --bdr2:rgba(47,52,55,0.18);
+  --tx:var(--text);
+  --tx2:#4A5053;
+  --tx3:var(--muted);
+  --acc:var(--accent);
+  --acc2:#9A5A42;
+  --ok:#5A7A6B;--okbg:#E8EEE9;
+  --warn:#B86F52;--warnbg:#F4E8E2;
+  --err:#A84A3C;--errbg:#F5E3DF;
+  --r:var(--radius);--rs:9px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Jost',sans-serif;overflow:hidden;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;overflow:hidden;line-height:1.5;}
 h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
+
+/* splash */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .4s ease;}
+#splash.hide{opacity:0;pointer-events:none;}
+#splash .sp-ic{width:96px;height:96px;border-radius:24px;background:var(--primary);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+#splash .sp-ic svg{width:58px;height:58px;}
+#splash .sp-t{font-family:'Tenor Sans',sans-serif;font-size:32px;color:var(--text);letter-spacing:.01em;}
+#splash .sp-s{font-family:'Jost',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
 
 /* shell */
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
@@ -44,13 +69,13 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .sc.on{display:block;}
 
 /* page header */
-.ph{position:sticky;top:0;z-index:10;background:var(--bg);padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr);}
+.ph{position:sticky;top:0;z-index:10;background:var(--bg);padding:24px 18px 14px;display:flex;align-items:center;justify-content:space-between;}
 .ph-left{}
-.pt{font-family:'Tenor Sans',sans-serif;font-size:30px;font-weight:400;color:var(--tx);line-height:1;}
-.ps{font-size:9px;color:var(--tx3);letter-spacing:0.09em;text-transform:uppercase;margin-top:3px;}
+.pt{font-family:'Tenor Sans',sans-serif;font-size:32px;font-weight:400;color:var(--text);line-height:1.05;letter-spacing:-0.005em;}
+.ps{font-size:10px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-top:5px;}
 .ph-right{display:flex;gap:8px;align-items:center;}
-.ic-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--bdr2);background:var(--surf);color:var(--tx2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s;position:relative;}
-.ic-btn:active{background:var(--bg2);}
+.ic-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--bdr2);background:var(--surface);color:var(--tx2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;position:relative;}
+.ic-btn:active{background:var(--primary-soft);}
 
 /* cards */
 .grid{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:11px;}
@@ -243,6 +268,20 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 </style>
 </head>
 <body>
+<div id="splash">
+  <div class="sp-ic" aria-hidden="true">
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="20" width="48" height="5" rx="2.5" fill="#F3F2EF"/>
+      <path d="M12 27 Q12 44 32 44 Q52 44 52 27" stroke="#F3F2EF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <line x1="32" y1="44" x2="32" y2="52" stroke="#F3F2EF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="24" y1="54" x2="40" y2="54" stroke="#F3F2EF" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <div class="sp-t" style="text-align:center">Глина</div>
+    <div class="sp-s" style="text-align:center;margin-top:6px">by Crafty Place</div>
+  </div>
+</div>
 <div id="toast"></div>
 
 <div id="app">
@@ -741,7 +780,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.2.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2111,21 +2150,28 @@ function delLib(id){
 // ── EXPORT / IMPORT ─────────────────────────────────────────────────────────
 function exportBackup(){
   userLibrary = loadUserLib();
+  var isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var device=isMobile?'mobile':'desktop';
+  var now=new Date();
   var payload = {
-    schemaVersion: 1,
-    exportedAt: new Date().toISOString(),
+    schemaVersion: 2,
+    exportedAt: now.toISOString(),
+    device: device,
+    appVersion: (typeof APP_VERSION!=='undefined')?APP_VERSION:'',
     db: {
-      pieces:    DB.pieces,
-      recipes:   DB.recipes,
-      materials: DB.materials,
-      tests:     DB.tests
+      pieces:         DB.pieces,
+      recipes:        DB.recipes,
+      materials:      DB.materials,
+      tests:          DB.tests,
+      firingProfiles: DB.firingProfiles
     },
     userLibrary: userLibrary
   };
+  var ts=now.toISOString().slice(0,16).replace('T','_').replace(':','');
   var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'atelie_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'atelie_'+ts+'_'+device+'.json';
   a.click();
   URL.revokeObjectURL(a.href);
   toast('Backup файлът е свален');
@@ -2149,11 +2195,40 @@ function importBackup(e){
        !Array.isArray(d.materials)||!Array.isArray(d.tests)){
       toast('Невалидни данни в backup файла — импортът е отменен'); return;
     }
-    if(!confirm('Импортирай backup?\n\nТОВА ЩЕ ЗАМЕНИ всички текущи данни!\n\nПродължи?'))return;
+    // Compute latest updatedAt across current DB — for age comparison
+    var latestLocal=0;
+    ['pieces','recipes','materials','tests','firingProfiles'].forEach(function(coll){
+      (DB[coll]||[]).forEach(function(x){
+        if(x&&x.updatedAt){var ts=new Date(x.updatedAt).getTime();if(ts>latestLocal)latestLocal=ts;}
+      });
+    });
+    var fmt=function(iso){try{return new Date(iso).toLocaleString('bg-BG');}catch(e){return iso;}};
+    var warn='Импортирай backup?\n\nТОВА ЩЕ ЗАМЕНИ всички текущи данни!\n\n';
+    if(parsed.exportedAt){
+      warn+='Файл експортиран: '+fmt(parsed.exportedAt);
+      if(parsed.device)warn+=' ('+parsed.device+')';
+      warn+='\n';
+    }
+    if(latestLocal>0){
+      warn+='Последна локална промяна: '+fmt(new Date(latestLocal).toISOString())+'\n';
+    }
+    if(parsed.exportedAt&&latestLocal>0){
+      var expTs=new Date(parsed.exportedAt).getTime();
+      if(expTs<latestLocal){
+        warn+='\n⚠ ВНИМАНИЕ: файлът е ПО-СТАР от текущите данни.\nМоже да загубиш работа!\n';
+      }
+    }
+    warn+='\nПродължи?';
+    if(!confirm(warn))return;
     DB.pieces    = d.pieces;
     DB.recipes   = d.recipes;
     DB.materials = d.materials;
     DB.tests     = d.tests;
+    // Backward compat: old backups (schemaVersion 1) lack firingProfiles.
+    // Preserve existing ones instead of wiping them.
+    if(Array.isArray(d.firingProfiles)){
+      DB.firingProfiles = d.firingProfiles;
+    }
     if(Array.isArray(parsed.userLibrary)){
       saveUserLib(parsed.userLibrary);
     }
@@ -2345,7 +2420,8 @@ function seedGuides(){
 // ─────────────────────────────────────────────────────────────────────────────
 // ══ INIT ══
 seedGuides();load();render('pieces');
-(function(){var vl=document.getElementById('ver-label');if(vl)vl.textContent='Ателие '+APP_VERSION;})();
+(function(){var vl=document.getElementById('ver-label');if(vl)vl.textContent='Глина '+APP_VERSION+' · by Crafty Place';})();
+(function(){var sp=document.getElementById('splash');if(!sp)return;setTimeout(function(){sp.classList.add('hide');setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},500);},600);})();
 </script>
 
 <!-- MODAL: Библиотека — добави/редактирай -->
