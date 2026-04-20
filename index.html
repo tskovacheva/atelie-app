@@ -387,8 +387,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="ph"><div class="ph-left"><div class="pt">Материали</div></div></div>
   <div class="stats">
     <div class="sb"><div class="sn" id="st-clays">0</div><div class="sl">Глини</div></div>
+    <div class="sb"><div class="sn" id="st-glazes">0</div><div class="sl">Глазури</div></div>
     <div class="sb"><div class="sn" id="st-mats">0</div><div class="sl">Суровини</div></div>
-    <div class="sb"><div class="sn" id="st-wish">0</div><div class="sl">Wishlist</div></div>
   </div>
   <div class="srch-wrap" style="padding-top:8px;">
     <input class="srch" type="search" id="mat-search" placeholder="Търси материал…" oninput="debounce(renderMaterials,'mat-search',200)">
@@ -809,7 +809,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.2.2';
+const APP_VERSION = 'v1.2.4';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1234,8 +1234,8 @@ function renderMaterials(){
   DB.materials.forEach(function(m){if(m.wishlist===true){cats.wish.push(m);}else if(cats[m.cat]){cats[m.cat].push(m);}});
   var low=getLowStock().length;
   document.getElementById("st-clays").textContent=cats.clays.length;
-  document.getElementById("st-mats").textContent=cats.base.length+cats.ox.length+cats.glaze.length;
-  var ws=document.getElementById("st-wish");if(ws)ws.textContent=cats.wish.length;
+  document.getElementById("st-mats").textContent=cats.base.length+cats.ox.length;
+  var gs=document.getElementById("st-glazes");if(gs)gs.textContent=cats.glaze.length;
   var sl=document.getElementById("st-low");if(sl)sl.textContent=low;
   var lsChip=document.getElementById("fc-mat-lowstock");if(lsChip)lsChip.textContent=low>0?('Само ниски ('+low+')'):'Само ниски';
   var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨"};
@@ -2090,7 +2090,7 @@ function renderLib(){
   all.forEach(function(l,i){
     var num=l.num||String(i+1).padStart(2,"0");
     var actBtns='<div style="display:flex;gap:6px;flex-shrink:0;">'
-      +'<button onclick="editLib(\''+l.id+'\');event.stopPropagation();" style="background:none;border:1px solid var(--bdr2);border-radius:99px;color:var(--tx3);cursor:pointer;font-size:11px;padding:4px 10px;">Уреди</button>'
+      +'<button onclick="editLib(\''+l.id+'\');event.stopPropagation();" style="background:none;border:1px solid var(--bdr2);border-radius:99px;color:var(--tx3);cursor:pointer;font-size:11px;padding:4px 10px;">Редактирай</button>'
       +'<button onclick="delLib(\''+l.id+'\');event.stopPropagation();" style="background:none;border:1px solid rgba(180,40,30,.35);border-radius:99px;color:var(--err);cursor:pointer;font-size:11px;padding:4px 10px;">Изтрий</button>'
       +'</div>';
     html+='<div class="lib-card">'
