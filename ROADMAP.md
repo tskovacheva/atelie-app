@@ -1,8 +1,9 @@
 # Глина — План за развитие
 
-Документ за планирано развитие на функционалностите за inventory, цени и себестойност.
+Документ за планирано развитие на функционалностите. Обновява се при всяко завършване на етап или промяна в плана.
 
-**Текуща версия:** v1.2.3 · `atelie-v16`
+**Текуща версия:** v1.2.4 · `atelie-v17`
+**В процес:** v1.3.0 (Фаза А — Bugs + функционални gap-и)
 **Последна ревизия:** април 2026
 
 ---
@@ -11,343 +12,286 @@
 
 Приложението „Глина" е направено за ателие-базирана керамична практика — ръчна работа, експериментални тестове, малки производства. НЕ цели да бъде общ керамичен CRM или да обслужва продажби/клиенти/партиди — това е различен продукт.
 
-Развитието върви по **йерархия на реалните нужди**:
+Целта е **относително универсално приложение за керамици** (не само за конкретен workflow), без комерсиална част.
 
-1. **Какво трябва да купя и откъде** ← текуща ежедневна болка
-2. **История на покупките** ← за trend analysis след време
-3. **Cost per ingredient в рецепта** ← за workshop planning в Crafty Place
-4. **Разход за изпичане** ← ако някога стане важно
-5. **Пълна себестойност на изделие** ← вероятно никога
-
-Всеки етап се прави **само след** реална употреба на предишния и потвърдена нужда от следващия. Не се правят етапи превантивно.
+Развитието върви по **йерархия на реалните нужди** — всеки етап се прави **само след** реална употреба на предишния и потвърдена нужда от следващия.
 
 ---
 
 ## Принципи на работа
 
-- **Без нов state layer.** Всички нови entity-та са масив в `DB`.
-- **Без архитектурни промени.** Vanilla JS + localStorage остава.
-- **Backward compatibility.** Всеки нов patch трябва да работи със стари localStorage данни.
-- **Малки patch-ове.** Ако един етап е повече от 2-3 patch-а, разбий го.
-- **Bump на APP_VERSION + CACHE_NAME** при всеки patch, който достига production.
-- **Тествай 2 седмици между етапите.** Без real-world употреба, не се знае дали foundation-ът е стабилен.
+- Без нов state layer — всички нови entity-та са масив в `DB`
+- Без архитектурни промени без реална нужда — vanilla JS + localStorage остава
+- Backward compatibility — всеки нов patch работи със стари localStorage данни
+- Малки patch-ове — ако етап е повече от 2-3 patch-а, разбий го
+- Bump на APP_VERSION + CACHE_NAME при всеки production patch
+- Тествай между фази — без real-world употреба не се знае дали основата е стабилна
 
 ---
+
+# ЧАСТ 1: Piece Model Evolution
+
+След първа обратна връзка от реална употреба (окарина проект), стана ясно че:
+
+- Текущият piece model с едно `stage`, едно `temp`, една `date` е твърде наивен за реалния керамичен workflow
+- Реалният workflow е **исторически** — изделието има живот през множество етапи, снимки, температури, firing методи
+- Някои ограничения са истински bugs или функционални gap-и, не нужни от архитектурна промяна
+
+Разделяме на 3 фази от прости корекции към дълбок architectural shift.
+
+## ФАЗА А — Bugs + функционални gap-и (v1.3.0)
+
+**Статус:** в процес
+**Ефорт:** ~7 малки patch-а в една сесия
+**Риск:** нисък — без архитектурни промени
+
+### Съдържание (по реда на работа)
+
+**А1. Bug fix — дублиран dropdown за глина в piece modal.**
+Регресионен bug. Един-редов fix.
+
+**А2. Piece може да избере глазура от рецепти ИЛИ от готови глазури.**
+В момента `piece.recipe` е FK само към recipes. Ако ползваш готова Botz/Mayco — няма къде да се запише. Решение: един dropdown със groups (optgroup) „Рецепти" и „Готови глазури". Ново поле `piece.material` (FK към material.id за готови). Backward compat: старите pieces с `recipe` продължават да работят.
+
+**А3. Нови категории материали: ангоби + подглазурни бои.**
+В момента: clays, base, ox, glaze. Добавят се: `engobe`, `underglaze`. Нови tabs в Материали, нови иконки, нови характеристики (цвят).
+
+**А4. Две температури на piece: bisque temp + glaze temp.**
+Плоски полета `bisqueTemp` и `glazeTemp` (без event migration засега). Миграция: старото `temp` → `glazeTemp` по default. Показват се conditionally в detail. В редакция — ясни labels („Бисквит °C", „Глазурно °C").
+
+**А5. Готови глазури с специфични характеристики.**
+За `cat==='glaze'` — нови полета:
+- `color` (свободен текст)
+- `foodsafe` (boolean — важно за съдове)
+- `surfaceType` (матова/гланцова/сатенирана/кристална/текстурирана)
+
+Показват се conditionally в modal и detail.
+
+**А6. Тестове могат да тестват готови глазури.**
+Grouped dropdown в test modal, ново `test.materialId`. Backward compat: стари тестове с `recipeId` работят. В detail показва правилно името независимо от източника.
+
+**А7. Brand dropdown с предишни стойности.**
+В material modal, brand вече не е свободен текст, а dropdown с `+ Нов` опция. Autocomplete от предишно въведените brand-ове.
+
+### Success criteria
+
+- Не се допускат bugs от документа (дублиран dropdown, тест с готова глазура)
+- Мога да създам окарина с: две температури, готова глазура, engobe
+- Backward compatibility — старите данни работят
+- UI не се е претоварил
+
+### Success look like
+
+След завършване на Фаза А, могат да се правят:
+- Bisque-only изделия (само bisqueTemp, без glaze)
+- Изделия с готови глазури (без да се налага рецепта-обвивка)
+- Тестове на готови глазури (директно на материала)
+- Ангобиране като отделна категория материали
+
+## ФАЗА Б — Event-based piece model
+
+**Статус:** планиран, след 2-3 седмици реална употреба на Фаза А
+**Ефорт:** ~4 сесии + 1 седмица тест
+**Риск:** висок — фундаментална архитектурна промяна
+
+### Мотивация
+
+Изделието не е **състояние** — то е **история**. Окарина за 3 седмици минава през 5-6 етапа, 2 изпичания, 20+ снимки на различни моменти.
+
+### Data model промени
+
+```
+piece = {
+  id, name, clay, recipe, material, notes,
+  stage,          // computed от последен event, cached
+  photos,         // общи thumbnails, за back-compat
+  events: [       // НОВ масив
+    { id, type, date, stage, note, photos, firing: {...} }
+  ],
+  createdAt, updatedAt
+}
+```
+
+### Event types
+
+- `progress` — междинна снимка/бележка в рамките на текущ етап
+- `stage` — преход към нов етап (greenware → leather-hard), не-firing
+- `firing` — firing event с температура и method
+
+### Firing event schema
+
+```
+firing: {
+  method: 'electric' | 'gas' | 'wood' | 'raku' | 'pit' | 'sawdust' | 'salt' | 'saggar' | 'other',
+  profileId: "...",    // само при electric + профил
+  temp: 1240,
+  fuel: "дъб",         // за wood/gas
+  additives: "меден сулфат, медна тел",
+  duration: 4,         // часове за non-electric
+  notes: "..."
+}
+```
+
+### UX промени
+
+- Piece detail — timeline на events
+- „Добави събитие" бутон с type switcher
+- List view — последна снимка от последния event
+- Backward compat: стари pieces с flat fields → synthesized legacy event
+
+### Open questions
+
+1. Progress events без stage change — имат ли смисъл, или всяка снимка е етап?
+2. Firing methods — dropdown или свободен текст?
+3. Decoration additives — структурирано поле или свободен текст?
+4. Timeline visualization — вертикална, horizontal scrollable, календарна?
+5. Shared firing event — ако 5 piece-а в едно firing, shared entity или отделни events?
+
+## ФАЗА В — Advanced (по желание)
+
+**Статус:** не започнат, може никога
+**Ефорт:** среден
+
+### Примерни идеи
+
+- Multiple decoration techniques per piece (array на decorations с date, type, materials)
+- Timeline visualization в detail view
+- Aggregate reports („Колко изделия Q1", average firing cost, most used clay)
+- Calendar view
+- Export на единично изделие като PDF
+
+---
+
+# ЧАСТ 2: Cost & Supplier Tracking
 
 ## ЕТАП 1 — „Какво трябва да купя и откъде"
 
 **Статус:** не започнат
-**Приоритет:** висок
-**Предварителни условия:** 2+ седмици реална употреба на v1.2.3
-
-### Проблем
-
-Когато материал свършва, няма лесен начин да си спомня откъде го поръчах последно, колко струваше и с какво количество. Ровя в имейли и сайтове.
-
-### Решение
-
-Разширяване на material model с полета за доставка.
+**Приоритет:** висок (след Фаза А на Piece evolution)
+**Предварителни условия:** 2+ седмици реална употреба на v1.3.x
 
 ### Нови полета в `material`
 
 | Поле | Тип | Описание |
 |---|---|---|
-| `supplier` | string | Име на доставчик („glazura.bg", „Eurokeramiki") |
-| `supplierUrl` | string | Директен линк към продукта (опционално) |
-| `lastPrice` | number | Последна цена на единица в лв. |
-| `lastPriceUnit` | string | „kg", „g", „L", „бр" (default: „kg") |
+| `supplier` | string | Име на доставчик |
+| `supplierUrl` | string | Директен линк |
+| `lastPrice` | number | Последна цена на единица |
+| `lastPriceUnit` | string | "kg", "g", "L", "бр" |
 | `lastPriceDate` | ISO date | Кога е въведена цената |
-| `packSize` | number | Стандартна опаковка (напр. 1, 5, 25) |
-| `packUnit` | string | Единица на опаковката (kg, L, бр) |
+| `packSize` | number | Стандартна опаковка |
+| `packUnit` | string | Единица на опаковката |
 
-### UX промени
+### UX
 
-- В Material modal: нова секция „Доставка" след „Наличност", преди „Бележки"
-- В Material detail: нова секция „Доставка" с показване на всички полета + линк към supplier
-- В Notifications panel („⚠ Ниски"): под името на материала показвай последната цена и supplier-а
-- Нов filter chip в Материали: „За поръчка" — всички материали с `supplier` попълнен и `stock <= alertAt`
-
-### Обем работа
-
-- ~50 реда нов HTML (form fields)
-- ~30 реда нов JS (save/load на новите полета)
-- ~40 реда нов render логика (detail section, notification display, filter)
-- 1 малък patch, 1 сесия
-
-### Success criteria
-
-- След 2 седмици употреба, попълнил съм `supplier` на поне 80% от активните материали
-- Когато нещо свърши, отварям Notifications и веднага виждам откъде да поръчам
-- Не ровя в имейли за последната цена
-
-### Възможни рискове
-
-- Ако не попълвам supplier/цена честно, полетата стоят празни и функцията губи смисъл
-- Цените се променят — `lastPrice` може да стане заблуждаващо. Затова `lastPriceDate` е важно
-
----
+- Нова секция „Доставка" в material modal/detail
+- Notifications: supplier + последна цена
+- Нов filter chip „За поръчка"
 
 ## ЕТАП 2 — „История на покупките"
 
 **Статус:** не започнат
 **Приоритет:** среден
-**Предварителни условия:** Етап 1 работи, имам поне 3-4 покупки, които искам да запомня
+**Предварителни условия:** Етап 1 работи
 
-### Проблем
-
-Цените се менят. Без история не знам дали Kaolin е поскъпнал с 20% или е едно и също. Няма начин да видя „колко хранителни разходи имах за 2026 Q1".
-
-### Решение
-
-Нов entity `purchases` — самостоятелен масив в `DB`.
-
-### Нов entity schema
-
-```javascript
-{
-  id: string,                // uuid
-  materialId: string,        // FK към material.id
-  date: ISO date,            // кога е направена покупката
-  supplier: string,          // может да е различен от material.supplier (понякога поръчваш от друго място)
-  quantity: number,          // колко е купено
-  quantityUnit: string,      // "kg", "L", "бр"
-  unitPrice: number,         // цена за единица
-  totalPrice: number,        // calculated или manually overridden
-  notes: string,             // партиден номер, наблюдения
-  createdAt, updatedAt: ISO date
-}
-```
-
-### UX промени
-
-- В Material detail: нова секция „История на покупките" — list.li с дата, количество, сума, supplier
-- Нов button в Material detail: „Регистрирай покупка" → отваря малък modal
-- При save на нова покупка:
-  - `material.stock` += `quantity` (автоматично добавяне към наличността)
-  - `material.lastPrice` = `unitPrice`
-  - `material.lastPriceDate` = `date`
-  - `material.supplier` = `supplier` (ако е различен)
-- Нов екран: глобален purchase log (опционално) — всички покупки сортирани по дата
-
-### Обем работа
-
-- Нов entity със CRUD — modal, save, delete, render в detail
-- ~150 реда нов JS/HTML
-- 2 patch-а: (1) entity + form, (2) integration в material detail
-
-### Success criteria
-
-- Всяка реална покупка се записва в app-а в деня, в който пристигне
-- Мога да видя за избран материал как са се променяли цените му
-- `stock`-ът остава точен без ръчно update
-
-### Рискове
-
-- Disordered data — ако покупка се запише с грешен `materialId`, stock се bloat-ва. Нужен е дропдаун с избор, не свободен текст
-- Няма undo — ако се сгреши purchase, нужно е manual correction
-
----
+Нов entity `purchases` — {id, materialId, date, supplier, quantity, unitPrice, totalPrice, notes}.
 
 ## ЕТАП 3 — „Cost per ingredient в рецепта"
 
 **Статус:** не започнат
 **Приоритет:** среден
-**Предварителни условия:** Етап 1 завършен, поне 70% от материалите в активните рецепти имат `lastPrice`
+**Предварителни условия:** Етап 1 завършен
 
-### Проблем
-
-За workshop planning в Crafty Place трябва да знам колко струват материалите за да пресметна pricing на участник. Ръчно изчисление е трудоемко.
-
-### Решение
-
-Добавя се cost display в recipe detail и gram calculator.
-
-### Няма data model промени
-
-Използват се вече съществуващи полета: `recipe.ingredients` (с `matId`, `pct`) + `material.lastPrice` + `material.lastPriceUnit`.
-
-### Нова функция
-
-```javascript
-function calcRecipeCost(recipe, batchGrams){
-  // Returns {total: лв, breakdown: [{ingredient, cost, missingPrice: bool}]}
-  // Обработва: material изтрит, material без lastPrice, unit conversion
-}
-```
-
-### UX промени
-
-- В Recipe detail, под gram calculator-а:
-  - Нов ред „Приблизителна себестойност: ~X.XX лв"
-  - Малък breakdown-toggle: per-ingredient cost
-  - Ако някои съставки нямат цена, показвай warning („5 от 7 съставки имат цени, останалите не са включени в сметката")
-- Ако в материалите масово липсват цени, display-ва се съобщение „Добави цени към материалите, за да видиш себестойност"
-
-### Обем работа
-
-- ~40 реда нов JS (calc функция + render)
-- ~10 реда HTML
-- 1 patch, половин сесия
-
-### Success criteria
-
-- Преди всеки workshop, отварям recipe-та и виждам material cost за X участници
-- Знам кои рецепти са „евтини" (може да правя с много участници) vs „скъпи" (за индивидуални класове)
-
----
+Няма data model промени. Показва cost breakdown в recipe detail + gram calculator.
 
 ## ЕТАП 4 — „Разход за изпичане"
 
 **Статус:** не започнат
 **Приоритет:** нисък
-**Предварителни условия:** Етапи 1-3 работят; имам данни за kWh разход от реални измервания
-
-### Проблем
-
-Ток за firing е значителен разход, но не се следи. Не знам дали един bisque firing ми струва 5 лв или 15 лв.
-
-### Решение (Подход А — prag matic)
-
-Ръчно въвеждане на estimated cost в firing profile. НЕ автоматично изчисление от физически модел (неточно без реални измервания).
-
-### Нови полета в `firingProfile`
-
-| Поле | Тип | Описание |
-|---|---|---|
-| `estimatedKwh` | number | Приблизителен kWh разход за пълен цикъл |
-| `estimatedCost` | number | Приблизителна цена в лв (calculated или manually) |
-| `kwhPrice` | number | Цена на kWh към датата на измерване |
-| `measuredDate` | ISO date | Кога е било последното измерване |
-
-### UX промени
-
-- В Firing Profile modal: нова секция „Разход" с тези полета
-- В Firing Profile detail: ред „Приблизителен разход: 8.50 лв (~4.2 kWh @ 2.00 лв/kWh)"
-- В Test detail: ако тестът е свързан с profile, показвай inherited cost
-
-### Обем работа
-
-- ~30 реда нов HTML/JS
-- 1 patch
-
-### Success criteria
-
-- Измерил съм с kWh meter реални разходи за поне 3 firing цикъла
-- Имам попълнени `estimatedKwh` за bisque и glaze profile
-- Знам приблизителната цена на всяко firing-а
-
-### Важна бележка
-
-**Не правя Подход Б** (автоматично изчисление от ramp rates + kiln mass + insulation). Това е физически модел, който без реални измервания е неточен. Фирмата prag matic е по-добра.
-
----
+**Подход:** Manual entry на estimatedKwh в firing profile. Не физически модел.
 
 ## ЕТАП 5 — „Пълна себестойност на изделие"
 
 **Статус:** вероятно никога
-**Приоритет:** много нисък
-**Предварителни условия:** Всички предишни етапи завършени + реална необходимост (продажби на изделия, а не workshop-и)
-
-### Защо „вероятно никога"
-
-- Не продавам изделия в търговски мащаб
-- Себестойността е любопитство, не бизнес нужда за мен
-- Много data collection effort (weight на изделие, глазура usage, shared firing cost) за минимална стойност
-
-### Ако все пак се направи
-
-Нови полета в `piece`:
-- `weightDry` (тегло в leather-hard)
-- `clayUsed` (calculated от weight + shrinkage или manual)
-- `glazeUsed` (manual estimation — много трудно за точна мярка)
-- `firingCostShare` (1/capacity на firing-а)
-
-Нова функция `calcPieceCost(piece)` — сумиране на clay cost + glaze cost + firing share.
-
-**Очаквани проблеми:**
-- Глазура usage е неточен — колко остана върху парчето vs в кофата?
-- Shared firing cost — делиш по бройка, тегло или обем?
-- Работно време — ако е добавено, manual entry е досадно
-
-Решение ще има смисъл **само ако** в някой бъдещ момент регулярно продавам изделия и искам стабилна pricing система. Не за ателие-практика.
+**Забележка:** След Фаза Б на piece evolution може да стане по-feasible (точна история на firings и decorations). Но стойност остава ниска ако не се продават изделия.
 
 ---
 
-## Паралелни идеи (не етапи, възможни прибавки)
+# ЧАСТ 3: Паралелни идеи
 
 ### SG (Specific Gravity) калкулатор за глазура
 
-**Приоритет:** нисък-среден
-**Контекст:** текущо в troubleshooting на ash glazes — целта е 1.40–1.45
-
-- Ново поле в `test`: `sg` (number) — измерено specific gravity
-- В Test detail: display на SG
-- Evtl нов filter/sort в Тестове
-
-Малък patch, но не е критичен. Мога да записвам в notes засега.
+**Приоритет:** нисък
+Ново поле в `test` + display. Малък patch.
 
 ### Firing log с target vs actual
 
-**Приоритет:** нисък
-**Контекст:** целя 1240–1250°C, а реалният ход на kiln-а не винаги съвпада
-
-- Нов entity `firingLogs` — запис за всяко реално firing
-- `targetProfileId` + `actualMaxTemp` + `actualHoldTime` + deviation analysis
-
-Полезно при systematic troubleshooting, но сега manual в notes е достатъчно.
+**Приоритет:** нисък-среден
+Препокрива се с Фаза Б firing events. Вероятно като част от нея.
 
 ### Image lightbox за снимки
 
 **Приоритет:** среден
-**Контекст:** в Тестове има до 6 снимки, но thumbnail-те са малки и не може да се види детайл
-
-- Click на снимка → fullscreen overlay с swipe навигация
-- Малка, self-contained feature
+Click на снимка → fullscreen overlay с swipe навигация.
 
 ### Draft auto-save в modals
 
 **Приоритет:** нисък
-**Контекст:** ако случайно затворя modal, губя въведеното
-
-- При промяна в modal → записване в localStorage `atelie_draft_<entity>`
-- При повторно отваряне → питане „Възстанови чернова?"
-
-Чисто UX подобрение, не засяга data model.
+При промяна → localStorage `atelie_draft_<entity>`. При re-open → питане „Възстанови чернова?"
 
 ---
 
-## Отхвърлени идеи (да не се правят)
+# ЧАСТ 4: Отхвърлени идеи
 
-- **Облачна синхронизация (Google Drive).** Риск > стойност при работа основно на едно устройство. Backup/restore workflow-ът е достатъчен.
-- **Партиди/колекции/клиенти.** Това е product-centric jewelry flow, не ateliéно. Ако се добави, ще замъгли продукта.
-- **Multi-user / sharing.** Няма нужда. App-ът е личен инструмент.
+- **Облачна синхронизация (Google Drive).** Риск > стойност при работа основно на едно устройство. Backup/restore е достатъчен.
+- **Партиди/колекции/клиенти.** Product-centric flow, различно приложение.
+- **Multi-user / sharing.** App е личен инструмент.
 - **Публикуване / social features.** Не е продуктът.
-- **AI асистент за препоръки.** Premature — няма достатъчно данни в един потребител за смислени препоръки.
+- **AI асистент за препоръки.** Premature без достатъчно данни.
+- **Автоматично изчисление на firing kWh от физически модел.** Неточно без измервания.
 
 ---
 
-## За следващ developer
+# ЧАСТ 5: За следващ developer
 
-Ако не работя с Claude по-нататък и trябва да обясня кода:
+Ако не работя с Claude по-нататък:
 
-- **Един файл** (`atelie_v6.html`), ~2500 реда vanilla JS + HTML + inline CSS
-- **localStorage** с два ключа: `atelie_v6` (main DB) и `atelie_userlib` (библиотека)
-- **DB structure:** `{pieces, recipes, materials, tests, firingProfiles}` — всичко масиви
-- **Service worker** в отделен `sw.js`. Bump `CACHE_NAME` при всеки deploy.
-- **Icon/manifest** в `icons/` папка + `app.webmanifest`
-- **Deploy:** GitHub Pages от https://tskovacheva.github.io/atelie-app/
-- **CSS design system:** от v1.2.0. Нови vars (`--primary`, `--surface`, etc.) + legacy aliases (`--tx`, `--acc`) за backward compat
-- **Derived relations** — никаква FK data не се пази; всички свързани записи се изчисляват при detail view open
-- **Backup format:** JSON с `schemaVersion:2`, `exportedAt`, `device`, `db`, `userLibrary`. Schema v1 (без `firingProfiles`) все още поддържан при import
+- Един файл `atelie_v6.html`, ~2500 реда vanilla JS + HTML + inline CSS
+- localStorage — `atelie_v6` (main DB) + `atelie_userlib` (библиотека)
+- DB: `{pieces, recipes, materials, tests, firingProfiles}` — всичко масиви
+- Service worker `sw.js`. Bump `CACHE_NAME` при всеки deploy.
+- Icons в `icons/` + `app.webmanifest`
+- Deploy: GitHub Pages от https://tskovacheva.github.io/atelie-app/
+- CSS design system от v1.2.0: `--primary`, `--surface`, etc. + legacy aliases
+- Derived relations — не се пази reverse FK data; свързаните записи се изчисляват при detail open
+- Backup format: JSON с `schemaVersion:2`, `exportedAt`, `device`, `db`, `userLibrary`. Schema v1 (без firingProfiles) поддържан при import.
 
 ### Минимални patch принципи
 
-- Inspect before modify — винаги виж текущия код
-- No refactor — промяната се впише в съществуващата архитектура
-- Safe guards — null checks, `|| ''` fallbacks за липсващи полета в стари records
-- Test със старите localStorage данни преди deploy
-- `APP_VERSION` + `CACHE_NAME` bump задължителен при всеки production patch
+- Inspect before modify — виж текущия код
+- No refactor
+- Safe guards — null checks, `|| ''` fallbacks
+- Test със стари localStorage данни преди deploy
+- Bump на APP_VERSION + CACHE_NAME задължителен
 
 ---
 
-*Документът е жив — обновява се при всяко завършване на етап или промяна в плана.*
+# ЧАСТ 6: Открити въпроси
+
+Отбелязани за да не се загубят. Ще се разглеждат поетапно.
+
+### От първа обратна връзка (окарина, април 2026)
+
+- [ ] Reusable non-electric firing profiles — за раку/дърва, ако се използват често. Засега ad-hoc в note.
+- [ ] Shared firing events — на всяко piece отделен event или shared entity?
+- [ ] Timeline visualization — кой тип UX е най-добър?
+- [ ] Transferни печати / декали — нова категория материали?
+
+### Общи
+
+- [ ] Multi-device sync — ако стане нужно, как? Google Drive с manual merge? Backend?
+- [ ] Reports/analytics — какви metrics ще са полезни?
+
+---
+
+*Документът е жив — обновява се при всяко завършване на фаза или промяна в плана.*

@@ -809,7 +809,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.2.4';
+const APP_VERSION = 'v1.3.0-alpha';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1326,7 +1326,13 @@ function openPieceDet(id){
   document.getElementById('dpi-t').textContent=p.name;
   document.getElementById('dpi-m').textContent=[p.date,p.technique].filter(Boolean).join(' · ');
   const rec=DB.recipes.find(r=>r.id===p.recipe);
-  document.getElementById('dpi-info').innerHTML=[dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',p.clay),dr('Глазура',(rec&&rec.name)||(p.recipe?'Изтрита рецепта':null)),dr('Температура',p.temp?p.temp+'°C':'')].join('');
+  var _pMat=p.material?DB.materials.find(function(m){return m.id===p.material;}):null;
+  var _glzLabel=null;
+  if(rec)_glzLabel=rec.name;
+  else if(p.recipe)_glzLabel='Изтрита рецепта';
+  else if(_pMat)_glzLabel=_pMat.name+' (готова)';
+  else if(p.material)_glzLabel='Изтрита глазура';
+  document.getElementById('dpi-info').innerHTML=[dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',p.clay),dr('Глазура',_glzLabel),dr('Температура',p.temp?p.temp+'°C':'')].join('');
   var _sa=document.getElementById('dpi-stage-actions');
   if(_sa){
     var _idx=resolveStageIdx(p.stage);
@@ -1345,18 +1351,29 @@ function openPieceDet(id){
   var _piRecRow=document.getElementById('dpi-recipe-row');
   if(!_piRecRow){
     _piRecRow=document.createElement('div');_piRecRow.id='dpi-recipe-row';_piRecRow.className='ds';
-    _piRecRow.innerHTML='<div class="ds-t">Рецепта</div><div id="dpi-recipe-val"></div>';
+    _piRecRow.innerHTML='<div class="ds-t" id="dpi-recipe-label">Глазура</div><div id="dpi-recipe-val"></div>';
     var _piAnchor=document.getElementById('dpi-notes').parentNode.parentNode;
     _piAnchor.appendChild(_piRecRow);
   }
   var _piRec=p.recipe?DB.recipes.find(function(x){return x&&x.id===p.recipe;}):null;
+  var _piGlzMat=p.material?DB.materials.find(function(x){return x&&x.id===p.material;}):null;
   var _piRecVal=document.getElementById('dpi-recipe-val');
+  var _piRecLbl=document.getElementById('dpi-recipe-label');
   if(_piRec){
     _piRecRow.style.display='';
+    if(_piRecLbl)_piRecLbl.textContent='Рецепта';
     var sub=[_piRec.temp?_piRec.temp+'°C':'',_piRec.cone?'Конус '+_piRec.cone:''].filter(Boolean).join(' · ');
     _piRecVal.innerHTML='<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-piece\');openRecipeDet(\''+_piRec.id+'\')">'
       +'<div class="li-ic">'+(_piRec.photo?'<img src="'+_piRec.photo+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div>'
       +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(_piRec.name||'—')+'</div><div class="li-s">'+sub+'</div></div>'
+      +'<div class="li-r">›</div></div>';
+  } else if(_piGlzMat){
+    _piRecRow.style.display='';
+    if(_piRecLbl)_piRecLbl.textContent='Готова глазура';
+    var mSub=[_piGlzMat.brand||'',_piGlzMat.gfire?_piGlzMat.gfire+'°C':''].filter(Boolean).join(' · ');
+    _piRecVal.innerHTML='<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-piece\');openMatDet(\''+_piGlzMat.id+'\')">'
+      +'<div class="li-ic">'+(_piGlzMat.photo?'<img src="'+_piGlzMat.photo+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div>'
+      +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(_piGlzMat.name||'—')+'</div><div class="li-s">'+mSub+'</div></div>'
       +'<div class="li-r">›</div></div>';
   } else {
     _piRecRow.style.display='none';
@@ -1627,6 +1644,29 @@ function openMatDet(id){
   } else {
     _mrRow.style.display='none';
   }
+  // Related pieces (when material is used as a ready glaze on a piece)
+  var _mpRow=document.getElementById('dmat-pieces-row');
+  if(!_mpRow){
+    _mpRow=document.createElement('div');_mpRow.id='dmat-pieces-row';_mpRow.className='ds';
+    _mpRow.innerHTML='<div class="ds-t">Използвана в изделия</div><div id="dmat-pieces-val"></div>';
+    var _mpAnchor=document.getElementById('dmat-notes').parentNode;
+    _mpAnchor.insertBefore(_mpRow,_mpAnchor.querySelector('.ds:last-of-type'));
+  }
+  var _relMatPcs=DB.pieces.filter(function(p){return p&&p.material===id;});
+  var _mpVal=document.getElementById('dmat-pieces-val');
+  if(_relMatPcs.length){
+    _mpRow.style.display='';
+    _mpVal.innerHTML=_relMatPcs.map(function(p){
+      var ph=(p.photos&&p.photos[0])?'<img src="'+p.photos[0]+'" style="width:100%;height:100%;object-fit:cover">':K(20);
+      var sub=[p.date||'',stageLabel(p.stage||'greenware')].filter(Boolean).join(' · ');
+      return '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-mat\');openPieceDet(\''+p.id+'\')">'
+        +'<div class="li-ic">'+ph+'</div>'
+        +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(p.name||'—')+'</div><div class="li-s">'+sub+'</div></div>'
+        +'<div class="li-r">›</div></div>';
+    }).join('');
+  } else {
+    _mpRow.style.display='none';
+  }
   document.getElementById('det-mat').classList.add('on');
 }
 
@@ -1640,11 +1680,20 @@ function openPieceMo(p){
   document.getElementById('pi-tech').value=p?.technique||'';
   document.getElementById('pi-notes').value=p?.notes||'';
   const cs=document.getElementById('pi-clay');
-  cs.innerHTML='<option value="">—</option>'+CLAY_NAMES.map(n=>`<option ${p?.clay===n?'selected':''}>${n}</option>`).join('')+
-    DB.materials.filter(m=>m.cat==='clays').map(m=>`<option value="${m.id}" ${p?.clay===m.id?'selected':''}>${m.name}</option>`).join('');
+  var _matClays=DB.materials.filter(function(m){return m.cat==='clays';});
+  var _matClayNames=_matClays.map(function(m){return m.name;});
+  var _extraClays=CLAY_NAMES.filter(function(n){return _matClayNames.indexOf(n)<0;});
+  cs.innerHTML='<option value="">—</option>'+_extraClays.map(function(n){return '<option '+(p&&p.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
+    _matClays.map(function(m){return '<option value="'+m.id+'" '+(p&&p.clay===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
   if(p?.clay)cs.value=p.clay;
   const rs=document.getElementById('pi-rec');
-  rs.innerHTML='<option value="">— без глазура —</option>'+DB.recipes.map(r=>`<option value="${r.id}" ${p?.recipe===r.id?'selected':''}>${r.name}</option>`).join('');
+  var _curGlz=p&&(p.material||p.recipe)||'';
+  var _recOpts=DB.recipes.map(function(r){return '<option value="rec:'+r.id+'" '+(p&&p.recipe===r.id?'selected':'')+'>'+r.name+'</option>';}).join('');
+  var _glzMats=DB.materials.filter(function(m){return m.cat==='glaze';});
+  var _matOpts=_glzMats.map(function(m){return '<option value="mat:'+m.id+'" '+(p&&p.material===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
+  rs.innerHTML='<option value="">— без глазура —</option>'
+    +(_recOpts?'<optgroup label="Рецепти">'+_recOpts+'</optgroup>':'')
+    +(_matOpts?'<optgroup label="Готови глазури">'+_matOpts+'</optgroup>':'');
   var _ss=document.getElementById('pi-stage');
   if(_ss)_ss.value=p&&p.stage?p.stage:'greenware';
   renderPrev('pi-prev',pPh);
@@ -1658,7 +1707,12 @@ function savePiece(){
   const dateVal=document.getElementById('pi-date').value;
   if(dateVal&&!vDate(dateVal)){toast('Невалидна дата');focusEl('pi-date');return;}
   const _stEl=document.getElementById('pi-stage');
-  const p={id:editId||uid(),name,photos:[...pPh],clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:document.getElementById('pi-rec').value,temp:tempVal,date:dateVal,stage:_stEl?_stEl.value||'greenware':'greenware',notes:document.getElementById('pi-notes').value};
+  var _glzVal=document.getElementById('pi-rec').value;
+  var _recId='',_matId='';
+  if(_glzVal.indexOf('rec:')===0){_recId=_glzVal.slice(4);}
+  else if(_glzVal.indexOf('mat:')===0){_matId=_glzVal.slice(4);}
+  else if(_glzVal){_recId=_glzVal;} // backward compat: plain value = recipe
+  const p={id:editId||uid(),name,photos:[...pPh],clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,temp:tempVal,date:dateVal,stage:_stEl?_stEl.value||'greenware':'greenware',notes:document.getElementById('pi-notes').value};
   if(editId)DB.pieces[DB.pieces.findIndex(x=>x.id===editId)]=p;else DB.pieces.unshift(p);
   save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;
 }
@@ -1845,8 +1899,11 @@ function openTestMo(t){
   const rs=document.getElementById('ti-rec');
   rs.innerHTML='<option value="">—</option>'+DB.recipes.map(r=>`<option value="${r.id}" ${t?.recipeId===r.id?'selected':''}>${r.name}</option>`).join('');
   const cs=document.getElementById('ti-clay');
-  cs.innerHTML='<option value="">—</option>'+CLAY_NAMES.map(n=>`<option ${t?.clay===n?'selected':''}>${n}</option>`).join('')+
-    DB.materials.filter(m=>m.cat==='clays').map(m=>`<option ${t?.clay===m.name?'selected':''}>${m.name}</option>`).join('');
+  var _tMatClays=DB.materials.filter(function(m){return m.cat==='clays';});
+  var _tMatClayNames=_tMatClays.map(function(m){return m.name;});
+  var _tExtraClays=CLAY_NAMES.filter(function(n){return _tMatClayNames.indexOf(n)<0;});
+  cs.innerHTML='<option value="">—</option>'+_tExtraClays.map(function(n){return '<option '+(t&&t.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
+    _tMatClays.map(function(m){return '<option '+(t&&t.clay===m.name?'selected':'')+'>'+m.name+'</option>';}).join('');
   if(t?.clay)cs.value=t.clay;
   renderPrev('ti-prev',tPh);openMo('mo-test');
 }
