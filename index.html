@@ -406,12 +406,16 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <button class="tb" id="mbtab-base" onclick="switchMat('base')">Базови</button>
     <button class="tb" id="mbtab-ox" onclick="switchMat('ox')">Оксиди</button>
     <button class="tb" id="mbtab-glaze" onclick="switchMat('glaze')">Глазури</button>
+    <button class="tb" id="mbtab-engobe" onclick="switchMat('engobe')">Ангоби</button>
+    <button class="tb" id="mbtab-underglaze" onclick="switchMat('underglaze')">Подгл. бои</button>
     <button class="tb" id="mbtab-wish" onclick="switchMat('wish')">Wishlist</button>
   </div>
   <div id="mat-clays"></div>
   <div id="mat-base" style="display:none"></div>
   <div id="mat-ox" style="display:none"></div>
   <div id="mat-glaze" style="display:none"></div>
+  <div id="mat-engobe" style="display:none"></div>
+  <div id="mat-underglaze" style="display:none"></div>
   <div id="mat-wish" style="display:none"></div>
 </div>
 
@@ -643,8 +647,14 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="finished">Finished</option>
         </select>
       </div>
-      <div class="f"><label>Глазура / Рецепта</label><select id="pi-rec"><option value="">— без глазура —</option></select></div>
-      <div class="f"><label>Температура (°C)</label><input type="number" id="pi-temp" placeholder="1240"></div>
+      <div class="f"><label>Глазура / Рецепта</label>
+        <input type="search" id="pi-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('pi-rec',this.value)">
+        <select id="pi-rec"><option value="">— без глазура —</option></select>
+      </div>
+      <div style="display:flex;gap:9px;">
+        <div class="f" style="flex:1"><label>Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
+        <div class="f" style="flex:1"><label>Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
+      </div>
       <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
       <div class="f"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
       <button class="btn bp" onclick="savePiece()">Запази</button>
@@ -718,7 +728,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="ph-prev" id="ti-prev"></div>
       </div>
       <input type="file" id="ti-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'ti-prev',tPh,6)">
-      <div class="f"><label>Рецепта / Основна глазура</label><select id="ti-rec"><option value="">—</option></select></div>
+      <div class="f"><label>Рецепта / Готова глазура</label>
+        <input type="search" id="ti-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('ti-rec',this.value)">
+        <select id="ti-rec"><option value="">—</option></select>
+      </div>
    <div class="f">
     <label>Наслоени глазури (по желание)</label>
     <textarea id="ti-layers" style="min-height:60px;" placeholder="напр. Основа: Класическа пепелна (потапяне)&#10;Отгоре: PC-20 Blue Rutile (четка, 2 слоя)&#10;Ред: основа → изсъхне → втора глазура"></textarea>
@@ -757,10 +770,14 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <select id="mi-cat" onchange="toggleMatFields()">
           <option value="clays">Глина</option><option value="base">Базова суровина</option>
           <option value="ox">Оксид / Оцветител</option><option value="glaze">Готова глазура</option>
+          <option value="engobe">Ангоба</option><option value="underglaze">Подглазурна боя</option>
         </select>
       </div>
       <div class="f"><label>Химична формула</label><input type="text" id="mi-formula"></div>
-      <div class="f"><label>Производител / Произход</label><input type="text" id="mi-brand" placeholder="напр. Sibelco, Собствена, Ferro"></div>
+      <div class="f"><label>Производител / Произход</label>
+        <input type="text" id="mi-brand" placeholder="напр. Sibelco, Собствена, Ferro" list="mi-brand-list" autocomplete="off">
+        <datalist id="mi-brand-list"></datalist>
+      </div>
       <!-- Clay specific -->
       <div id="mi-clay-f">
         <div class="f"><label>Температура на изпичане (°C)</label><input type="text" id="mi-fire" placeholder="напр. 1220–1280"></div>
@@ -771,6 +788,24 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <!-- Glaze specific -->
       <div id="mi-glaze-f" style="display:none">
         <div class="f"><label>Температура на изпичане (°C)</label><input type="text" id="mi-gfire" placeholder="напр. 1220–1260"></div>
+        <div class="f"><label>Цвят</label><input type="text" id="mi-gcolor" placeholder="напр. прозрачна, тъмносиня, бежова"></div>
+        <div class="f"><label>Тип повърхност</label>
+          <select id="mi-gsurface">
+            <option value="">—</option>
+            <option value="matte">Матова</option>
+            <option value="gloss">Гланцова</option>
+            <option value="satin">Сатенена</option>
+            <option value="crystal">Кристална</option>
+            <option value="textured">Текстурирана</option>
+          </select>
+        </div>
+        <div class="f"><label>Безопасна за храна</label>
+          <select id="mi-gfoodsafe">
+            <option value="">—</option>
+            <option value="yes">Да (безоловна)</option>
+            <option value="no">Не (оловна / декоративна)</option>
+          </select>
+        </div>
       </div>
       <div class="f">
     <label>Статус</label>
@@ -810,7 +845,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.3.0-beta';
+const APP_VERSION = 'v1.3.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1244,7 +1279,7 @@ function renderMaterials(){
     if(activeSort.mat==='stock'){return arr.slice().sort(function(a,b){return (a.stock!=null?parseFloat(a.stock):Infinity)-(b.stock!=null?parseFloat(b.stock):Infinity);});}
     return arr.slice().sort(function(a,b){return a.name.localeCompare(b.name,'bg');});
   }
-  var cats={clays:[],base:[],ox:[],glaze:[],wish:[]};
+  var cats={clays:[],base:[],ox:[],glaze:[],engobe:[],underglaze:[],wish:[]};
   DB.materials.forEach(function(m){if(m.wishlist===true){cats.wish.push(m);}else if(cats[m.cat]){cats[m.cat].push(m);}});
   var low=getLowStock().length;
   document.getElementById("st-clays").textContent=cats.clays.length;
@@ -1252,10 +1287,10 @@ function renderMaterials(){
   var gs=document.getElementById("st-glazes");if(gs)gs.textContent=cats.glaze.length;
   var sl=document.getElementById("st-low");if(sl)sl.textContent=low;
   var lsChip=document.getElementById("fc-mat-lowstock");if(lsChip)lsChip.textContent=low>0?('Само ниски ('+low+')'):'Само ниски';
-  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨"};
+  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨",engobe:"🎭",underglaze:"🖌"};
   var hasQ=q||f.lowstock;
   var lowEmpty='<div class="empty" style="padding:30px"><div class="empty-k">∅</div><div class="empty-t">Няма материали под прага</div><div class="empty-s">Всички наличности са в норма</div></div>';
-  ["clays","base","ox","glaze"].forEach(function(cat){
+  ["clays","base","ox","glaze","engobe","underglaze"].forEach(function(cat){
     var el=document.getElementById("mat-"+cat);if(!el)return;
     var items=sortMats(cats[cat].filter(matchMat));
     if(!items.length){el.innerHTML=f.lowstock?lowEmpty:('<div class="empty" style="padding:30px"><div class="empty-t">'+(hasQ?'Няма резултати':'Няма добавени')+'</div></div>');return;}
@@ -1274,7 +1309,7 @@ function renderMaterials(){
   var wishEl=document.getElementById("mat-wish");if(!wishEl)return;
   var wishItems=sortMats(cats.wish.filter(matchMat));
   if(!wishItems.length){wishEl.innerHTML=f.lowstock?lowEmpty:('<div class="empty" style="padding:30px"><div class="empty-t">'+(hasQ?'Няма резултати':'Wishlist е празен')+'</div>'+(hasQ?'':'<div class="empty-s">Маркирай материал като Wishlist при добавяне</div>')+'</div>');return;}
-  var cL={clays:"Глина",base:"Базова суровина",ox:"Оксид",glaze:"Глазура"};
+  var cL={clays:"Глина",base:"Базова суровина",ox:"Оксид",glaze:"Глазура",engobe:"Ангоба",underglaze:"Подглазурна боя"};
   var wHtml="";
   wishItems.forEach(function(m){
     var sub=(cL[m.cat]||m.cat)+(m.formula?" · "+m.formula:"");
@@ -1289,8 +1324,8 @@ function renderMaterials(){
 
 function switchMat(t){
   matTab=t;
-  ['clays','base','ox','glaze','wish'].forEach(function(k){
-    document.getElementById('mat-'+k).style.display=k===t?'block':'none';
+  ['clays','base','ox','glaze','engobe','underglaze','wish'].forEach(function(k){
+    var el=document.getElementById('mat-'+k);if(el)el.style.display=k===t?'block':'none';
   });
   document.querySelectorAll('#mat-tabs .tb').forEach(function(b){
     b.classList.remove('on');
@@ -1346,7 +1381,12 @@ function openPieceDet(id){
   else if(p.recipe)_glzLabel='Изтрита рецепта';
   else if(_pMat)_glzLabel=_pMat.name+' (готова)';
   else if(p.material)_glzLabel='Изтрита глазура';
-  document.getElementById('dpi-info').innerHTML=[dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',p.clay),dr('Глазура',_glzLabel),dr('Температура',p.temp?p.temp+'°C':'')].join('');
+  var _bisque=(p.bisqueTemp||'');
+  var _glaze=(p.glazeTemp||p.temp||'');
+  var _tempRows=[];
+  if(_bisque)_tempRows.push(dr('Бисквит',_bisque+'°C'));
+  if(_glaze)_tempRows.push(dr('Глазурно',_glaze+'°C'));
+  document.getElementById('dpi-info').innerHTML=[dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',p.clay),dr('Глазура',_glzLabel)].concat(_tempRows).join('');
   var _sa=document.getElementById('dpi-stage-actions');
   if(_sa){
     var _idx=resolveStageIdx(p.stage);
@@ -1506,12 +1546,20 @@ function toggleFav(){
 function openTestDet(id){
   const t=DB.tests.find(x=>x.id===id);if(!t)return;curTest=id;
   const rec=DB.recipes.find(r=>r.id===t.recipeId);
-  document.getElementById('dtest-t').textContent=(rec&&rec.name)||'Изтрита рецепта';
+  var _tMat=t.materialId?DB.materials.find(function(m){return m.id===t.materialId;}):null;
+  var _glzTitle='';
+  if(rec)_glzTitle=rec.name;
+  else if(t.recipeId)_glzTitle='Изтрита рецепта';
+  else if(_tMat)_glzTitle=_tMat.name+' (готова)';
+  else if(t.materialId)_glzTitle='Изтрита глазура';
+  else _glzTitle='Тест';
+  document.getElementById('dtest-t').textContent=_glzTitle;
   document.getElementById('dtest-m').textContent=[t.date,t.clay].filter(Boolean).join(' · ');
   document.getElementById('dtest-photos').innerHTML=t.photos?.map(s=>`<img src="${s}" style="width:80px;height:80px;border-radius:var(--rs);object-fit:cover;" alt="">`).join('')||'';
   var _tfp=t.firingProfileId?DB.firingProfiles.find(function(x){return x.id===t.firingProfileId;}):null;
   var _tfpN=_tfp?_tfp.name:(t.firingProfileId?'Изтрит профил':null);
-  document.getElementById('dtest-params').innerHTML=[dr('Рецепта',(rec&&rec.name)||(t.recipeId?'Изтрита рецепта':null)),dr('Профил',_tfpN),dr('Наслоени глазури',t.glazeLayers),dr('Глина',t.clay),dr('Температура',t.temp?t.temp+'°C':''),dr('Задръжка',t.hold?t.hold+' мин':'')].join('');
+  var _glzParam=rec?rec.name:(t.recipeId?'Изтрита рецепта':(_tMat?_tMat.name+' (готова)':(t.materialId?'Изтрита глазура':null)));
+  document.getElementById('dtest-params').innerHTML=[dr('Глазура',_glzParam),dr('Профил',_tfpN),dr('Наслоени глазури',t.glazeLayers),dr('Глина',t.clay),dr('Температура',t.temp?t.temp+'°C':''),dr('Задръжка',t.hold?t.hold+' мин':'')].join('');
   document.getElementById('dtest-res').innerHTML=[
     dr('Течене',t.flow),dr('Повърхност',t.surf),
     dr('Дефекти',t.def),
@@ -1519,20 +1567,30 @@ function openTestDet(id){
     )].join('');
   document.getElementById('dtest-notes').textContent=t.notes||'—';
   document.getElementById('dtest-res').innerHTML+=t.updatedAt?dr('Последно редактирано',new Date(t.updatedAt).toLocaleDateString('bg-BG')):'';
-  // Related recipe (derived, clickable)
+  // Related glaze (derived, clickable) — recipe OR material
   var _tRecRow=document.getElementById('dtest-recipe-row');
   var _tAnchor=document.getElementById('dtest-notes').parentNode.parentNode;
   if(!_tRecRow){
     _tRecRow=document.createElement('div');_tRecRow.id='dtest-recipe-row';_tRecRow.className='ds';
-    _tRecRow.innerHTML='<div class="ds-t">Рецепта</div><div id="dtest-recipe-val"></div>';
+    _tRecRow.innerHTML='<div class="ds-t" id="dtest-recipe-label">Глазура</div><div id="dtest-recipe-val"></div>';
     _tAnchor.appendChild(_tRecRow);
   }
+  var _tRecLbl=document.getElementById('dtest-recipe-label');
   if(rec){
     _tRecRow.style.display='';
+    if(_tRecLbl)_tRecLbl.textContent='Рецепта';
     var _rsub=[rec.temp?rec.temp+'°C':'',rec.cone?'Конус '+rec.cone:''].filter(Boolean).join(' · ');
     document.getElementById('dtest-recipe-val').innerHTML='<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-test\');openRecipeDet(\''+rec.id+'\')">'
       +'<div class="li-ic">'+(rec.photo?'<img src="'+rec.photo+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div>'
       +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(rec.name||'—')+'</div><div class="li-s">'+_rsub+'</div></div>'
+      +'<div class="li-r">›</div></div>';
+  } else if(_tMat){
+    _tRecRow.style.display='';
+    if(_tRecLbl)_tRecLbl.textContent='Готова глазура';
+    var _msub=[_tMat.brand||'',_tMat.gfire?_tMat.gfire+'°C':''].filter(Boolean).join(' · ');
+    document.getElementById('dtest-recipe-val').innerHTML='<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-test\');openMatDet(\''+_tMat.id+'\')">'
+      +'<div class="li-ic">'+(_tMat.photo?'<img src="'+_tMat.photo+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div>'
+      +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(_tMat.name||'—')+'</div><div class="li-s">'+_msub+'</div></div>'
       +'<div class="li-r">›</div></div>';
   } else {
     _tRecRow.style.display='none';
@@ -1585,7 +1643,7 @@ function openMatDet(id){
   const hero=document.getElementById('dmat-hero');
   if(!hero){console.error('dmat-hero not found');return;}
   hero.innerHTML=m.photo?`<img src="${m.photo}" alt="">`:K(70);
-  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура'};
+  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура',engobe:'Ангоба',underglaze:'Подглазурна боя'};
   document.getElementById('dmat-t').textContent=m.name;
   document.getElementById('dmat-m').textContent=[catLabel[m.cat]||m.cat,m.brand].filter(Boolean).join(' · ');
   const rows=[
@@ -1600,7 +1658,14 @@ function openMatDet(id){
     if(m.shrink)rows.push(dr('Свиваемост',m.shrink+'%'));
     rows.push(dr('Цвят след изпичане',m.color));
   }
-  if(m.cat==='glaze'){rows.push(dr('Температура',m.gfire));}
+  if(m.cat==='glaze'){
+    rows.push(dr('Температура',m.gfire));
+    if(m.gcolor)rows.push(dr('Цвят',m.gcolor));
+    var surfL={matte:'Матова',gloss:'Гланцова',satin:'Сатенена',crystal:'Кристална',textured:'Текстурирана'};
+    if(m.surfaceType)rows.push(dr('Повърхност',surfL[m.surfaceType]||m.surfaceType));
+    if(m.foodsafe==='yes')rows.push(dr('Безопасна за храна','Да (безоловна)'));
+    else if(m.foodsafe==='no')rows.push(dr('Безопасна за храна','Не (декоративна)'));
+  }
   if(m.alertAt)rows.push(dr('Известие при',m.alertAt+'г'));
   document.getElementById('dmat-info').innerHTML=rows.filter(Boolean).join('');
   document.getElementById('dmat-notes').textContent=m.notes||'—';
@@ -1681,6 +1746,29 @@ function openMatDet(id){
   } else {
     _mpRow.style.display='none';
   }
+  // Related tests (when material is used as ready glaze in a test)
+  var _mtRow=document.getElementById('dmat-tests-row');
+  if(!_mtRow){
+    _mtRow=document.createElement('div');_mtRow.id='dmat-tests-row';_mtRow.className='ds';
+    _mtRow.innerHTML='<div class="ds-t">Използвана в тестове</div><div id="dmat-tests-val"></div>';
+    var _mtAnchor=document.getElementById('dmat-notes').parentNode;
+    _mtAnchor.insertBefore(_mtRow,_mtAnchor.querySelector('.ds:last-of-type'));
+  }
+  var _relMatTests=DB.tests.filter(function(te){return te&&te.materialId===id;});
+  var _mtVal=document.getElementById('dmat-tests-val');
+  if(_relMatTests.length){
+    _mtRow.style.display='';
+    _mtVal.innerHTML=_relMatTests.map(function(te){
+      var ph=(te.photos&&te.photos[0])?'<img src="'+te.photos[0]+'" style="width:100%;height:100%;object-fit:cover">':K(20);
+      var sub=[te.date||'',te.temp?te.temp+'°C':''].filter(Boolean).join(' · ');
+      return '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-mat\');openTestDet(\''+te.id+'\')">'
+        +'<div class="li-ic">'+ph+'</div>'
+        +'<div class="li-body"><div class="li-t" style="font-size:14px">Тест</div><div class="li-s">'+sub+'</div></div>'
+        +'<div class="li-r">›</div></div>';
+    }).join('');
+  } else {
+    _mtRow.style.display='none';
+  }
   document.getElementById('det-mat').classList.add('on');
 }
 
@@ -1689,7 +1777,8 @@ function openPieceMo(p){
   pPh=p?.photos?[...p.photos]:[];
   document.getElementById('mo-piece-t').textContent=p?'Редактирай':'Ново изделие';
   document.getElementById('pi-name').value=p?.name||'';
-  document.getElementById('pi-temp').value=p?.temp||'';
+  document.getElementById('pi-bisque-temp').value=(p&&p.bisqueTemp)||'';
+  document.getElementById('pi-glaze-temp').value=(p&&(p.glazeTemp||p.temp))||'';
   document.getElementById('pi-date').value=p?.date||new Date().toISOString().split('T')[0];
   document.getElementById('pi-tech').value=p?.technique||'';
   document.getElementById('pi-notes').value=p?.notes||'';
@@ -1702,22 +1791,46 @@ function openPieceMo(p){
   if(p?.clay)cs.value=p.clay;
   const rs=document.getElementById('pi-rec');
   var _curGlz=p&&(p.material||p.recipe)||'';
-  var _recOpts=DB.recipes.map(function(r){return '<option value="rec:'+r.id+'" '+(p&&p.recipe===r.id?'selected':'')+'>'+r.name+'</option>';}).join('');
-  var _glzMats=DB.materials.filter(function(m){return m.cat==='glaze';});
-  var _matOpts=_glzMats.map(function(m){return '<option value="mat:'+m.id+'" '+(p&&p.material===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
-  rs.innerHTML='<option value="">— без глазура —</option>'
-    +(_recOpts?'<optgroup label="Рецепти">'+_recOpts+'</optgroup>':'')
-    +(_matOpts?'<optgroup label="Готови глазури">'+_matOpts+'</optgroup>':'');
+  _glzDropdownData['pi-rec']={
+    recipes:DB.recipes.slice(),
+    mats:DB.materials.filter(function(m){return m.cat==='glaze';}),
+    curRec:(p&&p.recipe)||'',
+    curMat:(p&&p.material)||''
+  };
+  var _searchEl=document.getElementById('pi-rec-srch');if(_searchEl)_searchEl.value='';
+  buildGlzDropdown('pi-rec','');
   var _ss=document.getElementById('pi-stage');
   if(_ss)_ss.value=p&&p.stage?p.stage:'greenware';
   renderPrev('pi-prev',pPh);
   openMo('mo-piece');
 }
+var _glzDropdownData={};
+function buildGlzDropdown(selectId,query){
+  var data=_glzDropdownData[selectId];if(!data)return;
+  var q=(query||'').toLowerCase().trim();
+  var filt=function(items,nameKey){
+    if(!q)return items;
+    return items.filter(function(x){return (x[nameKey||'name']||'').toLowerCase().indexOf(q)>=0;});
+  };
+  var recs=filt(data.recipes);
+  var mats=filt(data.mats);
+  var recOpts=recs.map(function(r){return '<option value="rec:'+r.id+'" '+(data.curRec===r.id?'selected':'')+'>'+r.name+'</option>';}).join('');
+  var matOpts=mats.map(function(m){return '<option value="mat:'+m.id+'" '+(data.curMat===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
+  var sel=document.getElementById(selectId);if(!sel)return;
+  sel.innerHTML='<option value="">— без глазура —</option>'
+    +(recOpts?'<optgroup label="Рецепти ('+recs.length+')">'+recOpts+'</optgroup>':'')
+    +(matOpts?'<optgroup label="Готови глазури ('+mats.length+')">'+matOpts+'</optgroup>':'');
+}
+function filterGlzDropdown(selectId,query){
+  buildGlzDropdown(selectId,query);
+}
 function savePiece(){
   const name=document.getElementById('pi-name').value.trim();
   if(!name){toast('Въведи наименование');focusEl('pi-name');return;}
-  const tempVal=document.getElementById('pi-temp').value;
-  if(!vPosNum(tempVal,'Температура')){focusEl('pi-temp');return;}
+  const bisqueVal=document.getElementById('pi-bisque-temp').value;
+  const glazeVal=document.getElementById('pi-glaze-temp').value;
+  if(bisqueVal&&!vPosNum(bisqueVal,'Бисквит температура')){focusEl('pi-bisque-temp');return;}
+  if(glazeVal&&!vPosNum(glazeVal,'Глазурна температура')){focusEl('pi-glaze-temp');return;}
   const dateVal=document.getElementById('pi-date').value;
   if(dateVal&&!vDate(dateVal)){toast('Невалидна дата');focusEl('pi-date');return;}
   const _stEl=document.getElementById('pi-stage');
@@ -1725,8 +1838,8 @@ function savePiece(){
   var _recId='',_matId='';
   if(_glzVal.indexOf('rec:')===0){_recId=_glzVal.slice(4);}
   else if(_glzVal.indexOf('mat:')===0){_matId=_glzVal.slice(4);}
-  else if(_glzVal){_recId=_glzVal;} // backward compat: plain value = recipe
-  const p={id:editId||uid(),name,photos:[...pPh],clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,temp:tempVal,date:dateVal,stage:_stEl?_stEl.value||'greenware':'greenware',notes:document.getElementById('pi-notes').value};
+  else if(_glzVal){_recId=_glzVal;}
+  const p={id:editId||uid(),name,photos:[...pPh],clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,bisqueTemp:bisqueVal,glazeTemp:glazeVal,date:dateVal,stage:_stEl?_stEl.value||'greenware':'greenware',notes:document.getElementById('pi-notes').value};
   if(editId)DB.pieces[DB.pieces.findIndex(x=>x.id===editId)]=p;else DB.pieces.unshift(p);
   save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;
 }
@@ -1911,7 +2024,14 @@ function openTestMo(t){
   var _tiFP=document.getElementById('ti-fp');
   if(_tiFP){_tiFP.innerHTML='<option value="">—</option>'+DB.firingProfiles.map(function(fp){return '<option value="'+fp.id+'"'+(t&&t.firingProfileId===fp.id?' selected':'')+'>'+fp.name+'</option>';}).join('');if(t&&t.firingProfileId)_tiFP.value=t.firingProfileId;}
   const rs=document.getElementById('ti-rec');
-  rs.innerHTML='<option value="">—</option>'+DB.recipes.map(r=>`<option value="${r.id}" ${t?.recipeId===r.id?'selected':''}>${r.name}</option>`).join('');
+  _glzDropdownData['ti-rec']={
+    recipes:DB.recipes.slice(),
+    mats:DB.materials.filter(function(m){return m.cat==='glaze';}),
+    curRec:(t&&t.recipeId)||'',
+    curMat:(t&&t.materialId)||''
+  };
+  var _tSrch=document.getElementById('ti-rec-srch');if(_tSrch)_tSrch.value='';
+  buildGlzDropdown('ti-rec','');
   const cs=document.getElementById('ti-clay');
   var _tMatClays=DB.materials.filter(function(m){return m.cat==='clays';});
   var _tMatClayNames=_tMatClays.map(function(m){return m.name;});
@@ -1931,7 +2051,12 @@ function saveTest(){
   const batchValRaw=document.getElementById('ti-batch')?document.getElementById('ti-batch').value:'';
   if(!vPosNum(batchValRaw,'Партида')){return;}
   const layersEl=document.getElementById('ti-layers');
-  const t={id:editId||uid(),updatedAt:new Date().toISOString(),recipeId:document.getElementById('ti-rec').value,firingProfileId:(document.getElementById('ti-fp')?document.getElementById('ti-fp').value||null:null),clay:document.getElementById('ti-clay').value,date:dateVal,temp:tempVal,hold:holdVal,flow:document.getElementById('ti-flow').value,surf:document.getElementById('ti-surf').value,def:document.getElementById('ti-def').value,rat:document.getElementById('ti-rat').value,notes:document.getElementById('ti-notes').value,glazeLayers:layersEl?layersEl.value:'',photos:[...tPh]};
+  var _tGlzVal=document.getElementById('ti-rec').value;
+  var _tRecId='',_tMatId='';
+  if(_tGlzVal.indexOf('rec:')===0){_tRecId=_tGlzVal.slice(4);}
+  else if(_tGlzVal.indexOf('mat:')===0){_tMatId=_tGlzVal.slice(4);}
+  else if(_tGlzVal){_tRecId=_tGlzVal;}
+  const t={id:editId||uid(),updatedAt:new Date().toISOString(),recipeId:_tRecId,materialId:_tMatId,firingProfileId:(document.getElementById('ti-fp')?document.getElementById('ti-fp').value||null:null),clay:document.getElementById('ti-clay').value,date:dateVal,temp:tempVal,hold:holdVal,flow:document.getElementById('ti-flow').value,surf:document.getElementById('ti-surf').value,def:document.getElementById('ti-def').value,rat:document.getElementById('ti-rat').value,notes:document.getElementById('ti-notes').value,glazeLayers:layersEl?layersEl.value:'',photos:[...tPh]};
   // ── STOCK DEDUCTION ─────────────────────────────────────────────────────
   // Runs ONLY on CREATE (editId===null). Edit never re-deducts. Delete never
   // restores stock automatically.
@@ -1980,13 +2105,23 @@ function delTest(){
 }
 
 // ══ MATERIAL MODAL ══
+function setupBrandDropdown(currentBrand){
+  var el=document.getElementById('mi-brand');
+  if(el)el.value=currentBrand||'';
+  var list=document.getElementById('mi-brand-list');if(!list)return;
+  var brands={};
+  DB.materials.forEach(function(m){
+    if(m&&m.brand&&m.brand.trim())brands[m.brand.trim()]=true;
+  });
+  var opts=Object.keys(brands).sort(function(a,b){return a.localeCompare(b,'bg');});
+  list.innerHTML=opts.map(function(b){return '<option value="'+b.replace(/"/g,'&quot;')+'">';}).join('');
+}
 function openMatMo(m){
   mPh=m?.photo?[m.photo]:[];editId=m?.id||null;
   document.getElementById('mo-mat-t').textContent=m?'Редактирай':'Нов материал';
   document.getElementById('mi-name').value=m?.name||'';
   document.getElementById('mi-cat').value=m?.cat||'base';
   document.getElementById('mi-formula').value=m?.formula||'';
-  document.getElementById('mi-brand').value=m?.brand||'';
   document.getElementById('mi-stock').value=m?.stock!=null?m.stock:'';
   document.getElementById('mi-alert').value=m?.alertAt||'';
   document.getElementById('mi-notes').value=m?.notes||'';
@@ -1995,6 +2130,10 @@ function openMatMo(m){
   document.getElementById('mi-shrink').value=m?.shrink||'';
   document.getElementById('mi-color').value=m?.color||'';
   document.getElementById('mi-gfire').value=m?.gfire||'';
+  var _gcolor=document.getElementById('mi-gcolor');if(_gcolor)_gcolor.value=m?.gcolor||'';
+  var _gsurf=document.getElementById('mi-gsurface');if(_gsurf)_gsurf.value=m?.surfaceType||'';
+  var _gfood=document.getElementById('mi-gfoodsafe');if(_gfood)_gfood.value=m?.foodsafe||'';
+  setupBrandDropdown(m?m.brand:'');
   setMatStatus((m&&m.wishlist)?'wish':'have');
   // Chem analysis
   var chemFields2=['sio2','al2o3','fe2o3','cao','k2o','na2o','mgo','tio2'];
@@ -2053,7 +2192,12 @@ function saveMat(){
     notes:document.getElementById('mi-notes').value,
     photo:mPh[0]||null};
   if(cat==='clays'){m.fireTemp=document.getElementById('mi-fire').value;m.grog=document.getElementById('mi-grog').value;m.shrink=document.getElementById('mi-shrink').value;m.color=document.getElementById('mi-color').value;}
-  if(cat==='glaze'){m.gfire=document.getElementById('mi-gfire').value;}
+  if(cat==='glaze'){
+    m.gfire=document.getElementById('mi-gfire').value;
+    var _gc=document.getElementById('mi-gcolor');if(_gc)m.gcolor=_gc.value;
+    var _gs=document.getElementById('mi-gsurface');if(_gs)m.surfaceType=_gs.value;
+    var _gf=document.getElementById('mi-gfoodsafe');if(_gf)m.foodsafe=_gf.value;
+  }
   // Chemical analysis
   var chemFields=['sio2','al2o3','fe2o3','cao','k2o','na2o','mgo','tio2'];
   var chem={};
@@ -2115,8 +2259,26 @@ function handlePh(e,prevId,arr,maxItems){
   Array.from(e.target.files).forEach(function(f){resizeAndAdd(f,arr,max,prevId);});
   e.target.value='';
 }
+function _phArr(id){
+  if(id==='pi-prev')return pPh;
+  if(id==='ri-prev')return rPh;
+  if(id==='ti-prev')return tPh;
+  if(id==='mi-prev')return mPh;
+  return null;
+}
+function removePh(id,i){
+  var arr=_phArr(id);if(!arr)return;
+  arr.splice(i,1);
+  renderPrev(id,arr);
+}
 function renderPrev(id,arr){
-  document.getElementById(id).innerHTML=arr.map((s,i)=>`<img class="ph-th" src="${s}" onclick="arr.splice(${i},1);renderPrev('${id}',arr)" title="Премахни">`).join('');
+  var el=document.getElementById(id);if(!el)return;
+  el.innerHTML=arr.map(function(s,i){
+    return '<div style="position:relative;display:inline-block;margin:2px;">'
+      +'<img class="ph-th" src="'+s+'" style="display:block;">'
+      +'<button onclick="removePh(\''+id+'\','+i+')" type="button" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;border:2px solid var(--surface);font-size:14px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);">×</button>'
+      +'</div>';
+  }).join('');
 }
 
 // ══ MODAL HELPERS ══
