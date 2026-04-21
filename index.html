@@ -445,7 +445,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <input type="file" accept=".json" onchange="importBackup(event)" style="display:none;">
       </label>
     </div>
-    <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="ver-label"></div>
+    <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="storage-label"></div>
+    <div style="text-align:right;margin-top:4px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="ver-label"></div>
   </div>
 </div>
 
@@ -809,7 +810,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.3.0-alpha';
+const APP_VERSION = 'v1.3.0-beta';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -959,7 +960,7 @@ function vDate(val){
   return !isNaN(Date.parse(val));
 }
 function focusEl(id){try{var el=document.getElementById(id);if(el)el.focus();}catch(e){}}
-function save(){safeSaveJSON('atelie_v6',DB);}
+function save(){safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();}
 function load(){
   var d=safeLoadJSON('atelie_v6',null);
   if(d&&typeof d==='object'){
@@ -993,7 +994,20 @@ function safeLoadJSON(key, fallback){
 }
 function safeSaveJSON(key, value){
   try{localStorage.setItem(key,JSON.stringify(value));return true;}
-  catch(e){toast('Не може да се запише — паметта е пълна или блокирана');return false;}
+  catch(e){
+    var msg='ВНИМАНИЕ: Данните НЕ бяха запазени!\n\n';
+    if(e&&e.name==='QuotaExceededError'){
+      msg+='Паметта на приложението е пълна.\n\n';
+      msg+='Какво да направиш:\n';
+      msg+='1. Експортни backup (Библиотека → Експорт)\n';
+      msg+='2. Изтрий стари записи със снимки\n';
+      msg+='3. Опитай пак';
+    } else {
+      msg+='Грешка: '+(e&&e.message||'неизвестна');
+    }
+    try{alert(msg);}catch(err){toast('Грешка при запис — паметта е пълна');}
+    return false;
+  }
 }
 
 
@@ -2067,28 +2081,33 @@ function delMat(){
 }
 
 // ══ PHOTOS ══
-var PH_MAX_BYTES=2*1024*1024; // 2 MB
-var PH_MAX_DIM=1600;
+var PH_MAX_BYTES=10*1024*1024; // 10 MB input (ще се компресира)
+var PH_MAX_DIM=1000;
+var PH_QUALITY=0.75;
 function resizeAndAdd(file,arr,maxItems,prevId){
   if(arr.length>=maxItems){toast('Максимум '+maxItems+' снимки');return;}
-  if(file.size>PH_MAX_BYTES){toast('Снимката е над 2 MB — намали я и опитай отново');return;}
+  if(file.size>PH_MAX_BYTES){toast('Снимката е твърде голяма (над 10 MB)');return;}
   var reader=new FileReader();
   reader.onload=function(ev){
     var img=new Image();
     img.onload=function(){
       var w=img.width,h=img.height;
-      if(w<=PH_MAX_DIM&&h<=PH_MAX_DIM){
-        arr.push(ev.target.result);renderPrev(prevId,arr);return;
-      }
-      var scale=PH_MAX_DIM/Math.max(w,h);
+      var scale=Math.min(1,PH_MAX_DIM/Math.max(w,h));
       var canvas=document.createElement('canvas');
-      canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);
-      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-      arr.push(canvas.toDataURL('image/jpeg',0.85));
+      canvas.width=Math.round(w*scale);
+      canvas.height=Math.round(h*scale);
+      var ctx=canvas.getContext('2d');
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      var compressed=canvas.toDataURL('image/jpeg',PH_QUALITY);
+      arr.push(compressed);
       renderPrev(prevId,arr);
     };
+    img.onerror=function(){toast('Грешка при зареждане на снимката');};
     img.src=ev.target.result;
   };
+  reader.onerror=function(){toast('Грешка при четене на файла');};
   reader.readAsDataURL(file);
 }
 function handlePh(e,prevId,arr,maxItems){
@@ -2507,6 +2526,23 @@ function seedGuides(){
 // ══ INIT ══
 seedGuides();load();render('pieces');
 (function(){var vl=document.getElementById('ver-label');if(vl)vl.textContent='Глина '+APP_VERSION+' · by Crafty Place';})();
+function updateStorageLabel(){
+  var el=document.getElementById('storage-label');if(!el)return;
+  var total=0;
+  try{
+    for(var k in localStorage){
+      if(localStorage.hasOwnProperty(k)){
+        total+=(localStorage[k].length+k.length)*2;
+      }
+    }
+    var mb=(total/1024/1024).toFixed(2);
+    var pct=Math.round(total/(5*1024*1024)*100);
+    var warn=pct>=75;
+    el.textContent='Памет: '+mb+' MB'+(warn?' ⚠ '+pct+'%':'');
+    el.style.color=warn?'var(--accent)':'var(--muted)';
+  }catch(e){el.textContent='';}
+}
+updateStorageLabel();
 (function(){var sp=document.getElementById('splash');if(!sp)return;setTimeout(function(){sp.classList.add('hide');setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},500);},600);})();
 </script>
 
