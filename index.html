@@ -850,7 +850,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.3.2';
+const APP_VERSION = 'v1.4.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1015,6 +1015,7 @@ function load(){
         DB.materials.push(JSON.parse(JSON.stringify(def)));
       }
     });
+    DB.pieces.forEach(ensurePieceEvents);
     runMigrations();
     save();
   } else {
@@ -1085,6 +1086,32 @@ function uid(){
 function safeParseJSON(raw, fallback){
   try{return JSON.parse(raw);}catch(e){return fallback;}
 }
+
+// ── PIECE EVENTS — schema preparation (v1.4.0) ───────────────
+// Future piece event shape:
+// {
+//   id,
+//   type: 'stage' | 'progress' | 'firing' | 'decoration',
+//   date,
+//   note,
+//   photos: [],
+//   data: {}  // type-specific fields go here
+// }
+//
+// In v1.4.0 events[] is just an empty array on every piece.
+// No UI yet, no validation of event content. Defensive only.
+function ensurePieceEvents(piece){
+  if(!piece||typeof piece!=='object')return piece;
+  if(!Array.isArray(piece.events))piece.events=[];
+  return piece;
+}
+function _normalizeEvent(e){
+  if(!e||typeof e!=='object')return null;
+  if(!e.id)e.id=uid();
+  if(!Array.isArray(e.photos))e.photos=[];
+  return e;
+}
+
 function safeLoadJSON(key, fallback){
   try{var raw=localStorage.getItem(key);if(raw==null)return fallback;return safeParseJSON(raw,fallback);}catch(e){return fallback;}
 }
@@ -1933,6 +1960,12 @@ function savePiece(){
   else if(_glzVal.indexOf('mat:')===0){_matId=_glzVal.slice(4);}
   else if(_glzVal){_recId=_glzVal;}
   const p={id:editId||uid(),name,photos:[...pPh],type:(document.getElementById('pi-type')?document.getElementById('pi-type').value:'')||'',clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,bisqueTemp:bisqueVal,glazeTemp:glazeVal,date:dateVal,stage:_stEl?_stEl.value||'greenware':'greenware',notes:document.getElementById('pi-notes').value};
+  // Preserve events on edit; initialize on new
+  if(editId){
+    var _existing=DB.pieces.find(function(x){return x.id===editId;});
+    if(_existing&&Array.isArray(_existing.events))p.events=_existing.events;
+  }
+  ensurePieceEvents(p);
   if(editId)DB.pieces[DB.pieces.findIndex(x=>x.id===editId)]=p;else DB.pieces.unshift(p);
   save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;
 }
