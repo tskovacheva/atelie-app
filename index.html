@@ -850,7 +850,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.3.1';
+const APP_VERSION = 'v1.3.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -882,7 +882,7 @@ const CLAY_NAMES=['PRNF Black','Sibelco Nigra 2002','PRGF Golden Brown','MARTE R
 const DEF_MATS=[
   // ── ГЛИНИ (налични) ──────────────────────────────────────────────────
   {id:'c1',name:'PRNF Black',cat:'clays',brand:'Sibelco',formula:'—',
-   fireTemp:'1220–1280',grog:'Шамот',color:'Тъмносив/черен',
+   fireGlazeTemp:'1220–1280',grog:'Шамот',color:'Тъмносив/черен',
    notes:'Черна шамотна глина. Текуща работна глина.'},
 
   // ── БАЗОВИ СУРОВИНИ (налични) ─────────────────────────────────────────
@@ -945,19 +945,19 @@ const DEF_MATS=[
 
   // ── WISHLIST — ГЛИНИ ──────────────────────────────────────────────────
   {id:'w18',name:'Sibelco Nigra 2002',formula:'—',cat:'clays',wishlist:true,brand:'Sibelco',
-   fireTemp:'1220–1280',color:'Черен',
+   fireGlazeTemp:'1220–1280',color:'Черен',
    notes:'Черна шамотна. Близо до PRNF — интересно за сравнение.'},
   {id:'w19',name:'PRGF Golden Brown',formula:'—',cat:'clays',wishlist:true,brand:'',
-   fireTemp:'1220–1260',color:'Топлокафяв',
+   fireGlazeTemp:'1220–1260',color:'Топлокафяв',
    notes:'Топли тонове. Различна база за пепелни глазури.'},
   {id:'w20',name:'MARTE Red',formula:'—',cat:'clays',wishlist:true,brand:'',
-   fireTemp:'1180–1240',color:'Тъмночервен',
+   fireGlazeTemp:'1180–1240',color:'Тъмночервен',
    notes:'Земна червена — красива с пепел и ash глазури.'},
   {id:'w21',name:'TOFFEE Caramel',formula:'—',cat:'clays',wishlist:true,brand:'',
-   fireTemp:'1200–1260',color:'Карамелен',
+   fireGlazeTemp:'1200–1260',color:'Карамелен',
    notes:'Топъл карамелен тон. Интересна за Куринуки.'},
   {id:'w22',name:'S&G 933',formula:'—',cat:'clays',wishlist:true,brand:'S&G',
-   fireTemp:'1220–1280',color:'',
+   fireGlazeTemp:'1220–1280',color:'',
    notes:'Вдъхновение: magda_ceramics / terra.aeterna естетика.'},
 
   // ── WISHLIST — ГОТОВИ ГЛАЗУРИ ─────────────────────────────────────────
@@ -1009,17 +1009,73 @@ function load(){
     DB.materials=Array.isArray(d.materials)?d.materials:[];
     DB.tests=Array.isArray(d.tests)?d.tests:[];
     DB.firingProfiles=Array.isArray(d.firingProfiles)?d.firingProfiles:[];
+    DB._migrations=d._migrations||{};
     DEF_MATS.forEach(function(def){
       if(!DB.materials.find(function(m){return m.id===def.id;})){
         DB.materials.push(JSON.parse(JSON.stringify(def)));
       }
     });
+    runMigrations();
     save();
   } else {
     if(d!==null){toast('Данните изглеждат повредени — заредени са стойности по подразбиране');}
     DB.materials=JSON.parse(JSON.stringify(DEF_MATS));
     DB.recipes=JSON.parse(JSON.stringify(DEF_REC));
+    DB._migrations={'v1.3.2':new Date().toISOString()};
     save();
+  }
+}
+
+// ── DATA MIGRATIONS ──────────────────────────────────────────
+// Idempotent migrations that run on load. Each migration:
+//   - Checks DB._migrations[name] flag — skip if already done
+//   - Backs up raw localStorage to atelie_v6_pre_<name> before mutating
+//   - Sets the flag and saves on success
+// Legacy fallback code (e.g. p.glazeTemp||p.temp) is intentionally
+// kept until next version, in case a migration misses an edge case.
+function runMigrations(){
+  if(!DB._migrations)DB._migrations={};
+  var changes=0;
+
+  // v1.3.2 — Canonicalize piece + clay temperature fields
+  if(!DB._migrations['v1.3.2']){
+    try{
+      // Backup raw localStorage before mutating
+      var raw=localStorage.getItem('atelie_v6');
+      if(raw)localStorage.setItem('atelie_v6_pre_v1_3_2',raw);
+    }catch(e){console.warn('[migration] backup failed:',e);}
+
+    var pieceUpdates=0;
+    DB.pieces.forEach(function(p){
+      if(!p||typeof p!=='object')return;
+      // p.temp → p.glazeTemp (only if glazeTemp is empty)
+      if(p.temp&&!p.glazeTemp){
+        p.glazeTemp=p.temp;
+        pieceUpdates++;
+      }
+      // Always remove the legacy field once data is preserved
+      if('temp' in p){delete p.temp;pieceUpdates++;}
+    });
+
+    var matUpdates=0;
+    DB.materials.forEach(function(m){
+      if(!m||typeof m!=='object')return;
+      if(m.cat==='clays'){
+        if(m.fireTemp&&!m.fireGlazeTemp){
+          m.fireGlazeTemp=m.fireTemp;
+          matUpdates++;
+        }
+        if('fireTemp' in m){delete m.fireTemp;matUpdates++;}
+      }
+    });
+
+    DB._migrations['v1.3.2']=new Date().toISOString();
+    changes+=pieceUpdates+matUpdates;
+    console.log('[migration v1.3.2] piece field updates:',pieceUpdates,'material updates:',matUpdates);
+  }
+
+  if(changes>0){
+    try{toast('Данните са актуализирани (миграция)');}catch(e){}
   }
 }
 function uid(){
