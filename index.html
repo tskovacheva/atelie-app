@@ -850,7 +850,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.0';
+const APP_VERSION = 'v1.4.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1110,6 +1110,160 @@ function _normalizeEvent(e){
   if(!e.id)e.id=uid();
   if(!Array.isArray(e.photos))e.photos=[];
   return e;
+}
+
+// ── TIMELINE HELPERS (v1.4.1) ────────────────────────────────
+// Read-only timeline support. No mutation of piece data.
+// See EVENT_SCHEMA.md for full event spec.
+
+// Synthesize a "legacy" view of timeline from flat fields
+// for pieces that don't yet have events. Used for display only.
+function synthesizeLegacyEvents(piece){
+  if(!piece)return [];
+  var synth=[];
+  // Stage marker — current stage as a single event
+  if(piece.stage){
+    synth.push({
+      _synthetic:true,
+      type:'stage',
+      date:piece.date||'',
+      data:{stageValue:piece.stage}
+    });
+  }
+  // Bisque firing — only if bisqueTemp was recorded
+  if(piece.bisqueTemp){
+    synth.push({
+      _synthetic:true,
+      type:'firing',
+      date:'',
+      data:{
+        method:'electric',
+        firingPurpose:'bisque',
+        temp:piece.bisqueTemp
+      }
+    });
+  }
+  // Glaze firing — only if glazeTemp was recorded
+  if(piece.glazeTemp){
+    synth.push({
+      _synthetic:true,
+      type:'firing',
+      date:'',
+      data:{
+        method:'electric',
+        firingPurpose:'glaze',
+        temp:piece.glazeTemp
+      }
+    });
+  }
+  return synth;
+}
+
+// Returns events for display, sorted reverse chronological.
+// Real events first; if none, synthesized.
+function getTimelineEvents(piece){
+  if(!piece)return {events:[],isSynthetic:false};
+  var real=Array.isArray(piece.events)?piece.events:[];
+  if(real.length>0){
+    var sorted=real.slice().sort(function(a,b){
+      // Events without date go to the end
+      if(!a.date&&!b.date)return 0;
+      if(!a.date)return 1;
+      if(!b.date)return -1;
+      return b.date.localeCompare(a.date); // reverse chronological
+    });
+    return {events:sorted,isSynthetic:false};
+  }
+  return {events:synthesizeLegacyEvents(piece),isSynthetic:true};
+}
+
+// Bulgarian labels for stage values
+var _STAGE_LABELS={
+  'wet':'Сурово',
+  'leather-hard':'Кожна влажност',
+  'bone-dry':'Сухо',
+  'bisque':'Бисквит',
+  'glazed':'Глазирано',
+  'finished':'Готово',
+  // Legacy stage values (from v1.3.x)
+  'greenware':'Сурово',
+  'glaze-fired':'Готово'
+};
+
+// Bulgarian labels for firing purpose
+var _FIRING_PURPOSE_LABELS={
+  'bisque':'Бисквит',
+  'glaze':'Глазурно',
+  'single-fire':'Еднопек',
+  'alternative':'Алтернативно'
+};
+
+// Bulgarian labels for firing methods
+var _FIRING_METHOD_LABELS={
+  'electric':'Електрическа',
+  'gas':'Газова',
+  'wood':'Дървена',
+  'raku':'Раку',
+  'chushkopek':'Чушкопек',
+  'pit':'Pit firing',
+  'barrel':'Barrel firing',
+  'sagar':'Сагар',
+  'sawdust':'Стърготини',
+  'soda':'Soda firing',
+  'salt':'Salt firing',
+  'obvara':'Обвара',
+  'other':'Друго'
+};
+
+// Bulgarian labels for decoration techniques
+var _DECORATION_LABELS={
+  'sgraffito':'Сграфито',
+  'stamp':'Печат / отпечатък',
+  'terra-sigillata':'Тера сигилата',
+  'engobe':'Ангоба',
+  'slip':'Slip',
+  'oxide-wash':'Окис (претриване)',
+  'underglaze':'Подглазурна боя',
+  'glaze':'Глазура',
+  'burnishing':'Полиране',
+  'carving':'Изрязване / релеф',
+  'slip-trailing':'Slip-trailing',
+  'other':'Друго'
+};
+
+// Returns short label for an event for timeline display
+function eventLabel(e){
+  if(!e||!e.type)return '—';
+  var d=e.data||{};
+  if(e.type==='stage'){
+    return _STAGE_LABELS[d.stageValue]||d.stageValue||'Етап';
+  }
+  if(e.type==='firing'){
+    var purpose=_FIRING_PURPOSE_LABELS[d.firingPurpose]||'';
+    var method=_FIRING_METHOD_LABELS[d.method]||'';
+    var parts=[];
+    if(purpose)parts.push(purpose);
+    if(method)parts.push(method);
+    if(d.temp)parts.push(d.temp+'°C');
+    return parts.length?parts.join(' · '):'Изпичане';
+  }
+  if(e.type==='decoration'){
+    return _DECORATION_LABELS[d.technique]||d.technique||'Декорация';
+  }
+  if(e.type==='progress'){
+    return 'Прогрес';
+  }
+  return e.type;
+}
+
+// Returns an icon (SVG or emoji) for event type
+function eventIcon(e){
+  if(!e||!e.type)return '•';
+  if(e.type==='stage')return '◆';
+  if(e.type==='firing')return '🔥';
+  if(e.type==='decoration')return '✦';
+  if(e.type==='progress')return '○';
+  return '•';
 }
 
 function safeLoadJSON(key, fallback){
@@ -1540,6 +1694,41 @@ function openPieceDet(id){
   } else {
     _piRecRow.style.display='none';
   }
+
+  // ── TIMELINE (v1.4.1, read-only) ───────────────────────────
+  var _tlRow=document.getElementById('dpi-timeline-row');
+  if(!_tlRow){
+    _tlRow=document.createElement('div');_tlRow.id='dpi-timeline-row';_tlRow.className='ds';
+    _tlRow.innerHTML='<div class="ds-t" style="display:flex;justify-content:space-between;align-items:center;"><span>История</span><span id="dpi-timeline-hint" style="font-size:10px;color:var(--tx3);font-weight:normal;letter-spacing:.04em;"></span></div><div id="dpi-timeline-val"></div>';
+    var _tlAnchor=document.getElementById('dpi-notes').parentNode.parentNode;
+    _tlAnchor.appendChild(_tlRow);
+  }
+  var _tl=getTimelineEvents(p);
+  var _tlVal=document.getElementById('dpi-timeline-val');
+  var _tlHint=document.getElementById('dpi-timeline-hint');
+  if(_tl.events.length===0){
+    _tlRow.style.display='none';
+  } else {
+    _tlRow.style.display='';
+    if(_tlHint){
+      _tlHint.textContent=_tl.isSynthetic?'извлечена от полета':'';
+    }
+    _tlVal.innerHTML=_tl.events.map(function(ev){
+      var icon=eventIcon(ev);
+      var label=eventLabel(ev);
+      var dateStr=ev.date||'—';
+      var noteSnippet=ev.note?(ev.note.length>60?ev.note.slice(0,60)+'…':ev.note):'';
+      var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
+      var syntheticStyle=_tl.isSynthetic?'opacity:.65;':'';
+      return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
+        +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
+        +'<div class="li-body">'
+        +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+photoBadge+'</div>'
+        +'<div class="li-s" style="font-size:11px;">'+dateStr+(noteSnippet?' · '+noteSnippet:'')+'</div>'
+        +'</div></div>';
+    }).join('');
+  }
+
   document.getElementById('det-piece').classList.add('on');
 }
 function resolveStageIdx(v){
