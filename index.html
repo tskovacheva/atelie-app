@@ -848,9 +848,121 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- MODAL: Event (v1.4.2) -->
+<div class="mo" id="mo-event" onclick="closeBg(event,'mo-event')">
+  <div class="mo-sh">
+    <div class="mo-h"></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-event-t">Ново събитие</div><button class="mo-x" onclick="closeMo('mo-event')">×</button></div>
+    <div class="mo-b">
+      <!-- Type label (shown, not editable here — chosen via popup before opening modal) -->
+      <div class="f"><label>Тип събитие</label>
+        <div id="ev-type-display" style="padding:10px 12px;background:var(--primary-soft);color:var(--primary);border-radius:10px;font-weight:600;font-size:13px;"></div>
+      </div>
+      <div class="f"><label>Дата</label><input type="date" id="ev-date"></div>
+
+      <!-- Stage-specific -->
+      <div id="ev-fields-stage" style="display:none">
+        <div class="f"><label>Етап *</label>
+          <select id="ev-stage-value">
+            <option value="wet">Сурово</option>
+            <option value="leather-hard">Кожна влажност</option>
+            <option value="bone-dry">Сухо</option>
+            <option value="bisque">Бисквит</option>
+            <option value="glazed">Глазирано</option>
+            <option value="finished">Готово</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Decoration-specific -->
+      <div id="ev-fields-decoration" style="display:none">
+        <div class="f"><label>Техника *</label>
+          <select id="ev-dec-technique" onchange="onDecTechniqueChange()">
+            <option value="">— избери —</option>
+            <option value="sgraffito">Сграфито</option>
+            <option value="stamp">Печат / отпечатък</option>
+            <option value="terra-sigillata">Тера сигилата</option>
+            <option value="engobe">Ангоба</option>
+            <option value="slip">Slip</option>
+            <option value="oxide-wash">Окис (претриване)</option>
+            <option value="underglaze">Подглазурна боя</option>
+            <option value="glaze">Глазура</option>
+            <option value="burnishing">Полиране</option>
+            <option value="carving">Изрязване / релеф</option>
+            <option value="slip-trailing">Slip-trailing</option>
+            <option value="other">Друго</option>
+          </select>
+        </div>
+        <!-- Material selector (shown when technique needs materials) -->
+        <div class="f" id="ev-dec-materials-wrap" style="display:none">
+          <label>Материали</label>
+          <div id="ev-dec-materials-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:24px;"></div>
+          <div style="display:flex;gap:6px;">
+            <select id="ev-dec-material-pick" style="flex:1"><option value="">— избери —</option></select>
+            <button type="button" class="btn bg" style="padding:8px 14px;margin-top:0;font-size:12px;" onclick="addDecMaterial()">+ Добави</button>
+          </div>
+        </div>
+        <div class="f"><label>Нанасяне</label>
+          <select id="ev-dec-application">
+            <option value="">—</option>
+            <option value="brush">С четка</option>
+            <option value="dip">Потапяне</option>
+            <option value="spray">Впръскване / спрей</option>
+            <option value="pour">Поливане</option>
+            <option value="rub">Претриване</option>
+            <option value="stamp">Печат</option>
+            <option value="imprint">Отпечатък</option>
+            <option value="other">Друго</option>
+          </select>
+        </div>
+        <div class="f"><label>Обхват</label>
+          <select id="ev-dec-coverage">
+            <option value="">—</option>
+            <option value="full">Цялостно</option>
+            <option value="partial">На участъци</option>
+            <option value="pattern">Рисунка / мотив</option>
+          </select>
+        </div>
+        <div class="f" id="ev-dec-layers-wrap" style="display:none">
+          <label>Брой слоеве</label><input type="number" id="ev-dec-layers" min="1" placeholder="1">
+        </div>
+      </div>
+
+      <!-- Note + photos (common) -->
+      <div class="f"><label>Бележка</label>
+        <textarea id="ev-note" rows="3" placeholder="опционално"></textarea>
+      </div>
+      <div class="pha" onclick="document.getElementById('ev-ph').click()">
+        <div style="font-size:18px;margin-bottom:5px;opacity:.4">📷</div>
+        <div style="font-size:11px;color:var(--tx3)">Снимки за този момент</div>
+        <div class="ph-prev" id="ev-prev"></div>
+      </div>
+      <input type="file" id="ev-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'ev-prev',evPh,3)">
+    </div>
+    <div class="mo-f">
+      <button class="btn bp" onclick="saveEvent()">Запази</button>
+      <button class="btn bg" onclick="closeMo('mo-event')">Откажи</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP: Event type chooser -->
+<div id="ev-type-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center;" onclick="closeEvTypePopup(event)">
+  <div style="background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;width:100%;max-width:480px;padding:18px;animation:slideUp 0.2s ease;">
+    <div style="text-align:center;font-weight:600;color:var(--text);margin-bottom:14px;font-size:14px;letter-spacing:.04em;">Какво искаш да добавиш?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('stage')">◆ &nbsp; Етап (преход)</button>
+      <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('decoration')">✦ &nbsp; Декорация</button>
+      <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('progress')">○ &nbsp; Прогрес (снимка/бележка)</button>
+      <div style="font-size:11px;color:var(--tx3);text-align:center;padding:6px 0;font-style:italic;">Изпичане идва в следваща версия</div>
+      <button class="btn bg" style="margin-top:6px;" onclick="closeEvTypePopup()">Откажи</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.1';
+const APP_VERSION = 'v1.4.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -874,7 +986,7 @@ let cur='pieces',editId=null,curRec=null,curPiece=null,curTest=null,curMat=null;
 var activeFilters={rec:{},test:{},mat:{},pc:{}};
 var activeSort={rec:'name',mat:'name',pc:'name'};
 var _scrollPos={};
-let pPh=[],rPh=[],tPh=[],mPh=[],recIngs=[],showFavOnly=false;
+let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],recIngs=[],showFavOnly=false;
 
 const CLAY_NAMES=['PRNF Black','Sibelco Nigra 2002','PRGF Golden Brown','MARTE Red','TOFFEE Caramel','S&G 933'];
 
@@ -1264,6 +1376,268 @@ function eventIcon(e){
   if(e.type==='decoration')return '✦';
   if(e.type==='progress')return '○';
   return '•';
+}
+
+// ── EVENT MODAL (v1.4.2) ─────────────────────────────────────
+// State for editing events
+var curEventType=null;
+var curEventEditId=null; // null = new event
+var _decMaterialIds=[]; // working array for decoration material multi-select
+
+// Valid stage values for each decoration technique (from EVENT_SCHEMA.md)
+var _DEC_VALID_STAGES={
+  'sgraffito':['wet','leather-hard'],
+  'stamp':['wet','leather-hard'],
+  'terra-sigillata':['leather-hard','bone-dry','bisque'],
+  'engobe':['leather-hard','bone-dry','bisque'],
+  'slip':['leather-hard','bone-dry','bisque'],
+  'oxide-wash':['bone-dry','bisque'],
+  'underglaze':['bisque'],
+  'glaze':['bone-dry','bisque'],
+  'burnishing':['leather-hard'],
+  'carving':['leather-hard'],
+  'slip-trailing':['leather-hard'],
+  'other':['wet','leather-hard','bone-dry','bisque','glazed','finished']
+};
+
+// Mapping: technique → which material categories to show
+function _decMaterialCats(technique){
+  if(technique==='engobe')return ['engobe'];
+  if(technique==='underglaze')return ['underglaze'];
+  if(technique==='oxide-wash')return ['ox'];
+  if(technique==='terra-sigillata')return ['base','engobe']; // mixed sources
+  if(technique==='slip')return ['base','clays','engobe'];
+  // glaze handled separately (recipes + materials)
+  return [];
+}
+
+// Whether technique needs material selection
+function _decNeedsMaterials(technique){
+  if(!technique)return false;
+  if(technique==='glaze')return true; // recipes + glaze materials
+  return _decMaterialCats(technique).length>0;
+}
+
+// Whether technique uses layers field
+function _decHasLayers(technique){
+  return technique==='glaze'||technique==='underglaze'||technique==='engobe';
+}
+
+// Show popup chooser for event type
+function showEventTypePopup(){
+  var p=document.getElementById('ev-type-popup');
+  if(p){p.style.display='flex';}
+}
+function closeEvTypePopup(e){
+  if(e&&e.target&&!e.target.id)return; // click inside content
+  if(e&&e.target&&e.target.id!=='ev-type-popup')return;
+  var p=document.getElementById('ev-type-popup');
+  if(p)p.style.display='none';
+}
+
+// Open event modal with chosen type (called from popup buttons or edit)
+function openEventMo(type,editId){
+  // Close popup if open
+  var pop=document.getElementById('ev-type-popup');
+  if(pop)pop.style.display='none';
+
+  // Resolve existing event if editing
+  var ev=null;
+  if(editId&&curPiece){
+    var piece=DB.pieces.find(function(x){return x.id===curPiece;});
+    if(piece&&Array.isArray(piece.events)){
+      ev=piece.events.find(function(x){return x.id===editId;});
+    }
+  }
+
+  curEventType=type;
+  curEventEditId=editId||null;
+  evPh=ev&&Array.isArray(ev.photos)?[...ev.photos]:[];
+  _decMaterialIds=ev&&ev.data&&Array.isArray(ev.data.materialIds)?[...ev.data.materialIds]:[];
+
+  // Title + type label
+  document.getElementById('mo-event-t').textContent=editId?'Редактирай събитие':'Ново събитие';
+  var typeLabels={stage:'◆ Етап',progress:'○ Прогрес',firing:'🔥 Изпичане',decoration:'✦ Декорация'};
+  document.getElementById('ev-type-display').textContent=typeLabels[type]||type;
+
+  // Common
+  document.getElementById('ev-date').value=ev&&ev.date?ev.date:'';
+  document.getElementById('ev-note').value=ev&&ev.note?ev.note:'';
+
+  // Hide all type-specific
+  document.getElementById('ev-fields-stage').style.display='none';
+  document.getElementById('ev-fields-decoration').style.display='none';
+
+  // Show only relevant
+  if(type==='stage'){
+    document.getElementById('ev-fields-stage').style.display='';
+    var sv=ev&&ev.data&&ev.data.stageValue?ev.data.stageValue:'wet';
+    document.getElementById('ev-stage-value').value=sv;
+  } else if(type==='decoration'){
+    document.getElementById('ev-fields-decoration').style.display='';
+    var t=ev&&ev.data&&ev.data.technique?ev.data.technique:'';
+    document.getElementById('ev-dec-technique').value=t;
+    document.getElementById('ev-dec-application').value=ev&&ev.data&&ev.data.application?ev.data.application:'';
+    document.getElementById('ev-dec-coverage').value=ev&&ev.data&&ev.data.coverage?ev.data.coverage:'';
+    document.getElementById('ev-dec-layers').value=ev&&ev.data&&ev.data.layers?ev.data.layers:'';
+    onDecTechniqueChange();
+  }
+
+  renderPrev('ev-prev',evPh);
+  openMo('mo-event');
+}
+
+// When decoration technique changes — update fields visibility
+function onDecTechniqueChange(){
+  var t=document.getElementById('ev-dec-technique').value;
+  // Layers
+  document.getElementById('ev-dec-layers-wrap').style.display=_decHasLayers(t)?'':'none';
+  // Materials
+  document.getElementById('ev-dec-materials-wrap').style.display=_decNeedsMaterials(t)?'':'none';
+  if(_decNeedsMaterials(t)){
+    _populateDecMaterialPicker(t);
+    _renderDecMaterialChips();
+  }
+}
+
+// Populate the material picker dropdown for decoration
+function _populateDecMaterialPicker(technique){
+  var sel=document.getElementById('ev-dec-material-pick');
+  if(!sel)return;
+  if(technique==='glaze'){
+    // Grouped: recipes + glaze materials (rec:/mat: prefix)
+    var recOpts=DB.recipes.map(function(r){return '<option value="rec:'+r.id+'">'+r.name+'</option>';}).join('');
+    var glzMats=DB.materials.filter(function(m){return m.cat==='glaze';});
+    var matOpts=glzMats.map(function(m){return '<option value="mat:'+m.id+'">'+m.name+'</option>';}).join('');
+    sel.innerHTML='<option value="">— избери —</option>'
+      +(recOpts?'<optgroup label="Рецепти">'+recOpts+'</optgroup>':'')
+      +(matOpts?'<optgroup label="Готови глазури">'+matOpts+'</optgroup>':'');
+  } else {
+    var cats=_decMaterialCats(technique);
+    var mats=DB.materials.filter(function(m){return cats.indexOf(m.cat)>=0;});
+    // Sort alphabetically
+    mats.sort(function(a,b){return (a.name||'').localeCompare(b.name||'','bg');});
+    sel.innerHTML='<option value="">— избери —</option>'
+      +mats.map(function(m){return '<option value="mat:'+m.id+'">'+m.name+'</option>';}).join('');
+  }
+}
+
+// Add selected material to chips
+function addDecMaterial(){
+  var sel=document.getElementById('ev-dec-material-pick');
+  var v=sel.value;
+  if(!v)return;
+  if(_decMaterialIds.indexOf(v)>=0){toast('Вече добавен');return;}
+  _decMaterialIds.push(v);
+  sel.value='';
+  _renderDecMaterialChips();
+}
+
+// Remove material from chips
+function removeDecMaterial(idx){
+  _decMaterialIds.splice(idx,1);
+  _renderDecMaterialChips();
+}
+
+// Render chips for selected materials
+function _renderDecMaterialChips(){
+  var el=document.getElementById('ev-dec-materials-chips');
+  if(!el)return;
+  if(_decMaterialIds.length===0){
+    el.innerHTML='<span style="font-size:11px;color:var(--tx3);font-style:italic;">няма избрани</span>';
+    return;
+  }
+  el.innerHTML=_decMaterialIds.map(function(ref,i){
+    var label=_resolveMaterialRef(ref);
+    return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:var(--primary-soft);color:var(--primary);border-radius:14px;font-size:12px;">'
+      +label
+      +'<button type="button" onclick="removeDecMaterial('+i+')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:14px;line-height:1;padding:0;margin-left:2px;">×</button>'
+      +'</span>';
+  }).join('');
+}
+
+// Resolve "rec:id" or "mat:id" to display name
+function _resolveMaterialRef(ref){
+  if(!ref)return '?';
+  if(ref.indexOf('rec:')===0){
+    var r=DB.recipes.find(function(x){return x.id===ref.slice(4);});
+    return r?r.name+' (рецепта)':'(изтрита рецепта)';
+  }
+  if(ref.indexOf('mat:')===0){
+    var m=DB.materials.find(function(x){return x.id===ref.slice(4);});
+    return m?m.name:'(изтрит материал)';
+  }
+  return ref;
+}
+
+// Save event
+function saveEvent(){
+  if(!curPiece){toast('Грешка: няма избрано изделие');return;}
+  var piece=DB.pieces.find(function(x){return x.id===curPiece;});
+  if(!piece){toast('Грешка: изделието не е намерено');return;}
+  ensurePieceEvents(piece);
+
+  var ev={
+    id:curEventEditId||uid(),
+    type:curEventType,
+    date:document.getElementById('ev-date').value||'',
+    note:document.getElementById('ev-note').value||'',
+    photos:[...evPh],
+    data:{}
+  };
+
+  // Validation + type-specific data
+  if(curEventType==='stage'){
+    ev.data.stageValue=document.getElementById('ev-stage-value').value;
+    if(!ev.data.stageValue){toast('Избери етап');return;}
+  } else if(curEventType==='decoration'){
+    var tech=document.getElementById('ev-dec-technique').value;
+    if(!tech){toast('Избери техника');return;}
+    ev.data.technique=tech;
+    ev.data.materialIds=_decNeedsMaterials(tech)?[..._decMaterialIds]:[];
+    var app=document.getElementById('ev-dec-application').value;
+    if(app)ev.data.application=app;
+    var cov=document.getElementById('ev-dec-coverage').value;
+    if(cov)ev.data.coverage=cov;
+    if(_decHasLayers(tech)){
+      var l=document.getElementById('ev-dec-layers').value;
+      if(l)ev.data.layers=parseInt(l,10);
+    }
+  } else if(curEventType==='progress'){
+    // No type-specific fields
+  } else if(curEventType==='firing'){
+    toast('Изпичането ще се добави в следваща версия');return;
+  }
+
+  _normalizeEvent(ev);
+
+  // Insert or update
+  if(curEventEditId){
+    var i=piece.events.findIndex(function(x){return x.id===curEventEditId;});
+    if(i>=0)piece.events[i]=ev; else piece.events.push(ev);
+  } else {
+    piece.events.push(ev);
+  }
+  piece.updatedAt=new Date().toISOString();
+  save();
+  closeMo('mo-event');
+  openPieceDet(curPiece); // refresh timeline
+  toast(curEventEditId?'Обновено':'Добавено!');
+  curEventType=null;
+  curEventEditId=null;
+}
+
+// Delete event from current piece
+function deleteEvent(eventId){
+  if(!curPiece)return;
+  if(!confirm('Изтрий това събитие?'))return;
+  var piece=DB.pieces.find(function(x){return x.id===curPiece;});
+  if(!piece||!Array.isArray(piece.events))return;
+  piece.events=piece.events.filter(function(x){return x.id!==eventId;});
+  piece.updatedAt=new Date().toISOString();
+  save();
+  openPieceDet(curPiece);
+  toast('Изтрито');
 }
 
 function safeLoadJSON(key, fallback){
@@ -1699,20 +2073,21 @@ function openPieceDet(id){
   var _tlRow=document.getElementById('dpi-timeline-row');
   if(!_tlRow){
     _tlRow=document.createElement('div');_tlRow.id='dpi-timeline-row';_tlRow.className='ds';
-    _tlRow.innerHTML='<div class="ds-t" style="display:flex;justify-content:space-between;align-items:center;"><span>История</span><span id="dpi-timeline-hint" style="font-size:10px;color:var(--tx3);font-weight:normal;letter-spacing:.04em;"></span></div><div id="dpi-timeline-val"></div>';
+    _tlRow.innerHTML='<div class="ds-t" style="display:flex;justify-content:space-between;align-items:center;"><span>История</span><div style="display:flex;align-items:center;gap:8px;"><span id="dpi-timeline-hint" style="font-size:10px;color:var(--tx3);font-weight:normal;letter-spacing:.04em;"></span><button id="dpi-timeline-add" onclick="showEventTypePopup()" style="background:var(--primary);color:white;border:none;border-radius:50%;width:26px;height:26px;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button></div></div><div id="dpi-timeline-val"></div>';
     var _tlAnchor=document.getElementById('dpi-notes').parentNode.parentNode;
     _tlAnchor.appendChild(_tlRow);
   }
   var _tl=getTimelineEvents(p);
   var _tlVal=document.getElementById('dpi-timeline-val');
   var _tlHint=document.getElementById('dpi-timeline-hint');
+  // Always show row (so + button is always available)
+  _tlRow.style.display='';
+  if(_tlHint){
+    _tlHint.textContent=_tl.isSynthetic&&_tl.events.length>0?'извлечена от полета':'';
+  }
   if(_tl.events.length===0){
-    _tlRow.style.display='none';
+    _tlVal.innerHTML='<div style="padding:14px 0;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">няма събития — натисни + за добавяне</div>';
   } else {
-    _tlRow.style.display='';
-    if(_tlHint){
-      _tlHint.textContent=_tl.isSynthetic?'извлечена от полета':'';
-    }
     _tlVal.innerHTML=_tl.events.map(function(ev){
       var icon=eventIcon(ev);
       var label=eventLabel(ev);
@@ -1720,12 +2095,15 @@ function openPieceDet(id){
       var noteSnippet=ev.note?(ev.note.length>60?ev.note.slice(0,60)+'…':ev.note):'';
       var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
       var syntheticStyle=_tl.isSynthetic?'opacity:.65;':'';
+      var actions=_tl.isSynthetic?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
       return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
         +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
         +'<div class="li-body">'
         +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+photoBadge+'</div>'
         +'<div class="li-s" style="font-size:11px;">'+dateStr+(noteSnippet?' · '+noteSnippet:'')+'</div>'
-        +'</div></div>';
+        +'</div>'
+        +(actions?'<div style="display:flex;align-items:center;">'+actions+'</div>':'')
+        +'</div>';
     }).join('');
   }
 
@@ -2588,6 +2966,7 @@ function _phArr(id){
   if(id==='ri-prev')return rPh;
   if(id==='ti-prev')return tPh;
   if(id==='mi-prev')return mPh;
+  if(id==='ev-prev')return evPh;
   return null;
 }
 function removePh(id,i){
