@@ -642,13 +642,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       </div>
       <div class="f"><label>Етап</label>
         <select id="pi-stage">
-          <option value="greenware">Greenware</option>
-          <option value="leather-hard">Leather-hard</option>
-          <option value="bone-dry">Bone dry</option>
-          <option value="bisque">Biscuit</option>
-          <option value="glazed">Glazed</option>
-          <option value="glaze-fired">Glaze fired</option>
-          <option value="finished">Finished</option>
+          <option value="wet">Сурово</option>
+          <option value="leather-hard">Кожна влажност</option>
+          <option value="bone-dry">Сухо</option>
+          <option value="bisque">Бисквит</option>
+          <option value="glazed">Глазирано</option>
+          <option value="finished">Готово</option>
         </select>
       </div>
       <div class="f"><label>Глазура / Рецепта</label>
@@ -963,20 +962,29 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.2.1';
+const APP_VERSION = 'v1.4.2.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
-  {v:'greenware',   l:'Greenware'},
-  {v:'leather-hard',l:'Leather-hard'},
-  {v:'bone-dry',    l:'Bone dry'},
-  {v:'bisque',      l:'Biscuit'},
-  {v:'glazed',      l:'Glazed'},
-  {v:'glaze-fired', l:'Glaze fired'},
-  {v:'finished',    l:'Finished'},
+  {v:'wet',          l:'Сурово'},
+  {v:'leather-hard', l:'Кожна влажност'},
+  {v:'bone-dry',     l:'Сухо'},
+  {v:'bisque',       l:'Бисквит'},
+  {v:'glazed',       l:'Глазирано'},
+  {v:'finished',     l:'Готово'},
 ];
+// Legacy stage value mapping (auto-migrated during recompute)
+var _STAGE_LEGACY={
+  'greenware':'wet',
+  'glaze-fired':'finished'
+};
+function normalizeStageValue(v){
+  if(!v)return 'wet';
+  return _STAGE_LEGACY[v]||v;
+}
 function stageLabel(v){
   if(!v)return '';
+  v=normalizeStageValue(v);
   var s=STAGES.find(function(x){return x.v===v;});
   return s?s.l:v;
 }
@@ -1620,6 +1628,7 @@ function saveEvent(){
     piece.events.push(ev);
   }
   piece.updatedAt=new Date().toISOString();
+  recomputePieceStage(piece);
   save();
   closeMo('mo-event');
   openPieceDet(curPiece); // refresh timeline
@@ -1636,9 +1645,78 @@ function deleteEvent(eventId){
   if(!piece||!Array.isArray(piece.events))return;
   piece.events=piece.events.filter(function(x){return x.id!==eventId;});
   piece.updatedAt=new Date().toISOString();
+  recomputePieceStage(piece);
   save();
   openPieceDet(curPiece);
   toast('Изтрито');
+}
+
+// ── STAGE / PROCESS SYNCHRONIZATION (v1.4.2.2) ───────────────
+// Recomputes piece.stage from the latest stage event in the timeline.
+// If no stage events exist, falls back to the existing piece.stage.
+// Called after add/edit/delete of any stage event.
+function recomputePieceStage(piece){
+  if(!piece||!Array.isArray(piece.events))return;
+  var stageEventsWithIdx=[];
+  piece.events.forEach(function(e,i){
+    if(e&&e.type==='stage'&&e.date&&e.data&&e.data.stageValue){
+      stageEventsWithIdx.push({ev:e,idx:i});
+    }
+  });
+  if(stageEventsWithIdx.length===0){
+    // No dated stage events — check undated, fall back
+    var undated=piece.events.filter(function(e){
+      return e&&e.type==='stage'&&!e.date&&e.data&&e.data.stageValue;
+    });
+    if(undated.length>0){
+      piece.stage=normalizeStageValue(undated[undated.length-1].data.stageValue);
+    }
+    return;
+  }
+  // Sort by date desc; tie-break: later inserted wins
+  stageEventsWithIdx.sort(function(a,b){
+    var cmp=b.ev.date.localeCompare(a.ev.date);
+    if(cmp!==0)return cmp;
+    return b.idx-a.idx;
+  });
+  piece.stage=normalizeStageValue(stageEventsWithIdx[0].ev.data.stageValue);
+}
+
+// Used by the stage slider's quick action buttons.
+// Adds a stage event to the timeline at today's date and recomputes piece.stage.
+// Skips event creation if the latest stage event is already the target stage.
+function syncStageFromSlider(piece,newStageValue){
+  if(!piece)return;
+  ensurePieceEvents(piece);
+  newStageValue=normalizeStageValue(newStageValue);
+  // Find latest stage event with a date. When dates tie, later insertion wins.
+  var stageEventsWithIdx=[];
+  piece.events.forEach(function(e,i){
+    if(e&&e.type==='stage'&&e.date&&e.data&&e.data.stageValue){
+      stageEventsWithIdx.push({ev:e,idx:i});
+    }
+  });
+  stageEventsWithIdx.sort(function(a,b){
+    var cmp=b.ev.date.localeCompare(a.ev.date);
+    if(cmp!==0)return cmp;
+    return b.idx-a.idx; // tie-break: later inserted wins
+  });
+  var latest=stageEventsWithIdx[0]?stageEventsWithIdx[0].ev:null;
+  if(latest&&normalizeStageValue(latest.data.stageValue)===newStageValue){
+    piece.stage=newStageValue;
+    return;
+  }
+  var today=new Date().toISOString().slice(0,10);
+  var newEv={
+    id:uid(),
+    type:'stage',
+    date:today,
+    note:'',
+    photos:[],
+    data:{stageValue:newStageValue}
+  };
+  piece.events.push(newEv);
+  piece.stage=newStageValue;
 }
 
 function safeLoadJSON(key, fallback){
@@ -2134,6 +2212,7 @@ function openPieceDet(id){
 }
 function resolveStageIdx(v){
   if(!v)return 0;
+  v=normalizeStageValue(v);
   var i=STAGES.findIndex(function(x){return x.v===v;});
   return i<0?0:i;
 }
@@ -2144,7 +2223,8 @@ function shiftPieceStage(delta){
   var idx=resolveStageIdx(p.stage);
   var next=Math.max(0,Math.min(STAGES.length-1,idx+delta));
   if(next===idx)return;
-  p.stage=STAGES[next].v;
+  // syncStageFromSlider sets p.stage and adds a stage event to Процес
+  syncStageFromSlider(p,STAGES[next].v);
   p.updatedAt=new Date().toISOString();
   save();
   openPieceDet(curPiece);
@@ -2510,7 +2590,7 @@ function openPieceMo(p){
   var _searchEl=document.getElementById('pi-rec-srch');if(_searchEl)_searchEl.value='';
   buildGlzDropdown('pi-rec','');
   var _ss=document.getElementById('pi-stage');
-  if(_ss)_ss.value=p&&p.stage?p.stage:'greenware';
+  if(_ss)_ss.value=p&&p.stage?normalizeStageValue(p.stage):'wet';
   renderPrev('pi-prev',pPh);
   openMo('mo-piece');
 }
@@ -2549,7 +2629,7 @@ function savePiece(){
   if(_glzVal.indexOf('rec:')===0){_recId=_glzVal.slice(4);}
   else if(_glzVal.indexOf('mat:')===0){_matId=_glzVal.slice(4);}
   else if(_glzVal){_recId=_glzVal;}
-  const p={id:editId||uid(),name,photos:[...pPh],type:(document.getElementById('pi-type')?document.getElementById('pi-type').value:'')||'',clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,bisqueTemp:bisqueVal,glazeTemp:glazeVal,date:dateVal,stage:_stEl?_stEl.value||'greenware':'greenware',notes:document.getElementById('pi-notes').value};
+  const p={id:editId||uid(),name,photos:[...pPh],type:(document.getElementById('pi-type')?document.getElementById('pi-type').value:'')||'',clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,bisqueTemp:bisqueVal,glazeTemp:glazeVal,date:dateVal,stage:normalizeStageValue(_stEl?_stEl.value||'wet':'wet'),notes:document.getElementById('pi-notes').value};
   // Preserve events on edit; initialize on new
   if(editId){
     var _existing=DB.pieces.find(function(x){return x.id===editId;});
