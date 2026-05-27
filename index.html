@@ -852,10 +852,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-event" onclick="closeBg(event,'mo-event')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t" id="mo-event-t">Ново събитие</div><button class="mo-x" onclick="closeMo('mo-event')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-event-t">Нова стъпка</div><button class="mo-x" onclick="closeMo('mo-event')">×</button></div>
     <div class="mo-b">
       <!-- Type label (shown, not editable here — chosen via popup before opening modal) -->
-      <div class="f"><label>Тип събитие</label>
+      <div class="f"><label>Тип стъпка</label>
         <div id="ev-type-display" style="padding:10px 12px;background:var(--primary-soft);color:var(--primary);border-radius:10px;font-weight:600;font-size:13px;"></div>
       </div>
       <div class="f"><label>Дата</label><input type="date" id="ev-date"></div>
@@ -949,7 +949,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <!-- POPUP: Event type chooser -->
 <div id="ev-type-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center;" onclick="closeEvTypePopup(event)">
   <div style="background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;width:100%;max-width:480px;padding:18px;animation:slideUp 0.2s ease;">
-    <div style="text-align:center;font-weight:600;color:var(--text);margin-bottom:14px;font-size:14px;letter-spacing:.04em;">Какво искаш да добавиш?</div>
+    <div style="text-align:center;font-weight:600;color:var(--text);margin-bottom:4px;font-size:14px;letter-spacing:.04em;">Каква стъпка добавяш?</div>
+    <div style="text-align:center;font-size:11px;color:var(--tx3);margin-bottom:14px;">от процеса на изработка</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('stage')">◆ &nbsp; Етап (преход)</button>
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('decoration')">✦ &nbsp; Декорация</button>
@@ -962,7 +963,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.2';
+const APP_VERSION = 'v1.4.2.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1456,7 +1457,7 @@ function openEventMo(type,editId){
   _decMaterialIds=ev&&ev.data&&Array.isArray(ev.data.materialIds)?[...ev.data.materialIds]:[];
 
   // Title + type label
-  document.getElementById('mo-event-t').textContent=editId?'Редактирай събитие':'Ново събитие';
+  document.getElementById('mo-event-t').textContent=editId?'Редактирай стъпка':'Нова стъпка';
   var typeLabels={stage:'◆ Етап',progress:'○ Прогрес',firing:'🔥 Изпичане',decoration:'✦ Декорация'};
   document.getElementById('ev-type-display').textContent=typeLabels[type]||type;
 
@@ -1630,7 +1631,7 @@ function saveEvent(){
 // Delete event from current piece
 function deleteEvent(eventId){
   if(!curPiece)return;
-  if(!confirm('Изтрий това събитие?'))return;
+  if(!confirm('Изтрий тази стъпка?'))return;
   var piece=DB.pieces.find(function(x){return x.id===curPiece;});
   if(!piece||!Array.isArray(piece.events))return;
   piece.events=piece.events.filter(function(x){return x.id!==eventId;});
@@ -1792,7 +1793,9 @@ function renderPieces(){
   if(!items.length){g.innerHTML=hasF?'<div class="empty" style="grid-column:1/-1"><div class="empty-k">∅</div><div class="empty-t">Няма съвпадения</div><div class="empty-s">Промени търсенето или филтрите</div></div>':'<div class="empty" style="grid-column:1/-1"><div class="empty-k">К</div><div class="empty-t">Няма изделия</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   g.innerHTML=items.map(function(p){
     var sl=stageLabel(p.stage||'greenware');
-    var ic=Array.isArray(p.photos)&&p.photos.length?'<img src="'+p.photos[0]+'" alt="" style="width:100%;height:100%;object-fit:cover;">':K(36);
+    // Latest photo from most recent event with photos; fallback to piece.photos[0]
+    var thumb=getLatestPhoto(p);
+    var ic=thumb?'<img src="'+thumb+'" alt="" style="width:100%;height:100%;object-fit:cover;">':K(36);
     return '<div class="pc" onclick="openPieceDet(\''+p.id+'\')"><div class="pc-img">'+ic+'</div>'
       +'<div class="pc-info"><div class="pc-name">'+(p.name||'')+'</div>'
       +(p.type?'<div class="pc-sub" style="font-style:italic">'+p.type+'</div>':'')
@@ -1801,6 +1804,29 @@ function renderPieces(){
       +(sl?'<div style="margin-top:3px;"><span class="stage-badge">'+sl+'</span></div>':'')
       +'</div></div>';
   }).join('');
+}
+
+// v1.4.2.1: Get latest photo for a piece — from most recent event with photos,
+// fallback to piece.photos[0] (legacy).
+function getLatestPhoto(p){
+  if(!p)return null;
+  if(Array.isArray(p.events)&&p.events.length>0){
+    // Sort events by date desc, find first with photos
+    var sorted=p.events.slice().sort(function(a,b){
+      if(!a.date&&!b.date)return 0;
+      if(!a.date)return 1;
+      if(!b.date)return -1;
+      return b.date.localeCompare(a.date);
+    });
+    for(var i=0;i<sorted.length;i++){
+      var ev=sorted[i];
+      if(ev&&Array.isArray(ev.photos)&&ev.photos.length>0){
+        return ev.photos[ev.photos.length-1]; // last photo of that event
+      }
+    }
+  }
+  if(Array.isArray(p.photos)&&p.photos.length>0)return p.photos[0];
+  return null;
 }
 function togglePcChip(key){
   activeFilters.pc=activeFilters.pc||{};
@@ -2006,7 +2032,8 @@ function renderTests(){
 // ══ DETAILS ══
 function openPieceDet(id){
   const p=DB.pieces.find(x=>x.id===id);if(!p)return;curPiece=id;
-  document.getElementById('dpi-hero').innerHTML=p.photos?.length?`<img src="${p.photos[0]}" alt="">`:K(70);
+  var _heroPhoto=getLatestPhoto(p);
+  document.getElementById('dpi-hero').innerHTML=_heroPhoto?'<img src="'+_heroPhoto+'" alt="">':K(70);
   document.getElementById('dpi-t').textContent=p.name;
   document.getElementById('dpi-m').textContent=[p.type,p.date,p.technique].filter(Boolean).join(' · ');
   const rec=DB.recipes.find(r=>r.id===p.recipe);
@@ -2073,20 +2100,16 @@ function openPieceDet(id){
   var _tlRow=document.getElementById('dpi-timeline-row');
   if(!_tlRow){
     _tlRow=document.createElement('div');_tlRow.id='dpi-timeline-row';_tlRow.className='ds';
-    _tlRow.innerHTML='<div class="ds-t" style="display:flex;justify-content:space-between;align-items:center;"><span>История</span><div style="display:flex;align-items:center;gap:8px;"><span id="dpi-timeline-hint" style="font-size:10px;color:var(--tx3);font-weight:normal;letter-spacing:.04em;"></span><button id="dpi-timeline-add" onclick="showEventTypePopup()" style="background:var(--primary);color:white;border:none;border-radius:50%;width:26px;height:26px;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button></div></div><div id="dpi-timeline-val"></div>';
+    _tlRow.innerHTML='<div class="ds-t">Процес</div><div id="dpi-timeline-val"></div><button id="dpi-timeline-add" onclick="showEventTypePopup()" style="width:100%;margin-top:12px;padding:12px;background:var(--primary-soft);color:var(--primary);border:1.5px dashed var(--primary);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">+ Добави стъпка от процеса</button>';
     var _tlAnchor=document.getElementById('dpi-notes').parentNode.parentNode;
     _tlAnchor.appendChild(_tlRow);
   }
   var _tl=getTimelineEvents(p);
   var _tlVal=document.getElementById('dpi-timeline-val');
-  var _tlHint=document.getElementById('dpi-timeline-hint');
   // Always show row (so + button is always available)
   _tlRow.style.display='';
-  if(_tlHint){
-    _tlHint.textContent=_tl.isSynthetic&&_tl.events.length>0?'извлечена от полета':'';
-  }
   if(_tl.events.length===0){
-    _tlVal.innerHTML='<div style="padding:14px 0;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">няма събития — натисни + за добавяне</div>';
+    _tlVal.innerHTML='<div style="padding:10px 0;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">все още няма отбелязани стъпки</div>';
   } else {
     _tlVal.innerHTML=_tl.events.map(function(ev){
       var icon=eventIcon(ev);
@@ -2094,7 +2117,7 @@ function openPieceDet(id){
       var dateStr=ev.date||'—';
       var noteSnippet=ev.note?(ev.note.length>60?ev.note.slice(0,60)+'…':ev.note):'';
       var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
-      var syntheticStyle=_tl.isSynthetic?'opacity:.65;':'';
+      var syntheticStyle=_tl.isSynthetic?'opacity:.6;':'';
       var actions=_tl.isSynthetic?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
       return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
         +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
