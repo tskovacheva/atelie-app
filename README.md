@@ -6,7 +6,7 @@
 
 [**→ Отвори приложението**](https://tskovacheva.github.io/atelie-app/)
 
-*by [Crafty Place](https://craftyplace.bg)*
+*by [Crafty Place](https://crafty.place)*
 
 **Текуща версия:** v1.4.1 (май 2026)
 
