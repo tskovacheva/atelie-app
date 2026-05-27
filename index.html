@@ -962,7 +962,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.2.2';
+const APP_VERSION = 'v1.4.2.3';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1194,6 +1194,43 @@ function runMigrations(){
     DB._migrations['v1.3.2']=new Date().toISOString();
     changes+=pieceUpdates+matUpdates;
     console.log('[migration v1.3.2] piece field updates:',pieceUpdates,'material updates:',matUpdates);
+  }
+
+  // v1.4.2.3 — Clean up duplicate stage events created by v1.4.2.2 slider bug.
+  // Removes consecutive stage events with the same date AND same stageValue.
+  // Keeps the first; drops subsequent duplicates.
+  if(!DB._migrations['v1.4.2.3']){
+    try{
+      var raw=localStorage.getItem('atelie_v6');
+      if(raw)localStorage.setItem('atelie_v6_pre_v1_4_2_3',raw);
+    }catch(e){console.warn('[migration] backup failed:',e);}
+
+    var dupsRemoved=0;
+    DB.pieces.forEach(function(p){
+      if(!p||!Array.isArray(p.events))return;
+      // Walk through events, removing consecutive duplicate stage events
+      var cleaned=[];
+      var prevStageKey=null; // "date|stageValue" for last stage event seen
+      p.events.forEach(function(e){
+        if(e&&e.type==='stage'&&e.date&&e.data&&e.data.stageValue){
+          var key=e.date+'|'+normalizeStageValue(e.data.stageValue);
+          if(key===prevStageKey){
+            dupsRemoved++;
+            return; // skip duplicate
+          }
+          prevStageKey=key;
+        } else {
+          // Non-stage event resets the chain
+          prevStageKey=null;
+        }
+        cleaned.push(e);
+      });
+      if(cleaned.length!==p.events.length)p.events=cleaned;
+    });
+
+    DB._migrations['v1.4.2.3']=new Date().toISOString();
+    changes+=dupsRemoved;
+    if(dupsRemoved>0)console.log('[migration v1.4.2.3] removed',dupsRemoved,'duplicate stage events');
   }
 
   if(changes>0){
@@ -1651,10 +1688,11 @@ function deleteEvent(eventId){
   toast('Изтрито');
 }
 
-// ── STAGE / PROCESS SYNCHRONIZATION (v1.4.2.2) ───────────────
-// Recomputes piece.stage from the latest stage event in the timeline.
-// If no stage events exist, falls back to the existing piece.stage.
-// Called after add/edit/delete of any stage event.
+// ── STAGE / PROCESS SYNCHRONIZATION (v1.4.2.3) ───────────────
+// Direction: Процес → Slider (one-way).
+// When stage events are added/edited/deleted in Процес, piece.stage is
+// recomputed from the latest stage event. The slider just reflects the
+// current status — its quick-action buttons never write events.
 function recomputePieceStage(piece){
   if(!piece||!Array.isArray(piece.events))return;
   var stageEventsWithIdx=[];
@@ -1680,43 +1718,6 @@ function recomputePieceStage(piece){
     return b.idx-a.idx;
   });
   piece.stage=normalizeStageValue(stageEventsWithIdx[0].ev.data.stageValue);
-}
-
-// Used by the stage slider's quick action buttons.
-// Adds a stage event to the timeline at today's date and recomputes piece.stage.
-// Skips event creation if the latest stage event is already the target stage.
-function syncStageFromSlider(piece,newStageValue){
-  if(!piece)return;
-  ensurePieceEvents(piece);
-  newStageValue=normalizeStageValue(newStageValue);
-  // Find latest stage event with a date. When dates tie, later insertion wins.
-  var stageEventsWithIdx=[];
-  piece.events.forEach(function(e,i){
-    if(e&&e.type==='stage'&&e.date&&e.data&&e.data.stageValue){
-      stageEventsWithIdx.push({ev:e,idx:i});
-    }
-  });
-  stageEventsWithIdx.sort(function(a,b){
-    var cmp=b.ev.date.localeCompare(a.ev.date);
-    if(cmp!==0)return cmp;
-    return b.idx-a.idx; // tie-break: later inserted wins
-  });
-  var latest=stageEventsWithIdx[0]?stageEventsWithIdx[0].ev:null;
-  if(latest&&normalizeStageValue(latest.data.stageValue)===newStageValue){
-    piece.stage=newStageValue;
-    return;
-  }
-  var today=new Date().toISOString().slice(0,10);
-  var newEv={
-    id:uid(),
-    type:'stage',
-    date:today,
-    note:'',
-    photos:[],
-    data:{stageValue:newStageValue}
-  };
-  piece.events.push(newEv);
-  piece.stage=newStageValue;
 }
 
 function safeLoadJSON(key, fallback){
@@ -2223,8 +2224,9 @@ function shiftPieceStage(delta){
   var idx=resolveStageIdx(p.stage);
   var next=Math.max(0,Math.min(STAGES.length-1,idx+delta));
   if(next===idx)return;
-  // syncStageFromSlider sets p.stage and adds a stage event to Процес
-  syncStageFromSlider(p,STAGES[next].v);
+  // Slider just updates the status — no event written to Процес.
+  // Process is independent: add events there via "+ Добави стъпка".
+  p.stage=normalizeStageValue(STAGES[next].v);
   p.updatedAt=new Date().toISOString();
   save();
   openPieceDet(curPiece);
