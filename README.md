@@ -6,9 +6,9 @@
 
 [**→ Отвори приложението**](https://tskovacheva.github.io/atelie-app/)
 
-*by [Crafty Place](https://crafty.place)*
+*by [Crafty Place](https://craftyplace.bg)*
 
-**Текуща версия:** v1.4.1 (май 2026)
+**Текуща версия:** v1.4.2.3 (май 2026)
 
 ---
 
@@ -16,7 +16,7 @@
 
 Шест раздела, които покриват цикъла на ръчната керамика:
 
-- **Изделия** — каталог на парчетата с етапи (greenware → leather-hard → bone-dry → bisque → glazed → glaze-fired → finished), типове (ваза, чаша, музикален инструмент...), снимки, свързани глини и глазури, две температури (бисквит + глазурно)
+- **Изделия** — каталог на парчетата с типове (ваза, чаша, музикален инструмент...), снимки, свързани глини и глазури, две температури (бисквит + глазурно), и **Процес** — timeline на стъпките от изработката (етапи, декорации, прогрес)
 - **Рецепти** — глазурни рецепти със съставки и проценти, температура/конус, тип, препоръчан профил на изпичане, калкулатор за грамове при произволен батч
 - **Материали** — шест категории: глини, базови суровини, оксиди/оцветители, готови глазури, ангоби, подглазурни бои. Склад с известия за ниски запаси, химичен анализ, wishlist за бъдещи покупки
 - **Тестове** — дневник на глазурни опити (от рецепта или готова глазура) с оценка, дефекти, резултатни полета, снимки
@@ -24,6 +24,19 @@
 - **Библиотека** — лична база знания с предзаредени справочни материали; backup/restore; индикатор за използвана памет
 
 Всеки раздел поддържа търсене, филтри, сортиране (азбучно по default) и дублиране на записи. Между тях има **свързани записи** (derived relations) — от рецепта виждаш свързаните изделия и тестове, от профил виждаш кои тестове и рецепти го ползват, от материал виждаш в кои рецепти, изделия и тестове се използва.
+
+### Процес — timeline на изделието
+
+Във v1.4.x всяко изделие може да има **Процес** — хронологичен запис на стъпките от изработката:
+
+- **Етап** — преход между състояния (Сурово → Кожна влажност → Сухо → Бисквит → Глазирано → Готово)
+- **Декорация** — сграфито, ангоба, тера сигилата, подглазурни бои, глазура, печат, полиране и още (12 техники)
+- **Прогрес** — междинна снимка/бележка без промяна на статуса
+- **Изпичане** *(планирано за v1.4.3)* — електрическа, газова, дървена, раку, обвара, pit, sagar и още методи
+
+Процесът е **опционален**. Можеш да създадеш изделие само на финален етап (без история) или да документираш всяка стъпка с дата, бележка и снимки.
+
+Подробна спецификация на event типовете е в [`EVENT_SCHEMA.md`](EVENT_SCHEMA.md).
 
 ## За кого е
 
@@ -41,12 +54,13 @@
 ## Технически детайли
 
 - Vanilla JavaScript (ES5+ syntax), inline CSS, inline HTML. Без framework-и, без dependencies.
-- Около 2850 реда общо. Оптимизирано за четливост, не за производителност.
-- Data structure: `{pieces, recipes, materials, tests, firingProfiles}` в localStorage под ключ `atelie_v6`; библиотеката отделно под `atelie_userlib`.
+- Около 3600+ реда общо. Оптимизирано за четливост, не за производителност.
+- Data structure: `{pieces, recipes, materials, tests, firingProfiles, _migrations}` в localStorage под ключ `atelie_v6`; библиотеката отделно под `atelie_userlib`.
 - Derived relations — никакви reverse foreign keys не се пазят; всички „свързани" списъци се изчисляват при отваряне на detail екран.
+- **Event-based piece model** (от v1.4.0) — `piece.events[]` array съхранява хронологична история на изделието. Backward-compatible: piece-ове без events продължават да работят с flat полета.
 - Service worker cache strategy: navigation → network-first, assets → cache-first. `CACHE_NAME` се bump-ва при всеки deploy.
 - Design system от v1.2.0: sage + terra cotta палитра, Tenor Sans + Jost шрифтове. Стари CSS variables запазени като aliases за backward compatibility.
-- Data migrations backward-compatible — стари полета (напр. `piece.temp`, `material.fireTemp`) се прочитат и мигрират автоматично към новите (напр. `glazeTemp`, `fireGlazeTemp`).
+- **Migration system** — `runMigrations()` се изпълнява при load с idempotent flag-ове в `DB._migrations` и safety backup-и. Стари полета (напр. `piece.temp`, `material.fireTemp`) се мигрират автоматично към новите.
 
 ## Запазване на данни — важно
 
@@ -61,15 +75,20 @@
 
 ## Roadmap
 
-Плановете за развитие — Event-based piece model с decoration, supplier tracking, cost per recipe, firing cost и други — са в отделен файл: [ROADMAP.md](ROADMAP.md)
+Плановете за развитие — firing events, supplier tracking, cost per recipe, двуезичност и други — са в отделен файл: [ROADMAP.md](ROADMAP.md)
 
 Кратък списък:
 
 - ✅ **v1.0–v1.2** Search, филтри, quick stage actions, свързани записи, duplicate, rebranding към „Глина", визуален редизайн
 - ✅ **v1.3.0 Фаза А** Bugs + функционални gap-и — готови глазури в piece/test, нови категории материали (ангоби, подглазурни бои), две температури на piece
-- ✅ **v1.3.1 Фаза А.1** Post-launch bug fixes — имена на глини, filter fixes, азбучно сортиране, две температури на глина, тип на изделие
-- ⏳ **v1.4.0 Фаза Б (следващо)** Event-based piece model с decoration (сграфито, ангобиране, подглазурни бои като етапи в timeline), non-electric firing methods
-- ⏳ **Cost & Supplier Tracking Етап 1** — откъде, колко струва, кога купено
+- ✅ **v1.3.1 Фаза А.1** Post-launch bug fixes — имена на глини, filter fixes, азбучно сортиране, тип на изделие
+- ✅ **v1.3.2 Фаза А.2** Hardening преди major change — миграция на data debt
+- ✅ **v1.4.0 Фаза Б, схема** Event-based piece model (без UI)
+- ✅ **v1.4.1 Фаза Б, read-only** Timeline в piece detail
+- ✅ **v1.4.2.x Фаза Б, add/edit/delete** Stage, progress, decoration events + UX polish + slider/Процес хармонизация
+- ⏳ **v1.4.3 Фаза Б, firing events (следващо)** Електрически и алтернативни firing методи в Процес
+- ⏳ **v1.4.x Универсални подобрения** Двуезичност, Android back button handling, ClayLab-style UI, потребителски настройки
+- ⏳ **Cost & Supplier Tracking** — откъде, колко струва, кога купено
 - ❌ **Пълна себестойност на изделие** — вероятно никога
 
 ## Deploy
@@ -77,17 +96,17 @@
 Върху GitHub Pages. Пет файла за production:
 
 ```
-atelie_v6.html
+index.html
 sw.js
 app.webmanifest
 icons/icon-192.png
 icons/icon-512.png
 ```
 
-`ROADMAP.md` и `README.md` живеят в repo-то, но не се сервират директно на потребители.
+`ROADMAP.md`, `EVENT_SCHEMA.md` и `README.md` живеят в repo-то, но не се сервират директно на потребители.
 
 При всеки production update:
-1. Bump `APP_VERSION` в `atelie_v6.html`
+1. Bump `APP_VERSION` в `index.html`
 2. Bump `CACHE_NAME` в `sw.js`
 3. Commit + push → GitHub Pages deploys автоматично
 4. Провери версията в Chrome browser на целевия URL (не в PWA) за да се увериш, че deploy-ът е преминал
@@ -104,6 +123,14 @@ icons/icon-512.png
 - **Без външни dependencies.** Един file, без build tooling.
 - **UX над features.** Ако feature не решава реална ежедневна болка, не се добавя.
 - **Тествай между фази.** Без real-world употреба не се знае дали основата е стабилна.
+- **Винаги deploy-аеми междинни версии.** Всяка фаза разделена на 3-5 малки версии, всяка функционална самостоятелно.
+- **Two-phase removal.** Миграция в една версия, премахване на legacy code в следващата (за safety net).
+
+## Документация
+
+- [`README.md`](README.md) — този файл, обща визитка
+- [`ROADMAP.md`](ROADMAP.md) — план за развитие, история на релийзите, отворени въпроси
+- [`EVENT_SCHEMA.md`](EVENT_SCHEMA.md) — пълна спецификация на event типове в `piece.events[]`
 
 ## Лиценз
 
