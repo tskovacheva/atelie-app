@@ -97,15 +97,13 @@
 **v1.4.3 — Firing events (следващо)**
 - Firing event тип през „+ Добави стъпка"
 - 3 dropdown-а: method, atmosphere, firingPurpose
+- **Атмосфера: само 2 опции** — окислително / редукционно (решено)
 - Conditional полета: profileId само за electric, optional temp/duration/details
 - **ВАЖНО:** включва пълен списък алтернативни firing методи:
   - Електрическа, газова, дървена, чушкопек, раку
   - Pit / barrel / sagar / sawdust / опушване
   - Soda / salt / обвара / друго
-- Хармонизация на `bisqueTemp`/`glazeTemp` flat полета:
-  - Решение: остават като quick-entry в piece modal, но създават реален firing event (не само synthesized)
-  - ИЛИ: премахват се от modal, единствен начин = firing event
-  - Ще се реши преди старт на v1.4.3
+- **flat полетата bisqueTemp/glazeTemp: Опция В (решено)** — остават както са за бърз create в piece modal, без auto-event. Без промяна на текущото поведение. Firing event през Процес е допълнителен, опционален начин за детайлно документиране.
 
 **v1.4.4 (опционално) — Polish + cleanup**
 - Material detail: „Използвана в декорации" нова секция
@@ -118,7 +116,8 @@
 
 1. **Reusable non-electric firing profiles** — за раку/дърва, ако се използват често. Засега решение: ad-hoc, profile-ите остават само за electric.
 2. **Shared firing event** — на всяко piece отделен event (не shared entity). Решено.
-3. **Хармонизация bisqueTemp/glazeTemp с firing events** — да се реши преди v1.4.3.
+3. ~~**Хармонизация bisqueTemp/glazeTemp с firing events**~~ — РЕШЕНО (Опция В): flat полетата остават както са за бърз create, без auto-event. Legacy synthesized events продължават да работят. Потребителят сам решава дали да добавя истински firing event през Процес.
+4. ~~**Атмосфера — колко опции**~~ — РЕШЕНО: само 2 (окислително / редукционно). Без neutral/na за сега.
 
 ## ФАЗА В — Advanced (по желание)
 
