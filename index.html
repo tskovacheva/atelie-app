@@ -667,6 +667,80 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       </div>
       <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
       <div class="f"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
+
+      <!-- v1.4.5: Quick-add collapsible — за завършено изделие с известен метод и декорация -->
+      <div id="pi-quickfinal-wrap" style="margin-top:6px;border-top:1px dashed var(--bdr);padding-top:14px;">
+        <div id="pi-quickfinal-toggle" onclick="togglePiQuickFinal()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:6px 0;user-select:none;">
+          <span style="font-size:12px;color:var(--tx2);font-weight:600;letter-spacing:.03em;">Опционално: метод на изпичане и декорация</span>
+          <span id="pi-quickfinal-chev" style="font-size:14px;color:var(--tx3);transition:transform .2s ease;">▾</span>
+        </div>
+        <div id="pi-quickfinal-body" style="display:none;padding-top:8px;">
+          <div style="font-size:11px;color:var(--tx3);font-style:italic;margin-bottom:10px;">За завършено изделие — създават се автоматично стъпки в Процес</div>
+
+          <!-- Firing block -->
+          <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:6px;">🔥 ИЗПИЧАНЕ (опционално)</div>
+            <div class="f" style="margin-bottom:6px;"><label style="font-size:10px;">Метод</label>
+              <select id="pi-qf-firing-method">
+                <option value="">— няма / не отбелязвам —</option>
+                <option value="electric">Електрическа пещ</option>
+                <option value="gas">Газова пещ</option>
+                <option value="wood">Дървена пещ</option>
+                <option value="raku">Раку</option>
+                <option value="chushkopek">Чушкопек</option>
+                <option value="pit">Pit firing (трап)</option>
+                <option value="barrel">Barrel firing (варел)</option>
+                <option value="sagar">Сагар</option>
+                <option value="sawdust">Стърготини / опушване</option>
+                <option value="soda">Soda firing (сода)</option>
+                <option value="salt">Salt firing (солно)</option>
+                <option value="obvara">Обвара</option>
+                <option value="other">Друго</option>
+              </select>
+            </div>
+            <div class="f" style="margin-bottom:6px;"><label style="font-size:10px;">Атмосфера</label>
+              <select id="pi-qf-firing-atmosphere">
+                <option value="">—</option>
+                <option value="oxidation">Окислително</option>
+                <option value="reduction">Редукционно</option>
+              </select>
+            </div>
+            <div class="f" style="margin-bottom:0;"><label style="font-size:10px;">Тип изпичане</label>
+              <select id="pi-qf-firing-purpose">
+                <option value="">—</option>
+                <option value="bisque">Бисквит</option>
+                <option value="glaze">Глазурно</option>
+                <option value="single-fire">Еднопек</option>
+                <option value="alternative">Алтернативно</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Decoration block -->
+          <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:6px;">✦ ДЕКОРАЦИЯ (опционално)</div>
+            <div class="f" style="margin-bottom:0;"><label style="font-size:10px;">Главна техника</label>
+              <select id="pi-qf-dec-technique">
+                <option value="">— няма / не отбелязвам —</option>
+                <option value="sgraffito">Сграфито</option>
+                <option value="stamp">Печат / отпечатък</option>
+                <option value="terra-sigillata">Тера сигилата</option>
+                <option value="engobe">Ангоба</option>
+                <option value="slip">Slip</option>
+                <option value="oxide-wash">Окис (претриване)</option>
+                <option value="underglaze">Подглазурна боя</option>
+                <option value="glaze">Глазура</option>
+                <option value="burnishing">Полиране</option>
+                <option value="carving">Изрязване / релеф</option>
+                <option value="slip-trailing">Slip-trailing</option>
+                <option value="other">Друго</option>
+              </select>
+            </div>
+            <div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:6px;">За повече декорации — добави стъпки в Процес след запазване</div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn bp" onclick="savePiece()">Запази</button>
       <button class="btn bg" onclick="closeMo('mo-piece')">Откажи</button>
     </div>
@@ -1020,7 +1094,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.4';
+const APP_VERSION = 'v1.4.5';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2724,6 +2798,10 @@ function openPieceMo(p){
   buildGlzDropdown('pi-rec','');
   var _ss=document.getElementById('pi-stage');
   if(_ss)_ss.value=p&&p.stage?normalizeStageValue(p.stage):'wet';
+  // v1.4.5: Reset quick-final section (closed + cleared) — hide on edit
+  resetPiQuickFinal();
+  var _qfWrap=document.getElementById('pi-quickfinal-wrap');
+  if(_qfWrap)_qfWrap.style.display=p?'none':''; // hide on edit (only for new pieces)
   renderPrev('pi-prev',pPh);
   openMo('mo-piece');
 }
@@ -2769,8 +2847,49 @@ function savePiece(){
     if(_existing&&Array.isArray(_existing.events))p.events=_existing.events;
   }
   ensurePieceEvents(p);
+  // v1.4.5: Auto-create firing/decoration events from quick-final inputs (only on new piece)
+  if(!editId){
+    var _qfDate=dateVal||new Date().toISOString().slice(0,10);
+    // Firing event
+    var _qfFm=document.getElementById('pi-qf-firing-method');
+    var _qfFa=document.getElementById('pi-qf-firing-atmosphere');
+    var _qfFp=document.getElementById('pi-qf-firing-purpose');
+    if(_qfFm&&_qfFm.value){
+      var _fev={id:uid(),type:'firing',date:_qfDate,note:'',photos:[],data:{method:_qfFm.value}};
+      if(_qfFa&&_qfFa.value)_fev.data.atmosphere=_qfFa.value;
+      if(_qfFp&&_qfFp.value)_fev.data.firingPurpose=_qfFp.value;
+      p.events.push(_fev);
+    }
+    // Decoration event
+    var _qfDt=document.getElementById('pi-qf-dec-technique');
+    if(_qfDt&&_qfDt.value){
+      var _dev={id:uid(),type:'decoration',date:_qfDate,note:'',photos:[],data:{technique:_qfDt.value,materialIds:[]}};
+      p.events.push(_dev);
+    }
+  }
   if(editId)DB.pieces[DB.pieces.findIndex(x=>x.id===editId)]=p;else DB.pieces.unshift(p);
   save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;
+}
+
+// v1.4.5: Toggle quick-final collapsible
+function togglePiQuickFinal(){
+  var body=document.getElementById('pi-quickfinal-body');
+  var chev=document.getElementById('pi-quickfinal-chev');
+  if(!body)return;
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(chev)chev.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
+}
+
+// v1.4.5: Reset quick-final fields to defaults (called when opening modal)
+function resetPiQuickFinal(){
+  var body=document.getElementById('pi-quickfinal-body');
+  var chev=document.getElementById('pi-quickfinal-chev');
+  if(body)body.style.display='none';
+  if(chev)chev.style.transform='rotate(0deg)';
+  ['pi-qf-firing-method','pi-qf-firing-atmosphere','pi-qf-firing-purpose','pi-qf-dec-technique'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
 }
 function editPiece(){closeDet('det-piece');editId=curPiece;openPieceMo(DB.pieces.find(p=>p.id===editId));}
 function delPiece(){if(!confirm('Изтрий?'))return;DB.pieces=DB.pieces.filter(p=>p.id!==curPiece);save();closeDet('det-piece');renderPieces();toast('Изтрито');}
