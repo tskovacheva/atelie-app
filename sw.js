@@ -5,7 +5,7 @@
 // Bump CACHE_NAME on every deploy to trigger cache refresh.
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'atelie-v29';
+const CACHE_NAME = 'atelie-v30';
 
 const PRECACHE_URLS = [
   './',
@@ -49,8 +49,22 @@ self.addEventListener('activate', function (event) {
     }).then(function () {
       // Take control of all open clients immediately
       return self.clients.claim();
+    }).then(function () {
+      // v1.4.4: Notify all clients that a new SW has activated
+      return self.clients.matchAll({ type: 'window' }).then(function (clients) {
+        clients.forEach(function (client) {
+          client.postMessage({ type: 'SW_UPDATED', cacheName: CACHE_NAME });
+        });
+      });
     })
   );
+});
+
+// v1.4.4: Listen for skipWaiting requests from clients
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // ── FETCH ─────────────────────────────────────────────────────

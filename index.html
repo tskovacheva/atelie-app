@@ -82,14 +82,21 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 /* cards */
 .grid{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.pc{background:var(--surface);border-radius:var(--radius);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s ease, box-shadow .15s ease;}
+.pc{background:var(--surface);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s ease, box-shadow .15s ease;}
 .pc:active{transform:scale(0.98);}
 @media(hover:hover){.pc:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,0.06);}}
 .pc-img{width:100%;aspect-ratio:1;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .pc-img img{width:100%;height:100%;object-fit:cover;}
-.pc-info{padding:11px 13px 13px;}
+.pc-info{padding:12px 14px 14px;}
 .pc-name{font-family:'Tenor Sans',sans-serif;font-size:15px;color:var(--text);line-height:1.25;}
 .pc-sub{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;}
+/* v1.4.4: Stage badge color variants — conservative palette (sage + earth tones) */
+.stage-badge.sb-wet{background:#e9efe8;color:#5e7261;}
+.stage-badge.sb-leather-hard{background:#e9efe8;color:#5e7261;}
+.stage-badge.sb-bone-dry{background:#ede9df;color:#7a6c54;}
+.stage-badge.sb-bisque{background:#f0e3d4;color:#8a6845;}
+.stage-badge.sb-glazed{background:#d8e3d6;color:#4f6952;}
+.stage-badge.sb-finished{background:#c4d3c1;color:#384a3b;}
 
 /* list */
 .li{display:flex;align-items:center;gap:13px;padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s;}
@@ -1013,7 +1020,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.3';
+const APP_VERSION = 'v1.4.4';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1523,20 +1530,40 @@ function _decHasLayers(technique){
 // Show popup chooser for event type
 function showEventTypePopup(){
   var p=document.getElementById('ev-type-popup');
-  if(p){p.style.display='flex';}
+  if(p){
+    p.style.display='flex';
+    _pushOverlay('popup', 'ev-type-popup');
+  }
 }
 function closeEvTypePopup(e){
   if(e&&e.target&&!e.target.id)return; // click inside content
   if(e&&e.target&&e.target.id!=='ev-type-popup')return;
   var p=document.getElementById('ev-type-popup');
-  if(p)p.style.display='none';
+  if(p){
+    p.style.display='none';
+    // Remove from stack
+    var i = _overlayStack.length - 1;
+    while (i >= 0) {
+      if (_overlayStack[i].id === 'ev-type-popup') { _overlayStack.splice(i,1); break; }
+      i--;
+    }
+    _popOverlayHistory();
+  }
 }
 
 // Open event modal with chosen type (called from popup buttons or edit)
 function openEventMo(type,editId){
-  // Close popup if open
+  // Close popup if open (via helper so history stack stays consistent)
   var pop=document.getElementById('ev-type-popup');
-  if(pop)pop.style.display='none';
+  if(pop&&pop.style.display==='flex'){
+    pop.style.display='none';
+    var pi = _overlayStack.length - 1;
+    while (pi >= 0) {
+      if (_overlayStack[pi].id === 'ev-type-popup') { _overlayStack.splice(pi,1); break; }
+      pi--;
+    }
+    _popOverlayHistory();
+  }
 
   // Resolve existing event if editing
   var ev=null;
@@ -1974,7 +2001,8 @@ function renderPieces(){
   var g=document.getElementById('pieces-grid');
   if(!items.length){g.innerHTML=hasF?'<div class="empty" style="grid-column:1/-1"><div class="empty-k">∅</div><div class="empty-t">Няма съвпадения</div><div class="empty-s">Промени търсенето или филтрите</div></div>':'<div class="empty" style="grid-column:1/-1"><div class="empty-k">К</div><div class="empty-t">Няма изделия</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   g.innerHTML=items.map(function(p){
-    var sl=stageLabel(p.stage||'greenware');
+    var sn=normalizeStageValue(p.stage||'wet');
+    var sl=stageLabel(sn);
     // Latest photo from most recent event with photos; fallback to piece.photos[0]
     var thumb=getLatestPhoto(p);
     var ic=thumb?'<img src="'+thumb+'" alt="" style="width:100%;height:100%;object-fit:cover;">':K(36);
@@ -1983,7 +2011,7 @@ function renderPieces(){
       +(p.type?'<div class="pc-sub" style="font-style:italic">'+p.type+'</div>':'')
       +'<div class="pc-sub">'+(p.date||'')+'</div>'
       +'<div class="pc-sub" style="color:var(--tx2)">'+clayName(p.clay)+'</div>'
-      +(sl?'<div style="margin-top:3px;"><span class="stage-badge">'+sl+'</span></div>':'')
+      +(sl?'<div style="margin-top:3px;"><span class="stage-badge sb-'+sn+'">'+sl+'</span></div>':'')
       +'</div></div>';
   }).join('');
 }
@@ -2312,7 +2340,7 @@ function openPieceDet(id){
     }).join('');
   }
 
-  document.getElementById('det-piece').classList.add('on');
+  _openDet('det-piece');
 }
 function resolveStageIdx(v){
   if(!v)return 0;
@@ -2407,7 +2435,7 @@ function openRecipeDet(id){
   var _rfpV=document.getElementById('drec-fp-val');if(_rfpV)_rfpV.textContent=_rrfpN||'';
   if(r.updatedAt){var ud=document.getElementById('drec-updated');if(!ud){ud=document.createElement('div');ud.id='drec-updated';ud.style.cssText='font-size:10px;color:var(--tx3);margin-top:8px;';document.getElementById('drec-notes').after(ud);}ud.textContent='Последно редактирано: '+new Date(r.updatedAt).toLocaleDateString('bg-BG');}
   document.getElementById('drec-batch').value='';document.getElementById('drec-grams').innerHTML='';
-  document.getElementById('det-recipe').classList.add('on');
+  _openDet('det-recipe');
 }
 
 function calcG(){
@@ -2516,7 +2544,7 @@ function openTestDet(id){
   } else {
     _tPcRow.style.display='none';
   }
-  document.getElementById('det-test').classList.add('on');
+  _openDet('det-test');
 }
 
 function openMatDet(id){
@@ -2655,7 +2683,7 @@ function openMatDet(id){
   } else {
     _mtRow.style.display='none';
   }
-  document.getElementById('det-mat').classList.add('on');
+  _openDet('det-mat');
 }
 
 // ══ PIECE MODAL ══
@@ -3193,11 +3221,76 @@ function renderPrev(id,arr){
 }
 
 // ══ MODAL HELPERS ══
-function openMo(id){document.getElementById(id).classList.add('on');}
-function closeMo(id){document.getElementById(id).classList.remove('on');}
+// v1.4.4: Track open overlays on history stack so Android back button
+// closes them instead of exiting the app.
+var _overlayStack = []; // stack of currently open overlays (modals + details + popups)
+var _ignorePopState = false; // guard to prevent re-trigger when closing programmatically
+
+function _pushOverlay(kind, id){
+  _overlayStack.push({kind: kind, id: id});
+  try {
+    history.pushState({glina_overlay: true, kind: kind, id: id}, '');
+  } catch(e) { /* ignore */ }
+}
+
+function _popOverlayHistory(){
+  // Sync history with stack: go back if our state is on top
+  if (history.state && history.state.glina_overlay) {
+    _ignorePopState = true;
+    history.back();
+    // _ignorePopState reset by popstate handler
+  }
+}
+
+function openMo(id){
+  document.getElementById(id).classList.add('on');
+  _pushOverlay('modal', id);
+}
+function closeMo(id){
+  document.getElementById(id).classList.remove('on');
+  // Remove from stack
+  var i = _overlayStack.length - 1;
+  while (i >= 0) {
+    if (_overlayStack[i].id === id) { _overlayStack.splice(i,1); break; }
+    i--;
+  }
+  _popOverlayHistory();
+}
 function closeBg(e,id){if(e.target===e.currentTarget)closeMo(id);}
-function closeDet(id){document.getElementById(id).classList.remove('on');
-  var sv=_scrollPos[cur];if(sv){var mx=document.getElementById('main');if(mx)setTimeout(function(){mx.scrollTop=sv;},50);}}
+function closeDet(id){
+  document.getElementById(id).classList.remove('on');
+  var i = _overlayStack.length - 1;
+  while (i >= 0) {
+    if (_overlayStack[i].id === id) { _overlayStack.splice(i,1); break; }
+    i--;
+  }
+  _popOverlayHistory();
+  var sv=_scrollPos[cur];if(sv){var mx=document.getElementById('main');if(mx)setTimeout(function(){mx.scrollTop=sv;},50);}
+}
+// v1.4.4: Helper for opening detail views with history support
+function _openDet(id){
+  document.getElementById(id).classList.add('on');
+  _pushOverlay('detail', id);
+}
+
+// Listen for back button — close topmost overlay if any
+window.addEventListener('popstate', function(e){
+  if (_ignorePopState) {
+    _ignorePopState = false;
+    return;
+  }
+  // If we have any overlay open, close the topmost without going further back
+  if (_overlayStack.length > 0) {
+    var top = _overlayStack.pop();
+    var el = document.getElementById(top.id);
+    if (el) {
+      el.classList.remove('on');
+      // ev-type-popup uses inline display style
+      if (top.id === 'ev-type-popup') el.style.display = 'none';
+    }
+    // No need to re-push; back already consumed our state
+  }
+});
 
 // ══ TOAST ══
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200);}
@@ -3525,7 +3618,7 @@ function openFPDet(id){
   } else {
     _frRow.style.display='none';
   }
-  d.classList.add('on');
+  _openDet('det-fp');
 }
 
 function openFPMo(fp){
@@ -3650,19 +3743,14 @@ if ('serviceWorker' in navigator) {
       .then(function (reg) {
         if (!reg) return;
         console.log('[SW] Registered, scope:', reg.scope);
+        // v1.4.4: Manually check for updates on load (more aggressive)
+        try { reg.update(); } catch (e) { /* ignore */ }
         reg.addEventListener('updatefound', function () {
           var nw = reg.installing;
           if (!nw) return;
           nw.addEventListener('statechange', function () {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              var t = document.getElementById('toast');
-              if (t) {
-                t.textContent = 'Нова версия — натисни за презареждане';
-                t.classList.add('on');
-                t.style.cursor = 'pointer';
-                t.style.bottom = '90px';
-                t.onclick = function () { window.location.reload(); };
-              }
+              showUpdateToast(nw);
             }
           });
         });
@@ -3670,7 +3758,36 @@ if ('serviceWorker' in navigator) {
       .catch(function (err) {
         console.warn('[SW] Skipped:', err.message);
       });
+
+    // v1.4.4: Listen for SW messages — fallback notification path
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        if (event.data && event.data.type === 'SW_UPDATED') {
+          console.log('[SW] Update activated:', event.data.cacheName);
+          // Page already controlled by new SW — silent (the change is invisible until reload)
+        }
+      });
+    }
   });
+}
+
+// v1.4.4: Show update toast with manual reload button
+function showUpdateToast(waitingWorker) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = 'Нова версия — натисни за обнова';
+  t.classList.add('on');
+  t.style.cursor = 'pointer';
+  t.style.bottom = '90px';
+  t.style.background = 'var(--primary)';
+  t.style.color = 'white';
+  t.onclick = function () {
+    // Ask the waiting SW to take control immediately, then reload
+    if (waitingWorker) {
+      try { waitingWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+    }
+    setTimeout(function () { window.location.reload(); }, 200);
+  };
 }
 </script>
 
