@@ -873,6 +873,57 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
       </div>
 
+      <!-- Firing-specific (v1.4.3) -->
+      <div id="ev-fields-firing" style="display:none">
+        <div class="f"><label>Метод *</label>
+          <select id="ev-firing-method" onchange="onFiringMethodChange()">
+            <option value="">— избери —</option>
+            <option value="electric">Електрическа пещ</option>
+            <option value="gas">Газова пещ</option>
+            <option value="wood">Дървена пещ</option>
+            <option value="raku">Раку</option>
+            <option value="chushkopek">Чушкопек</option>
+            <option value="pit">Pit firing (трап)</option>
+            <option value="barrel">Barrel firing (варел)</option>
+            <option value="sagar">Сагар</option>
+            <option value="sawdust">Стърготини / опушване</option>
+            <option value="soda">Soda firing (сода)</option>
+            <option value="salt">Salt firing (солно)</option>
+            <option value="obvara">Обвара</option>
+            <option value="other">Друго</option>
+          </select>
+        </div>
+        <div class="f"><label>Атмосфера *</label>
+          <select id="ev-firing-atmosphere">
+            <option value="">— избери —</option>
+            <option value="oxidation">Окислително</option>
+            <option value="reduction">Редукционно</option>
+          </select>
+        </div>
+        <div class="f"><label>Тип изпичане *</label>
+          <select id="ev-firing-purpose">
+            <option value="">— избери —</option>
+            <option value="bisque">Бисквит</option>
+            <option value="glaze">Глазурно</option>
+            <option value="single-fire">Еднопек</option>
+            <option value="alternative">Алтернативно</option>
+          </select>
+        </div>
+        <div class="f"><label>Температура (°C)</label><input type="number" id="ev-firing-temp" placeholder="напр. 1240"></div>
+        <div class="f"><label>Продължителност (часове)</label><input type="number" id="ev-firing-duration" step="0.5" placeholder="напр. 6"></div>
+        <!-- Profile selector — only for electric -->
+        <div class="f" id="ev-firing-profile-wrap" style="display:none">
+          <label>Профил на изпичане</label>
+          <select id="ev-firing-profile-id"><option value="">— без профил —</option></select>
+        </div>
+        <div class="f"><label>Подробности</label>
+          <textarea id="ev-firing-details" rows="2" placeholder="горива, добавки, материали (напр. медна тел + стърготини)"></textarea>
+        </div>
+        <div class="f"><label>Резултат</label>
+          <textarea id="ev-firing-result" rows="2" placeholder="какъв ефект се получи"></textarea>
+        </div>
+      </div>
+
       <!-- Decoration-specific -->
       <div id="ev-fields-decoration" style="display:none">
         <div class="f"><label>Техника *</label>
@@ -953,8 +1004,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div style="display:flex;flex-direction:column;gap:8px;">
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('stage')">◆ &nbsp; Етап (преход)</button>
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('decoration')">✦ &nbsp; Декорация</button>
+      <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('firing')">🔥 &nbsp; Изпичане</button>
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('progress')">○ &nbsp; Прогрес (снимка/бележка)</button>
-      <div style="font-size:11px;color:var(--tx3);text-align:center;padding:6px 0;font-style:italic;">Изпичане идва в следваща версия</div>
       <button class="btn bg" style="margin-top:6px;" onclick="closeEvTypePopup()">Откажи</button>
     </div>
   </div>
@@ -962,7 +1013,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.2.3';
+const APP_VERSION = 'v1.4.3';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1513,6 +1564,7 @@ function openEventMo(type,editId){
   // Hide all type-specific
   document.getElementById('ev-fields-stage').style.display='none';
   document.getElementById('ev-fields-decoration').style.display='none';
+  document.getElementById('ev-fields-firing').style.display='none';
 
   // Show only relevant
   if(type==='stage'){
@@ -1527,10 +1579,40 @@ function openEventMo(type,editId){
     document.getElementById('ev-dec-coverage').value=ev&&ev.data&&ev.data.coverage?ev.data.coverage:'';
     document.getElementById('ev-dec-layers').value=ev&&ev.data&&ev.data.layers?ev.data.layers:'';
     onDecTechniqueChange();
+  } else if(type==='firing'){
+    document.getElementById('ev-fields-firing').style.display='';
+    var fd=ev&&ev.data?ev.data:{};
+    document.getElementById('ev-firing-method').value=fd.method||'';
+    document.getElementById('ev-firing-atmosphere').value=fd.atmosphere||'';
+    document.getElementById('ev-firing-purpose').value=fd.firingPurpose||'';
+    document.getElementById('ev-firing-temp').value=fd.temp||'';
+    document.getElementById('ev-firing-duration').value=fd.duration||'';
+    document.getElementById('ev-firing-details').value=fd.details||'';
+    document.getElementById('ev-firing-result').value=fd.result||'';
+    // Populate profile dropdown with current profiles
+    _populateFiringProfilePicker(fd.profileId||'');
+    onFiringMethodChange();
   }
 
   renderPrev('ev-prev',evPh);
   openMo('mo-event');
+}
+
+// When firing method changes — show/hide profile selector (only for electric)
+function onFiringMethodChange(){
+  var m=document.getElementById('ev-firing-method').value;
+  document.getElementById('ev-firing-profile-wrap').style.display=(m==='electric')?'':'none';
+}
+
+// Populate firing profile dropdown
+function _populateFiringProfilePicker(selectedId){
+  var sel=document.getElementById('ev-firing-profile-id');
+  if(!sel)return;
+  var profiles=Array.isArray(DB.firingProfiles)?DB.firingProfiles.slice():[];
+  profiles.sort(function(a,b){return (a.name||'').localeCompare(b.name||'','bg');});
+  sel.innerHTML='<option value="">— без профил —</option>'
+    +profiles.map(function(p){return '<option value="'+p.id+'">'+(p.name||'(без име)')+'</option>';}).join('');
+  if(selectedId)sel.value=selectedId;
 }
 
 // When decoration technique changes — update fields visibility
@@ -1652,7 +1734,28 @@ function saveEvent(){
   } else if(curEventType==='progress'){
     // No type-specific fields
   } else if(curEventType==='firing'){
-    toast('Изпичането ще се добави в следваща версия');return;
+    var fmethod=document.getElementById('ev-firing-method').value;
+    var fatm=document.getElementById('ev-firing-atmosphere').value;
+    var fpurp=document.getElementById('ev-firing-purpose').value;
+    if(!fmethod){toast('Избери метод');return;}
+    if(!fatm){toast('Избери атмосфера');return;}
+    if(!fpurp){toast('Избери тип изпичане');return;}
+    ev.data.method=fmethod;
+    ev.data.atmosphere=fatm;
+    ev.data.firingPurpose=fpurp;
+    var ftemp=document.getElementById('ev-firing-temp').value;
+    if(ftemp)ev.data.temp=parseFloat(ftemp);
+    var fdur=document.getElementById('ev-firing-duration').value;
+    if(fdur)ev.data.duration=parseFloat(fdur);
+    // Profile only meaningful for electric
+    if(fmethod==='electric'){
+      var fpid=document.getElementById('ev-firing-profile-id').value;
+      if(fpid)ev.data.profileId=fpid;
+    }
+    var fdet=document.getElementById('ev-firing-details').value;
+    if(fdet)ev.data.details=fdet;
+    var fres=document.getElementById('ev-firing-result').value;
+    if(fres)ev.data.result=fres;
   }
 
   _normalizeEvent(ev);
