@@ -1120,7 +1120,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.7';
+const APP_VERSION = 'v1.5.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1953,26 +1953,236 @@ function recomputePieceStage(piece){
   piece.stage=normalizeStageValue(stageEventsWithIdx[0].ev.data.stageValue);
 }
 
-function safeLoadJSON(key, fallback){
-  try{var raw=localStorage.getItem(key);if(raw==null)return fallback;return safeParseJSON(raw,fallback);}catch(e){return fallback;}
-}
-function safeSaveJSON(key, value){
-  try{localStorage.setItem(key,JSON.stringify(value));return true;}
-  catch(e){
-    var msg='ВНИМАНИЕ: Данните НЕ бяха запазени!\n\n';
-    if(e&&e.name==='QuotaExceededError'){
-      msg+='Паметта на приложението е пълна.\n\n';
-      msg+='Какво да направиш:\n';
-      msg+='1. Експортни backup (Библиотека → Експорт)\n';
-      msg+='2. Изтрий стари записи със снимки\n';
-      msg+='3. Опитай пак';
-    } else {
-      msg+='Грешка: '+(e&&e.message||'неизвестна');
+// ── STORAGE LAYER (v1.5.0) ──────────────────────────────────
+// IndexedDB-backed storage with a synchronous-feeling interface.
+// Strategy:
+//   1. On boot: read all keys from IDB into _storageCache.
+//   2. safeLoadJSON reads from cache (synchronous).
+//   3. safeSaveJSON writes to cache immediately + fires async IDB write.
+//   4. localStorage stays as a read-only backup until v1.5.2.
+
+var IDB_NAME='atelie_idb';
+var IDB_STORE='kv';
+var IDB_VERSION=1;
+var _storageCache={}; // { key: stringValue }
+var _idbReady=false;
+var _idbDB=null;
+var _idbInitPromise=null;
+
+function _openIDB(){
+  if(_idbInitPromise)return _idbInitPromise;
+  _idbInitPromise=new Promise(function(resolve,reject){
+    if(!('indexedDB' in window)){
+      console.warn('[storage] IndexedDB not supported, falling back to localStorage only');
+      resolve(null);return;
     }
-    try{alert(msg);}catch(err){toast('Грешка при запис — паметта е пълна');}
+    try{
+      var req=indexedDB.open(IDB_NAME,IDB_VERSION);
+      req.onupgradeneeded=function(e){
+        var db=e.target.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)){
+          db.createObjectStore(IDB_STORE);
+        }
+      };
+      req.onsuccess=function(e){
+        _idbDB=e.target.result;
+        resolve(_idbDB);
+      };
+      req.onerror=function(e){
+        console.warn('[storage] IDB open failed:',e.target.error);
+        resolve(null);
+      };
+    }catch(e){
+      console.warn('[storage] IDB open exception:',e);
+      resolve(null);
+    }
+  });
+  return _idbInitPromise;
+}
+
+function _idbGet(key){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve(null);return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readonly');
+      var store=tx.objectStore(IDB_STORE);
+      var req=store.get(key);
+      req.onsuccess=function(){resolve(req.result!==undefined?req.result:null);};
+      req.onerror=function(){resolve(null);};
+    }catch(e){resolve(null);}
+  });
+}
+
+function _idbSet(key,value){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve(false);return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readwrite');
+      var store=tx.objectStore(IDB_STORE);
+      var req=store.put(value,key);
+      req.onsuccess=function(){resolve(true);};
+      req.onerror=function(){resolve(false);};
+    }catch(e){resolve(false);}
+  });
+}
+
+function _idbDelete(key){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve(false);return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readwrite');
+      var store=tx.objectStore(IDB_STORE);
+      var req=store.delete(key);
+      req.onsuccess=function(){resolve(true);};
+      req.onerror=function(){resolve(false);};
+    }catch(e){resolve(false);}
+  });
+}
+
+function _idbGetAllKeys(){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve([]);return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readonly');
+      var store=tx.objectStore(IDB_STORE);
+      var req=store.getAllKeys();
+      req.onsuccess=function(){resolve(req.result||[]);};
+      req.onerror=function(){resolve([]);};
+    }catch(e){resolve([]);}
+  });
+}
+
+// Boot: open IDB, load all known keys into cache, run migration from localStorage if needed.
+// Returns a promise that resolves when storage is ready.
+function bootStorage(){
+  return _openIDB().then(function(db){
+    if(!db){
+      // Fallback: load directly from localStorage into cache
+      console.warn('[storage] Using localStorage fallback');
+      _idbReady=false;
+      try{
+        for(var i=0;i<localStorage.length;i++){
+          var k=localStorage.key(i);
+          if(!k)continue;
+          if(k==='atelie_v6'||k==='atelie_userlib'){
+            _storageCache[k]=localStorage.getItem(k);
+          }
+        }
+      }catch(e){}
+      return false;
+    }
+    _idbReady=true;
+    // Get all keys from IDB
+    return _idbGetAllKeys().then(function(keys){
+      // Load known keys into cache
+      var loadPromises=keys.map(function(k){
+        return _idbGet(k).then(function(v){
+          if(typeof v==='string')_storageCache[k]=v;
+        });
+      });
+      return Promise.all(loadPromises);
+    }).then(function(){
+      // One-time migration from localStorage to IDB
+      return _migrateLocalStorageToIDB();
+    }).then(function(){
+      return true;
+    });
+  });
+}
+
+// Migrate localStorage data into IDB if IDB is empty and localStorage has data.
+function _migrateLocalStorageToIDB(){
+  return new Promise(function(resolve){
+    // Check if already migrated (atelie_v6 exists in cache)
+    if(_storageCache['atelie_v6']){
+      console.log('[storage] Already migrated to IDB');
+      resolve();return;
+    }
+    // Check if localStorage has data
+    var lsV6=null,lsUL=null;
+    try{
+      lsV6=localStorage.getItem('atelie_v6');
+      lsUL=localStorage.getItem('atelie_userlib');
+    }catch(e){}
+    if(!lsV6&&!lsUL){
+      console.log('[storage] No data to migrate (fresh install)');
+      resolve();return;
+    }
+    console.log('[storage] Migrating from localStorage to IDB…');
+    var promises=[];
+    if(lsV6){
+      _storageCache['atelie_v6']=lsV6;
+      promises.push(_idbSet('atelie_v6',lsV6));
+    }
+    if(lsUL){
+      _storageCache['atelie_userlib']=lsUL;
+      promises.push(_idbSet('atelie_userlib',lsUL));
+    }
+    // Migrate any atelie_v6_pre_* backup keys too
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k=localStorage.key(i);
+        if(k&&k.indexOf('atelie_v6_pre_')===0){
+          var val=localStorage.getItem(k);
+          if(val){
+            _storageCache[k]=val;
+            promises.push(_idbSet(k,val));
+          }
+        }
+      }
+    }catch(e){}
+    Promise.all(promises).then(function(){
+      console.log('[storage] Migration complete. localStorage kept as backup.');
+      try{toast('Преместено към нов storage (по-голям лимит)');}catch(e){}
+      resolve();
+    });
+  });
+}
+
+function safeLoadJSON(key, fallback){
+  try{
+    var raw=_storageCache[key];
+    if(raw==null){
+      // Fallback to localStorage if cache miss (e.g. IDB not ready yet)
+      raw=localStorage.getItem(key);
+    }
+    if(raw==null)return fallback;
+    return safeParseJSON(raw,fallback);
+  }catch(e){return fallback;}
+}
+
+function safeSaveJSON(key, value){
+  try{
+    var serialized=JSON.stringify(value);
+    _storageCache[key]=serialized;
+    // Async write to IDB (fire and forget with error tracking)
+    if(_idbReady){
+      _idbSet(key,serialized).then(function(ok){
+        if(!ok)console.warn('[storage] IDB write failed for key:',key);
+      });
+    } else {
+      // Fallback: write to localStorage synchronously
+      try{localStorage.setItem(key,serialized);}
+      catch(e){
+        if(e&&e.name==='QuotaExceededError'){
+          alert('ВНИМАНИЕ: Паметта на приложението е пълна.\n\nЕкспортни backup и опитай пак.');
+        }
+        return false;
+      }
+    }
+    return true;
+  }catch(e){
+    console.error('[storage] save failed:',e);
     return false;
   }
 }
+
+function safeRemoveKey(key){
+  delete _storageCache[key];
+  if(_idbReady)_idbDelete(key);
+  try{localStorage.removeItem(key);}catch(e){}
+}
+// (Legacy localStorage-only functions removed in v1.5.0 — replaced by IDB-backed storage above)
 
 
 // ── Etap2: filter/sort/search helpers ────────────────────────
@@ -3410,7 +3620,7 @@ function delMat(){
 
 // ══ PHOTOS ══
 var PH_MAX_BYTES=10*1024*1024; // 10 MB input (ще се компресира)
-var PH_MAX_DIM=1000;
+var PH_MAX_DIM=800;
 var PH_QUALITY=0.75;
 function resizeAndAdd(file,arr,maxItems,prevId){
   if(arr.length>=maxItems){toast('Максимум '+maxItems+' снимки');return;}
@@ -3764,11 +3974,19 @@ function _analyzePhotos(){
 function _findMigrationBackups(){
   var keys=[];
   try{
+    // v1.5.0: Check both cache (IDB-backed) and localStorage (legacy)
+    var seen={};
+    for(var k in _storageCache){
+      if(_storageCache.hasOwnProperty(k)&&k.indexOf('atelie_v6_pre_')===0){
+        keys.push({key:k,bytes:_strBytes(_storageCache[k])});
+        seen[k]=true;
+      }
+    }
     for(var i=0;i<localStorage.length;i++){
-      var k=localStorage.key(i);
-      if(k&&k.indexOf('atelie_v6_pre_')===0){
-        var raw=localStorage.getItem(k)||'';
-        keys.push({key:k,bytes:_strBytes(raw)});
+      var lk=localStorage.key(i);
+      if(lk&&lk.indexOf('atelie_v6_pre_')===0&&!seen[lk]){
+        var raw=localStorage.getItem(lk)||'';
+        keys.push({key:lk,bytes:_strBytes(raw)});
       }
     }
   }catch(e){}
@@ -3792,22 +4010,35 @@ function openStorageAnalysis(){
 }
 
 function _renderStorageAnalysis(body){
-  // Sum all localStorage keys
+  // v1.5.0: Read from cache (IDB-backed). localStorage shown separately as legacy.
   var allKeys=[];
-  var totalLS=0;
+  var totalActive=0;
+  for(var k in _storageCache){
+    if(_storageCache.hasOwnProperty(k)){
+      var b=_strBytes(_storageCache[k]);
+      totalActive+=b;
+      allKeys.push({key:k,bytes:b,source:'idb'});
+    }
+  }
+  // Check legacy localStorage (for users still in fallback mode or post-migration leftover)
+  var totalLegacyLS=0;
+  var legacyLSKeys=[];
   try{
     for(var i=0;i<localStorage.length;i++){
-      var k=localStorage.key(i);
-      if(!k)continue;
-      var v=localStorage.getItem(k)||'';
-      var b=_strBytes(v);
-      totalLS+=b;
-      allKeys.push({key:k,bytes:b});
+      var lk=localStorage.key(i);
+      if(!lk)continue;
+      var lv=localStorage.getItem(lk)||'';
+      var lb=_strBytes(lv);
+      totalLegacyLS+=lb;
+      // Only show legacy keys that are NOT also in cache (avoid double-count)
+      if(!_storageCache[lk]){
+        legacyLSKeys.push({key:lk,bytes:lb,source:'localStorage (стар)'});
+      }
     }
   }catch(e){}
   allKeys.sort(function(a,b){return b.bytes-a.bytes;});
 
-  // Migration backups
+  // Migration backups (combined cache + legacy)
   var migBackups=_findMigrationBackups();
   var migTotalBytes=migBackups.reduce(function(s,k){return s+k.bytes;},0);
 
@@ -3815,14 +4046,23 @@ function _renderStorageAnalysis(body){
   var photoStats=_analyzePhotos();
   var oversizedTotal=photoStats.oversized.reduce(function(s,o){return s+o.bytes;},0);
 
+  // Use totalActive (IDB) for headline; show legacy LS separately if present
+  var totalLS=totalActive;
   // Build report
   var html='';
-  // Top: total storage
-  var pct=Math.min(100,Math.round((totalLS/(5*1024*1024))*100));
-  var pctColor=pct>=85?'var(--accent)':pct>=60?'var(--tx2)':'var(--primary)';
+  // Top: storage backend status
+  var storageMode=_idbReady?'IndexedDB':'localStorage';
+  var storageLimit=_idbReady?'~1 GB+':'5 MB';
+  var pct=_idbReady?null:Math.min(100,Math.round((totalLS/(5*1024*1024))*100));
+  var pctColor=_idbReady?'var(--primary)':(pct>=85?'var(--accent)':pct>=60?'var(--tx2)':'var(--primary)');
   html+='<div style="margin-bottom:14px;padding:12px;background:var(--bg2);border-radius:10px;border:1px solid var(--bdr);">';
-  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Общо в localStorage</div>';
-  html+='<div style="font-size:18px;font-weight:600;color:'+pctColor+';">'+_fmtBytes(totalLS)+' / 5 MB ('+pct+'%)</div>';
+  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Storage '+(_idbReady?'(IndexedDB ✓)':'(localStorage)')+'</div>';
+  if(_idbReady){
+    html+='<div style="font-size:18px;font-weight:600;color:'+pctColor+';">'+_fmtBytes(totalLS)+'</div>';
+    html+='<div style="font-size:11px;color:var(--tx3);margin-top:4px;">лимит ~1 GB+ (зависи от устройството)</div>';
+  } else {
+    html+='<div style="font-size:18px;font-weight:600;color:'+pctColor+';">'+_fmtBytes(totalLS)+' / 5 MB ('+pct+'%)</div>';
+  }
   html+='</div>';
 
   // Keys breakdown
@@ -3841,6 +4081,13 @@ function _renderStorageAnalysis(body){
     html+='<span style="font-size:12px;color:var(--tx2);">'+_fmtBytes(k.bytes)+'</span>';
     html+='</div>';
   });
+
+  // Show legacy localStorage if it has data still (post-migration backup)
+  if(_idbReady && totalLegacyLS > 0){
+    html+='<div style="margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px;border:1px dashed var(--bdr);font-size:11px;color:var(--tx3);">';
+    html+='💾 localStorage (стар, остава като backup): '+_fmtBytes(totalLegacyLS);
+    html+='</div>';
+  }
 
   // Migration backups action
   if(migBackups.length>0){
@@ -3888,7 +4135,8 @@ function cleanupMigrationBackups(){
   if(!confirm('Изтрий '+backups.length+' миграционен backup ('+_fmtBytes(totalBytes)+')?'))return;
   var removed=0;
   backups.forEach(function(b){
-    try{localStorage.removeItem(b.key);removed++;}catch(e){}
+    // v1.5.0: Remove from all three places — cache, IDB, localStorage
+    try{safeRemoveKey(b.key);removed++;}catch(e){}
   });
   toast('Изтрити '+removed+' backup-а — '+_fmtBytes(totalBytes)+' освободено');
   // Refresh analysis
@@ -4277,25 +4525,44 @@ function seedGuides(){
 }
 // ─────────────────────────────────────────────────────────────────────────────
 // ══ INIT ══
-seedGuides();load();render('pieces');
+// v1.5.0: Wait for IDB to boot before loading data
+bootStorage().then(function(){
+  seedGuides();
+  load();
+  render('pieces');
+  updateStorageLabel();
+}).catch(function(err){
+  console.error('[storage] Boot failed, falling back:',err);
+  seedGuides();
+  load();
+  render('pieces');
+  updateStorageLabel();
+});
 (function(){var vl=document.getElementById('ver-label');if(vl)vl.textContent='Глина '+APP_VERSION+' · by Crafty Place';})();
 function updateStorageLabel(){
   var el=document.getElementById('storage-label');if(!el)return;
   var total=0;
   try{
-    for(var k in localStorage){
-      if(localStorage.hasOwnProperty(k)){
-        total+=(localStorage[k].length+k.length)*2;
+    // v1.5.0: Compute from in-memory cache (reflects IDB content)
+    for(var k in _storageCache){
+      if(_storageCache.hasOwnProperty(k)){
+        total+=(_storageCache[k].length+k.length)*2;
       }
     }
     var mb=(total/1024/1024).toFixed(2);
-    var pct=Math.round(total/(5*1024*1024)*100);
-    var warn=pct>=75;
-    el.textContent='Памет: '+mb+' MB'+(warn?' ⚠ '+pct+'%':'');
-    el.style.color=warn?'var(--accent)':'var(--muted)';
+    if(_idbReady){
+      // IndexedDB has much higher limit — show MB only, no %
+      el.textContent='Памет: '+mb+' MB';
+      el.style.color='var(--muted)';
+    } else {
+      // Fallback localStorage mode — still show % warning
+      var pct=Math.round(total/(5*1024*1024)*100);
+      var warn=pct>=75;
+      el.textContent='Памет: '+mb+' MB'+(warn?' ⚠ '+pct+'%':'');
+      el.style.color=warn?'var(--accent)':'var(--muted)';
+    }
   }catch(e){el.textContent='';}
 }
-updateStorageLabel();
 (function(){var sp=document.getElementById('splash');if(!sp)return;setTimeout(function(){sp.classList.add('hide');setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},500);},600);})();
 </script>
 
