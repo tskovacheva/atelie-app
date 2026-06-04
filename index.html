@@ -456,6 +456,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <input type="file" accept=".json" onchange="importBackup(event)" style="display:none;">
       </label>
     </div>
+    <button onclick="openStorageAnalysis()" class="btn bg btn-sm" style="width:100%;padding:10px;margin-top:8px;">🔍 Анализ на паметта</button>
     <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="storage-label"></div>
     <div style="text-align:right;margin-top:4px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="ver-label"></div>
   </div>
@@ -1101,9 +1102,25 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- MODAL: Storage analysis (v1.4.7) -->
+<div class="mo" id="mo-storage-analysis" onclick="closeBg(event,'mo-storage-analysis')">
+  <div class="mo-sh">
+    <div class="mo-h"></div>
+    <div class="mo-hdr"><div class="mo-t">🔍 Анализ на паметта</div><button class="mo-x" onclick="closeMo('mo-storage-analysis')">×</button></div>
+    <div class="mo-b">
+      <div id="storage-analysis-body" style="font-size:12px;line-height:1.6;">
+        <div style="color:var(--tx3);font-style:italic;">Изчисляване…</div>
+      </div>
+    </div>
+    <div class="mo-f">
+      <button class="btn bg" onclick="closeMo('mo-storage-analysis')">Затвори</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.6';
+const APP_VERSION = 'v1.4.7';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3649,6 +3666,342 @@ function delLib(id){
   saveUserLib(userLibrary);
   renderLib();
   toast('Изтрито');
+}
+
+
+// ── STORAGE ANALYSIS (v1.4.7) ──────────────────────────────────────────────
+// Tools to diagnose and fix storage bloat — migration backups, oversized photos.
+
+// Estimate byte size of a string in localStorage (chars × 2 — UTF-16 in most browsers)
+function _strBytes(s){
+  if(typeof s!=='string')return 0;
+  return s.length*2;
+}
+
+// Format bytes as readable string
+function _fmtBytes(b){
+  if(b<1024)return b+' B';
+  if(b<1024*1024)return (b/1024).toFixed(1)+' KB';
+  return (b/(1024*1024)).toFixed(2)+' MB';
+}
+
+// Estimate the byte size of a base64 image data URL (the decoded image, not the string)
+function _imgBytesFromDataUrl(dataUrl){
+  if(typeof dataUrl!=='string')return 0;
+  // The actual byte size encoded in localStorage is the string length × 2 (UTF-16)
+  return _strBytes(dataUrl);
+}
+
+// Scan all photos in the database and return stats
+function _analyzePhotos(){
+  var stats={total:0,totalBytes:0,oversized:[],bySource:{}};
+  function _scanPhotoArray(arr,sourceLabel){
+    if(!Array.isArray(arr))return;
+    arr.forEach(function(p,i){
+      if(typeof p==='string'&&p.indexOf('data:')===0){
+        var bytes=_imgBytesFromDataUrl(p);
+        stats.total++;
+        stats.totalBytes+=bytes;
+        stats.bySource[sourceLabel]=(stats.bySource[sourceLabel]||0)+bytes;
+        if(bytes>200*1024){
+          stats.oversized.push({source:sourceLabel,index:i,bytes:bytes});
+        }
+      }
+    });
+  }
+  // Scan pieces
+  DB.pieces.forEach(function(p){
+    _scanPhotoArray(p.photos,'piece:'+(p.name||p.id));
+    if(Array.isArray(p.events)){
+      p.events.forEach(function(e){
+        _scanPhotoArray(e.photos,'event:'+(p.name||p.id));
+      });
+    }
+  });
+  // Scan recipes
+  DB.recipes.forEach(function(r){
+    if(r.photo&&typeof r.photo==='string'&&r.photo.indexOf('data:')===0){
+      var bytes=_imgBytesFromDataUrl(r.photo);
+      stats.total++;stats.totalBytes+=bytes;
+      stats.bySource['recipe:'+(r.name||r.id)]=bytes;
+      if(bytes>200*1024)stats.oversized.push({source:'recipe:'+(r.name||r.id),index:0,bytes:bytes});
+    }
+  });
+  // Scan materials
+  DB.materials.forEach(function(m){
+    if(m.photo&&typeof m.photo==='string'&&m.photo.indexOf('data:')===0){
+      var bytes=_imgBytesFromDataUrl(m.photo);
+      stats.total++;stats.totalBytes+=bytes;
+      stats.bySource['material:'+(m.name||m.id)]=bytes;
+      if(bytes>200*1024)stats.oversized.push({source:'material:'+(m.name||m.id),index:0,bytes:bytes});
+    }
+  });
+  // Scan tests
+  if(Array.isArray(DB.tests)){
+    DB.tests.forEach(function(t){
+      _scanPhotoArray(t.photos,'test:'+(t.id));
+    });
+  }
+  // Scan user library
+  try{
+    var ul=safeLoadJSON('atelie_userlib',[]);
+    if(Array.isArray(ul)){
+      ul.forEach(function(item){
+        if(item.photo&&typeof item.photo==='string'&&item.photo.indexOf('data:')===0){
+          var bytes=_imgBytesFromDataUrl(item.photo);
+          stats.total++;stats.totalBytes+=bytes;
+          if(bytes>200*1024)stats.oversized.push({source:'library:'+(item.name||item.id),index:0,bytes:bytes});
+        }
+      });
+    }
+  }catch(e){}
+  // Sort oversized largest first
+  stats.oversized.sort(function(a,b){return b.bytes-a.bytes;});
+  return stats;
+}
+
+// Find migration backup keys in localStorage
+function _findMigrationBackups(){
+  var keys=[];
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(k&&k.indexOf('atelie_v6_pre_')===0){
+        var raw=localStorage.getItem(k)||'';
+        keys.push({key:k,bytes:_strBytes(raw)});
+      }
+    }
+  }catch(e){}
+  return keys;
+}
+
+// Open analysis modal and populate
+function openStorageAnalysis(){
+  openMo('mo-storage-analysis');
+  var body=document.getElementById('storage-analysis-body');
+  if(!body)return;
+  body.innerHTML='<div style="color:var(--tx3);font-style:italic;">Изчисляване…</div>';
+  // Defer to next tick so modal can render
+  setTimeout(function(){
+    try{
+      _renderStorageAnalysis(body);
+    }catch(e){
+      body.innerHTML='<div style="color:var(--accent);">Грешка: '+(e.message||e)+'</div>';
+    }
+  },50);
+}
+
+function _renderStorageAnalysis(body){
+  // Sum all localStorage keys
+  var allKeys=[];
+  var totalLS=0;
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(!k)continue;
+      var v=localStorage.getItem(k)||'';
+      var b=_strBytes(v);
+      totalLS+=b;
+      allKeys.push({key:k,bytes:b});
+    }
+  }catch(e){}
+  allKeys.sort(function(a,b){return b.bytes-a.bytes;});
+
+  // Migration backups
+  var migBackups=_findMigrationBackups();
+  var migTotalBytes=migBackups.reduce(function(s,k){return s+k.bytes;},0);
+
+  // Photos analysis
+  var photoStats=_analyzePhotos();
+  var oversizedTotal=photoStats.oversized.reduce(function(s,o){return s+o.bytes;},0);
+
+  // Build report
+  var html='';
+  // Top: total storage
+  var pct=Math.min(100,Math.round((totalLS/(5*1024*1024))*100));
+  var pctColor=pct>=85?'var(--accent)':pct>=60?'var(--tx2)':'var(--primary)';
+  html+='<div style="margin-bottom:14px;padding:12px;background:var(--bg2);border-radius:10px;border:1px solid var(--bdr);">';
+  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Общо в localStorage</div>';
+  html+='<div style="font-size:18px;font-weight:600;color:'+pctColor+';">'+_fmtBytes(totalLS)+' / 5 MB ('+pct+'%)</div>';
+  html+='</div>';
+
+  // Keys breakdown
+  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Ключове</div>';
+  allKeys.forEach(function(k){
+    var label=k.key;
+    var hint='';
+    if(k.key==='atelie_v6')label='Главна база (atelie_v6)';
+    else if(k.key==='atelie_userlib')label='Библиотека (atelie_userlib)';
+    else if(k.key.indexOf('atelie_v6_pre_')===0){
+      hint=' <span style="color:var(--accent);font-size:10px;">← може да се изтрие</span>';
+      label='Backup '+k.key.replace('atelie_v6_pre_','').replace(/_/g,'.');
+    }
+    html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);">';
+    html+='<span style="font-size:12px;">'+label+hint+'</span>';
+    html+='<span style="font-size:12px;color:var(--tx2);">'+_fmtBytes(k.bytes)+'</span>';
+    html+='</div>';
+  });
+
+  // Migration backups action
+  if(migBackups.length>0){
+    html+='<div style="margin-top:14px;padding:12px;background:var(--primary-soft);border-radius:10px;">';
+    html+='<div style="font-size:12px;color:var(--text);margin-bottom:8px;">Имаш <strong>'+migBackups.length+'</strong> миграционен backup ('+_fmtBytes(migTotalBytes)+'). Това са автоматични snapshot-и от стари миграции. Можеш да ги изтриеш безопасно — мигрирала си вече до текущата версия.</div>';
+    html+='<button onclick="cleanupMigrationBackups()" class="btn bp btn-sm" style="width:100%;padding:8px;font-size:12px;">🗑 Изтрий миграционните backup-и ('+_fmtBytes(migTotalBytes)+')</button>';
+    html+='</div>';
+  }
+
+  // Photos summary
+  html+='<div style="margin-top:14px;font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Снимки</div>';
+  html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px;">';
+  html+='<span>Брой общо</span><span style="color:var(--tx2);">'+photoStats.total+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px;">';
+  html+='<span>Общо размер</span><span style="color:var(--tx2);">'+_fmtBytes(photoStats.totalBytes)+'</span></div>';
+
+  // Oversized photos
+  if(photoStats.oversized.length>0){
+    html+='<div style="margin-top:10px;padding:12px;background:var(--primary-soft);border-radius:10px;">';
+    html+='<div style="font-size:12px;color:var(--text);margin-bottom:6px;"><strong>'+photoStats.oversized.length+'</strong> снимки са над 200 KB ('+_fmtBytes(oversizedTotal)+' общо). Вероятно са от стари версии преди компресията. Прекомпресия ще ги намали 3-5 пъти.</div>';
+    // List top 5
+    var top=photoStats.oversized.slice(0,5);
+    html+='<div style="margin:8px 0;font-size:11px;color:var(--tx2);">';
+    top.forEach(function(o){
+      html+='<div>• '+o.source+' — '+_fmtBytes(o.bytes)+'</div>';
+    });
+    if(photoStats.oversized.length>5){
+      html+='<div style="font-style:italic;">…и още '+(photoStats.oversized.length-5)+'</div>';
+    }
+    html+='</div>';
+    html+='<button onclick="recompressOldPhotos()" class="btn bp btn-sm" style="width:100%;padding:8px;font-size:12px;">📐 Прекомпресирай '+photoStats.oversized.length+' снимки</button>';
+    html+='</div>';
+  } else {
+    html+='<div style="margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px;font-size:12px;color:var(--tx3);text-align:center;font-style:italic;">Всички снимки са правилно компресирани</div>';
+  }
+
+  body.innerHTML=html;
+}
+
+// Cleanup migration backups
+function cleanupMigrationBackups(){
+  var backups=_findMigrationBackups();
+  if(backups.length===0){toast('Няма миграционни backup-и');return;}
+  var totalBytes=backups.reduce(function(s,k){return s+k.bytes;},0);
+  if(!confirm('Изтрий '+backups.length+' миграционен backup ('+_fmtBytes(totalBytes)+')?'))return;
+  var removed=0;
+  backups.forEach(function(b){
+    try{localStorage.removeItem(b.key);removed++;}catch(e){}
+  });
+  toast('Изтрити '+removed+' backup-а — '+_fmtBytes(totalBytes)+' освободено');
+  // Refresh analysis
+  setTimeout(function(){openStorageAnalysis();},300);
+  // Refresh storage label
+  if(typeof updateStorageLabel==='function')updateStorageLabel();
+}
+
+// Recompress a single base64 data URL to PH_MAX_DIM × JPEG PH_QUALITY
+function _recompressDataUrl(dataUrl,callback){
+  if(typeof dataUrl!=='string'||dataUrl.indexOf('data:')!==0){callback(null);return;}
+  var img=new Image();
+  img.onload=function(){
+    var w=img.width,h=img.height;
+    var scale=Math.min(1,PH_MAX_DIM/Math.max(w,h));
+    var canvas=document.createElement('canvas');
+    canvas.width=Math.round(w*scale);
+    canvas.height=Math.round(h*scale);
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    try{
+      var compressed=canvas.toDataURL('image/jpeg',PH_QUALITY);
+      callback(compressed);
+    }catch(e){callback(null);}
+  };
+  img.onerror=function(){callback(null);};
+  img.src=dataUrl;
+}
+
+// Walk the database, recompressing any oversized photos
+function recompressOldPhotos(){
+  var stats=_analyzePhotos();
+  if(stats.oversized.length===0){toast('Няма снимки за компресия');return;}
+  if(!confirm('Прекомпресирай '+stats.oversized.length+' снимки? Това може да отнеме няколко секунди.'))return;
+
+  // Collect all photo "slots" to walk
+  var slots=[];
+  DB.pieces.forEach(function(p){
+    if(Array.isArray(p.photos)){
+      p.photos.forEach(function(_,i){slots.push({arr:p.photos,idx:i});});
+    }
+    if(Array.isArray(p.events)){
+      p.events.forEach(function(e){
+        if(Array.isArray(e.photos)){
+          e.photos.forEach(function(_,i){slots.push({arr:e.photos,idx:i});});
+        }
+      });
+    }
+  });
+  DB.recipes.forEach(function(r){
+    if(r.photo&&typeof r.photo==='string'&&r.photo.indexOf('data:')===0){
+      slots.push({obj:r,key:'photo'});
+    }
+  });
+  DB.materials.forEach(function(m){
+    if(m.photo&&typeof m.photo==='string'&&m.photo.indexOf('data:')===0){
+      slots.push({obj:m,key:'photo'});
+    }
+  });
+  if(Array.isArray(DB.tests)){
+    DB.tests.forEach(function(t){
+      if(Array.isArray(t.photos)){
+        t.photos.forEach(function(_,i){slots.push({arr:t.photos,idx:i});});
+      }
+    });
+  }
+
+  // Filter to slots that are oversized
+  var workQueue=slots.filter(function(s){
+    var dataUrl=s.arr?s.arr[s.idx]:s.obj[s.key];
+    return typeof dataUrl==='string'&&dataUrl.indexOf('data:')===0&&_imgBytesFromDataUrl(dataUrl)>200*1024;
+  });
+  if(workQueue.length===0){toast('Няма снимки за компресия');return;}
+
+  var processed=0;
+  var bytesSaved=0;
+  var failed=0;
+
+  function processNext(){
+    if(processed+failed>=workQueue.length){
+      // Done
+      save();
+      toast('Прекомпресирани '+processed+' снимки — '+_fmtBytes(bytesSaved)+' освободени');
+      if(typeof updateStorageLabel==='function')updateStorageLabel();
+      // Refresh analysis after a delay
+      setTimeout(function(){openStorageAnalysis();},500);
+      return;
+    }
+    var s=workQueue[processed+failed];
+    var oldDataUrl=s.arr?s.arr[s.idx]:s.obj[s.key];
+    var oldBytes=_imgBytesFromDataUrl(oldDataUrl);
+    _recompressDataUrl(oldDataUrl,function(newDataUrl){
+      if(newDataUrl&&newDataUrl.length<oldDataUrl.length){
+        if(s.arr)s.arr[s.idx]=newDataUrl;
+        else s.obj[s.key]=newDataUrl;
+        var newBytes=_imgBytesFromDataUrl(newDataUrl);
+        bytesSaved+=(oldBytes-newBytes);
+        processed++;
+      } else {
+        failed++;
+      }
+      // Update modal
+      var body=document.getElementById('storage-analysis-body');
+      if(body){
+        body.innerHTML='<div style="text-align:center;padding:20px;"><div style="font-size:14px;color:var(--text);margin-bottom:10px;">Компресия в процес…</div><div style="font-size:24px;color:var(--primary);font-weight:600;">'+(processed+failed)+' / '+workQueue.length+'</div></div>';
+      }
+      setTimeout(processNext,30); // small yield for UI
+    });
+  }
+
+  processNext();
 }
 
 
