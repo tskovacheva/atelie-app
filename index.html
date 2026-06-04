@@ -643,7 +643,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <input type="text" id="pi-type" placeholder="напр. ваза, чаша, музикален инструмент" list="pi-type-list" autocomplete="off">
         <datalist id="pi-type-list"></datalist>
       </div>
-      <div class="f"><label>Глина</label><select id="pi-clay"><option value="">—</option></select></div>
+      <div class="f"><label>Глина</label>
+        <select id="pi-clay"><option value="">—</option></select>
+        <button type="button" onclick="openNewClayFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:2px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова глина</button>
+      </div>
       <div class="f"><label>Техника</label>
         <select id="pi-tech"><option value="">—</option><option>Точене</option><option>Фурш / намотки</option><option>Платки</option><option>Ръчно формоване</option><option>Калъп</option><option>Куринуки</option><option>Друго</option></select>
       </div>
@@ -660,25 +663,28 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="f"><label>Глазура / Рецепта</label>
         <input type="search" id="pi-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('pi-rec',this.value)">
         <select id="pi-rec"><option value="">— без глазура —</option></select>
+        <div style="display:flex;gap:14px;margin-top:2px;">
+          <button type="button" onclick="openNewRecipeFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова рецепта</button>
+          <button type="button" onclick="openNewGlazeMaterialFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова готова глазура</button>
+        </div>
       </div>
       <div style="display:flex;gap:9px;">
         <div class="f" style="flex:1"><label>Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
         <div class="f" style="flex:1"><label>Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
       </div>
-      <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
-      <div class="f"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
 
       <!-- v1.4.5: Quick-add collapsible — за завършено изделие с известен метод и декорация -->
-      <div id="pi-quickfinal-wrap" style="margin-top:6px;border-top:1px dashed var(--bdr);padding-top:14px;">
-        <div id="pi-quickfinal-toggle" onclick="togglePiQuickFinal()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:6px 0;user-select:none;">
-          <span style="font-size:12px;color:var(--tx2);font-weight:600;letter-spacing:.03em;">Опционално: метод на изпичане и декорация</span>
-          <span id="pi-quickfinal-chev" style="font-size:14px;color:var(--tx3);transition:transform .2s ease;">▾</span>
+      <!-- v1.4.6: преместено преди Дата/Бележки + по-видим toggle bar -->
+      <div id="pi-quickfinal-wrap" style="margin-top:14px;">
+        <div id="pi-quickfinal-toggle" onclick="togglePiQuickFinal()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--primary-soft);border:1.5px dashed var(--primary);border-radius:10px;user-select:none;">
+          <span style="font-size:12px;color:var(--primary);font-weight:600;letter-spacing:.04em;">+ Добави метод на изпичане / декорация</span>
+          <span id="pi-quickfinal-chev" style="font-size:16px;color:var(--primary);transition:transform .2s ease;line-height:1;">▾</span>
         </div>
-        <div id="pi-quickfinal-body" style="display:none;padding-top:8px;">
+        <div id="pi-quickfinal-body" style="display:none;padding-top:10px;">
           <div style="font-size:11px;color:var(--tx3);font-style:italic;margin-bottom:10px;">За завършено изделие — създават се автоматично стъпки в Процес</div>
 
           <!-- Firing block -->
-          <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <div style="background:var(--surface);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
             <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:6px;">🔥 ИЗПИЧАНЕ (опционално)</div>
             <div class="f" style="margin-bottom:6px;"><label style="font-size:10px;">Метод</label>
               <select id="pi-qf-firing-method">
@@ -717,7 +723,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           </div>
 
           <!-- Decoration block -->
-          <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;">
+          <div style="background:var(--surface);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;">
             <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:6px;">✦ ДЕКОРАЦИЯ (опционално)</div>
             <div class="f" style="margin-bottom:0;"><label style="font-size:10px;">Главна техника</label>
               <select id="pi-qf-dec-technique">
@@ -740,6 +746,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           </div>
         </div>
       </div>
+
+      <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
+      <div class="f"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
 
       <button class="btn bp" onclick="savePiece()">Запази</button>
       <button class="btn bg" onclick="closeMo('mo-piece')">Откажи</button>
@@ -1094,7 +1103,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.4.5';
+const APP_VERSION = 'v1.4.6';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1124,6 +1133,9 @@ var pieceStageFilter='';
 
 const DB={pieces:[],recipes:[],materials:[],tests:[],firingProfiles:[]};
 let cur='pieces',editId=null,curRec=null,curPiece=null,curTest=null,curMat=null;
+// v1.4.6: Nested-add state — when set, a save handler should call this instead of normal close.
+// Callback receives the newly created entity (m or r) and the entity kind ('material'|'recipe').
+var _nestedAddCallback=null;
 var activeFilters={rec:{},test:{},mat:{},pc:{}};
 var activeSort={rec:'name',mat:'name',pc:'name'};
 var _scrollPos={};
@@ -2779,13 +2791,8 @@ function openPieceMo(p){
   document.getElementById('pi-date').value=p?.date||new Date().toISOString().split('T')[0];
   document.getElementById('pi-tech').value=p?.technique||'';
   document.getElementById('pi-notes').value=p?.notes||'';
-  const cs=document.getElementById('pi-clay');
-  var _matClays=DB.materials.filter(function(m){return m.cat==='clays';});
-  var _matClayNames=_matClays.map(function(m){return m.name;});
-  var _extraClays=CLAY_NAMES.filter(function(n){return _matClayNames.indexOf(n)<0;});
-  cs.innerHTML='<option value="">—</option>'+_extraClays.map(function(n){return '<option '+(p&&p.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
-    _matClays.map(function(m){return '<option value="'+m.id+'" '+(p&&p.clay===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
-  if(p?.clay)cs.value=p.clay;
+  // v1.4.6: Build clay dropdown (extracted for nested-add support)
+  _buildPiClayDropdown(p);
   const rs=document.getElementById('pi-rec');
   var _curGlz=p&&(p.material||p.recipe)||'';
   _glzDropdownData['pi-rec']={
@@ -2804,6 +2811,18 @@ function openPieceMo(p){
   if(_qfWrap)_qfWrap.style.display=p?'none':''; // hide on edit (only for new pieces)
   renderPrev('pi-prev',pPh);
   openMo('mo-piece');
+}
+
+// v1.4.6: Extracted clay dropdown builder — used on open and after nested add
+function _buildPiClayDropdown(p){
+  const cs=document.getElementById('pi-clay');
+  if(!cs)return;
+  var _matClays=DB.materials.filter(function(m){return m.cat==='clays';});
+  var _matClayNames=_matClays.map(function(m){return m.name;});
+  var _extraClays=CLAY_NAMES.filter(function(n){return _matClayNames.indexOf(n)<0;});
+  cs.innerHTML='<option value="">—</option>'+_extraClays.map(function(n){return '<option '+(p&&p.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
+    _matClays.map(function(m){return '<option value="'+m.id+'" '+(p&&p.clay===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
+  if(p&&p.clay)cs.value=p.clay;
 }
 var _glzDropdownData={};
 function buildGlzDropdown(selectId,query){
@@ -2890,6 +2909,81 @@ function resetPiQuickFinal(){
   ['pi-qf-firing-method','pi-qf-firing-atmosphere','pi-qf-firing-purpose','pi-qf-dec-technique'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
+}
+
+// v1.4.6: Nested-add handlers — let user create a new material/recipe from inside the piece modal.
+// After save, the dropdowns are rebuilt and the new entity is auto-selected.
+// The piece modal stays open (it's beneath the nested modal on the overlay stack).
+function _saveEditIdForNested(){
+  return editId; // remember piece's editId so we can restore it
+}
+function _restoreEditIdAfterNested(savedEditId){
+  editId = savedEditId;
+}
+
+function openNewClayFromPiece(){
+  var savedEditId = _saveEditIdForNested();
+  editId = null; // for nested modal — it must treat as new
+  _nestedAddCallback = function(newMat, kind){
+    editId = savedEditId;
+    if(kind !== 'material') return;
+    // Rebuild clay dropdown and select new material
+    _buildPiClayDropdown(null);
+    var cs = document.getElementById('pi-clay');
+    if(cs) cs.value = newMat.id;
+    toast('Глината "'+(newMat.name||'')+'" е добавена');
+  };
+  // Open mat modal pre-set to "clays" category
+  openMatMo(null);
+  var catEl = document.getElementById('mi-cat');
+  if(catEl){
+    catEl.value = 'clays';
+    // Trigger conditional fields display
+    if(typeof toggleMatFields === 'function') toggleMatFields();
+  }
+}
+
+function openNewGlazeMaterialFromPiece(){
+  var savedEditId = _saveEditIdForNested();
+  editId = null;
+  _nestedAddCallback = function(newMat, kind){
+    editId = savedEditId;
+    if(kind !== 'material') return;
+    // Rebuild glaze dropdown
+    _glzDropdownData['pi-rec'] = {
+      recipes: DB.recipes.slice(),
+      mats: DB.materials.filter(function(m){return m.cat==='glaze';}),
+      curRec: '',
+      curMat: newMat.id
+    };
+    buildGlzDropdown('pi-rec','');
+    toast('Глазурата "'+(newMat.name||'')+'" е добавена');
+  };
+  openMatMo(null);
+  var catEl = document.getElementById('mi-cat');
+  if(catEl){
+    catEl.value = 'glaze';
+    if(typeof toggleMatFields === 'function') toggleMatFields();
+  }
+}
+
+function openNewRecipeFromPiece(){
+  var savedEditId = _saveEditIdForNested();
+  editId = null;
+  _nestedAddCallback = function(newRec, kind){
+    editId = savedEditId;
+    if(kind !== 'recipe') return;
+    // Rebuild glaze dropdown
+    _glzDropdownData['pi-rec'] = {
+      recipes: DB.recipes.slice(),
+      mats: DB.materials.filter(function(m){return m.cat==='glaze';}),
+      curRec: newRec.id,
+      curMat: ''
+    };
+    buildGlzDropdown('pi-rec','');
+    toast('Рецептата "'+(newRec.name||'')+'" е добавена');
+  };
+  openRecipeMo(null);
 }
 function editPiece(){closeDet('det-piece');editId=curPiece;openPieceMo(DB.pieces.find(p=>p.id===editId));}
 function delPiece(){if(!confirm('Изтрий?'))return;DB.pieces=DB.pieces.filter(p=>p.id!==curPiece);save();closeDet('det-piece');renderPieces();toast('Изтрито');}
@@ -3024,7 +3118,15 @@ function saveRecipe(){
     fav:false,photo:rPh[0]||null,
     ingredients:validIngs};
   if(editId){const idx=DB.recipes.findIndex(x=>x.id===editId);r.fav=DB.recipes[idx].fav;DB.recipes[idx]=r;}else DB.recipes.push(r);
-  save();closeMo('mo-recipe');renderRecipes();toast(editId?'Обновено':'Добавено!');editId=null;
+  save();
+  // v1.4.6: If we're in nested-add mode, hand off to caller
+  if(_nestedAddCallback && !editId){
+    var cb=_nestedAddCallback;_nestedAddCallback=null;
+    closeMo('mo-recipe');
+    cb(r,'recipe');
+    return;
+  }
+  closeMo('mo-recipe');renderRecipes();toast(editId?'Обновено':'Добавено!');editId=null;
 }
 function editRecipe(){closeDet('det-recipe');editId=curRec;openRecipeMo(DB.recipes.find(r=>r.id===editId));}
 function dupRecipe(){
@@ -3264,7 +3366,15 @@ function saveMat(){
   });
   if(Object.keys(chem).length)m.chem=chem;
   if(editId)DB.materials[DB.materials.findIndex(x=>x.id===editId)]=m;else DB.materials.push(m);
-  save();closeMo('mo-mat');renderMaterials();switchMat(isWishlist?'wish':cat);updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
+  save();
+  // v1.4.6: If we're in nested-add mode, hand off to caller (skip normal close flow)
+  if(_nestedAddCallback && !editId){
+    var cb=_nestedAddCallback;_nestedAddCallback=null;
+    closeMo('mo-mat');
+    cb(m,'material');
+    return;
+  }
+  closeMo('mo-mat');renderMaterials();switchMat(isWishlist?'wish':cat);updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
 }
 function editMat(){closeDet('det-mat');openMatMo(DB.materials.find(m=>m.id===curMat));}
 function delMat(){
@@ -3367,6 +3477,11 @@ function openMo(id){
 }
 function closeMo(id){
   document.getElementById(id).classList.remove('on');
+  // v1.4.6: If closing a nested-add target (without saving), clear callback
+  if (_nestedAddCallback && (id === 'mo-mat' || id === 'mo-recipe')) {
+    _nestedAddCallback = null;
+    editId = null; // restore — was set to null for new entity
+  }
   // Remove from stack
   var i = _overlayStack.length - 1;
   while (i >= 0) {
