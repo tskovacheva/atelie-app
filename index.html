@@ -1069,6 +1069,20 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
       </div>
 
+      <!-- v1.5.1: Stage context — за decoration & progress (показва се conditionally) -->
+      <div class="f" id="ev-at-stage-wrap" style="display:none">
+        <label>На етап</label>
+        <select id="ev-at-stage">
+          <option value="">— не отбелязвам —</option>
+          <option value="wet">Сурово</option>
+          <option value="leather-hard">Кожна влажност</option>
+          <option value="bone-dry">Сухо</option>
+          <option value="bisque">Бисквит</option>
+          <option value="glazed">Глазирано</option>
+        </select>
+        <div style="font-size:10px;color:var(--tx3);font-style:italic;margin-top:4px;">В какво състояние е било изделието по време на тази стъпка</div>
+      </div>
+
       <!-- Note + photos (common) -->
       <div class="f"><label>Бележка</label>
         <textarea id="ev-note" rows="3" placeholder="опционално"></textarea>
@@ -1120,7 +1134,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.0.1';
+const APP_VERSION = 'v1.5.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1484,12 +1498,39 @@ function getTimelineEvents(piece){
   if(!piece)return {events:[],isSynthetic:false};
   var real=Array.isArray(piece.events)?piece.events:[];
   if(real.length>0){
+    // v1.5.1: When dates tie, use stage context as secondary sort key
+    // Stage order: wet(0) < leather-hard(1) < bone-dry(2) < bisque(3) < glazed(4) < finished(5)
+    var stageOrder={'wet':0,'leather-hard':1,'bone-dry':2,'bisque':3,'glazed':4,'finished':5};
+    function _eventStageIdx(e){
+      if(!e||!e.data)return null;
+      // For stage event itself, use stageValue
+      if(e.type==='stage'&&e.data.stageValue){
+        return stageOrder[normalizeStageValue(e.data.stageValue)]||0;
+      }
+      // For decoration, check appliedAtStage
+      if(e.type==='decoration'&&e.data.appliedAtStage){
+        return stageOrder[e.data.appliedAtStage]||0;
+      }
+      // For progress, check atStage
+      if(e.type==='progress'&&e.data.atStage){
+        return stageOrder[e.data.atStage]||0;
+      }
+      return null;
+    }
     var sorted=real.slice().sort(function(a,b){
       // Events without date go to the end
       if(!a.date&&!b.date)return 0;
       if(!a.date)return 1;
       if(!b.date)return -1;
-      return b.date.localeCompare(a.date); // reverse chronological
+      var dateCmp=b.date.localeCompare(a.date); // reverse chronological
+      if(dateCmp!==0)return dateCmp;
+      // Same date — use stage context as tie-breaker
+      var aIdx=_eventStageIdx(a),bIdx=_eventStageIdx(b);
+      if(aIdx!=null&&bIdx!=null&&aIdx!==bIdx){
+        return bIdx-aIdx; // later stage shows above (reverse chronological)
+      }
+      // Both same stage (or no context) — keep insertion order stable
+      return 0;
     });
     return {events:sorted,isSynthetic:false};
   }
@@ -1696,6 +1737,21 @@ function openEventMo(type,editId){
   document.getElementById('ev-fields-decoration').style.display='none';
   document.getElementById('ev-fields-firing').style.display='none';
 
+  // v1.5.1: Show "На етап" only for decoration & progress (not for stage or firing)
+  var _atStageWrap=document.getElementById('ev-at-stage-wrap');
+  if(_atStageWrap){
+    _atStageWrap.style.display=(type==='decoration'||type==='progress')?'':'none';
+    var _atStageEl=document.getElementById('ev-at-stage');
+    if(_atStageEl){
+      // Read appliedAtStage (decoration) or atStage (progress)
+      var _atVal='';
+      if(ev&&ev.data){
+        _atVal=ev.data.appliedAtStage||ev.data.atStage||'';
+      }
+      _atStageEl.value=_atVal;
+    }
+  }
+
   // Show only relevant
   if(type==='stage'){
     document.getElementById('ev-fields-stage').style.display='';
@@ -1861,8 +1917,13 @@ function saveEvent(){
       var l=document.getElementById('ev-dec-layers').value;
       if(l)ev.data.layers=parseInt(l,10);
     }
+    // v1.5.1: appliedAtStage (optional)
+    var _atDec=document.getElementById('ev-at-stage');
+    if(_atDec&&_atDec.value)ev.data.appliedAtStage=_atDec.value;
   } else if(curEventType==='progress'){
-    // No type-specific fields
+    // v1.5.1: atStage (optional)
+    var _atProg=document.getElementById('ev-at-stage');
+    if(_atProg&&_atProg.value)ev.data.atStage=_atProg.value;
   } else if(curEventType==='firing'){
     var fmethod=document.getElementById('ev-firing-method').value;
     var fatm=document.getElementById('ev-firing-atmosphere').value;
@@ -2641,11 +2702,20 @@ function openPieceDet(id){
       var noteSnippet=ev.note?(ev.note.length>60?ev.note.slice(0,60)+'…':ev.note):'';
       var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
       var syntheticStyle=_tl.isSynthetic?'opacity:.6;':'';
+      // v1.5.1: Show stage context (appliedAtStage for decoration, atStage for progress)
+      var stageContext='';
+      if(ev.data){
+        var atStageVal=ev.data.appliedAtStage||ev.data.atStage;
+        if(atStageVal){
+          var stageLabelText=_STAGE_LABELS[atStageVal]||atStageVal;
+          stageContext='<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--bg2);border-radius:8px;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);">на '+stageLabelText.toLowerCase()+'</span>';
+        }
+      }
       var actions=_tl.isSynthetic?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
       return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
         +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
         +'<div class="li-body">'
-        +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+photoBadge+'</div>'
+        +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+stageContext+photoBadge+'</div>'
         +'<div class="li-s" style="font-size:11px;">'+dateStr+(noteSnippet?' · '+noteSnippet:'')+'</div>'
         +'</div>'
         +(actions?'<div style="display:flex;align-items:center;">'+actions+'</div>':'')
