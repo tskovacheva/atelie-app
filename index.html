@@ -466,7 +466,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <input type="file" accept=".json" onchange="importBackup(event)" style="display:none;">
       </label>
     </div>
-    <button onclick="openStorageAnalysis()" class="btn bg btn-sm" style="width:100%;padding:10px;margin-top:8px;">🔍 Анализ на паметта</button>
+    <button onclick="openStorageAnalysis()" class="btn bg btn-sm" style="width:100%;padding:10px;margin-top:8px;">📦 Място на устройството</button>
     <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="storage-label"></div>
     <div style="text-align:right;margin-top:4px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="ver-label"></div>
   </div>
@@ -649,17 +649,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="ph-prev" id="pi-prev"></div>
       </div>
       <input type="file" id="pi-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'pi-prev',pPh,5)">
+
+      <!-- v1.5.3: ОСНОВНИ ПОЛЕТА (винаги видими) -->
       <div class="f"><label>Наименование *</label><input type="text" id="pi-name" placeholder="напр. чаша"></div>
-      <div class="f"><label>Тип</label>
-        <input type="text" id="pi-type" placeholder="напр. ваза, чаша, музикален инструмент" list="pi-type-list" autocomplete="off">
-        <datalist id="pi-type-list"></datalist>
-      </div>
       <div class="f"><label>Глина</label>
         <select id="pi-clay"><option value="">—</option></select>
         <button type="button" onclick="openNewClayFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:2px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова глина</button>
-      </div>
-      <div class="f"><label>Техника</label>
-        <select id="pi-tech"><option value="">—</option><option>Точене</option><option>Фурш / намотки</option><option>Платки</option><option>Ръчно формоване</option><option>Калъп</option><option>Куринуки</option><option>Друго</option></select>
       </div>
       <div class="f"><label>Етап</label>
         <select id="pi-stage">
@@ -671,21 +666,38 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="finished">Готово</option>
         </select>
       </div>
-      <div class="f"><label>Глазура / Рецепта</label>
-        <input type="search" id="pi-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('pi-rec',this.value)">
-        <select id="pi-rec"><option value="">— без глазура —</option></select>
-        <div style="display:flex;gap:14px;margin-top:2px;">
-          <button type="button" onclick="openNewRecipeFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова рецепта</button>
-          <button type="button" onclick="openNewGlazeMaterialFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова готова глазура</button>
+      <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
+
+      <!-- v1.5.3: ДОПЪЛНИТЕЛНИ ДЕТАЙЛИ (collapsible) -->
+      <div id="pi-more-wrap" style="margin-top:6px;">
+        <div id="pi-more-toggle" onclick="togglePiMore()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 0;user-select:none;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);">
+          <span style="font-size:12px;color:var(--tx2);font-weight:500;letter-spacing:.03em;">Допълнителни детайли</span>
+          <span id="pi-more-chev" style="font-size:14px;color:var(--tx3);transition:transform .2s ease;">▾</span>
         </div>
-      </div>
-      <div style="display:flex;gap:9px;">
-        <div class="f" style="flex:1"><label>Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
-        <div class="f" style="flex:1"><label>Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
+        <div id="pi-more-body" style="display:none;padding-top:10px;">
+          <div class="f"><label>Тип</label>
+            <input type="text" id="pi-type" placeholder="напр. ваза, чаша, музикален инструмент" list="pi-type-list" autocomplete="off">
+            <datalist id="pi-type-list"></datalist>
+          </div>
+          <div class="f"><label>Техника</label>
+            <select id="pi-tech"><option value="">—</option><option>Точене</option><option>Фурш / намотки</option><option>Платки</option><option>Ръчно формоване</option><option>Калъп</option><option>Куринуки</option><option>Друго</option></select>
+          </div>
+          <div class="f"><label>Глазура / Рецепта</label>
+            <input type="search" id="pi-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('pi-rec',this.value)">
+            <select id="pi-rec"><option value="">— без глазура —</option></select>
+            <div style="display:flex;gap:14px;margin-top:2px;flex-wrap:wrap;">
+              <button type="button" onclick="openNewRecipeFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова рецепта</button>
+              <button type="button" onclick="openNewGlazeMaterialFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова готова глазура</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1"><label>Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
+            <div class="f" style="flex:1"><label>Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
+          </div>
+        </div>
       </div>
 
       <!-- v1.4.5: Quick-add collapsible — за завършено изделие с известен метод и декорация -->
-      <!-- v1.4.6: преместено преди Дата/Бележки + по-видим toggle bar -->
       <div id="pi-quickfinal-wrap" style="margin-top:14px;">
         <div id="pi-quickfinal-toggle" onclick="togglePiQuickFinal()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--primary-soft);border:1.5px dashed var(--primary);border-radius:10px;user-select:none;">
           <span style="font-size:12px;color:var(--primary);font-weight:600;letter-spacing:.04em;">+ Добави метод на изпичане / декорация</span>
@@ -758,8 +770,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
       </div>
 
-      <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
-      <div class="f"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
+      <div class="f" style="margin-top:14px;"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
 
       <button class="btn bp" onclick="savePiece()">Запази</button>
       <button class="btn bg" onclick="closeMo('mo-piece')">Откажи</button>
@@ -1130,7 +1141,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-storage-analysis" onclick="closeBg(event,'mo-storage-analysis')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t">🔍 Анализ на паметта</div><button class="mo-x" onclick="closeMo('mo-storage-analysis')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t">📦 Място на устройството</div><button class="mo-x" onclick="closeMo('mo-storage-analysis')">×</button></div>
     <div class="mo-b">
       <div id="storage-analysis-body" style="font-size:12px;line-height:1.6;">
         <div style="color:var(--tx3);font-style:italic;">Изчисляване…</div>
@@ -1144,7 +1155,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.2';
+const APP_VERSION = 'v1.5.3';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3165,6 +3176,12 @@ function openPieceMo(p){
   resetPiQuickFinal();
   var _qfWrap=document.getElementById('pi-quickfinal-wrap');
   if(_qfWrap)_qfWrap.style.display=p?'none':''; // hide on edit (only for new pieces)
+  // v1.5.3: Auto-open "More details" if any additional field has a value on edit
+  var hasMoreData=false;
+  if(p){
+    if(p.type||p.technique||p.recipe||p.material||p.bisqueTemp||p.glazeTemp)hasMoreData=true;
+  }
+  setPiMoreOpen(hasMoreData);
   renderPrev('pi-prev',pPh);
   openMo('mo-piece');
 }
@@ -3265,6 +3282,24 @@ function resetPiQuickFinal(){
   ['pi-qf-firing-method','pi-qf-firing-atmosphere','pi-qf-firing-purpose','pi-qf-dec-technique'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
+}
+
+// v1.5.3: Toggle "Допълнителни детайли" collapsible
+function togglePiMore(){
+  var body=document.getElementById('pi-more-body');
+  var chev=document.getElementById('pi-more-chev');
+  if(!body)return;
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(chev)chev.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
+}
+
+// v1.5.3: Set "More details" state explicitly (used when opening for edit)
+function setPiMoreOpen(open){
+  var body=document.getElementById('pi-more-body');
+  var chev=document.getElementById('pi-more-chev');
+  if(body)body.style.display=open?'block':'none';
+  if(chev)chev.style.transform=open?'rotate(180deg)':'rotate(0deg)';
 }
 
 // v1.4.6: Nested-add handlers — let user create a new material/recipe from inside the piece modal.
@@ -4187,35 +4222,30 @@ function openStorageAnalysis(){
 }
 
 function _renderStorageAnalysis(body){
-  // v1.5.0: Read from cache (IDB-backed). localStorage shown separately as legacy.
+  // v1.5.3: User-friendly report — no IndexedDB/localStorage/backup jargon.
+  // Internal vars keep technical names but UI uses semantic language.
   var allKeys=[];
   var totalActive=0;
   for(var k in _storageCache){
     if(_storageCache.hasOwnProperty(k)){
       var b=_strBytes(_storageCache[k]);
       totalActive+=b;
-      allKeys.push({key:k,bytes:b,source:'idb'});
+      allKeys.push({key:k,bytes:b});
     }
   }
-  // Check legacy localStorage (for users still in fallback mode or post-migration leftover)
+  // Check old leftover data (for users still in fallback mode or post-migration leftover)
   var totalLegacyLS=0;
-  var legacyLSKeys=[];
   try{
     for(var i=0;i<localStorage.length;i++){
       var lk=localStorage.key(i);
       if(!lk)continue;
       var lv=localStorage.getItem(lk)||'';
-      var lb=_strBytes(lv);
-      totalLegacyLS+=lb;
-      // Only show legacy keys that are NOT also in cache (avoid double-count)
-      if(!_storageCache[lk]){
-        legacyLSKeys.push({key:lk,bytes:lb,source:'localStorage (стар)'});
-      }
+      totalLegacyLS+=_strBytes(lv);
     }
   }catch(e){}
   allKeys.sort(function(a,b){return b.bytes-a.bytes;});
 
-  // Migration backups (combined cache + legacy)
+  // Migration backups
   var migBackups=_findMigrationBackups();
   var migTotalBytes=migBackups.reduce(function(s,k){return s+k.bytes;},0);
 
@@ -4223,82 +4253,97 @@ function _renderStorageAnalysis(body){
   var photoStats=_analyzePhotos();
   var oversizedTotal=photoStats.oversized.reduce(function(s,o){return s+o.bytes;},0);
 
-  // Use totalActive (IDB) for headline; show legacy LS separately if present
   var totalLS=totalActive;
-  // Build report
   var html='';
-  // Top: storage backend status
-  var storageMode=_idbReady?'IndexedDB':'localStorage';
-  var storageLimit=_idbReady?'~1 GB+':'5 MB';
-  var pct=_idbReady?null:Math.min(100,Math.round((totalLS/(5*1024*1024))*100));
-  var pctColor=_idbReady?'var(--primary)':(pct>=85?'var(--accent)':pct>=60?'var(--tx2)':'var(--primary)');
-  html+='<div style="margin-bottom:14px;padding:12px;background:var(--bg2);border-radius:10px;border:1px solid var(--bdr);">';
-  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Storage '+(_idbReady?'(IndexedDB ✓)':'(localStorage)')+'</div>';
+
+  // ── Headline: semantic free-space indicator
+  // For modern IDB users, threshold is much higher (1 GB+) — use absolute MB as guide
+  var freeSpaceLabel, freeSpaceColor, freeSpaceHint;
   if(_idbReady){
-    html+='<div style="font-size:18px;font-weight:600;color:'+pctColor+';">'+_fmtBytes(totalLS)+'</div>';
-    html+='<div style="font-size:11px;color:var(--tx3);margin-top:4px;">лимит ~1 GB+ (зависи от устройството)</div>';
+    // Generous thresholds for IDB — most devices have plenty
+    if(totalLS<50*1024*1024){
+      freeSpaceLabel='Свободно място: много';
+      freeSpaceColor='var(--primary)';
+      freeSpaceHint='Имаш достатъчно място за нови изделия и снимки.';
+    } else if(totalLS<200*1024*1024){
+      freeSpaceLabel='Свободно място: средно';
+      freeSpaceColor='var(--tx2)';
+      freeSpaceHint='Имаш още доста място, но обмисли периодично да правиш backup.';
+    } else {
+      freeSpaceLabel='Свободно място: малко';
+      freeSpaceColor='var(--accent)';
+      freeSpaceHint='Препоръчително — направи backup и обмисли да изтриеш стари изделия със снимки.';
+    }
   } else {
-    html+='<div style="font-size:18px;font-weight:600;color:'+pctColor+';">'+_fmtBytes(totalLS)+' / 5 MB ('+pct+'%)</div>';
+    // Fallback mode — old 5MB limit
+    var pct=Math.min(100,Math.round((totalLS/(5*1024*1024))*100));
+    if(pct<60){
+      freeSpaceLabel='Свободно място: много';freeSpaceColor='var(--primary)';
+      freeSpaceHint='Имаш достатъчно място.';
+    } else if(pct<85){
+      freeSpaceLabel='Свободно място: средно';freeSpaceColor='var(--tx2)';
+      freeSpaceHint='Препоръчително — направи backup.';
+    } else {
+      freeSpaceLabel='Свободно място: малко';freeSpaceColor='var(--accent)';
+      freeSpaceHint='Внимание — паметта се пълни. Направи backup и почисти стари снимки.';
+    }
   }
+
+  html+='<div style="margin-bottom:14px;padding:14px;background:var(--bg2);border-radius:10px;border:1px solid var(--bdr);">';
+  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Заето пространство</div>';
+  html+='<div style="font-size:20px;font-weight:600;color:var(--text);">'+_fmtBytes(totalLS)+'</div>';
+  html+='<div style="font-size:13px;color:'+freeSpaceColor+';font-weight:500;margin-top:6px;">'+freeSpaceLabel+'</div>';
+  html+='<div style="font-size:11px;color:var(--tx3);margin-top:4px;line-height:1.4;">'+freeSpaceHint+'</div>';
   html+='</div>';
 
-  // Keys breakdown
-  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Ключове</div>';
+  // ── What's taking up space (friendly breakdown)
+  html+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Какво заема място</div>';
   allKeys.forEach(function(k){
+    // Skip migration backups from main list (shown separately as cleanup action)
+    if(k.key.indexOf('atelie_v6_pre_')===0)return;
     var label=k.key;
-    var hint='';
-    if(k.key==='atelie_v6')label='Главна база (atelie_v6)';
-    else if(k.key==='atelie_userlib')label='Библиотека (atelie_userlib)';
-    else if(k.key.indexOf('atelie_v6_pre_')===0){
-      hint=' <span style="color:var(--accent);font-size:10px;">← може да се изтрие</span>';
-      label='Backup '+k.key.replace('atelie_v6_pre_','').replace(/_/g,'.');
-    }
-    html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);">';
-    html+='<span style="font-size:12px;">'+label+hint+'</span>';
+    if(k.key==='atelie_v6')label='Изделия, рецепти, материали';
+    else if(k.key==='atelie_userlib')label='Библиотека (справочни)';
+    html+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);">';
+    html+='<span style="font-size:12px;color:var(--text);">'+label+'</span>';
     html+='<span style="font-size:12px;color:var(--tx2);">'+_fmtBytes(k.bytes)+'</span>';
     html+='</div>';
   });
 
-  // Show legacy localStorage if it has data still (post-migration backup)
-  if(_idbReady && totalLegacyLS > 0){
-    html+='<div style="margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px;border:1px dashed var(--bdr);font-size:11px;color:var(--tx3);">';
-    html+='💾 localStorage (стар, остава като backup): '+_fmtBytes(totalLegacyLS);
-    html+='</div>';
-  }
-
-  // Migration backups action
+  // ── Migration backups (cleanup opportunity)
   if(migBackups.length>0){
     html+='<div style="margin-top:14px;padding:12px;background:var(--primary-soft);border-radius:10px;">';
-    html+='<div style="font-size:12px;color:var(--text);margin-bottom:8px;">Имаш <strong>'+migBackups.length+'</strong> миграционен backup ('+_fmtBytes(migTotalBytes)+'). Това са автоматични snapshot-и от стари миграции. Можеш да ги изтриеш безопасно — мигрирала си вече до текущата версия.</div>';
-    html+='<button onclick="cleanupMigrationBackups()" class="btn bp btn-sm" style="width:100%;padding:8px;font-size:12px;">🗑 Изтрий миграционните backup-и ('+_fmtBytes(migTotalBytes)+')</button>';
+    html+='<div style="font-size:12px;color:var(--text);margin-bottom:8px;">Намерено е <strong>'+_fmtBytes(migTotalBytes)+'</strong> от стари автоматични snapshot-и. Те са били запазени за безопасност при предишни обновявания и вече не са нужни.</div>';
+    html+='<button onclick="cleanupMigrationBackups()" class="btn bp btn-sm" style="width:100%;padding:8px;font-size:12px;">🗑 Освободи '+_fmtBytes(migTotalBytes)+'</button>';
     html+='</div>';
   }
 
-  // Photos summary
+  // ── Photos summary
   html+='<div style="margin-top:14px;font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Снимки</div>';
-  html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px;">';
-  html+='<span>Брой общо</span><span style="color:var(--tx2);">'+photoStats.total+'</span></div>';
-  html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px;">';
-  html+='<span>Общо размер</span><span style="color:var(--tx2);">'+_fmtBytes(photoStats.totalBytes)+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px;">';
+  html+='<span style="color:var(--text);">Брой</span><span style="color:var(--tx2);">'+photoStats.total+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px;">';
+  html+='<span style="color:var(--text);">Общо</span><span style="color:var(--tx2);">'+_fmtBytes(photoStats.totalBytes)+'</span></div>';
 
-  // Oversized photos
+  // ── Oversized photos (compression opportunity)
   if(photoStats.oversized.length>0){
     html+='<div style="margin-top:10px;padding:12px;background:var(--primary-soft);border-radius:10px;">';
-    html+='<div style="font-size:12px;color:var(--text);margin-bottom:6px;"><strong>'+photoStats.oversized.length+'</strong> снимки са над 200 KB ('+_fmtBytes(oversizedTotal)+' общо). Вероятно са от стари версии преди компресията. Прекомпресия ще ги намали 3-5 пъти.</div>';
-    // List top 5
+    html+='<div style="font-size:12px;color:var(--text);margin-bottom:6px;">Намерени <strong>'+photoStats.oversized.length+'</strong> по-големи снимки ('+_fmtBytes(oversizedTotal)+'). Намаляването им до стандартния размер ще освободи място, без видима загуба на качество.</div>';
     var top=photoStats.oversized.slice(0,5);
     html+='<div style="margin:8px 0;font-size:11px;color:var(--tx2);">';
     top.forEach(function(o){
-      html+='<div>• '+o.source+' — '+_fmtBytes(o.bytes)+'</div>';
+      // Strip technical prefixes from source label
+      var src=o.source.replace(/^(piece|event|recipe|material|test|library):/,'');
+      html+='<div>• '+src+' — '+_fmtBytes(o.bytes)+'</div>';
     });
     if(photoStats.oversized.length>5){
       html+='<div style="font-style:italic;">…и още '+(photoStats.oversized.length-5)+'</div>';
     }
     html+='</div>';
-    html+='<button onclick="recompressOldPhotos()" class="btn bp btn-sm" style="width:100%;padding:8px;font-size:12px;">📐 Прекомпресирай '+photoStats.oversized.length+' снимки</button>';
+    html+='<button onclick="recompressOldPhotos()" class="btn bp btn-sm" style="width:100%;padding:8px;font-size:12px;">📐 Намали '+photoStats.oversized.length+' снимки</button>';
     html+='</div>';
-  } else {
-    html+='<div style="margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px;font-size:12px;color:var(--tx3);text-align:center;font-style:italic;">Всички снимки са правилно компресирани</div>';
+  } else if(photoStats.total>0){
+    html+='<div style="margin-top:10px;padding:10px;background:var(--bg2);border-radius:10px;font-size:12px;color:var(--tx3);text-align:center;font-style:italic;">Всички снимки са с подходящ размер</div>';
   }
 
   body.innerHTML=html;
@@ -4720,7 +4765,6 @@ function updateStorageLabel(){
   var el=document.getElementById('storage-label');if(!el)return;
   var total=0;
   try{
-    // v1.5.0: Compute from in-memory cache (reflects IDB content)
     for(var k in _storageCache){
       if(_storageCache.hasOwnProperty(k)){
         total+=(_storageCache[k].length+k.length)*2;
@@ -4728,14 +4772,13 @@ function updateStorageLabel(){
     }
     var mb=(total/1024/1024).toFixed(2);
     if(_idbReady){
-      // IndexedDB has much higher limit — show MB only, no %
-      el.textContent='Памет: '+mb+' MB';
+      // v1.5.3: friendlier label
+      el.textContent='Заето: '+mb+' MB';
       el.style.color='var(--muted)';
     } else {
-      // Fallback localStorage mode — still show % warning
       var pct=Math.round(total/(5*1024*1024)*100);
       var warn=pct>=75;
-      el.textContent='Памет: '+mb+' MB'+(warn?' ⚠ '+pct+'%':'');
+      el.textContent='Заето: '+mb+' MB'+(warn?' ⚠ '+pct+'%':'');
       el.style.color=warn?'var(--accent)':'var(--muted)';
     }
   }catch(e){el.textContent='';}
