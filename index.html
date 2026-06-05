@@ -336,27 +336,37 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="srch-wrap">
     <input class="srch" type="search" id="pc-search" placeholder="Търси по име, глина, техника, бележка…" oninput="debounce(renderPieces,'pc-search',200)">
   </div>
-  <div class="fchips" style="padding-top:8px;">
-    <button class="fchip pf-chip" data-stage="greenware" onclick="setPieceStageFilter('greenware')">Greenware</button>
-    <button class="fchip pf-chip" data-stage="leather-hard" onclick="setPieceStageFilter('leather-hard')">Leather-hard</button>
-    <button class="fchip pf-chip" data-stage="bone-dry" onclick="setPieceStageFilter('bone-dry')">Bone dry</button>
-    <button class="fchip pf-chip" data-stage="bisque" onclick="setPieceStageFilter('bisque')">Biscuit</button>
-    <button class="fchip pf-chip" data-stage="glazed" onclick="setPieceStageFilter('glazed')">Glazed</button>
-    <button class="fchip pf-chip" data-stage="glaze-fired" onclick="setPieceStageFilter('glaze-fired')">Glaze fired</button>
-    <button class="fchip pf-chip" data-stage="finished" onclick="setPieceStageFilter('finished')">Finished</button>
+  <!-- v1.5.2: Filter toggle button + collapsible filter area -->
+  <div style="padding:6px 14px 0;display:flex;align-items:center;justify-content:space-between;">
+    <button id="pc-filter-toggle" onclick="togglePcFilters()" style="background:none;border:none;color:var(--tx2);font-size:12px;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px;font-family:inherit;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      <span>Филтри и сортиране</span>
+      <span id="pc-filter-badge" style="display:none;background:var(--primary);color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600;"></span>
+      <span id="pc-filter-chev" style="font-size:12px;color:var(--tx3);transition:transform .2s ease;">▾</span>
+    </button>
   </div>
-  <div class="fchips">
-    <button class="fchip" id="fc-pc-hasglz" onclick="togglePcChip('hasglz')">С глазура</button>
-    <button class="fchip" id="fc-pc-noglz" onclick="togglePcChip('noglz')">Без глазура</button>
-    <button class="fchip" id="fc-pc-hasph" onclick="togglePcChip('hasph')">Със снимка</button>
-    <button class="fchip" id="fc-pc-noph" onclick="togglePcChip('noph')">Без снимка</button>
-  </div>
-  <div class="sort-row">
-    <span class="sort-lbl">Сортирай:</span>
-    <button class="fchip on" id="sort-pc-upd" onclick="setPcSort('upd')">Последно</button>
-    <button class="fchip" id="sort-pc-name" onclick="setPcSort('name')">А→Я</button>
-    <button class="fchip" id="sort-pc-date" onclick="setPcSort('date')">Дата</button>
-    <button class="fchip" id="pc-reset" onclick="resetPcFilters()" style="margin-left:auto;">Изчисти</button>
+  <div id="pc-filter-body" style="display:none;">
+    <div class="fchips" style="padding-top:8px;">
+      <button class="fchip pf-chip" data-stage="wet" onclick="setPieceStageFilter('wet')">Сурово</button>
+      <button class="fchip pf-chip" data-stage="leather-hard" onclick="setPieceStageFilter('leather-hard')">Кожна влажност</button>
+      <button class="fchip pf-chip" data-stage="bone-dry" onclick="setPieceStageFilter('bone-dry')">Сухо</button>
+      <button class="fchip pf-chip" data-stage="bisque" onclick="setPieceStageFilter('bisque')">Бисквит</button>
+      <button class="fchip pf-chip" data-stage="glazed" onclick="setPieceStageFilter('glazed')">Глазирано</button>
+      <button class="fchip pf-chip" data-stage="finished" onclick="setPieceStageFilter('finished')">Готово</button>
+    </div>
+    <div class="fchips">
+      <button class="fchip" id="fc-pc-hasglz" onclick="togglePcChip('hasglz')">С глазура</button>
+      <button class="fchip" id="fc-pc-noglz" onclick="togglePcChip('noglz')">Без глазура</button>
+      <button class="fchip" id="fc-pc-hasph" onclick="togglePcChip('hasph')">Със снимка</button>
+      <button class="fchip" id="fc-pc-noph" onclick="togglePcChip('noph')">Без снимка</button>
+    </div>
+    <div class="sort-row">
+      <span class="sort-lbl">Сортирай:</span>
+      <button class="fchip on" id="sort-pc-upd" onclick="setPcSort('upd')">Последно</button>
+      <button class="fchip" id="sort-pc-name" onclick="setPcSort('name')">А→Я</button>
+      <button class="fchip" id="sort-pc-date" onclick="setPcSort('date')">Дата</button>
+      <button class="fchip" id="pc-reset" onclick="resetPcFilters()" style="margin-left:auto;">Изчисти</button>
+    </div>
   </div>
   <div class="grid" id="pieces-grid"></div>
 </div>
@@ -1134,7 +1144,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.1';
+const APP_VERSION = 'v1.5.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2353,7 +2363,8 @@ function renderPieces(){
   var _all=DB.pieces.slice();
   var total=_all.length;
   var items=_all.filter(function(p){
-    if(pieceStageFilter&&(p.stage||'greenware')!==pieceStageFilter)return false;
+    // v1.5.2: Normalize both sides — legacy English values map to BG (greenware→wet, glaze-fired→finished)
+    if(pieceStageFilter&&normalizeStageValue(p.stage||'wet')!==pieceStageFilter)return false;
     var hasGlaze=!!(p.recipe||p.material);
     if(f.hasglz&&!hasGlaze)return false;
     if(f.noglz&&hasGlaze)return false;
@@ -2421,6 +2432,7 @@ function togglePcChip(key){
   Object.keys(pairs).forEach(function(k){
     var el=document.getElementById('fc-pc-'+k);if(el)el.classList.toggle('on',!!activeFilters.pc[k]);
   });
+  _updatePcFilterBadge();
   renderPieces();
 }
 function setPcSort(key){
@@ -2434,6 +2446,7 @@ function setPieceStageFilter(v){
   document.querySelectorAll('.pf-chip').forEach(function(b){
     b.classList.toggle('on',b.dataset.stage===pieceStageFilter);
   });
+  _updatePcFilterBadge();
   renderPieces();
 }
 function resetPcFilters(){
@@ -2443,7 +2456,38 @@ function resetPcFilters(){
   var si=document.getElementById('pc-search');if(si)si.value='';
   document.querySelectorAll('#sc-pieces .fchip.on').forEach(function(b){b.classList.remove('on');});
   var defSort=document.getElementById('sort-pc-name');if(defSort)defSort.classList.add('on');
+  _updatePcFilterBadge();
   renderPieces();
+}
+
+// v1.5.2: Toggle filter section visibility
+function togglePcFilters(){
+  var body=document.getElementById('pc-filter-body');
+  var chev=document.getElementById('pc-filter-chev');
+  if(!body)return;
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(chev)chev.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
+}
+
+// v1.5.2: Update filter badge (count of active filters)
+function _updatePcFilterBadge(){
+  var f=activeFilters.pc||{};
+  var count=0;
+  if(pieceStageFilter)count++;
+  if(f.hasglz)count++;
+  if(f.noglz)count++;
+  if(f.hasph)count++;
+  if(f.noph)count++;
+  var badge=document.getElementById('pc-filter-badge');
+  if(badge){
+    if(count>0){
+      badge.style.display='inline-block';
+      badge.textContent=count;
+    } else {
+      badge.style.display='none';
+    }
+  }
 }
 
 // RECIPES
@@ -2637,13 +2681,28 @@ function openPieceDet(id){
   var _sa=document.getElementById('dpi-stage-actions');
   if(_sa){
     var _idx=resolveStageIdx(p.stage);
-    var _prev=_idx>0?STAGES[_idx-1]:null;
-    var _next=_idx<STAGES.length-1?STAGES[_idx+1]:null;
-    var _html='';
-    if(_prev)_html+='<button class="btn bg" style="flex:1;margin-top:0" onclick="shiftPieceStage(-1)">← '+_prev.l+'</button>';
-    if(_next)_html+='<button class="btn bg" style="flex:1;margin-top:0" onclick="shiftPieceStage(1)">'+_next.l+' →</button>';
-    _sa.innerHTML=_html;
-    _sa.style.display=_html?'flex':'none';
+    var _curStage=STAGES[_idx];
+    // v1.5.2: Build progress-dot indicator — visual status, not action buttons
+    var _dotsHtml='';
+    for(var _i=0;_i<STAGES.length;_i++){
+      var _isActive=(_i===_idx);
+      var _isPassed=(_i<_idx);
+      var _dotColor=_isActive?'var(--primary)':(_isPassed?'var(--primary-soft)':'var(--bdr)');
+      var _dotSize=_isActive?'10px':'7px';
+      _dotsHtml+='<div title="'+STAGES[_i].l+'" style="width:'+_dotSize+';height:'+_dotSize+';border-radius:50%;background:'+_dotColor+';transition:all .2s ease;'+(_isActive?'box-shadow:0 0 0 3px var(--primary-soft);':'')+'"></div>';
+    }
+    var _canPrev=_idx>0;
+    var _canNext=_idx<STAGES.length-1;
+    _sa.innerHTML=
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;width:100%;">'
+        +'<div style="display:flex;align-items:center;gap:8px;justify-content:center;">'
+          +(_canPrev?'<button onclick="shiftPieceStage(-1)" aria-label="Назад" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:4px 8px;line-height:1;">‹</button>':'<span style="width:24px;"></span>')
+          +'<div style="display:flex;align-items:center;gap:6px;">'+_dotsHtml+'</div>'
+          +(_canNext?'<button onclick="shiftPieceStage(1)" aria-label="Напред" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:4px 8px;line-height:1;">›</button>':'<span style="width:24px;"></span>')
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;font-weight:500;">'+(_curStage?_curStage.l:'')+'</div>'
+      +'</div>';
+    _sa.style.display='block';
   }
   const tests=DB.tests.filter(t=>t.pieces?.includes(id));
   document.getElementById('dpi-tests').innerHTML=tests.length?tests.map(t=>`<div style="font-size:13px;color:var(--tx2);padding:6px 0;border-bottom:1px solid var(--bdr)">${DB.recipes.find(r=>r.id===t.recipeId)?.name||'Тест'} · ${t.date||''}</div>`).join(''):'<div style="font-size:12px;color:var(--tx3);padding:8px 0">Няма свързани тестове</div>';
