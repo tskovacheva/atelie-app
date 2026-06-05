@@ -1120,7 +1120,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.0';
+const APP_VERSION = 'v1.5.0.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3622,36 +3622,84 @@ function delMat(){
 var PH_MAX_BYTES=10*1024*1024; // 10 MB input (ще се компресира)
 var PH_MAX_DIM=800;
 var PH_QUALITY=0.75;
-function resizeAndAdd(file,arr,maxItems,prevId){
+function resizeAndAdd(file,arr,maxItems,prevId,attempt){
   if(arr.length>=maxItems){toast('Максимум '+maxItems+' снимки');return;}
   if(file.size>PH_MAX_BYTES){toast('Снимката е твърде голяма (над 10 MB)');return;}
+  attempt=attempt||1;
+  // v1.5.0.1: Retry once on FileReader/Image failure — handles PWA suspension races on Android
+  var MAX_ATTEMPTS=2;
   var reader=new FileReader();
   reader.onload=function(ev){
     var img=new Image();
     img.onload=function(){
-      var w=img.width,h=img.height;
-      var scale=Math.min(1,PH_MAX_DIM/Math.max(w,h));
-      var canvas=document.createElement('canvas');
-      canvas.width=Math.round(w*scale);
-      canvas.height=Math.round(h*scale);
-      var ctx=canvas.getContext('2d');
-      ctx.fillStyle='#ffffff';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      var compressed=canvas.toDataURL('image/jpeg',PH_QUALITY);
-      arr.push(compressed);
-      renderPrev(prevId,arr);
+      try{
+        var w=img.width,h=img.height;
+        var scale=Math.min(1,PH_MAX_DIM/Math.max(w,h));
+        var canvas=document.createElement('canvas');
+        canvas.width=Math.round(w*scale);
+        canvas.height=Math.round(h*scale);
+        var ctx=canvas.getContext('2d');
+        ctx.fillStyle='#ffffff';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        var compressed=canvas.toDataURL('image/jpeg',PH_QUALITY);
+        arr.push(compressed);
+        renderPrev(prevId,arr);
+      } catch(err){
+        console.warn('[photo] canvas error attempt',attempt,err);
+        if(attempt<MAX_ATTEMPTS){
+          setTimeout(function(){resizeAndAdd(file,arr,maxItems,prevId,attempt+1);},300);
+        } else {
+          toast('Грешка при обработка на снимката — опитай пак');
+        }
+      }
     };
-    img.onerror=function(){toast('Грешка при зареждане на снимката');};
-    img.src=ev.target.result;
+    img.onerror=function(){
+      console.warn('[photo] img.onerror attempt',attempt);
+      if(attempt<MAX_ATTEMPTS){
+        setTimeout(function(){resizeAndAdd(file,arr,maxItems,prevId,attempt+1);},300);
+      } else {
+        toast('Грешка при зареждане на снимката — опитай пак');
+      }
+    };
+    try{img.src=ev.target.result;}
+    catch(err){
+      console.warn('[photo] img.src error',err);
+      if(attempt<MAX_ATTEMPTS){
+        setTimeout(function(){resizeAndAdd(file,arr,maxItems,prevId,attempt+1);},300);
+      } else {
+        toast('Грешка при обработка на снимката — опитай пак');
+      }
+    }
   };
-  reader.onerror=function(){toast('Грешка при четене на файла');};
-  reader.readAsDataURL(file);
+  reader.onerror=function(){
+    console.warn('[photo] reader.onerror attempt',attempt);
+    if(attempt<MAX_ATTEMPTS){
+      // Retry with a fresh FileReader after a short delay (gives PWA time to recover)
+      setTimeout(function(){resizeAndAdd(file,arr,maxItems,prevId,attempt+1);},300);
+    } else {
+      toast('Грешка при четене на файла — опитай пак');
+    }
+  };
+  try{reader.readAsDataURL(file);}
+  catch(err){
+    console.warn('[photo] readAsDataURL exception',err);
+    if(attempt<MAX_ATTEMPTS){
+      setTimeout(function(){resizeAndAdd(file,arr,maxItems,prevId,attempt+1);},300);
+    } else {
+      toast('Грешка при четене на файла — опитай пак');
+    }
+  }
 }
 function handlePh(e,prevId,arr,maxItems){
   var max=maxItems||5;
-  Array.from(e.target.files).forEach(function(f){resizeAndAdd(f,arr,max,prevId);});
+  // v1.5.0.1: Snapshot files and clear input immediately — releases Android file lock
+  var files=Array.from(e.target.files||[]);
   e.target.value='';
+  // Defer processing slightly — gives PWA time to resume from native picker
+  setTimeout(function(){
+    files.forEach(function(f){resizeAndAdd(f,arr,max,prevId);});
+  },50);
 }
 function _phArr(id){
   if(id==='pi-prev')return pPh;
