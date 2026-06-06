@@ -939,6 +939,22 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
    </div>
    <div class="f" id="mi-stock-field"><label>Налично количество (г)</label><input type="number" id="mi-stock"></div>
       <div class="f"><label>Известие при под (г)</label><input type="number" id="mi-alert" placeholder="напр. 100"></div>
+      <!-- v1.5.4: Cost per unit -->
+      <div style="display:flex;gap:9px;">
+        <div class="f" style="flex:2"><label>Цена (€)</label><input type="number" id="mi-cost" step="0.01" placeholder="напр. 4.50"></div>
+        <div class="f" style="flex:1"><label>за</label>
+          <select id="mi-cost-unit">
+            <option value="">—</option>
+            <option value="g">грам</option>
+            <option value="kg">килограм</option>
+            <option value="L">литър</option>
+            <option value="ml">милилитър</option>
+            <option value="бр">брой</option>
+            <option value="m">метър</option>
+            <option value="other">друго</option>
+          </select>
+        </div>
+      </div>
       <div class="f">
         <label>Химичен анализ (% оксиди) — по желание</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
@@ -1063,6 +1079,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <select id="ev-dec-material-pick" style="flex:1"><option value="">— избери —</option></select>
             <button type="button" class="btn bg" style="padding:8px 14px;margin-top:0;font-size:12px;" onclick="addDecMaterial()">+ Добави</button>
           </div>
+          <button type="button" onclick="openNewMaterialFromDecoration()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:4px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нов материал</button>
         </div>
         <div class="f"><label>Нанасяне</label>
           <select id="ev-dec-application">
@@ -1155,7 +1172,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.3';
+const APP_VERSION = 'v1.5.4';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2587,7 +2604,10 @@ function renderMaterials(){
     items.forEach(function(m){
       var low2=m.alertAt&&m.stock!=null&&parseFloat(m.stock)<=parseFloat(m.alertAt);
       var ic=m.photo?"<img src=\""+m.photo+"\" style=\"width:100%;height:100%;object-fit:cover\">":icons[cat];
-      var sub=(m.formula||"")+(m.brand?" · "+m.brand:"")+(m.stock!=null?" · "+m.stock+"г":"")+(low2?" ⚠️":"")+(m.updatedAt?" · ред. "+timeAgo(m.updatedAt):"");
+      // v1.5.4: Include cost in sub-text if available
+      var _unitL={g:'г',kg:'кг',L:'л',ml:'мл','бр':'бр',m:'м',other:''};
+      var costStr=(m.cost!=null)?(' · '+m.cost.toFixed(2)+'€'+(m.costUnit?'/'+(_unitL[m.costUnit]||m.costUnit):'')):'';
+      var sub=(m.formula||"")+(m.brand?" · "+m.brand:"")+(m.stock!=null?" · "+m.stock+"г":"")+costStr+(low2?" ⚠️":"")+(m.updatedAt?" · ред. "+timeAgo(m.updatedAt):"");
       html+='<div class="li" onclick="openMatDet(\''+m.id+'\')">'
         +'<div class="li-ic">'+ic+'</div>'
         +'<div class="li-body"><div class="li-t">'+m.name+'</div><div class="li-s">'+sub+'</div></div>'
@@ -3034,6 +3054,12 @@ function openMatDet(id){
     else if(m.foodsafe==='no')rows.push(dr('Безопасна за храна','Не (декоративна)'));
   }
   if(m.alertAt)rows.push(dr('Известие при',m.alertAt+'г'));
+  // v1.5.4: Cost row
+  if(m.cost!=null){
+    var _unitLabels={g:'грам',kg:'килограм',L:'литър',ml:'милилитър','бр':'брой',m:'метър',other:''};
+    var _unit=m.costUnit?(_unitLabels[m.costUnit]||m.costUnit):'';
+    rows.push(dr('Цена',m.cost.toFixed(2)+' €'+(_unit?' / '+_unit:'')));
+  }
   document.getElementById('dmat-info').innerHTML=rows.filter(Boolean).join('');
   document.getElementById('dmat-notes').textContent=m.notes||'—';
   document.getElementById('dmat-info').innerHTML+=m.updatedAt?dr('Последно редактирано',new Date(m.updatedAt).toLocaleDateString('bg-BG')):'';
@@ -3376,6 +3402,40 @@ function openNewRecipeFromPiece(){
   };
   openRecipeMo(null);
 }
+
+// v1.5.4: Add new material directly from Decoration event modal
+function openNewMaterialFromDecoration(){
+  // Resolve current technique to pre-select right material category
+  var techEl = document.getElementById('ev-dec-technique');
+  var technique = techEl ? techEl.value : '';
+  if(!technique){toast('Първо избери техника');return;}
+  var cats = _decMaterialCats(technique);
+  if(cats.length === 0 && technique !== 'glaze'){toast('Тази техника не изисква материал');return;}
+  // For glaze: prefer 'glaze' category (it can also be a recipe, but here we add a material)
+  var defaultCat = technique === 'glaze' ? 'glaze' : cats[0];
+
+  var savedEditId = _saveEditIdForNested();
+  editId = null;
+  _nestedAddCallback = function(newMat, kind){
+    editId = savedEditId;
+    if(kind !== 'material') return;
+    // Repopulate picker, then auto-add new material as a chip
+    _populateDecMaterialPicker(technique);
+    // Push the new material into the chips array (same as addDecMaterial does)
+    if(typeof _decMaterialIds !== 'undefined' && _decMaterialIds.indexOf(newMat.id) < 0){
+      _decMaterialIds.push(newMat.id);
+      _renderDecMaterialChips();
+    }
+    toast('Материалът "'+(newMat.name||'')+'" е добавен');
+  };
+  // Open mat modal with pre-selected category
+  openMatMo(null);
+  var catEl = document.getElementById('mi-cat');
+  if(catEl){
+    catEl.value = defaultCat;
+    if(typeof toggleMatFields === 'function') toggleMatFields();
+  }
+}
 function editPiece(){closeDet('det-piece');editId=curPiece;openPieceMo(DB.pieces.find(p=>p.id===editId));}
 function delPiece(){if(!confirm('Изтрий?'))return;DB.pieces=DB.pieces.filter(p=>p.id!==curPiece);save();closeDet('det-piece');renderPieces();toast('Изтрито');}
 
@@ -3683,6 +3743,11 @@ function openMatMo(m){
     var el=document.getElementById('mi-'+f);
     if(el)el.value=(m&&m.chem&&m.chem[f]!=null)?m.chem[f]:'';
   });
+  // v1.5.4: Load cost fields
+  var costEl=document.getElementById('mi-cost');
+  if(costEl)costEl.value=(m&&m.cost!=null)?m.cost:'';
+  var costUnitEl=document.getElementById('mi-cost-unit');
+  if(costUnitEl)costUnitEl.value=(m&&m.costUnit)?m.costUnit:'';
   toggleMatFields();
   document.getElementById('mi-cat').onchange=toggleMatFields;
   renderPrev('mi-prev',mPh);openMo('mo-mat');
@@ -3756,6 +3821,14 @@ function saveMat(){
     if(el&&el.value!=='')chem[f]=parseFloat(el.value);
   });
   if(Object.keys(chem).length)m.chem=chem;
+  // v1.5.4: Save cost fields
+  var costEl=document.getElementById('mi-cost');
+  if(costEl&&costEl.value!==''){
+    var costVal=parseFloat(costEl.value);
+    if(!isNaN(costVal)&&costVal>=0)m.cost=costVal;
+  }
+  var costUnitEl=document.getElementById('mi-cost-unit');
+  if(costUnitEl&&costUnitEl.value)m.costUnit=costUnitEl.value;
   if(editId)DB.materials[DB.materials.findIndex(x=>x.id===editId)]=m;else DB.materials.push(m);
   save();
   // v1.4.6: If we're in nested-add mode, hand off to caller (skip normal close flow)
