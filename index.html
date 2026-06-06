@@ -1075,10 +1075,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="f" id="ev-dec-materials-wrap" style="display:none">
           <label>Материали</label>
           <div id="ev-dec-materials-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:24px;"></div>
-          <div style="display:flex;gap:6px;">
-            <select id="ev-dec-material-pick" style="flex:1"><option value="">— избери —</option></select>
-            <button type="button" class="btn bg" style="padding:8px 14px;margin-top:0;font-size:12px;" onclick="addDecMaterial()">+ Добави</button>
-          </div>
+          <select id="ev-dec-material-pick" onchange="addDecMaterial()"><option value="">— добави материал —</option></select>
           <button type="button" onclick="openNewMaterialFromDecoration()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:4px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нов материал</button>
         </div>
         <div class="f"><label>Нанасяне</label>
@@ -1172,7 +1169,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.4';
+const APP_VERSION = 'v1.5.4.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3338,6 +3335,24 @@ function _restoreEditIdAfterNested(savedEditId){
   editId = savedEditId;
 }
 
+// v1.5.4.1: Boost z-index of nested modal so it appears above other modals.
+// All modals share z-index:200, so DOM order decides — but for nested-add,
+// the called modal may be earlier in DOM (e.g. mo-mat is before mo-event in DOM).
+// We boost the called modal so it overlays whatever's open.
+var _boostedNestedModalId=null;
+function _boostNestedModal(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.zIndex='300';
+  _boostedNestedModalId=id;
+}
+function _unboostNestedModal(){
+  if(!_boostedNestedModalId)return;
+  var el=document.getElementById(_boostedNestedModalId);
+  if(el)el.style.zIndex='';
+  _boostedNestedModalId=null;
+}
+
 function openNewClayFromPiece(){
   var savedEditId = _saveEditIdForNested();
   editId = null; // for nested modal — it must treat as new
@@ -3430,6 +3445,9 @@ function openNewMaterialFromDecoration(){
   };
   // Open mat modal with pre-selected category
   openMatMo(null);
+  // v1.5.4.1: Boost z-index — mo-mat is earlier in DOM than mo-event, so without
+  // this boost it appears underneath the event modal.
+  _boostNestedModal('mo-mat');
   var catEl = document.getElementById('mi-cat');
   if(catEl){
     catEl.value = defaultCat;
@@ -3993,6 +4011,10 @@ function closeMo(id){
   if (_nestedAddCallback && (id === 'mo-mat' || id === 'mo-recipe')) {
     _nestedAddCallback = null;
     editId = null; // restore — was set to null for new entity
+  }
+  // v1.5.4.1: Restore z-index if this modal was boosted for nested-add
+  if (_boostedNestedModalId === id) {
+    _unboostNestedModal();
   }
   // Remove from stack
   var i = _overlayStack.length - 1;
