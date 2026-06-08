@@ -1169,7 +1169,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.4.1';
+const APP_VERSION = 'v1.5.4.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1916,6 +1916,10 @@ function _resolveMaterialRef(ref){
     var m=DB.materials.find(function(x){return x.id===ref.slice(4);});
     return m?m.name:'(изтрит материал)';
   }
+  // v1.5.4.2: Safety fallback — if ref has no prefix, try to find it as raw material ID
+  // (handles legacy events written before prefix was enforced)
+  var raw=DB.materials.find(function(x){return x.id===ref;});
+  if(raw)return raw.name;
   return ref;
 }
 
@@ -3436,9 +3440,10 @@ function openNewMaterialFromDecoration(){
     if(kind !== 'material') return;
     // Repopulate picker, then auto-add new material as a chip
     _populateDecMaterialPicker(technique);
-    // Push the new material into the chips array (same as addDecMaterial does)
-    if(typeof _decMaterialIds !== 'undefined' && _decMaterialIds.indexOf(newMat.id) < 0){
-      _decMaterialIds.push(newMat.id);
+    // v1.5.4.2: Push with 'mat:' prefix — without it _resolveMaterialRef shows raw ID
+    var matRef = 'mat:' + newMat.id;
+    if(typeof _decMaterialIds !== 'undefined' && _decMaterialIds.indexOf(matRef) < 0){
+      _decMaterialIds.push(matRef);
       _renderDecMaterialChips();
     }
     toast('Материалът "'+(newMat.name||'')+'" е добавен');
@@ -4687,9 +4692,9 @@ function newPieceFromRecipe(){
 // ══ FIRING PROFILES ═════════════════════════════════════════
 var curFP=null;
 var FP_TYPES=[
-  {v:'bisque',l:'Biscuit'},
-  {v:'glaze', l:'Glazurno'},
-  {v:'other', l:'Drugo'},
+  {v:'bisque',l:'Бисквит'},
+  {v:'glaze', l:'Глазурно'},
+  {v:'other', l:'Друго'},
 ];
 function fpTypeLabel(v){var t=FP_TYPES.find(function(x){return x.v===v;});return t?t.l:v||'—';}
 
@@ -4699,7 +4704,10 @@ function renderFiringProfiles(){
   var cntEl=document.getElementById('cnt-fp');if(cntEl)cntEl.textContent=items.length+' профила';
   if(!items.length){l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">Няма профили</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   l.innerHTML=items.map(function(fp){
-    var sub=[fpTypeLabel(fp.type),fp.ramp1To?fp.ramp1To+'°C':'',fp.holdMin?fp.holdMin+' мин':''].filter(Boolean).join(' · ');
+    // v1.5.4.2: Show peak temperature (ramp2To) — that's the meaningful one.
+    // Fall back to ramp1To if no second ramp (single-ramp programs).
+    var peakTemp=fp.ramp2To||fp.ramp1To;
+    var sub=[fpTypeLabel(fp.type),peakTemp?peakTemp+'°C':'',fp.holdMin?fp.holdMin+' мин':''].filter(Boolean).join(' · ');
     return '<div class="li" onclick="openFPDet(\''+fp.id+'\')">'
       +'<div class="li-ic" style="font-size:18px;">🔥</div>'
       +'<div class="li-body"><div class="li-t">'+fp.name+'</div><div class="li-s">'+sub+'</div></div>'
