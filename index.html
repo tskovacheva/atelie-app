@@ -425,6 +425,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <button class="tb" id="mbtab-glaze" onclick="switchMat('glaze')">Глазури</button>
     <button class="tb" id="mbtab-engobe" onclick="switchMat('engobe')">Ангоби</button>
     <button class="tb" id="mbtab-underglaze" onclick="switchMat('underglaze')">Подгл. бои</button>
+    <button class="tb" id="mbtab-raw" onclick="switchMat('raw')">Суровини</button>
     <button class="tb" id="mbtab-wish" onclick="switchMat('wish')">Wishlist</button>
   </div>
   <div id="mat-clays"></div>
@@ -433,6 +434,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div id="mat-glaze" style="display:none"></div>
   <div id="mat-engobe" style="display:none"></div>
   <div id="mat-underglaze" style="display:none"></div>
+  <div id="mat-raw" style="display:none"></div>
   <div id="mat-wish" style="display:none"></div>
 </div>
 
@@ -886,6 +888,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="clays">Глина</option><option value="base">Базова суровина</option>
           <option value="ox">Оксид / Оцветител</option><option value="glaze">Готова глазура</option>
           <option value="engobe">Ангоба</option><option value="underglaze">Подглазурна боя</option>
+          <option value="raw">Суровина (дива глина)</option>
         </select>
       </div>
       <div class="f"><label>Химична формула</label><input type="text" id="mi-formula"></div>
@@ -923,20 +926,20 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           </select>
         </div>
       </div>
-      <div class="f">
-    <label>Статус</label>
-    <div style="display:flex;gap:8px;margin-top:6px;">
-     <button type="button" id="mi-btn-have" onclick="setMatStatus('have')"
-      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--acc);background:var(--acc);color:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
-      Налично
-     </button>
-     <button type="button" id="mi-btn-wish" onclick="setMatStatus('wish')"
-      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--bdr2);background:transparent;color:var(--tx2);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
-      Wishlist
-     </button>
-    </div>
-    <input type="hidden" id="mi-status-val" value="have">
-   </div>
+      <!-- v1.6.0: Raw material (wild clay) specific — origin / batch identity -->
+      <div id="mi-raw-f" style="display:none">
+        <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:8px;">🏔 ПРОИЗХОД НА ПАРТИДАТА</div>
+          <div class="f" style="margin-bottom:8px;"><label style="font-size:10px;">Локация / находище</label><input type="text" id="mi-raw-location" placeholder="напр. Xi Beach, Кефалония"></div>
+          <div class="f" style="margin-bottom:8px;"><label style="font-size:10px;">Координати (по избор)</label><input type="text" id="mi-raw-coords" placeholder="напр. 38.1523, 20.4102"></div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Дата на добиване</label><input type="date" id="mi-raw-date"></div>
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Начално сухо тегло (г)</label><input type="number" id="mi-raw-weight" placeholder="напр. 4500"></div>
+          </div>
+          <div class="f" style="margin-bottom:0;"><label style="font-size:10px;">Геоложки / правни бележки</label><textarea id="mi-raw-geonotes" rows="2" placeholder="напр. плио-плейстоцен, синьо-сива, UNESCO геопарк; два пласта — сив (фин) и кафяв (песъчлив)"></textarea></div>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);font-style:italic;margin-bottom:6px;">Процесната биография (промивки, пресяване, отлежаване) се записва в детайлния изглед след запазване.</div>
+      </div>
    <div class="f" id="mi-stock-field"><label>Налично количество (г)</label><input type="number" id="mi-stock"></div>
       <div class="f"><label>Известие при под (г)</label><input type="number" id="mi-alert" placeholder="напр. 100"></div>
       <!-- v1.5.4: Cost per unit -->
@@ -1151,6 +1154,100 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- MODAL: Raw material process event (v1.6.0) -->
+<div class="mo" id="mo-raw-event" onclick="closeBg(event,'mo-raw-event')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-raw-event-t">Нова стъпка</div><button class="mo-x" onclick="closeMo('mo-raw-event')">×</button></div>
+      <div class="mo-b">
+        <!-- Type selector (only for new) -->
+        <div class="f" id="raw-type-wrap"><label>Тип стъпка</label>
+          <select id="raw-ev-type" onchange="onRawTypeChange()">
+            <option value="extraction">⛏ Добиване</option>
+            <option value="diagnostic">🔬 Диагностика</option>
+            <option value="wash">💧 Промивка</option>
+            <option value="sieve">🕸 Пресяване</option>
+            <option value="aging">⏳ Отлежаване / сушене</option>
+          </select>
+        </div>
+        <div class="f"><label>Дата</label><input type="date" id="raw-ev-date"></div>
+
+        <!-- EXTRACTION fields -->
+        <div id="raw-f-extraction" style="display:none">
+          <div class="f"><label>Начално сухо тегло (г)</label><input type="number" id="raw-ext-weight" placeholder="напр. 4500"></div>
+        </div>
+
+        <!-- DIAGNOSTIC fields -->
+        <div id="raw-f-diagnostic" style="display:none">
+          <div class="f"><label>Оцетен тест (карбонат)</label>
+            <select id="raw-diag-vinegar">
+              <option value="">—</option>
+              <option value="силно">Силно шупване (много CaCO₃)</option>
+              <option value="слабо">Слабо шупване</option>
+              <option value="няма">Няма реакция</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- WASH fields -->
+        <div id="raw-f-wash" style="display:none">
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1"><label>Пореден №</label><input type="number" id="raw-wash-num" placeholder="1"></div>
+            <div class="f" style="flex:1"><label>Съотношение</label><input type="text" id="raw-wash-ratio" placeholder="1:3"></div>
+          </div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1"><label>ppm преди</label><input type="number" id="raw-wash-ppm-before" placeholder="5020"></div>
+            <div class="f" style="flex:1"><label>ppm след</label><input type="number" id="raw-wash-ppm-after" placeholder="900"></div>
+          </div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1"><label>Утаяване (часове)</label><input type="number" id="raw-wash-settle" placeholder="24"></div>
+            <div class="f" style="flex:1"><label>Темп. вода (°C)</label><input type="number" id="raw-wash-temp" placeholder="20"></div>
+          </div>
+        </div>
+
+        <!-- SIEVE fields -->
+        <div id="raw-f-sieve" style="display:none">
+          <div class="f"><label>Mesh размер</label><input type="text" id="raw-sieve-mesh" placeholder="напр. 80"></div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1"><label>Тегло преди (г)</label><input type="number" id="raw-sieve-wb" placeholder="напр. 3000"></div>
+            <div class="f" style="flex:1"><label>Тегло след (г)</label><input type="number" id="raw-sieve-wa" placeholder="напр. 2800"></div>
+          </div>
+          <div class="f"><label>Наблюдения</label><input type="text" id="raw-sieve-obs" placeholder="напр. остатъчни карбонатни зрънца"></div>
+        </div>
+
+        <!-- AGING fields -->
+        <div id="raw-f-aging" style="display:none">
+          <div class="f"><label>Метод</label>
+            <select id="raw-aging-method">
+              <option value="">—</option>
+              <option value="гипс">Гипсова плоча</option>
+              <option value="платно">Платно</option>
+              <option value="газобетон">Газобетон</option>
+              <option value="тава">Тава</option>
+              <option value="найлон">Найлон (отлежаване)</option>
+              <option value="друго">Друго</option>
+            </select>
+          </div>
+          <div class="f"><label>Продължителност</label><input type="text" id="raw-aging-duration" placeholder="напр. 2 седмици"></div>
+          <div class="f"><label>Крайна консистенция</label><input type="text" id="raw-aging-consistency" placeholder="напр. пластична, готова за замес"></div>
+        </div>
+
+        <!-- Common: note + photos -->
+        <div class="f"><label>Бележка</label><textarea id="raw-ev-note" rows="2" placeholder="опционално"></textarea></div>
+        <div class="f"><label>Снимки</label>
+          <div id="raw-ev-prev" class="ph-prev"></div>
+          <input type="file" id="raw-ev-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'raw-ev-prev',rawEvPh,5)">
+          <button type="button" class="btn bg" onclick="document.getElementById('raw-ev-ph').click()">📷 Добави снимки</button>
+        </div>
+
+        <button class="btn bp" onclick="saveRawEvent()">Запази</button>
+        <button class="btn bg" onclick="closeMo('mo-raw-event')">Откажи</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Storage analysis (v1.4.7) -->
 <div class="mo" id="mo-storage-analysis" onclick="closeBg(event,'mo-storage-analysis')">
   <div class="mo-sh">
@@ -1169,7 +1266,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.5.4.2';
+const APP_VERSION = 'v1.6.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1205,7 +1302,7 @@ var _nestedAddCallback=null;
 var activeFilters={rec:{},test:{},mat:{},pc:{}};
 var activeSort={rec:'name',mat:'name',pc:'name'};
 var _scrollPos={};
-let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],recIngs=[],showFavOnly=false;
+let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],rawEvPh=[],recIngs=[],showFavOnly=false;
 
 const CLAY_NAMES=['PRNF Black','Sibelco Nigra 2002','PRGF Golden Brown','MARTE Red','TOFFEE Caramel','S&G 933'];
 
@@ -2021,6 +2118,125 @@ function deleteEvent(eventId){
   toast('Изтрито');
 }
 
+// ── RAW MATERIAL PROCESS EVENTS (v1.6.0) ─────────────────────
+var curRawEventEditId=null;
+function onRawTypeChange(){
+  var t=document.getElementById('raw-ev-type').value;
+  ['extraction','diagnostic','wash','sieve','aging'].forEach(function(type){
+    var el=document.getElementById('raw-f-'+type);
+    if(el)el.style.display=(type===t)?'block':'none';
+  });
+}
+function openRawEventMo(editId){
+  if(!curMat){toast('Грешка: няма избрана суровина');return;}
+  var m=DB.materials.find(function(x){return x.id===curMat;});
+  if(!m){toast('Грешка: суровината не е намерена');return;}
+  rawEvPh=[];
+  curRawEventEditId=editId||null;
+  var ev=null;
+  if(editId&&m.raw&&Array.isArray(m.raw.events)){
+    ev=m.raw.events.find(function(x){return x.id===editId;});
+  }
+  document.getElementById('mo-raw-event-t').textContent=ev?'Редактирай стъпка':'Нова стъпка';
+  // Type — locked on edit (can't change type)
+  var typeEl=document.getElementById('raw-ev-type');
+  var typeWrap=document.getElementById('raw-type-wrap');
+  if(ev){
+    typeEl.value=ev.type;
+    if(typeWrap)typeWrap.style.display='none';
+  } else {
+    typeEl.value='extraction';
+    if(typeWrap)typeWrap.style.display='';
+  }
+  onRawTypeChange();
+  // Common fields
+  document.getElementById('raw-ev-date').value=ev&&ev.date?ev.date:new Date().toISOString().slice(0,10);
+  document.getElementById('raw-ev-note').value=ev&&ev.note?ev.note:'';
+  if(ev&&Array.isArray(ev.photos))rawEvPh=ev.photos.slice();
+  renderPrev('raw-ev-prev',rawEvPh);
+  // Type-specific fields
+  var d=(ev&&ev.data)||{};
+  document.getElementById('raw-ext-weight').value=d.weight!=null?d.weight:'';
+  document.getElementById('raw-diag-vinegar').value=d.vinegar||'';
+  document.getElementById('raw-wash-num').value=d.washNum!=null?d.washNum:'';
+  document.getElementById('raw-wash-ratio').value=d.ratio||'';
+  document.getElementById('raw-wash-ppm-before').value=d.ppmBefore!=null?d.ppmBefore:'';
+  document.getElementById('raw-wash-ppm-after').value=d.ppmAfter!=null?d.ppmAfter:'';
+  document.getElementById('raw-wash-settle').value=d.settleHours!=null?d.settleHours:'';
+  document.getElementById('raw-wash-temp').value=d.waterTemp!=null?d.waterTemp:'';
+  document.getElementById('raw-sieve-mesh').value=d.mesh||'';
+  document.getElementById('raw-sieve-wb').value=d.weightBefore!=null?d.weightBefore:'';
+  document.getElementById('raw-sieve-wa').value=d.weightAfter!=null?d.weightAfter:'';
+  document.getElementById('raw-sieve-obs').value=d.observations||'';
+  document.getElementById('raw-aging-method').value=d.method||'';
+  document.getElementById('raw-aging-duration').value=d.duration||'';
+  document.getElementById('raw-aging-consistency').value=d.consistency||'';
+  openMo('mo-raw-event');
+}
+function saveRawEvent(){
+  if(!curMat){toast('Грешка: няма избрана суровина');return;}
+  var m=DB.materials.find(function(x){return x.id===curMat;});
+  if(!m){toast('Грешка');return;}
+  if(!m.raw)m.raw={};
+  if(!Array.isArray(m.raw.events))m.raw.events=[];
+  var type=document.getElementById('raw-ev-type').value;
+  var ev={
+    id:curRawEventEditId||uid(),
+    type:type,
+    date:document.getElementById('raw-ev-date').value||'',
+    note:document.getElementById('raw-ev-note').value||'',
+    photos:[...rawEvPh],
+    data:{}
+  };
+  var d=ev.data;
+  function _num(id){var v=document.getElementById(id).value;return v!==''?parseFloat(v):null;}
+  function _str(id){return document.getElementById(id).value||'';}
+  if(type==='extraction'){
+    var w=_num('raw-ext-weight');if(w!=null)d.weight=w;
+  } else if(type==='diagnostic'){
+    var vg=_str('raw-diag-vinegar');if(vg)d.vinegar=vg;
+  } else if(type==='wash'){
+    var wn=_num('raw-wash-num');if(wn!=null)d.washNum=wn;
+    var rt=_str('raw-wash-ratio');if(rt)d.ratio=rt;
+    var pb=_num('raw-wash-ppm-before');if(pb!=null)d.ppmBefore=pb;
+    var pa=_num('raw-wash-ppm-after');if(pa!=null)d.ppmAfter=pa;
+    var st=_num('raw-wash-settle');if(st!=null)d.settleHours=st;
+    var wt=_num('raw-wash-temp');if(wt!=null)d.waterTemp=wt;
+  } else if(type==='sieve'){
+    var ms=_str('raw-sieve-mesh');if(ms)d.mesh=ms;
+    var wb=_num('raw-sieve-wb');if(wb!=null)d.weightBefore=wb;
+    var wa=_num('raw-sieve-wa');if(wa!=null)d.weightAfter=wa;
+    var ob=_str('raw-sieve-obs');if(ob)d.observations=ob;
+  } else if(type==='aging'){
+    var mt=_str('raw-aging-method');if(mt)d.method=mt;
+    var du=_str('raw-aging-duration');if(du)d.duration=du;
+    var co=_str('raw-aging-consistency');if(co)d.consistency=co;
+  }
+  if(curRawEventEditId){
+    var idx=m.raw.events.findIndex(function(x){return x.id===curRawEventEditId;});
+    if(idx>=0)m.raw.events[idx]=ev;else m.raw.events.push(ev);
+  } else {
+    m.raw.events.push(ev);
+  }
+  m.updatedAt=new Date().toISOString();
+  save();
+  closeMo('mo-raw-event');
+  openMatDet(curMat);
+  toast(curRawEventEditId?'Обновено':'Добавена стъпка');
+  curRawEventEditId=null;
+}
+function deleteRawEvent(eventId){
+  if(!curMat)return;
+  if(!confirm('Изтрий тази стъпка?'))return;
+  var m=DB.materials.find(function(x){return x.id===curMat;});
+  if(!m||!m.raw||!Array.isArray(m.raw.events))return;
+  m.raw.events=m.raw.events.filter(function(x){return x.id!==eventId;});
+  m.updatedAt=new Date().toISOString();
+  save();
+  openMatDet(curMat);
+  toast('Изтрито');
+}
+
 // ── STAGE / PROCESS SYNCHRONIZATION (v1.4.2.3) ───────────────
 // Direction: Процес → Slider (one-way).
 // When stage events are added/edited/deleted in Процес, piece.stage is
@@ -2586,7 +2802,7 @@ function renderMaterials(){
     if(activeSort.mat==='stock'){return arr.slice().sort(function(a,b){return (a.stock!=null?parseFloat(a.stock):Infinity)-(b.stock!=null?parseFloat(b.stock):Infinity);});}
     return arr.slice().sort(function(a,b){return a.name.localeCompare(b.name,'bg');});
   }
-  var cats={clays:[],base:[],ox:[],glaze:[],engobe:[],underglaze:[],wish:[]};
+  var cats={clays:[],base:[],ox:[],glaze:[],engobe:[],underglaze:[],raw:[],wish:[]};
   DB.materials.forEach(function(m){if(m.wishlist===true){cats.wish.push(m);}else if(cats[m.cat]){cats[m.cat].push(m);}});
   var low=getLowStock().length;
   document.getElementById("st-clays").textContent=cats.clays.length;
@@ -2594,10 +2810,10 @@ function renderMaterials(){
   var gs=document.getElementById("st-glazes");if(gs)gs.textContent=cats.glaze.length;
   var sl=document.getElementById("st-low");if(sl)sl.textContent=low;
   var lsChip=document.getElementById("fc-mat-lowstock");if(lsChip)lsChip.textContent=low>0?('Само ниски ('+low+')'):'Само ниски';
-  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨",engobe:"🎭",underglaze:"🖌"};
+  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨",engobe:"🎭",underglaze:"🖌",raw:"⛏"};
   var hasQ=q||f.lowstock;
   var lowEmpty='<div class="empty" style="padding:30px"><div class="empty-k">∅</div><div class="empty-t">Няма материали под прага</div><div class="empty-s">Всички наличности са в норма</div></div>';
-  ["clays","base","ox","glaze","engobe","underglaze"].forEach(function(cat){
+  ["clays","base","ox","glaze","engobe","underglaze","raw"].forEach(function(cat){
     var el=document.getElementById("mat-"+cat);if(!el)return;
     var items=sortMats(cats[cat].filter(matchMat));
     if(!items.length){el.innerHTML=f.lowstock?lowEmpty:('<div class="empty" style="padding:30px"><div class="empty-t">'+(hasQ?'Няма резултати':'Няма добавени')+'</div></div>');return;}
@@ -2634,7 +2850,7 @@ function renderMaterials(){
 
 function switchMat(t){
   matTab=t;
-  ['clays','base','ox','glaze','engobe','underglaze','wish'].forEach(function(k){
+  ['clays','base','ox','glaze','engobe','underglaze','raw','wish'].forEach(function(k){
     var el=document.getElementById('mat-'+k);if(el)el.style.display=k===t?'block':'none';
   });
   document.querySelectorAll('#mat-tabs .tb').forEach(function(b){
@@ -3028,7 +3244,7 @@ function openMatDet(id){
   const hero=document.getElementById('dmat-hero');
   if(!hero){console.error('dmat-hero not found');return;}
   hero.innerHTML=m.photo?`<img src="${m.photo}" alt="">`:K(70);
-  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура',engobe:'Ангоба',underglaze:'Подглазурна боя'};
+  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура',engobe:'Ангоба',underglaze:'Подглазурна боя',raw:'Суровина (дива глина)'};
   document.getElementById('dmat-t').textContent=m.name;
   document.getElementById('dmat-m').textContent=[catLabel[m.cat]||m.cat,m.brand].filter(Boolean).join(' · ');
   const rows=[
@@ -3037,6 +3253,13 @@ function openMatDet(id){
     dr('Наличност',m.stock!=null?m.stock+'г':'—'),
     dr('Статус',m.wishlist?'Wishlist':'Налично'),
   ];
+  // v1.6.0: Raw material origin rows
+  if(m.cat==='raw'&&m.raw){
+    if(m.raw.location)rows.push(dr('Локация',m.raw.location));
+    if(m.raw.coords)rows.push(dr('Координати',m.raw.coords));
+    if(m.raw.date)rows.push(dr('Добито на',new Date(m.raw.date).toLocaleDateString('bg-BG')));
+    if(m.raw.weight!=null)rows.push(dr('Начално сухо тегло',m.raw.weight+'г'));
+  }
   if(m.cat==='clays'){
     var _bq=m.fireBisqueTemp;
     var _gl=m.fireGlazeTemp||m.fireTemp;
@@ -3163,7 +3386,114 @@ function openMatDet(id){
   } else {
     _mtRow.style.display='none';
   }
+  // v1.6.0: Raw material process biography (geonotes + process timeline)
+  _renderRawSection(m);
   _openDet('det-mat');
+}
+
+// v1.6.0: Render raw-material geonotes + process timeline in material detail
+function _renderRawSection(m){
+  var anchor=document.getElementById('dmat-notes').parentNode;
+  // ── Geonotes row
+  var _geoRow=document.getElementById('dmat-geo-row');
+  if(!_geoRow){
+    _geoRow=document.createElement('div');_geoRow.id='dmat-geo-row';_geoRow.className='ds';
+    _geoRow.innerHTML='<div class="ds-t">Геоложки / правни бележки</div><div id="dmat-geo-val" style="font-size:13px;color:var(--tx2);line-height:1.5;white-space:pre-wrap;"></div>';
+    anchor.insertBefore(_geoRow,anchor.querySelector('.ds:last-of-type'));
+  }
+  if(m.cat==='raw'&&m.raw&&m.raw.geonotes){
+    _geoRow.style.display='';
+    document.getElementById('dmat-geo-val').textContent=m.raw.geonotes;
+  } else {
+    _geoRow.style.display='none';
+  }
+  // ── Process timeline
+  var _procRow=document.getElementById('dmat-proc-row');
+  if(!_procRow){
+    _procRow=document.createElement('div');_procRow.id='dmat-proc-row';_procRow.className='ds';
+    _procRow.innerHTML='<div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">'
+      +'<span>Процесна биография</span>'
+      +'<button onclick="openRawEventMo()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Стъпка</button>'
+      +'</div><div id="dmat-proc-val"></div>';
+    anchor.insertBefore(_procRow,anchor.querySelector('.ds:last-of-type'));
+  }
+  if(m.cat==='raw'){
+    _procRow.style.display='';
+    _renderRawTimeline(m);
+  } else {
+    _procRow.style.display='none';
+  }
+}
+
+// v1.6.0: Render the process event timeline for a raw material
+function _renderRawTimeline(m){
+  var val=document.getElementById('dmat-proc-val');
+  if(!val)return;
+  var events=(m.raw&&Array.isArray(m.raw.events))?m.raw.events:[];
+  if(events.length===0){
+    val.innerHTML='<div style="padding:14px;text-align:center;color:var(--tx3);font-style:italic;font-size:12px;">Още няма записани стъпки. Добави добиване, промивка, пресяване, отлежаване…</div>';
+    return;
+  }
+  // Sort by date (reverse chronological), then by insertion order
+  var sorted=events.slice().sort(function(a,b){
+    if(!a.date&&!b.date)return 0;
+    if(!a.date)return 1;
+    if(!b.date)return -1;
+    return b.date.localeCompare(a.date);
+  });
+  val.innerHTML=sorted.map(function(ev){
+    var icon=_rawEventIcon(ev.type);
+    var label=_rawEventLabel(ev);
+    var sub=_rawEventSub(ev);
+    var dateStr=ev.date||'—';
+    var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
+    return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);">'
+      +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:8px;">'+icon+'</div>'
+      +'<div class="li-body">'
+      +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+photoBadge+'</div>'
+      +'<div class="li-s" style="font-size:11px;">'+dateStr+(sub?' · '+sub:'')+'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;">'
+      +'<button type="button" onclick="event.stopPropagation();openRawEventMo(\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button>'
+      +'<button type="button" onclick="event.stopPropagation();deleteRawEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function _rawEventIcon(type){
+  return {extraction:'⛏',diagnostic:'🔬',wash:'💧',sieve:'🕸',aging:'⏳'}[type]||'○';
+}
+function _rawEventLabel(ev){
+  var labels={extraction:'Добиване',diagnostic:'Диагностика',wash:'Промивка',sieve:'Пресяване',aging:'Отлежаване / сушене'};
+  var base=labels[ev.type]||ev.type;
+  var d=ev.data||{};
+  // Add key identifier to label
+  if(ev.type==='wash'&&d.washNum)base+=' #'+d.washNum;
+  if(ev.type==='sieve'&&d.mesh)base+=' '+d.mesh+' mesh';
+  return base;
+}
+function _rawEventSub(ev){
+  var d=ev.data||{};
+  var parts=[];
+  if(ev.type==='wash'){
+    if(d.ppmBefore!=null&&d.ppmAfter!=null)parts.push(d.ppmBefore+'→'+d.ppmAfter+' ppm');
+    else if(d.ppmAfter!=null)parts.push(d.ppmAfter+' ppm');
+    if(d.ratio)parts.push(d.ratio);
+    if(d.settleHours)parts.push(d.settleHours+'ч утаяване');
+  } else if(ev.type==='sieve'){
+    if(d.weightBefore!=null&&d.weightAfter!=null)parts.push(d.weightBefore+'→'+d.weightAfter+'г');
+    if(d.observations)parts.push(d.observations);
+  } else if(ev.type==='extraction'){
+    if(d.weight!=null)parts.push(d.weight+'г');
+  } else if(ev.type==='aging'){
+    if(d.method)parts.push(d.method);
+    if(d.duration)parts.push(d.duration);
+  } else if(ev.type==='diagnostic'){
+    if(d.vinegar)parts.push('оцет: '+d.vinegar);
+  }
+  if(ev.note)parts.push(ev.note.length>40?ev.note.slice(0,40)+'…':ev.note);
+  return parts.join(' · ');
 }
 
 // ══ PIECE MODAL ══
@@ -3771,6 +4101,13 @@ function openMatMo(m){
   if(costEl)costEl.value=(m&&m.cost!=null)?m.cost:'';
   var costUnitEl=document.getElementById('mi-cost-unit');
   if(costUnitEl)costUnitEl.value=(m&&m.costUnit)?m.costUnit:'';
+  // v1.6.0: Load raw material origin fields
+  var _raw=(m&&m.raw)||{};
+  var _rl=document.getElementById('mi-raw-location');if(_rl)_rl.value=_raw.location||'';
+  var _rc=document.getElementById('mi-raw-coords');if(_rc)_rc.value=_raw.coords||'';
+  var _rd=document.getElementById('mi-raw-date');if(_rd)_rd.value=_raw.date||'';
+  var _rw=document.getElementById('mi-raw-weight');if(_rw)_rw.value=_raw.weight!=null?_raw.weight:'';
+  var _rg=document.getElementById('mi-raw-geonotes');if(_rg)_rg.value=_raw.geonotes||'';
   toggleMatFields();
   document.getElementById('mi-cat').onchange=toggleMatFields;
   renderPrev('mi-prev',mPh);openMo('mo-mat');
@@ -3779,6 +4116,8 @@ function toggleMatFields(){
   const cat=document.getElementById('mi-cat').value;
   document.getElementById('mi-clay-f').style.display=cat==='clays'?'block':'none';
   document.getElementById('mi-glaze-f').style.display=cat==='glaze'?'block':'none';
+  var rawF=document.getElementById('mi-raw-f');
+  if(rawF)rawF.style.display=cat==='raw'?'block':'none';
 }
 function setMatStatus(val){
   document.getElementById('mi-status-val').value=val;
@@ -3852,6 +4191,21 @@ function saveMat(){
   }
   var costUnitEl=document.getElementById('mi-cost-unit');
   if(costUnitEl&&costUnitEl.value)m.costUnit=costUnitEl.value;
+  // v1.6.0: Save raw material origin fields (only when category is raw)
+  if(cat==='raw'){
+    var raw={};
+    var _rl=document.getElementById('mi-raw-location');if(_rl&&_rl.value.trim())raw.location=_rl.value.trim();
+    var _rc=document.getElementById('mi-raw-coords');if(_rc&&_rc.value.trim())raw.coords=_rc.value.trim();
+    var _rd=document.getElementById('mi-raw-date');if(_rd&&_rd.value)raw.date=_rd.value;
+    var _rw=document.getElementById('mi-raw-weight');if(_rw&&_rw.value!==''){var rw=parseFloat(_rw.value);if(!isNaN(rw)&&rw>=0)raw.weight=rw;}
+    var _rg=document.getElementById('mi-raw-geonotes');if(_rg&&_rg.value.trim())raw.geonotes=_rg.value.trim();
+    // Preserve existing process events if editing
+    if(editId){
+      var _existing=DB.materials.find(function(x){return x.id===editId;});
+      if(_existing&&_existing.raw&&Array.isArray(_existing.raw.events))raw.events=_existing.raw.events;
+    }
+    if(Object.keys(raw).length)m.raw=raw;
+  }
   if(editId)DB.materials[DB.materials.findIndex(x=>x.id===editId)]=m;else DB.materials.push(m);
   save();
   // v1.4.6: If we're in nested-add mode, hand off to caller (skip normal close flow)
