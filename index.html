@@ -926,6 +926,20 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           </select>
         </div>
       </div>
+      <div class="f">
+    <label>Статус</label>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+     <button type="button" id="mi-btn-have" onclick="setMatStatus('have')"
+      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--acc);background:var(--acc);color:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
+      Налично
+     </button>
+     <button type="button" id="mi-btn-wish" onclick="setMatStatus('wish')"
+      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--bdr2);background:transparent;color:var(--tx2);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
+      Wishlist
+     </button>
+    </div>
+    <input type="hidden" id="mi-status-val" value="have">
+   </div>
       <!-- v1.6.0: Raw material (wild clay) specific — origin / batch identity -->
       <div id="mi-raw-f" style="display:none">
         <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
@@ -1266,7 +1280,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.6.0';
+const APP_VERSION = 'v1.6.0.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
