@@ -1197,10 +1197,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
 
         <div class="f"><label>Бележки</label><textarea id="ms-notes" rows="2" placeholder="напр. отлежава в найлон"></textarea></div>
-        <div class="f"><label>Снимки</label>
+        <div class="f"><label>Снимка</label>
           <div id="ms-prev" class="ph-prev"></div>
-          <input type="file" id="ms-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'ms-prev',msPh,5)">
-          <button type="button" class="btn bg" onclick="document.getElementById('ms-ph').click()">📷 Добави снимки</button>
+          <input type="file" id="ms-ph" accept="image/*" style="display:none" onchange="handlePh(event,'ms-prev',msPh,1)">
+          <button type="button" class="btn bg" onclick="document.getElementById('ms-ph').click()">📷 Добави снимка</button>
         </div>
 
         <button class="btn bp" onclick="saveMass()">Запази</button>
@@ -1322,7 +1322,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.7.0';
+const APP_VERSION = 'v1.7.0.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2279,7 +2279,7 @@ function openMassMo(m){
   document.getElementById('ms-mixdate').value=b.mixDate||'';
   document.getElementById('ms-readydate').value=b.readyDate||'';
   document.getElementById('ms-notes').value=m?(m.notes||''):'';
-  if(m&&Array.isArray(m.photos))msPh=m.photos.slice();
+  msPh=(m&&m.photo)?[m.photo]:[];
   renderPrev('ms-prev',msPh);
   _renderMassComps();
   _populateMassCompPicker();
@@ -2296,7 +2296,7 @@ function saveMass(){
     cat:'mass',
     blend:{components:comps},
     notes:document.getElementById('ms-notes').value||'',
-    photos:[...msPh],
+    photo:msPh[0]||null,
     updatedAt:new Date().toISOString()
   };
   var mix=document.getElementById('ms-mixdate').value;
