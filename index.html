@@ -447,6 +447,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <input class="srch" type="search" id="test-search" placeholder="Търси рецепта, бележка, дефект…" oninput="debounce(renderTests,'test-search',200)">
   </div>
   <div class="fchips">
+    <button class="fchip" id="fc-test-glaze" onclick="toggleFChip('test','glaze')">✨ Глазурни</button>
+    <button class="fchip" id="fc-test-body" onclick="toggleFChip('test','body')">🧱 На маси</button>
     <button class="fchip" id="fc-test-hiscore" onclick="toggleFChip('test','hiscore')">★★★★+</button>
     <button class="fchip" id="fc-test-nodef" onclick="toggleFChip('test','nodef')">Без дефекти</button>
     <button class="fchip" id="fc-test-hasdef" onclick="toggleFChip('test','hasdef')">С дефекти</button>
@@ -847,23 +849,103 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="ph-prev" id="ti-prev"></div>
       </div>
       <input type="file" id="ti-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'ti-prev',tPh,6)">
-      <div class="f"><label>Рецепта / Готова глазура</label>
-        <input type="search" id="ti-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('ti-rec',this.value)">
-        <select id="ti-rec"><option value="">—</option></select>
+
+      <!-- v1.8.0: Test kind — glaze test vs clay-body test -->
+      <div class="f" id="ti-kind-wrap"><label>Вид тест</label>
+        <select id="ti-kind" onchange="onTestKindChange()">
+          <option value="glaze">✨ Глазурен тест</option>
+          <option value="body">🧱 Тест на маса</option>
+        </select>
       </div>
-   <div class="f">
-    <label>Наслоени глазури (по желание)</label>
-    <textarea id="ti-layers" style="min-height:60px;" placeholder="напр. Основа: Класическа пепелна (потапяне)&#10;Отгоре: PC-20 Blue Rutile (четка, 2 слоя)&#10;Ред: основа → изсъхне → втора глазура"></textarea>
-   </div>
-      <div class="f"><label>Глина</label><select id="ti-clay"><option value="">—</option></select></div>
-   <div class="f"><label>Профил изпичане</label><select id="ti-fp"><option value="">—</option></select></div>
+
+      <!-- ── GLAZE: subject ── -->
+      <div id="ti-glaze-a">
+        <div class="f"><label>Рецепта / Готова глазура</label>
+          <input type="search" id="ti-rec-srch" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('ti-rec',this.value)">
+          <select id="ti-rec"><option value="">—</option></select>
+        </div>
+        <div class="f">
+          <label>Наслоени глазури (по желание)</label>
+          <textarea id="ti-layers" style="min-height:60px;" placeholder="напр. Основа: Класическа пепелна (потапяне)&#10;Отгоре: PC-20 Blue Rutile (четка, 2 слоя)&#10;Ред: основа → изсъхне → втора глазура"></textarea>
+        </div>
+        <div class="f"><label>Глина</label><select id="ti-clay"><option value="">—</option></select></div>
+        <div class="f"><label>Партида глазура (г) — за приспадане от наличности</label><input type="number" id="ti-batch" placeholder="напр. 300"></div>
+      </div>
+
+      <!-- ── BODY: subject ── -->
+      <div id="ti-body-a" style="display:none">
+        <div class="f"><label>Маса / глина</label><select id="ti-body-ref"><option value="">—</option></select></div>
+      </div>
+
+      <!-- ── Common conditions ── -->
+      <div class="f"><label>Профил изпичане</label><select id="ti-fp"><option value="">—</option></select></div>
       <div class="f"><label>Дата</label><input type="date" id="ti-date"></div>
-      <div class="f"><label>Температура (°C)</label><input type="number" id="ti-temp"></div>
+      <div class="f"><label>Температура (°C)</label><input type="number" id="ti-temp" placeholder="напр. 950"></div>
       <div class="f"><label>Задръжка (мин)</label><input type="number" id="ti-hold"></div>
-   <div class="f"><label>Партида глазура (г) — за приспадане от наличности</label><input type="number" id="ti-batch" placeholder="напр. 300"></div>
-      <div class="f"><label>Течене</label><select id="ti-flow"><option value="">—</option><option>Ниско</option><option>Средно</option><option>Силно</option><option>Много силно</option></select></div>
-      <div class="f"><label>Повърхност</label><select id="ti-surf"><option value="">—</option><option>Матова</option><option>Сатенена</option><option>Гланцова</option><option>Кристална</option><option>Текстурирана</option><option>Сурова / недопечена</option></select></div>
-      <div class="f"><label>Дефекти</label><select id="ti-def"><option value="">—</option><option>Няма</option><option>Пинхоли</option><option>Пукнатини</option><option>Отлепяне</option><option>Пълзене</option><option>Незастопен кварц</option><option>Мехури</option></select></div>
+
+      <!-- ── GLAZE: results ── -->
+      <div id="ti-glaze-b">
+        <div class="f"><label>Течене</label><select id="ti-flow"><option value="">—</option><option>Ниско</option><option>Средно</option><option>Силно</option><option>Много силно</option></select></div>
+        <div class="f"><label>Повърхност</label><select id="ti-surf"><option value="">—</option><option>Матова</option><option>Сатенена</option><option>Гланцова</option><option>Кристална</option><option>Текстурирана</option><option>Сурова / недопечена</option></select></div>
+        <div class="f"><label>Дефекти</label><select id="ti-def"><option value="">—</option><option>Няма</option><option>Пинхоли</option><option>Пукнатини</option><option>Отлепяне</option><option>Пълзене</option><option>Незастопен кварц</option><option>Мехури</option></select></div>
+      </div>
+
+      <!-- ── BODY: results ── -->
+      <div id="ti-body-b" style="display:none">
+        <div class="f"><label>Пластичност</label>
+          <select id="ti-plast">
+            <option value="">—</option>
+            <option value="лоша">Лоша (пука при огъване)</option>
+            <option value="средна">Средна (леки пукнатини)</option>
+            <option value="добра">Добра</option>
+            <option value="отлична">Отлична</option>
+          </select>
+        </div>
+        <div class="f" style="margin-top:-4px;"><input type="text" id="ti-plast-note" placeholder="бележка за огъването (по желание)"></div>
+
+        <!-- Свиване -->
+        <div class="f">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Свиване (мм)</span>
+            <span id="ti-shrink-out" style="font-size:11px;font-weight:600;color:var(--primary);"></span>
+          </label>
+          <div style="display:flex;gap:7px;">
+            <div style="flex:1"><input type="number" step="0.1" id="ti-shr-marked" placeholder="100" value="100" oninput="_calcShrink()" style="text-align:right;"><div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;">маркирана</div></div>
+            <div style="flex:1"><input type="number" step="0.1" id="ti-shr-dry" placeholder="94" oninput="_calcShrink()" style="text-align:right;"><div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;">суха</div></div>
+            <div style="flex:1"><input type="number" step="0.1" id="ti-shr-fired" placeholder="91" oninput="_calcShrink()" style="text-align:right;"><div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;">печена</div></div>
+          </div>
+        </div>
+
+        <!-- Порестост -->
+        <div class="f">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Порестост (г)</span>
+            <span id="ti-poro-out" style="font-size:11px;font-weight:600;color:var(--primary);"></span>
+          </label>
+          <div style="display:flex;gap:7px;">
+            <div style="flex:1"><input type="number" step="0.01" id="ti-poro-dry" placeholder="50.0" oninput="_calcPoro()" style="text-align:right;"><div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;">сухо тегло</div></div>
+            <div style="flex:1"><input type="number" step="0.01" id="ti-poro-wet" placeholder="55.5" oninput="_calcPoro()" style="text-align:right;"><div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:2px;">след 24ч вода</div></div>
+          </div>
+        </div>
+
+        <div class="f"><label>Цвят</label><input type="text" id="ti-color" placeholder="напр. топло охра, леко напъстрен"></div>
+        <div class="f"><label>Деформация</label>
+          <select id="ti-deform"><option value="">—</option><option value="няма">Няма</option><option value="лека">Лека</option><option value="средна">Средна</option><option value="силна">Силна</option></select>
+        </div>
+        <div class="f"><label>Звук при почукване</label>
+          <select id="ti-sound"><option value="">—</option><option value="звънък">Звънък (спечена)</option><option value="глух">Глух (порьозна)</option><option value="пукнат">Пукнат</option></select>
+        </div>
+        <div class="f"><label>Lime popping (гореща таблетка в студена вода)</label>
+          <select id="ti-lime"><option value="">—</option><option value="няма">Няма</option><option value="слабо">Слабо</option><option value="силно">Силно</option></select>
+        </div>
+        <div class="f" style="margin-top:-4px;"><input type="text" id="ti-lime-note" placeholder="бележка (по желание)"></div>
+
+        <div class="f"><label>Дългосрочно наблюдение</label>
+          <input type="date" id="ti-lt-date" style="margin-bottom:6px;">
+          <textarea id="ti-lt-note" rows="2" placeholder="напр. след 3 седмици — лек скумминг по ръба, без пукнатини"></textarea>
+        </div>
+      </div>
+
       <div class="f"><label>Оценка</label><select id="ti-rat"><option value="">—</option><option>1 ★</option><option>2 ★★</option><option>3 ★★★</option><option>4 ★★★★</option><option>5 ★★★★★</option></select></div>
       <div class="f"><label>Изводи</label><textarea id="ti-notes"></textarea></div>
       <button class="btn bp" onclick="saveTest()">Запази</button>
@@ -1322,7 +1404,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.7.0.1';
+const APP_VERSION = 'v1.8.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2766,6 +2848,12 @@ function toggleFChip(ns,key){
   var tempKeys=['lt1200','1200','gt1240'];
   if(ns==='rec'&&tempKeys.indexOf(key)>=0){tempKeys.forEach(function(k){if(k!==key)activeFilters[ns][k]=false;});}
   if(ns==='test'&&(key==='nodef'||key==='hasdef')){activeFilters[ns][key==='nodef'?'hasdef':'nodef']=false;}
+  // v1.8.0: glaze/body kind chips are mutually exclusive
+  if(ns==='test'&&(key==='glaze'||key==='body')){
+    var _other=(key==='glaze')?'body':'glaze';
+    activeFilters[ns][_other]=false;
+    var _oEl=document.getElementById('fc-test-'+_other);if(_oEl)_oEl.classList.remove('on');
+  }
   activeFilters[ns][key]=!activeFilters[ns][key];
   if(ns==='rec'&&key==='fav'){showFavOnly=!!activeFilters.rec.fav;}
   var el=document.getElementById('fc-'+ns+'-'+key);if(el)el.classList.toggle('on',!!activeFilters[ns][key]);
@@ -3126,6 +3214,9 @@ function renderTests(){
   var q=srchVal('test-search');
   var f=activeFilters.test||{};
   var items=DB.tests.filter(function(t){
+    // v1.8.0: kind filter — mutually exclusive, handled in toggleFChip
+    if(f.glaze&&testKind(t)!=='glaze')return false;
+    if(f.body&&testKind(t)!=='body')return false;
     if(f.hiscore&&parseInt(t.rat)<4)return false;
     if(f.nodef&&t.def&&t.def!=='Няма')return false;
     if(f.hasdef&&(!t.def||t.def==='Няма'))return false;
@@ -3133,33 +3224,57 @@ function renderTests(){
       var rec=DB.recipes.find(function(r){return r.id===t.recipeId;});
       var mat=t.materialId?DB.materials.find(function(m){return m.id===t.materialId;}):null;
       var hay=((rec&&rec.name)||'')+' '+((mat&&mat.name)||'')+' '+(t.notes||'')+' '+(t.def||'')+' '+clayName(t.clay);
+      // v1.8.0: body tests are searchable by маса name and observations
+      if(testKind(t)==='body'){
+        var _bb=t.body||{};
+        hay+=' '+(t.bodyRef?_resolveMaterialRef(t.bodyRef):'')+' '+(_bb.color||'')+' '+(_bb.longTerm||'')+' '+(_bb.plasticity||'');
+      }
       if(hay.toLowerCase().indexOf(q)<0)return false;
     }
     return true;
   });
+  // v1.8.0: title for sorting — маса name for body tests, glaze name otherwise
+  var _tTitle=function(t){
+    if(testKind(t)==='body')return t.bodyRef?_resolveMaterialRef(t.bodyRef):'—';
+    var r=DB.recipes.find(function(x){return x.id===t.recipeId;});
+    var m=t.materialId?DB.materials.find(function(x){return x.id===t.materialId;}):null;
+    return (r&&r.name)||(m&&m.name)||'—';
+  };
   items=items.slice().sort(function(a,b){
-    var rA=DB.recipes.find(function(r){return r.id===a.recipeId;});
-    var mA=a.materialId?DB.materials.find(function(m){return m.id===a.materialId;}):null;
-    var nA=(rA&&rA.name)||(mA&&mA.name)||'—';
-    var rB=DB.recipes.find(function(r){return r.id===b.recipeId;});
-    var mB=b.materialId?DB.materials.find(function(m){return m.id===b.materialId;}):null;
-    var nB=(rB&&rB.name)||(mB&&mB.name)||'—';
-    return nA.localeCompare(nB,'bg');
+    return _tTitle(a).localeCompare(_tTitle(b),'bg');
   });
   var hasQ=q||(Object.keys(f).some(function(k){return f[k];}));
   document.getElementById('cnt-tests').textContent=items.length+' теста'+(hasQ?' (филтрирано)':'');
   var l=document.getElementById('tests-list');
   if(!items.length){l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">'+(hasQ?'Няма резултати':'Няма тестове')+'</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   l.innerHTML=items.map(function(t){
-    var rec=DB.recipes.find(function(r){return r.id===t.recipeId;});
-    var mat=t.materialId?DB.materials.find(function(m){return m.id===t.materialId;}):null;
-    var title=(rec&&rec.name)||(t.recipeId?'Изтрита рецепта':(mat?mat.name+' (готова)':(t.materialId?'Изтрита глазура':'—')));
+    var isBody=testKind(t)==='body';
+    var title,sub;
     var rating=t.rat?t.rat.replace(/[0-9]/,function(n){return '★'.repeat(+n);}):'';
+    if(isBody){
+      // v1.8.0: a body test is "which маса, at what temperature, what came out"
+      title='🧱 '+(t.bodyRef?_resolveMaterialRef(t.bodyRef):'—')+(t.temp?' @ '+t.temp+'°C':'');
+      var b=t.body||{};
+      var sp=[t.date];
+      var shr=_shrinkPcts(b);
+      if(shr&&shr.total!=null)sp.push('свиване '+shr.total.toFixed(1)+'%');
+      var po=_poroPct(b);
+      if(po!=null)sp.push('порестост '+po.toFixed(1)+'%');
+      if(b.plasticity)sp.push('пластичност: '+b.plasticity);
+      if(b.color)sp.push(b.color);
+      if(rating)sp.push(rating);
+      sub=sp.filter(Boolean).join(' · ');
+    } else {
+      var rec=DB.recipes.find(function(r){return r.id===t.recipeId;});
+      var mat=t.materialId?DB.materials.find(function(m){return m.id===t.materialId;}):null;
+      title=(rec&&rec.name)||(t.recipeId?'Изтрита рецепта':(mat?mat.name+' (готова)':(t.materialId?'Изтрита глазура':'—')));
+      sub=[t.date,clayName(t.clay),t.temp?t.temp+'°C':'',rating,t.updatedAt&&t.updatedAt.slice(0,10)!==t.date?timeAgo(t.updatedAt):''].filter(Boolean).join(' · ');
+    }
     return '<div class="li" onclick="openTestDet(\''+t.id+'\')">'
       +'<div class="li-ic">'+(t.photos&&t.photos[0]?'<img src="'+t.photos[0]+'" alt="" style="width:100%;height:100%;object-fit:cover;">':K(20))+'</div>'
       +'<div class="li-body">'
       +'<div class="li-t">'+title+'</div>'
-      +'<div class="li-s">'+[t.date,clayName(t.clay),t.temp?t.temp+'°C':'',rating,t.updatedAt&&t.updatedAt.slice(0,10)!==t.date?timeAgo(t.updatedAt):''].filter(Boolean).join(' · ')+'</div>'
+      +'<div class="li-s">'+sub+'</div>'
       +'</div><div class="li-r">›</div></div>';
   }).join('');
 }
@@ -3415,18 +3530,50 @@ function openTestDet(id){
   else if(_tMat)_glzTitle=_tMat.name+' (готова)';
   else if(t.materialId)_glzTitle='Изтрита глазура';
   else _glzTitle='Тест';
+  var _isBodyT=testKind(t)==='body';
+  if(_isBodyT)_glzTitle='🧱 '+(t.bodyRef?_resolveMaterialRef(t.bodyRef):'Тест на маса')+(t.temp?' @ '+t.temp+'°C':'');
   document.getElementById('dtest-t').textContent=_glzTitle;
-  document.getElementById('dtest-m').textContent=[t.date,t.clay].filter(Boolean).join(' · ');
+  document.getElementById('dtest-m').textContent=_isBodyT?[t.date,'тест на маса'].filter(Boolean).join(' · '):[t.date,t.clay].filter(Boolean).join(' · ');
   document.getElementById('dtest-photos').innerHTML=t.photos?.map(s=>`<img src="${s}" style="width:80px;height:80px;border-radius:var(--rs);object-fit:cover;" alt="">`).join('')||'';
   var _tfp=t.firingProfileId?DB.firingProfiles.find(function(x){return x.id===t.firingProfileId;}):null;
   var _tfpN=_tfp?_tfp.name:(t.firingProfileId?'Изтрит профил':null);
   var _glzParam=rec?rec.name:(t.recipeId?'Изтрита рецепта':(_tMat?_tMat.name+' (готова)':(t.materialId?'Изтрита глазура':null)));
-  document.getElementById('dtest-params').innerHTML=[dr('Глазура',_glzParam),dr('Профил',_tfpN),dr('Наслоени глазури',t.glazeLayers),dr('Глина',t.clay),dr('Температура',t.temp?t.temp+'°C':''),dr('Задръжка',t.hold?t.hold+' мин':'')].join('');
-  document.getElementById('dtest-res').innerHTML=[
-    dr('Течене',t.flow),dr('Повърхност',t.surf),
-    dr('Дефекти',t.def),
-    dr('Оценка',t.rat?t.rat.replace(/\d/,function(n){return '★'.repeat(+n);}):''
-    )].join('');
+  if(_isBodyT){
+    // v1.8.0: body test — measurements instead of glaze behaviour
+    var _b=t.body||{};
+    document.getElementById('dtest-params').innerHTML=[
+      dr('Маса',t.bodyRef?_resolveMaterialRef(t.bodyRef):''),
+      dr('Профил',_tfpN),
+      dr('Температура',t.temp?t.temp+'°C':''),
+      dr('Задръжка',t.hold?t.hold+' мин':'')
+    ].join('');
+    var _sh=_shrinkPcts(_b);
+    var _po=_poroPct(_b);
+    var _rows=[];
+    if(_b.plasticity)_rows.push(dr('Пластичност',_b.plasticity+(_b.plasticityNote?' — '+_b.plasticityNote:'')));
+    if(_sh){
+      if(_sh.wetDry!=null)_rows.push(dr('Свиване мокро→сухо',_sh.wetDry.toFixed(1)+'%'));
+      if(_sh.dryFired!=null)_rows.push(dr('Свиване сухо→печено',_sh.dryFired.toFixed(1)+'%'));
+      if(_sh.total!=null)_rows.push(dr('Свиване общо',_sh.total.toFixed(1)+'%'));
+      var _mm=[_b.shrMarked,_b.shrDry,_b.shrFired].filter(function(x){return x!=null;});
+      if(_mm.length)_rows.push(dr('Измерено (мм)',_mm.join(' → ')));
+    }
+    if(_po!=null)_rows.push(dr('Водопоглъщане',_po.toFixed(1)+'%'+(_b.poroDry!=null&&_b.poroWet!=null?' ('+_b.poroDry+'г → '+_b.poroWet+'г)':'')));
+    if(_b.color)_rows.push(dr('Цвят',_b.color));
+    if(_b.deformation)_rows.push(dr('Деформация',_b.deformation));
+    if(_b.sound)_rows.push(dr('Звук',_b.sound));
+    if(_b.limePopping)_rows.push(dr('Lime popping',_b.limePopping+(_b.limeNote?' — '+_b.limeNote:'')));
+    if(_b.longTerm||_b.longTermDate)_rows.push(dr('Дългосрочно',[_b.longTermDate,_b.longTerm].filter(Boolean).join(' — ')));
+    _rows.push(dr('Оценка',t.rat?t.rat.replace(/\d/,function(n){return '★'.repeat(+n);}):''));
+    document.getElementById('dtest-res').innerHTML=_rows.join('');
+  } else {
+    document.getElementById('dtest-params').innerHTML=[dr('Глазура',_glzParam),dr('Профил',_tfpN),dr('Наслоени глазури',t.glazeLayers),dr('Глина',t.clay),dr('Температура',t.temp?t.temp+'°C':''),dr('Задръжка',t.hold?t.hold+' мин':'')].join('');
+    document.getElementById('dtest-res').innerHTML=[
+      dr('Течене',t.flow),dr('Повърхност',t.surf),
+      dr('Дефекти',t.def),
+      dr('Оценка',t.rat?t.rat.replace(/\d/,function(n){return '★'.repeat(+n);}):''
+      )].join('');
+  }
   document.getElementById('dtest-notes').textContent=t.notes||'—';
   document.getElementById('dtest-res').innerHTML+=t.updatedAt?dr('Последно редактирано',new Date(t.updatedAt).toLocaleDateString('bg-BG')):'';
   // Related glaze (derived, clickable) — recipe OR material
@@ -3690,6 +3837,38 @@ function _renderRawSection(m){
   } else {
     _procRow.style.display='none';
   }
+  // ── Make-a-mass button (v1.8.0)
+  // A raw material isn't selectable for pieces/tests on purpose — it becomes usable
+  // through a маса. This button makes that two clicks instead of a chore.
+  var _mkRow=document.getElementById('dmat-mkmass-row');
+  if(!_mkRow){
+    _mkRow=document.createElement('div');_mkRow.id='dmat-mkmass-row';_mkRow.className='ds';
+    _mkRow.innerHTML='<div id="dmat-mkmass-val"></div>';
+    anchor.insertBefore(_mkRow,anchor.querySelector('.ds:last-of-type'));
+  }
+  if(m.cat==='raw'){
+    _mkRow.style.display='';
+    document.getElementById('dmat-mkmass-val').innerHTML=
+      '<button onclick="openMassFromRaw(\''+m.id+'\')" style="width:100%;padding:13px;background:var(--primary);color:white;border:none;border-radius:var(--rs);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;">🧱 &nbsp; Направи маса от тази суровина</button>'
+      +'<div style="font-size:11px;color:var(--tx3);font-style:italic;margin-top:7px;line-height:1.5;">Суровината не се избира директно при изделие или тест. За да я ползваш, направи маса от нея — 100% ако е без добавки.</div>';
+  } else {
+    _mkRow.style.display='none';
+  }
+}
+
+// v1.8.0: Open the маса modal pre-filled with this raw material at 100%
+function openMassFromRaw(rawId){
+  var raw=DB.materials.find(function(x){return x.id===rawId;});
+  if(!raw){toast('Грешка: суровината не е намерена');return;}
+  closeDet('det-mat');
+  openMassMo(null);
+  massComps=[{ref:'mat:'+rawId,pct:100}];
+  _renderMassComps();
+  _populateMassCompPicker();
+  var nameEl=document.getElementById('ms-name');
+  if(nameEl&&!nameEl.value)nameEl.value=raw.name+' — ';
+  var mixEl=document.getElementById('ms-mixdate');
+  if(mixEl&&!mixEl.value)mixEl.value=new Date().toISOString().slice(0,10);
 }
 
 // v1.6.0: Render the process event timeline for a raw material
@@ -4229,9 +4408,102 @@ function delRecipe(){
 }
 
 // ══ TEST MODAL ══
+// ── ТЕСТ НА МАСА (v1.8.0) ────────────────────────────────────
+// A test now has a kind: 'glaze' (the original) or 'body' (clay-body test).
+// Legacy tests have no kind field → treated as 'glaze'.
+function testKind(t){return (t&&t.kind)||'glaze';}
+
+function onTestKindChange(){
+  var k=document.getElementById('ti-kind').value;
+  var isBody=(k==='body');
+  ['ti-glaze-a','ti-glaze-b'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display=isBody?'none':'block';
+  });
+  ['ti-body-a','ti-body-b'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display=isBody?'block':'none';
+  });
+}
+
+// Shrinkage: marked → dry → fired. Enter mm, read percentages.
+function _calcShrink(){
+  var out=document.getElementById('ti-shrink-out');
+  if(!out)return;
+  var mk=parseFloat(document.getElementById('ti-shr-marked').value);
+  var dry=parseFloat(document.getElementById('ti-shr-dry').value);
+  var fir=parseFloat(document.getElementById('ti-shr-fired').value);
+  var parts=[];
+  if(!isNaN(mk)&&mk>0&&!isNaN(dry))parts.push('мокро→сухо '+((mk-dry)/mk*100).toFixed(1)+'%');
+  if(!isNaN(dry)&&dry>0&&!isNaN(fir))parts.push('сухо→печено '+((dry-fir)/dry*100).toFixed(1)+'%');
+  if(!isNaN(mk)&&mk>0&&!isNaN(fir))parts.push('общо '+((mk-fir)/mk*100).toFixed(1)+'%');
+  out.textContent=parts.join(' · ');
+}
+// Water absorption: (wet - dry) / dry × 100
+function _calcPoro(){
+  var out=document.getElementById('ti-poro-out');
+  if(!out)return;
+  var d=parseFloat(document.getElementById('ti-poro-dry').value);
+  var w=parseFloat(document.getElementById('ti-poro-wet').value);
+  if(!isNaN(d)&&d>0&&!isNaN(w)){
+    out.textContent='водопоглъщане '+((w-d)/d*100).toFixed(1)+'%';
+  } else out.textContent='';
+}
+// Same maths, for display outside the modal
+function _shrinkPcts(b){
+  if(!b)return null;
+  var mk=b.shrMarked,dry=b.shrDry,fir=b.shrFired,r={};
+  if(mk>0&&dry!=null)r.wetDry=(mk-dry)/mk*100;
+  if(dry>0&&fir!=null)r.dryFired=(dry-fir)/dry*100;
+  if(mk>0&&fir!=null)r.total=(mk-fir)/mk*100;
+  return Object.keys(r).length?r:null;
+}
+function _poroPct(b){
+  if(!b||!(b.poroDry>0)||b.poroWet==null)return null;
+  return (b.poroWet-b.poroDry)/b.poroDry*100;
+}
+// Body-test picker: masses and clays (a body test can target a commercial clay too)
+function _populateTestBodyPicker(t){
+  var sel=document.getElementById('ti-body-ref');
+  if(!sel)return;
+  var cur=(t&&t.bodyRef)||'';
+  var groups=[['mass','Маси'],['clays','Глини']];
+  var html='<option value="">—</option>';
+  groups.forEach(function(g){
+    var items=DB.materials.filter(function(m){return m.cat===g[0]&&!m.wishlist;});
+    if(!items.length)return;
+    html+='<optgroup label="'+g[1]+'">'
+      +items.map(function(m){var v='mat:'+m.id;return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+m.name+'</option>';}).join('')
+      +'</optgroup>';
+  });
+  sel.innerHTML=html;
+  if(cur)sel.value=cur;
+}
+
 function openTestMo(t){
   tPh=t?.photos?[...t.photos]:[];
   document.getElementById('mo-test-t').textContent=t?'Редактирай тест':'Нов тест';
+  // v1.8.0: kind + body fields
+  var _k=testKind(t);
+  var _kEl=document.getElementById('ti-kind');
+  if(_kEl)_kEl.value=_k;
+  onTestKindChange();
+  _populateTestBodyPicker(t);
+  var _b=(t&&t.body)||{};
+  var _set=function(id,v){var e=document.getElementById(id);if(e)e.value=(v!=null&&v!=='')?v:'';};
+  _set('ti-plast',_b.plasticity);
+  _set('ti-plast-note',_b.plasticityNote);
+  _set('ti-shr-marked',_b.shrMarked!=null?_b.shrMarked:(t?'':100));
+  _set('ti-shr-dry',_b.shrDry);
+  _set('ti-shr-fired',_b.shrFired);
+  _set('ti-poro-dry',_b.poroDry);
+  _set('ti-poro-wet',_b.poroWet);
+  _set('ti-color',_b.color);
+  _set('ti-deform',_b.deformation);
+  _set('ti-sound',_b.sound);
+  _set('ti-lime',_b.limePopping);
+  _set('ti-lime-note',_b.limeNote);
+  _set('ti-lt-date',_b.longTermDate);
+  _set('ti-lt-note',_b.longTerm);
+  _calcShrink();_calcPoro();
   document.getElementById('ti-date').value=t?.date||new Date().toISOString().split('T')[0];
   document.getElementById('ti-temp').value=t?.temp||'';
   document.getElementById('ti-hold').value=t?.hold||'';
@@ -4263,28 +4535,65 @@ function openTestMo(t){
   renderPrev('ti-prev',tPh);openMo('mo-test');
 }
 function saveTest(){
+  // v1.8.0: kind decides which fields matter and what's required
+  var _kind=document.getElementById('ti-kind')?document.getElementById('ti-kind').value:'glaze';
+  var _isBody=(_kind==='body');
   const dateVal=document.getElementById('ti-date').value;
   if(!dateVal||!vDate(dateVal)){toast('Датата е задължителна');focusEl('ti-date');return;}
   const tempVal=document.getElementById('ti-temp').value;
-  if(!vPosNum(tempVal,'Температура')){focusEl('ti-temp');return;}
+  // Body tests may have no firing at all (a plasticity test is just a bent coil),
+  // so temperature and hold are optional there.
+  if(_isBody){
+    if(tempVal!==''&&!vPosNum(tempVal,'Температура')){focusEl('ti-temp');return;}
+  } else {
+    if(!vPosNum(tempVal,'Температура')){focusEl('ti-temp');return;}
+  }
   const holdVal=document.getElementById('ti-hold').value;
-  if(!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
+  if(_isBody){
+    if(holdVal!==''&&!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
+  } else {
+    if(!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
+  }
   const batchValRaw=document.getElementById('ti-batch')?document.getElementById('ti-batch').value:'';
-  if(!vPosNum(batchValRaw,'Партида')){return;}
+  if(!_isBody&&!vPosNum(batchValRaw,'Партида')){return;}
   const layersEl=document.getElementById('ti-layers');
   var _tGlzVal=document.getElementById('ti-rec').value;
   var _tRecId='',_tMatId='';
   if(_tGlzVal.indexOf('rec:')===0){_tRecId=_tGlzVal.slice(4);}
   else if(_tGlzVal.indexOf('mat:')===0){_tMatId=_tGlzVal.slice(4);}
   else if(_tGlzVal){_tRecId=_tGlzVal;}
-  const t={id:editId||uid(),updatedAt:new Date().toISOString(),recipeId:_tRecId,materialId:_tMatId,firingProfileId:(document.getElementById('ti-fp')?document.getElementById('ti-fp').value||null:null),clay:document.getElementById('ti-clay').value,date:dateVal,temp:tempVal,hold:holdVal,flow:document.getElementById('ti-flow').value,surf:document.getElementById('ti-surf').value,def:document.getElementById('ti-def').value,rat:document.getElementById('ti-rat').value,notes:document.getElementById('ti-notes').value,glazeLayers:layersEl?layersEl.value:'',photos:[...tPh]};
+  const t={id:editId||uid(),kind:_kind,updatedAt:new Date().toISOString(),recipeId:_tRecId,materialId:_tMatId,firingProfileId:(document.getElementById('ti-fp')?document.getElementById('ti-fp').value||null:null),clay:document.getElementById('ti-clay').value,date:dateVal,temp:tempVal,hold:holdVal,flow:document.getElementById('ti-flow').value,surf:document.getElementById('ti-surf').value,def:document.getElementById('ti-def').value,rat:document.getElementById('ti-rat').value,notes:document.getElementById('ti-notes').value,glazeLayers:layersEl?layersEl.value:'',photos:[...tPh]};
+  // v1.8.0: body-test fields
+  if(_isBody){
+    var _bref=document.getElementById('ti-body-ref');
+    if(_bref&&_bref.value)t.bodyRef=_bref.value;
+    var _b={};
+    var _n=function(id){var e=document.getElementById(id);if(!e||e.value==='')return null;var v=parseFloat(e.value);return isNaN(v)?null:v;};
+    var _s=function(id){var e=document.getElementById(id);return (e&&e.value)?e.value:'';};
+    var _p=_s('ti-plast');if(_p)_b.plasticity=_p;
+    var _pn=_s('ti-plast-note');if(_pn)_b.plasticityNote=_pn;
+    var _sm=_n('ti-shr-marked');if(_sm!=null)_b.shrMarked=_sm;
+    var _sd=_n('ti-shr-dry');if(_sd!=null)_b.shrDry=_sd;
+    var _sf=_n('ti-shr-fired');if(_sf!=null)_b.shrFired=_sf;
+    var _pd=_n('ti-poro-dry');if(_pd!=null)_b.poroDry=_pd;
+    var _pw=_n('ti-poro-wet');if(_pw!=null)_b.poroWet=_pw;
+    var _c=_s('ti-color');if(_c)_b.color=_c;
+    var _df=_s('ti-deform');if(_df)_b.deformation=_df;
+    var _sn=_s('ti-sound');if(_sn)_b.sound=_sn;
+    var _lm=_s('ti-lime');if(_lm)_b.limePopping=_lm;
+    var _ln=_s('ti-lime-note');if(_ln)_b.limeNote=_ln;
+    var _ltd=_s('ti-lt-date');if(_ltd)_b.longTermDate=_ltd;
+    var _lt=_s('ti-lt-note');if(_lt)_b.longTerm=_lt;
+    if(Object.keys(_b).length)t.body=_b;
+  }
   // ── STOCK DEDUCTION ─────────────────────────────────────────────────────
   // Runs ONLY on CREATE (editId===null). Edit never re-deducts. Delete never
   // restores stock automatically.
   // TODO (future): replace with an inventory ledger / stock movements table
   //   so that edits, deletes and corrections are fully auditable.
   // ────────────────────────────────────────────────────────────────────────
-  if(!editId){
+  // v1.8.0: never runs for body tests — there's no recipe to deduct from.
+  if(!editId&&!_isBody){
     const batchEl=document.getElementById('ti-batch');
     const batch=batchEl?parseFloat(batchEl.value):0;
     if(batch>0){
