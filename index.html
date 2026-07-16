@@ -426,6 +426,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <button class="tb" id="mbtab-engobe" onclick="switchMat('engobe')">Ангоби</button>
     <button class="tb" id="mbtab-underglaze" onclick="switchMat('underglaze')">Подгл. бои</button>
     <button class="tb" id="mbtab-raw" onclick="switchMat('raw')">Суровини</button>
+    <button class="tb" id="mbtab-mass" onclick="switchMat('mass')">Маси</button>
     <button class="tb" id="mbtab-wish" onclick="switchMat('wish')">Wishlist</button>
   </div>
   <div id="mat-clays"></div>
@@ -435,6 +436,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div id="mat-engobe" style="display:none"></div>
   <div id="mat-underglaze" style="display:none"></div>
   <div id="mat-raw" style="display:none"></div>
+  <div id="mat-mass" style="display:none"></div>
   <div id="mat-wish" style="display:none"></div>
 </div>
 
@@ -1168,6 +1170,46 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- MODAL: Маса (blend) — v1.7.0 -->
+<div class="mo" id="mo-mass" onclick="closeBg(event,'mo-mass')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-mass-t">Нова маса</div><button class="mo-x" onclick="closeMo('mo-mass')">×</button></div>
+      <div class="mo-b">
+        <div class="f"><label>Име *</label><input type="text" id="ms-name" placeholder="напр. Дива глина Кефалония T2"></div>
+
+        <!-- Състав -->
+        <div class="f">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Състав</span>
+            <span id="ms-sum" style="font-size:11px;font-weight:600;"></span>
+          </label>
+          <div id="ms-comps"></div>
+          <select id="ms-comp-picker" onchange="addMassComp()" style="margin-top:6px;">
+            <option value="">— добави компонент —</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:9px;">
+          <div class="f" style="flex:1"><label>Дата на замесване</label><input type="date" id="ms-mixdate"></div>
+          <div class="f" style="flex:1"><label>Готова на</label><input type="date" id="ms-readydate"></div>
+        </div>
+
+        <div class="f"><label>Бележки</label><textarea id="ms-notes" rows="2" placeholder="напр. отлежава в найлон"></textarea></div>
+        <div class="f"><label>Снимки</label>
+          <div id="ms-prev" class="ph-prev"></div>
+          <input type="file" id="ms-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'ms-prev',msPh,5)">
+          <button type="button" class="btn bg" onclick="document.getElementById('ms-ph').click()">📷 Добави снимки</button>
+        </div>
+
+        <button class="btn bp" onclick="saveMass()">Запази</button>
+        <button class="btn bg" onclick="closeMo('mo-mass')">Откажи</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Raw material process event (v1.6.0) -->
 <div class="mo" id="mo-raw-event" onclick="closeBg(event,'mo-raw-event')">
   <div class="mo-sh">
@@ -1280,7 +1322,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.6.0.1';
+const APP_VERSION = 'v1.7.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1316,7 +1358,7 @@ var _nestedAddCallback=null;
 var activeFilters={rec:{},test:{},mat:{},pc:{}};
 var activeSort={rec:'name',mat:'name',pc:'name'};
 var _scrollPos={};
-let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],rawEvPh=[],recIngs=[],showFavOnly=false;
+let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],rawEvPh=[],msPh=[],recIngs=[],showFavOnly=false;
 
 const CLAY_NAMES=['PRNF Black','Sibelco Nigra 2002','PRGF Golden Brown','MARTE Red','TOFFEE Caramel','S&G 933'];
 
@@ -2119,6 +2161,209 @@ function saveEvent(){
 }
 
 // Delete event from current piece
+// ── МАСА (blend) — v1.7.0 ────────────────────────────────────
+// A маса is a normal material (cat:'mass') that knows what it's made of.
+// Because it's a material, it appears in clay pickers automatically.
+// Components are refs ('mat:id' / 'rec:id') — resolved via _resolveMaterialRef.
+var massComps=[];   // [{ref, pct}]
+var curMassEditId=null;
+
+// Does material `hostId` contain `targetId` anywhere in its blend tree?
+// Used to prevent cycles (A contains B, B contains A).
+function _massContains(hostId,targetId,seen){
+  if(!hostId||!targetId)return false;
+  seen=seen||{};
+  if(seen[hostId])return false;
+  seen[hostId]=1;
+  if(hostId===targetId)return true;
+  var h=DB.materials.find(function(x){return x.id===hostId;});
+  if(!h||!h.blend||!Array.isArray(h.blend.components))return false;
+  return h.blend.components.some(function(c){
+    if(!c.ref||c.ref.indexOf('mat:')!==0)return false;
+    return _massContains(c.ref.slice(4),targetId,seen);
+  });
+}
+
+// Build the component picker, excluding self and anything that would create a cycle
+function _populateMassCompPicker(){
+  var sel=document.getElementById('ms-comp-picker');
+  if(!sel)return;
+  var groups={raw:'Суровини',clays:'Глини',mass:'Маси',base:'Базови суровини',ox:'Оксиди / оцветители',engobe:'Ангоби',underglaze:'Подглазурни бои',glaze:'Готови глазури'};
+  var html='<option value="">— добави компонент —</option>';
+  Object.keys(groups).forEach(function(cat){
+    var items=DB.materials.filter(function(m){
+      if(m.cat!==cat)return false;
+      if(m.wishlist)return false;
+      var ref='mat:'+m.id;
+      if(massComps.some(function(c){return c.ref===ref;}))return false;   // already added
+      if(curMassEditId){
+        if(m.id===curMassEditId)return false;                             // can't contain itself
+        if(_massContains(m.id,curMassEditId))return false;                // would create a cycle
+      }
+      return true;
+    });
+    if(!items.length)return;
+    html+='<optgroup label="'+groups[cat]+'">'
+      +items.map(function(m){return '<option value="mat:'+m.id+'">'+m.name+'</option>';}).join('')
+      +'</optgroup>';
+  });
+  var recs=DB.recipes.filter(function(r){return !massComps.some(function(c){return c.ref==='rec:'+r.id;});});
+  if(recs.length){
+    html+='<optgroup label="Рецепти">'
+      +recs.map(function(r){return '<option value="rec:'+r.id+'">'+r.name+'</option>';}).join('')
+      +'</optgroup>';
+  }
+  sel.innerHTML=html;
+  sel.value='';
+}
+
+function addMassComp(){
+  var sel=document.getElementById('ms-comp-picker');
+  var v=sel.value;
+  if(!v)return;
+  massComps.push({ref:v,pct:null});
+  _renderMassComps();
+  _populateMassCompPicker();
+}
+function removeMassComp(i){
+  massComps.splice(i,1);
+  _renderMassComps();
+  _populateMassCompPicker();
+}
+function onMassPctChange(i,val){
+  var n=parseFloat(val);
+  massComps[i].pct=(val===''||isNaN(n))?null:n;
+  _updateMassSum();
+}
+function _renderMassComps(){
+  var c=document.getElementById('ms-comps');
+  if(!c)return;
+  if(!massComps.length){
+    c.innerHTML='<div style="padding:10px;text-align:center;color:var(--tx3);font-style:italic;font-size:12px;">Няма компоненти. Добави от списъка отдолу.</div>';
+    _updateMassSum();return;
+  }
+  c.innerHTML=massComps.map(function(comp,i){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);">'
+      +'<div style="flex:1;font-size:13px;color:var(--tx2);">'+_resolveMaterialRef(comp.ref)+'</div>'
+      +'<input type="number" step="0.1" value="'+(comp.pct!=null?comp.pct:'')+'" placeholder="0" '
+        +'oninput="onMassPctChange('+i+',this.value)" '
+        +'style="width:62px;text-align:right;padding:5px 7px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;font-size:13px;">'
+      +'<span style="font-size:12px;color:var(--tx3);">%</span>'
+      +'<button type="button" onclick="removeMassComp('+i+')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:15px;padding:2px 4px;">×</button>'
+      +'</div>';
+  }).join('');
+  _updateMassSum();
+}
+function _massSum(){
+  return massComps.reduce(function(a,c){return a+(c.pct||0);},0);
+}
+// Show the sum and warn when it isn't 100 — but never block saving
+function _updateMassSum(){
+  var el=document.getElementById('ms-sum');
+  if(!el)return;
+  if(!massComps.length){el.textContent='';return;}
+  var s=_massSum();
+  var rounded=Math.round(s*10)/10;
+  var ok=Math.abs(s-100)<0.05;
+  el.textContent=ok?('Сбор: '+rounded+'% ✓'):('Сбор: '+rounded+'% ⚠');
+  el.style.color=ok?'var(--acc)':'var(--accent)';
+}
+
+function openMassMo(m){
+  curMassEditId=(m&&m.id)||null;
+  massComps=[];msPh=[];
+  document.getElementById('mo-mass-t').textContent=m?'Редактирай маса':'Нова маса';
+  document.getElementById('ms-name').value=m?(m.name||''):'';
+  var b=(m&&m.blend)||{};
+  if(Array.isArray(b.components))massComps=b.components.map(function(c){return {ref:c.ref,pct:c.pct};});
+  document.getElementById('ms-mixdate').value=b.mixDate||'';
+  document.getElementById('ms-readydate').value=b.readyDate||'';
+  document.getElementById('ms-notes').value=m?(m.notes||''):'';
+  if(m&&Array.isArray(m.photos))msPh=m.photos.slice();
+  renderPrev('ms-prev',msPh);
+  _renderMassComps();
+  _populateMassCompPicker();
+  openMo('mo-mass');
+}
+
+function saveMass(){
+  var name=document.getElementById('ms-name').value.trim();
+  if(!name){toast('Въведи име');return;}
+  var comps=massComps.filter(function(c){return c.ref;}).map(function(c){return {ref:c.ref,pct:c.pct!=null?c.pct:0};});
+  var m={
+    id:curMassEditId||uid(),
+    name:name,
+    cat:'mass',
+    blend:{components:comps},
+    notes:document.getElementById('ms-notes').value||'',
+    photos:[...msPh],
+    updatedAt:new Date().toISOString()
+  };
+  var mix=document.getElementById('ms-mixdate').value;
+  var rdy=document.getElementById('ms-readydate').value;
+  if(mix)m.blend.mixDate=mix;
+  if(rdy)m.blend.readyDate=rdy;
+  if(curMassEditId){
+    var old=DB.materials.find(function(x){return x.id===curMassEditId;});
+    if(old&&old.createdAt)m.createdAt=old.createdAt;
+    var idx=DB.materials.findIndex(function(x){return x.id===curMassEditId;});
+    if(idx>=0)DB.materials[idx]=m;else DB.materials.push(m);
+  } else {
+    m.createdAt=new Date().toISOString();
+    DB.materials.push(m);
+  }
+  save();
+  closeMo('mo-mass');
+  renderMaterials();
+  toast(curMassEditId?'Обновена маса':'Създадена маса');
+  curMassEditId=null;
+}
+
+// Short composition summary for list rows: "80% Xi Beach · 10% шамот · 10% каолин"
+function _massSummary(m){
+  if(!m.blend||!Array.isArray(m.blend.components)||!m.blend.components.length)return 'без състав';
+  return m.blend.components.map(function(c){
+    return (c.pct!=null?c.pct+'% ':'')+_resolveMaterialRef(c.ref);
+  }).join(' · ');
+}
+
+// Composition block in the material detail view
+function _renderMassSection(m){
+  var anchor=document.getElementById('dmat-notes').parentNode;
+  var row=document.getElementById('dmat-mass-row');
+  if(!row){
+    row=document.createElement('div');row.id='dmat-mass-row';row.className='ds';
+    row.innerHTML='<div class="ds-t">Състав</div><div id="dmat-mass-val"></div>';
+    anchor.insertBefore(row,anchor.querySelector('.ds:last-of-type'));
+  }
+  if(m.cat!=='mass'){row.style.display='none';return;}
+  row.style.display='';
+  var val=document.getElementById('dmat-mass-val');
+  var comps=(m.blend&&Array.isArray(m.blend.components))?m.blend.components:[];
+  if(!comps.length){
+    val.innerHTML='<div style="padding:10px;color:var(--tx3);font-style:italic;font-size:12px;">Няма записани компоненти.</div>';
+    return;
+  }
+  var sum=comps.reduce(function(a,c){return a+(c.pct||0);},0);
+  var rounded=Math.round(sum*10)/10;
+  var ok=Math.abs(sum-100)<0.05;
+  val.innerHTML=comps.map(function(c){
+    // Components that are materials link through to their own detail (and biography)
+    var isMat=c.ref&&c.ref.indexOf('mat:')===0;
+    var tid=isMat?c.ref.slice(4):null;
+    var exists=tid&&DB.materials.some(function(x){return x.id===tid;});
+    var nameHtml=exists
+      ? '<span onclick="openMatDet(\''+tid+'\')" style="color:var(--primary);cursor:pointer;">'+_resolveMaterialRef(c.ref)+' ›</span>'
+      : _resolveMaterialRef(c.ref);
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px;">'
+      +'<div>'+nameHtml+'</div>'
+      +'<div style="font-weight:600;color:var(--tx2);">'+(c.pct!=null?c.pct+'%':'—')+'</div>'
+      +'</div>';
+  }).join('')
+  +'<div style="display:flex;justify-content:space-between;padding:8px 0 0;font-size:12px;font-weight:600;color:'+(ok?'var(--acc)':'var(--accent)')+';">'
+  +'<div>Сбор</div><div>'+rounded+'%'+(ok?' ✓':' ⚠')+'</div></div>';
+}
+
 function deleteEvent(eventId){
   if(!curPiece)return;
   if(!confirm('Изтрий тази стъпка?'))return;
@@ -2589,7 +2834,7 @@ function show(n){
 function addNew(){
   if(cur==='pieces'){editId=null;openPieceMo();}
   else if(cur==='recipes'){editId=null;openRecipeMo();}
-  else if(cur==='materials'){editId=null;openMatMo();}
+  else if(cur==='materials'){if(matTab==='mass'){openMassMo(null);}else{editId=null;openMatMo();}}
   else if(cur==='tests'){editId=null;openTestMo();}
   else if(cur==='fp'){editId=null;openFPMo(null);}
 }
@@ -2816,7 +3061,7 @@ function renderMaterials(){
     if(activeSort.mat==='stock'){return arr.slice().sort(function(a,b){return (a.stock!=null?parseFloat(a.stock):Infinity)-(b.stock!=null?parseFloat(b.stock):Infinity);});}
     return arr.slice().sort(function(a,b){return a.name.localeCompare(b.name,'bg');});
   }
-  var cats={clays:[],base:[],ox:[],glaze:[],engobe:[],underglaze:[],raw:[],wish:[]};
+  var cats={clays:[],base:[],ox:[],glaze:[],engobe:[],underglaze:[],raw:[],mass:[],wish:[]};
   DB.materials.forEach(function(m){if(m.wishlist===true){cats.wish.push(m);}else if(cats[m.cat]){cats[m.cat].push(m);}});
   var low=getLowStock().length;
   document.getElementById("st-clays").textContent=cats.clays.length;
@@ -2824,10 +3069,10 @@ function renderMaterials(){
   var gs=document.getElementById("st-glazes");if(gs)gs.textContent=cats.glaze.length;
   var sl=document.getElementById("st-low");if(sl)sl.textContent=low;
   var lsChip=document.getElementById("fc-mat-lowstock");if(lsChip)lsChip.textContent=low>0?('Само ниски ('+low+')'):'Само ниски';
-  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨",engobe:"🎭",underglaze:"🖌",raw:"⛏"};
+  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨",engobe:"🎭",underglaze:"🖌",raw:"⛏",mass:"🧱"};
   var hasQ=q||f.lowstock;
   var lowEmpty='<div class="empty" style="padding:30px"><div class="empty-k">∅</div><div class="empty-t">Няма материали под прага</div><div class="empty-s">Всички наличности са в норма</div></div>';
-  ["clays","base","ox","glaze","engobe","underglaze","raw"].forEach(function(cat){
+  ["clays","base","ox","glaze","engobe","underglaze","raw","mass"].forEach(function(cat){
     var el=document.getElementById("mat-"+cat);if(!el)return;
     var items=sortMats(cats[cat].filter(matchMat));
     if(!items.length){el.innerHTML=f.lowstock?lowEmpty:('<div class="empty" style="padding:30px"><div class="empty-t">'+(hasQ?'Няма резултати':'Няма добавени')+'</div></div>');return;}
@@ -2839,6 +3084,8 @@ function renderMaterials(){
       var _unitL={g:'г',kg:'кг',L:'л',ml:'мл','бр':'бр',m:'м',other:''};
       var costStr=(m.cost!=null)?(' · '+m.cost.toFixed(2)+'€'+(m.costUnit?'/'+(_unitL[m.costUnit]||m.costUnit):'')):'';
       var sub=(m.formula||"")+(m.brand?" · "+m.brand:"")+(m.stock!=null?" · "+m.stock+"г":"")+costStr+(low2?" ⚠️":"")+(m.updatedAt?" · ред. "+timeAgo(m.updatedAt):"");
+      // v1.7.0: A маса shows its composition instead of formula/brand/stock
+      if(m.cat==='mass')sub=_massSummary(m);
       html+='<div class="li" onclick="openMatDet(\''+m.id+'\')">'
         +'<div class="li-ic">'+ic+'</div>'
         +'<div class="li-body"><div class="li-t">'+m.name+'</div><div class="li-s">'+sub+'</div></div>'
@@ -2864,7 +3111,7 @@ function renderMaterials(){
 
 function switchMat(t){
   matTab=t;
-  ['clays','base','ox','glaze','engobe','underglaze','raw','wish'].forEach(function(k){
+  ['clays','base','ox','glaze','engobe','underglaze','raw','mass','wish'].forEach(function(k){
     var el=document.getElementById('mat-'+k);if(el)el.style.display=k===t?'block':'none';
   });
   document.querySelectorAll('#mat-tabs .tb').forEach(function(b){
@@ -3258,10 +3505,14 @@ function openMatDet(id){
   const hero=document.getElementById('dmat-hero');
   if(!hero){console.error('dmat-hero not found');return;}
   hero.innerHTML=m.photo?`<img src="${m.photo}" alt="">`:K(70);
-  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура',engobe:'Ангоба',underglaze:'Подглазурна боя',raw:'Суровина (дива глина)'};
+  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура',engobe:'Ангоба',underglaze:'Подглазурна боя',raw:'Суровина (дива глина)',mass:'Маса'};
   document.getElementById('dmat-t').textContent=m.name;
   document.getElementById('dmat-m').textContent=[catLabel[m.cat]||m.cat,m.brand].filter(Boolean).join(' · ');
-  const rows=[
+  const rows=(m.cat==='mass')?[
+    // v1.7.0: A маса has no stock/status — only composition and dates
+    dr('Замесена на',m.blend&&m.blend.mixDate?new Date(m.blend.mixDate).toLocaleDateString('bg-BG'):'—'),
+    dr('Готова на',m.blend&&m.blend.readyDate?new Date(m.blend.readyDate).toLocaleDateString('bg-BG'):'—'),
+  ]:[
     dr('Формула',m.formula),
     dr('Производител / Произход',m.brand),
     dr('Наличност',m.stock!=null?m.stock+'г':'—'),
@@ -3402,6 +3653,8 @@ function openMatDet(id){
   }
   // v1.6.0: Raw material process biography (geonotes + process timeline)
   _renderRawSection(m);
+  // v1.7.0: Маса composition
+  _renderMassSection(m);
   _openDet('det-mat');
 }
 
@@ -3561,7 +3814,7 @@ function openPieceMo(p){
 function _buildPiClayDropdown(p){
   const cs=document.getElementById('pi-clay');
   if(!cs)return;
-  var _matClays=DB.materials.filter(function(m){return m.cat==='clays';});
+  var _matClays=DB.materials.filter(function(m){return m.cat==='clays'||m.cat==='mass';});
   var _matClayNames=_matClays.map(function(m){return m.name;});
   var _extraClays=CLAY_NAMES.filter(function(n){return _matClayNames.indexOf(n)<0;});
   cs.innerHTML='<option value="">—</option>'+_extraClays.map(function(n){return '<option '+(p&&p.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
@@ -4001,7 +4254,7 @@ function openTestMo(t){
   var _tSrch=document.getElementById('ti-rec-srch');if(_tSrch)_tSrch.value='';
   buildGlzDropdown('ti-rec','');
   const cs=document.getElementById('ti-clay');
-  var _tMatClays=DB.materials.filter(function(m){return m.cat==='clays';});
+  var _tMatClays=DB.materials.filter(function(m){return m.cat==='clays'||m.cat==='mass';});
   var _tMatClayNames=_tMatClays.map(function(m){return m.name;});
   var _tExtraClays=CLAY_NAMES.filter(function(n){return _tMatClayNames.indexOf(n)<0;});
   cs.innerHTML='<option value="">—</option>'+_tExtraClays.map(function(n){return '<option '+(t&&t.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
@@ -4231,7 +4484,7 @@ function saveMat(){
   }
   closeMo('mo-mat');renderMaterials();switchMat(isWishlist?'wish':cat);updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
 }
-function editMat(){closeDet('det-mat');openMatMo(DB.materials.find(m=>m.id===curMat));}
+function editMat(){var _m=DB.materials.find(m=>m.id===curMat);closeDet('det-mat');if(_m&&_m.cat==='mass'){openMassMo(_m);}else{openMatMo(_m);}}
 function delMat(){
   var linkedRecipes = DB.recipes.filter(function(r){
     return r.ingredients&&r.ingredients.some(function(i){return i.matId===curMat;});
