@@ -671,6 +671,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="glazed">Глазирано</option>
           <option value="finished">Готово</option>
         </select>
+        <div id="pi-stage-hint" style="display:none;font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;">Етапът се променя от Процес — добави стъпка „Етап" в детайла на изделието.</div>
       </div>
       <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
 
@@ -869,7 +870,6 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <textarea id="ti-layers" style="min-height:60px;" placeholder="напр. Основа: Класическа пепелна (потапяне)&#10;Отгоре: PC-20 Blue Rutile (четка, 2 слоя)&#10;Ред: основа → изсъхне → втора глазура"></textarea>
         </div>
         <div class="f"><label>Глина</label><select id="ti-clay"><option value="">—</option></select></div>
-        <div class="f"><label>Партида глазура (г) — за приспадане от наличности</label><input type="number" id="ti-batch" placeholder="напр. 300"></div>
       </div>
 
       <!-- ── BODY: subject ── -->
@@ -1404,7 +1404,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.8.0';
+const APP_VERSION = 'v1.9.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2583,6 +2583,14 @@ function deleteRawEvent(eventId){
 // When stage events are added/edited/deleted in Процес, piece.stage is
 // recomputed from the latest stage event. The slider just reflects the
 // current status — its quick-action buttons never write events.
+// v1.9.0: Does this piece have real stage events? If so, Процес owns the stage
+// and no dropdown or slider may write it.
+function _hasStageEvents(piece){
+  if(!piece||!Array.isArray(piece.events))return false;
+  return piece.events.some(function(e){
+    return e&&e.type==='stage'&&e.data&&e.data.stageValue;
+  });
+}
 function recomputePieceStage(piece){
   if(!piece||!Array.isArray(piece.events))return;
   var stageEventsWithIdx=[];
@@ -2711,12 +2719,71 @@ function _idbGetAllKeys(){
 
 // Boot: open IDB, load all known keys into cache, run migration from localStorage if needed.
 // Returns a promise that resolves when storage is ready.
+// v1.9.0: Phase 2 of the two-phase removal started in v1.5.0.
+// The migration copied localStorage -> IDB and left the original in place.
+// Since then nothing has written to it (safeSaveJSON only falls back to
+// localStorage when IDB is unavailable), so that copy is frozen at migration
+// time. Nobody reads it either — until the day IDB fails to open, when
+// bootStorage would quietly serve months-old data as if it were current.
+// It cannot become a real mirror: ~2MB of base64 becomes ~4MB in localStorage's
+// UTF-16, against a 5MB ceiling. That is what drove the migration.
+// So: verify IDB really holds the data, then delete the stale copy, and leave a
+// flag behind so a later IDB failure can be reported instead of hidden.
+function _cleanupLegacyLocalStorage(){
+  return new Promise(function(resolve){
+    var lsV6=null;
+    try{lsV6=localStorage.getItem('atelie_v6');}catch(e){resolve();return;}
+    if(!lsV6){
+      // Nothing stale left — just mark that IDB is the live store.
+      try{localStorage.setItem('atelie_idb_active','1');}catch(e){}
+      resolve();return;
+    }
+    _idbGet('atelie_v6').then(function(idbV6){
+      // Verify before deleting anything: IDB must hold a parseable DB.
+      if(typeof idbV6!=='string'||!idbV6.length){
+        console.warn('[storage] IDB has no atelie_v6 — keeping the localStorage copy');
+        resolve();return;
+      }
+      var parsed=safeParseJSON(idbV6,null);
+      if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.pieces)){
+        console.warn('[storage] IDB copy failed the sanity check — keeping the localStorage copy');
+        resolve();return;
+      }
+      var removed=[];
+      try{
+        var keys=[];
+        for(var i=0;i<localStorage.length;i++){
+          var k=localStorage.key(i);
+          if(!k)continue;
+          if(k==='atelie_v6'||k==='atelie_userlib'||k.indexOf('atelie_v6_pre_')===0)keys.push(k);
+        }
+        keys.forEach(function(k){localStorage.removeItem(k);removed.push(k);});
+        localStorage.setItem('atelie_idb_active','1');
+      }catch(e){console.warn('[storage] cleanup failed:',e);}
+      if(removed.length)console.log('[storage] Removed stale localStorage copies:',removed.join(', '));
+      resolve();
+    }).catch(function(){resolve();});
+  });
+}
+
 function bootStorage(){
   return _openIDB().then(function(db){
     if(!db){
-      // Fallback: load directly from localStorage into cache
-      console.warn('[storage] Using localStorage fallback');
       _idbReady=false;
+      // v1.9.0: Two very different situations look identical here.
+      var _wasActive=null;
+      try{_wasActive=localStorage.getItem('atelie_idb_active');}catch(e){}
+      if(_wasActive==='1'){
+        // IDB has been this device's live store, and now it won't open. The data
+        // is in there, intact but unreachable. Serving the empty localStorage
+        // would look like total loss and invite re-entry into a second copy.
+        // Refuse to work rather than lie.
+        _storageBroken=true;
+        console.error('[storage] IDB unavailable on a device that was using it');
+        return false;
+      }
+      // Legitimate fallback: IDB never worked here, so localStorage is the store.
+      console.warn('[storage] Using localStorage fallback');
       try{
         for(var i=0;i<localStorage.length;i++){
           var k=localStorage.key(i);
@@ -2741,6 +2808,9 @@ function bootStorage(){
     }).then(function(){
       // One-time migration from localStorage to IDB
       return _migrateLocalStorageToIDB();
+    }).then(function(){
+      // v1.9.0: then drop the stale copy the migration left behind
+      return _cleanupLegacyLocalStorage();
     }).then(function(){
       return true;
     });
@@ -2789,7 +2859,7 @@ function _migrateLocalStorageToIDB(){
       }
     }catch(e){}
     Promise.all(promises).then(function(){
-      console.log('[storage] Migration complete. localStorage kept as backup.');
+      console.log('[storage] Migration complete.');
       try{toast('Преместено към нов storage (по-голям лимит)');}catch(e){}
       resolve();
     });
@@ -2808,7 +2878,16 @@ function safeLoadJSON(key, fallback){
   }catch(e){return fallback;}
 }
 
+// v1.9.0: Set when IndexedDB refuses to open on a device that was already using
+// it. In that state the real data is in IDB, unreachable — writing anything
+// would create a second, divergent copy. So we write nothing at all.
+var _storageBroken=false;
+
 function safeSaveJSON(key, value){
+  if(_storageBroken){
+    console.warn('[storage] write refused — storage is in a broken state');
+    return false;
+  }
   try{
     var serialized=JSON.stringify(value);
     _storageCache[key]=serialized;
@@ -3315,15 +3394,12 @@ function openPieceDet(id){
       var _dotSize=_isActive?'10px':'7px';
       _dotsHtml+='<div title="'+STAGES[_i].l+'" style="width:'+_dotSize+';height:'+_dotSize+';border-radius:50%;background:'+_dotColor+';transition:all .2s ease;'+(_isActive?'box-shadow:0 0 0 3px var(--primary-soft);':'')+'"></div>';
     }
-    var _canPrev=_idx>0;
-    var _canNext=_idx<STAGES.length-1;
+    // v1.9.0: Arrows removed. The dots were always a display; the arrows wrote
+    // piece.stage directly and competed with the events as a second source of
+    // truth. The stage now has exactly one owner — see savePiece / recomputePieceStage.
     _sa.innerHTML=
       '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;width:100%;">'
-        +'<div style="display:flex;align-items:center;gap:8px;justify-content:center;">'
-          +(_canPrev?'<button onclick="shiftPieceStage(-1)" aria-label="Назад" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:4px 8px;line-height:1;">‹</button>':'<span style="width:24px;"></span>')
-          +'<div style="display:flex;align-items:center;gap:6px;">'+_dotsHtml+'</div>'
-          +(_canNext?'<button onclick="shiftPieceStage(1)" aria-label="Напред" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:4px 8px;line-height:1;">›</button>':'<span style="width:24px;"></span>')
-        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;justify-content:center;">'+_dotsHtml+'</div>'
         +'<div style="font-size:11px;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;font-weight:500;">'+(_curStage?_curStage.l:'')+'</div>'
       +'</div>';
     _sa.style.display='block';
@@ -3414,22 +3490,9 @@ function resolveStageIdx(v){
   var i=STAGES.findIndex(function(x){return x.v===v;});
   return i<0?0:i;
 }
-function shiftPieceStage(delta){
-  if(!curPiece)return;
-  var p=DB.pieces.find(function(x){return x.id===curPiece;});
-  if(!p)return;
-  var idx=resolveStageIdx(p.stage);
-  var next=Math.max(0,Math.min(STAGES.length-1,idx+delta));
-  if(next===idx)return;
-  // Slider just updates the status — no event written to Процес.
-  // Process is independent: add events there via "+ Добави стъпка".
-  p.stage=normalizeStageValue(STAGES[next].v);
-  p.updatedAt=new Date().toISOString();
-  save();
-  openPieceDet(curPiece);
-  renderPieces();
-  toast('Преместено към: '+STAGES[next].l);
-}
+// v1.9.0: shiftPieceStage removed — the stage slider was a second writer of
+// piece.stage. Stage is now owned by the Процес events when they exist, and by
+// the Add/Edit Piece dropdown when they don't. One owner at any moment.
 
 function openRecipeDet(id){
   const r=DB.recipes.find(x=>x.id===id);if(!r)return;curRec=id;
@@ -3975,6 +4038,16 @@ function openPieceMo(p){
   buildGlzDropdown('pi-rec','');
   var _ss=document.getElementById('pi-stage');
   if(_ss)_ss.value=p&&p.stage?normalizeStageValue(p.stage):'wet';
+  // v1.9.0: Lock the dropdown when Процес owns the stage — editing it here would
+  // silently diverge from the events and get reverted on the next recompute.
+  var _stageOwned=_hasStageEvents(p);
+  if(_ss){
+    _ss.disabled=_stageOwned;
+    _ss.style.opacity=_stageOwned?'.55':'';
+    _ss.style.cursor=_stageOwned?'not-allowed':'';
+  }
+  var _sh=document.getElementById('pi-stage-hint');
+  if(_sh)_sh.style.display=_stageOwned?'block':'none';
   // v1.4.5: Reset quick-final section (closed + cleared) — hide on edit
   resetPiQuickFinal();
   var _qfWrap=document.getElementById('pi-quickfinal-wrap');
@@ -4042,6 +4115,11 @@ function savePiece(){
     if(_existing&&Array.isArray(_existing.events))p.events=_existing.events;
   }
   ensurePieceEvents(p);
+  // v1.9.0: The dropdown set p.stage above. If this piece has stage events, they
+  // are the truth — recompute overrides whatever the dropdown said. If it has
+  // none, recompute returns without touching it and the dropdown value stands.
+  // This is the one rule that keeps a single owner at any moment.
+  recomputePieceStage(p);
   // v1.4.5: Auto-create firing/decoration events from quick-final inputs (only on new piece)
   if(!editId){
     var _qfDate=dateVal||new Date().toISOString().slice(0,10);
@@ -4554,8 +4632,6 @@ function saveTest(){
   } else {
     if(!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
   }
-  const batchValRaw=document.getElementById('ti-batch')?document.getElementById('ti-batch').value:'';
-  if(!_isBody&&!vPosNum(batchValRaw,'Партида')){return;}
   const layersEl=document.getElementById('ti-layers');
   var _tGlzVal=document.getElementById('ti-rec').value;
   var _tRecId='',_tMatId='';
@@ -4592,23 +4668,13 @@ function saveTest(){
   // TODO (future): replace with an inventory ledger / stock movements table
   //   so that edits, deletes and corrections are fully auditable.
   // ────────────────────────────────────────────────────────────────────────
-  // v1.8.0: never runs for body tests — there's no recipe to deduct from.
-  if(!editId&&!_isBody){
-    const batchEl=document.getElementById('ti-batch');
-    const batch=batchEl?parseFloat(batchEl.value):0;
-    if(batch>0){
-      const rec=DB.recipes.find(r=>r.id===t.recipeId);
-      if(rec){
-        rec.ingredients.forEach(function(ing){
-          const mat=DB.materials.find(m=>m.id===ing.matId);
-          if(mat&&mat.stock!=null){
-            const used=(parseFloat(ing.pct)/100)*batch;
-            mat.stock=Math.max(0,parseFloat(mat.stock)-used);
-          }
-        });
-      }
-    }
-  }
+  // v1.9.0: Stock deduction removed.
+  // It ran on create only — edits never recalculated, deletes never restored,
+  // and there was no record of what moved. A silent, one-way, uncorrectable
+  // number is worse than an honest manual one. Stock is now edited by hand.
+  // If real inventory tracking is ever needed, it needs a movements ledger
+  // (purchase / adjustment / batch / waste), not a hook here.
+  // ────────────────────────────────────────────────────────────────────────
   if(editId)DB.tests[DB.tests.findIndex(x=>x.id===editId)]=t;else DB.tests.unshift(t);
   save();closeMo('mo-test');renderTests();updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
 }
@@ -5782,6 +5848,16 @@ function seedGuides(){
 // ══ INIT ══
 // v1.5.0: Wait for IDB to boot before loading data
 bootStorage().then(function(){
+  // v1.9.0: If IDB won't open on a device that was already using it, the data is
+  // intact but unreachable. Say so plainly instead of rendering an empty app —
+  // an empty app looks like total loss and invites re-entry into a second copy.
+  if(_storageBroken){
+    alert('Хранилището не се отваря.\n\n'
+      +'Данните ти са в приложението и са непокътнати, но точно сега не са достъпни.\n\n'
+      +'НЕ въвеждай нищо — нищо няма да се запази.\n\n'
+      +'Затвори приложението напълно и го отвори пак. Ако това не помогне, рестартирай телефона.');
+    return;
+  }
   seedGuides();
   load();
   render('pieces');
