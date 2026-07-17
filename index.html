@@ -483,11 +483,41 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <!-- ИЗПИЧАНИЯ -->
 <div class="sc" id="sc-fp">
   <div class="ph">
-    <div class="ph-left"><div class="pt">Изпичания</div><div class="ps" id="cnt-fp">0 профила</div></div>
+    <div class="ph-left"><div class="pt">Изпичания</div><div class="ps" id="cnt-fp">0</div></div>
   </div>
-  <div id="fp-list"></div>
+  <!-- v1.11.0: a profile is the programme (a template, reusable); a run is the
+       firing that actually happened, once, with these pieces in it. -->
+  <div class="tabs" style="display:flex;gap:6px;padding:0 18px 12px;overflow-x:auto;">
+    <button class="tb on" id="fptab-runs" onclick="switchFP('runs')">Изпичания</button>
+    <button class="tb" id="fptab-profiles" onclick="switchFP('profiles')">Профили</button>
+  </div>
+  <div id="run-list"></div>
+  <div id="fp-list" style="display:none"></div>
 </div>
 
+
+<!-- DETAIL: Изпичане (firing run) — v1.11.0 -->
+<div class="det" id="det-run">
+  <div style="position:relative;background:var(--bg2);padding:62px 18px 18px;">
+    <button class="det-back" onclick="closeDet('det-run')" style="background:var(--surf);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="det-t" id="drn-t"></div>
+    <div class="det-m" id="drn-m"></div>
+  </div>
+  <div style="padding:18px 18px 100px;">
+    <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
+    <div class="ds"><div class="ds-t">Параметри</div><div id="drn-rows"></div></div>
+    <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t">Алтернативно изпичане</div><div id="drn-alt"></div></div>
+    <div class="ds"><div class="ds-t">Изделия в това изпичане</div><div id="drn-pieces"></div></div>
+    <div class="ds"><div class="ds-t">Тестове</div><div id="drn-tests"></div></div>
+    <div class="ds"><div class="ds-t">Бележки</div><div id="drn-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
+    <div style="display:flex;gap:9px;margin-top:20px;">
+      <button class="btn bg" style="margin:0;" onclick="openRunMo(curRun)">Редактирай</button>
+      <button class="btn bg" style="margin:0;color:var(--accent);" onclick="deleteRun()">Изтрий</button>
+    </div>
+  </div>
+</div>
 
 <!-- DETAIL: Firing Profile -->
 <div class="det" id="det-fp">
@@ -880,6 +910,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
       <!-- ── Common conditions ── -->
       <div class="f"><label>Профил изпичане</label><select id="ti-fp"><option value="">—</option></select></div>
+      <div class="f"><label>Изпичане</label><select id="ti-run"><option value="">— самостоятелно —</option></select></div>
       <div class="f"><label>Дата</label><input type="date" id="ti-date"></div>
       <div class="f"><label>Температура (°C)</label><input type="number" id="ti-temp" placeholder="напр. 950"></div>
       <div class="f"><label>Задръжка (мин)</label><input type="number" id="ti-hold"></div>
@@ -1105,6 +1136,14 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
       <!-- Firing-specific (v1.4.3) -->
       <div id="ev-fields-firing" style="display:none">
+        <!-- v1.11.0: link to a real firing. When set, the run is the truth for
+             method / temperature / atmosphere and these fields hide — exactly the
+             single-owner rule the stage got in v1.9.0. -->
+        <div class="f"><label>Изпичане</label>
+          <select id="ev-firing-run" onchange="onEvFiringRunChange()"><option value="">— самостоятелно —</option></select>
+          <div id="ev-firing-run-hint" style="display:none;font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;">Методът, температурата и атмосферата идват от изпичането.</div>
+        </div>
+        <div id="ev-firing-own">
         <div class="f"><label>Метод *</label>
           <select id="ev-firing-method" onchange="onFiringMethodChange()">
             <option value="">— избери —</option>
@@ -1145,6 +1184,19 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="f" id="ev-firing-profile-wrap" style="display:none">
           <label>Профил на изпичане</label>
           <select id="ev-firing-profile-id"><option value="">— без профил —</option></select>
+        </div>
+        </div><!-- /ev-firing-own -->
+        <!-- v1.11.0: wrapping is per piece, not per firing — bare and saggared
+             come out of the same pit unrecognisable. It's a choice, not an
+             observation, so it earns a field rather than a note. -->
+        <div class="f"><label>Обвиване</label>
+          <select id="ev-firing-wrapping">
+            <option value="">—</option>
+            <option value="bare">Голо</option>
+            <option value="foil">Фолио</option>
+            <option value="saggar">Сагар</option>
+            <option value="other">Друго</option>
+          </select>
         </div>
         <div class="f"><label>Подробности</label>
           <textarea id="ev-firing-details" rows="2" placeholder="горива, добавки, материали (напр. медна тел + стърготини)"></textarea>
@@ -1249,6 +1301,88 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('firing')">🔥 &nbsp; Изпичане</button>
       <button class="btn bg" style="padding:14px;font-size:14px;text-align:left;margin-top:0;" onclick="openEventMo('progress')">○ &nbsp; Прогрес (снимка/бележка)</button>
       <button class="btn bg" style="margin-top:6px;" onclick="closeEvTypePopup()">Откажи</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Изпичане (firing run) — v1.11.0 -->
+<div class="mo" id="mo-run" onclick="closeBg(event,'mo-run')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-run-t">Ново изпичане</div><button class="mo-x" onclick="closeMo('mo-run')">×</button></div>
+      <div class="mo-b">
+        <div class="f"><label>Име (по желание)</label><input type="text" id="rn-name" placeholder="напр. Трапно #3 — юли"></div>
+        <div class="f"><label>Дата *</label><input type="date" id="rn-date"></div>
+        <div class="f"><label>Метод *</label>
+          <select id="rn-method" onchange="onRunMethodChange()">
+            <option value="">— избери —</option>
+            <option value="electric">Електрическа пещ</option>
+            <option value="gas">Газова пещ</option>
+            <option value="wood">Дървена пещ</option>
+            <option value="raku">Раку</option>
+            <option value="chushkopek">Чушкопек</option>
+            <option value="pit">Pit firing (трап)</option>
+            <option value="barrel">Barrel firing (варел)</option>
+            <option value="sagar">Сагар</option>
+            <option value="sawdust">Стърготини / опушване</option>
+            <option value="soda">Soda firing (сода)</option>
+            <option value="salt">Salt firing (солно)</option>
+            <option value="obvara">Обвара</option>
+            <option value="other">Друго</option>
+          </select>
+        </div>
+        <div class="f"><label>Атмосфера</label>
+          <select id="rn-atm"><option value="">—</option><option value="oxidation">Окислително</option><option value="reduction">Редукционно</option></select>
+        </div>
+        <div class="f"><label>Тип</label>
+          <select id="rn-purpose"><option value="">—</option><option value="bisque">Бисквит</option><option value="glaze">Глазурно</option><option value="single-fire">Еднопек</option><option value="alternative">Алтернативно</option></select>
+        </div>
+
+        <!-- Profile: what was planned -->
+        <div class="f" id="rn-profile-wrap"><label>Профил (планираното)</label>
+          <select id="rn-profile"><option value="">— без профил —</option></select>
+        </div>
+
+        <!-- What actually happened -->
+        <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:8px;">🔥 КАКВО СТАНА В ДЕЙСТВИТЕЛНОСТ</div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Пикова темп. (°C)</label><input type="number" id="rn-peak" placeholder="напр. 1240"></div>
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Задръжка (мин)</label><input type="number" id="rn-hold" placeholder="напр. 20"></div>
+          </div>
+          <div class="f" style="margin-bottom:0;"><label style="font-size:10px;">Конуси</label><input type="text" id="rn-cones" placeholder="напр. 6 паднал, 7 наведен"></div>
+        </div>
+
+        <!-- Non-electric only -->
+        <div id="rn-alt-wrap" style="display:none">
+          <div class="f"><label>Гориво</label><input type="text" id="rn-fuel" list="rn-fuel-list" placeholder="напр. дъб, пропан, стърготини">
+            <datalist id="rn-fuel-list"></datalist>
+          </div>
+          <div class="f"><label>Добавки в огъня</label>
+            <div id="rn-add-chips"></div>
+            <select id="rn-add-picker" onchange="addRunAdditive()" style="margin-top:6px;">
+              <option value="">— от материалите —</option>
+            </select>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="rn-add-free" list="rn-add-list" placeholder="или напиши (сол, бананови кори…)" style="flex:1;">
+              <button type="button" class="btn bg" style="margin:0;width:auto;padding:0 14px;" onclick="addRunAdditiveFree()">+</button>
+            </div>
+            <datalist id="rn-add-list"></datalist>
+          </div>
+          <div class="f"><label>Времетраене (часове)</label><input type="number" id="rn-duration" step="0.5" placeholder="напр. 6"></div>
+        </div>
+
+        <div class="f"><label>Бележки</label><textarea id="rn-notes" rows="2" placeholder="как мина, проблеми, наблюдения"></textarea></div>
+        <div class="f"><label>Снимки</label>
+          <div id="rn-prev" class="ph-prev"></div>
+          <input type="file" id="rn-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'rn-prev',rnPh,5)">
+          <button type="button" class="btn bg" onclick="document.getElementById('rn-ph').click()">📷 Добави снимки</button>
+        </div>
+
+        <button class="btn bp" onclick="saveRun()">Запази</button>
+        <button class="btn bg" onclick="closeMo('mo-run')">Откажи</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1405,7 +1539,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.10.0';
+const APP_VERSION = 'v1.11.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1433,7 +1567,7 @@ function stageLabel(v){
 }
 var pieceStageFilter='';
 
-const DB={pieces:[],recipes:[],materials:[],tests:[],firingProfiles:[]};
+const DB={pieces:[],recipes:[],materials:[],tests:[],firingProfiles:[],firingRuns:[]};
 let cur='pieces',editId=null,curRec=null,curPiece=null,curTest=null,curMat=null;
 // v1.4.6: Nested-add state — when set, a save handler should call this instead of normal close.
 // Callback receives the newly created entity (m or r) and the entity kind ('material'|'recipe').
@@ -1441,7 +1575,7 @@ var _nestedAddCallback=null;
 var activeFilters={rec:{},test:{},mat:{},pc:{}};
 var activeSort={rec:'name',mat:'name',pc:'name'};
 var _scrollPos={};
-let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],rawEvPh=[],msPh=[],recIngs=[],showFavOnly=false;
+let pPh=[],rPh=[],tPh=[],mPh=[],evPh=[],rawEvPh=[],msPh=[],rnPh=[],recIngs=[],showFavOnly=false;
 
 const CLAY_NAMES=['PRNF Black','Sibelco Nigra 2002','PRGF Golden Brown','MARTE Red','TOFFEE Caramel','S&G 933'];
 
@@ -1576,6 +1710,8 @@ function load(){
     DB.materials=Array.isArray(d.materials)?d.materials:[];
     DB.tests=Array.isArray(d.tests)?d.tests:[];
     DB.firingProfiles=Array.isArray(d.firingProfiles)?d.firingProfiles:[];
+    // v1.11.0: an actual firing that happened — profiles are the programme, runs are the event
+    DB.firingRuns=Array.isArray(d.firingRuns)?d.firingRuns:[];
     DB._migrations=d._migrations||{};
     DEF_MATS.forEach(function(def){
       if(!DB.materials.find(function(m){return m.id===def.id;})){
@@ -1870,12 +2006,17 @@ function eventLabel(e){
     return _STAGE_LABELS[d.stageValue]||d.stageValue||'Етап';
   }
   if(e.type==='firing'){
-    var purpose=_FIRING_PURPOSE_LABELS[d.firingPurpose]||'';
-    var method=_FIRING_METHOD_LABELS[d.method]||'';
+    // v1.11.0: read through to the run when linked — the timeline shows the same
+    // thing it always did, it just no longer stores it twice.
+    var _r=(typeof _evFiringRun==='function')?_evFiringRun(e):null;
+    var purpose=_FIRING_PURPOSE_LABELS[_r?_r.purpose:d.firingPurpose]||'';
+    var method=_FIRING_METHOD_LABELS[_r?_r.method:d.method]||'';
+    var _t=_r?_r.peakTemp:d.temp;
     var parts=[];
     if(purpose)parts.push(purpose);
     if(method)parts.push(method);
-    if(d.temp)parts.push(d.temp+'°C');
+    if(_t)parts.push(_t+'°C');
+    if(_r)parts.push('↗');
     return parts.length?parts.join(' · '):'Изпичане';
   }
   if(e.type==='decoration'){
@@ -2049,6 +2190,11 @@ function openEventMo(type,editId){
     // Populate profile dropdown with current profiles
     _populateFiringProfilePicker(fd.profileId||'');
     onFiringMethodChange();
+    // v1.11.0: run link + wrapping
+    _populateEvFiringRunPicker(fd.firingRunId||'');
+    var _wr=document.getElementById('ev-firing-wrapping');
+    if(_wr)_wr.value=fd.wrapping||'';
+    onEvFiringRunChange();
   }
 
   renderPrev('ev-prev',evPh);
@@ -2056,6 +2202,39 @@ function openEventMo(type,editId){
 }
 
 // When firing method changes — show/hide profile selector (only for electric)
+// v1.11.0: linking a firing event to a run
+function onEvFiringRunChange(){
+  var v=document.getElementById('ev-firing-run').value;
+  var own=document.getElementById('ev-firing-own');
+  var hint=document.getElementById('ev-firing-run-hint');
+  if(own)own.style.display=v?'none':'';
+  if(hint)hint.style.display=v?'block':'none';
+}
+function _populateEvFiringRunPicker(cur){
+  var sel=document.getElementById('ev-firing-run');if(!sel)return;
+  var runs=DB.firingRuns.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  sel.innerHTML='<option value="">— самостоятелно —</option>'
+    +runs.map(function(r){return '<option value="'+r.id+'">'+_runLabel(r)+'</option>';}).join('');
+  sel.value=cur||'';
+}
+// When an event points at a run, the run answers for it. One owner at a time.
+function _evFiringRun(ev){
+  if(!ev||!ev.data||!ev.data.firingRunId)return null;
+  return DB.firingRuns.find(function(x){return x.id===ev.data.firingRunId;})||null;
+}
+function _evFiringMethod(ev){
+  var r=_evFiringRun(ev);
+  return r?r.method:(ev&&ev.data&&ev.data.method);
+}
+function _evFiringTemp(ev){
+  var r=_evFiringRun(ev);
+  return r?r.peakTemp:(ev&&ev.data&&ev.data.temp);
+}
+function _evFiringAtm(ev){
+  var r=_evFiringRun(ev);
+  return r?r.atmosphere:(ev&&ev.data&&ev.data.atmosphere);
+}
+
 function onFiringMethodChange(){
   var m=document.getElementById('ev-firing-method').value;
   document.getElementById('ev-firing-profile-wrap').style.display=(m==='electric')?'':'none';
@@ -2200,24 +2379,37 @@ function saveEvent(){
     var _atProg=document.getElementById('ev-at-stage');
     if(_atProg&&_atProg.value)ev.data.atStage=_atProg.value;
   } else if(curEventType==='firing'){
-    var fmethod=document.getElementById('ev-firing-method').value;
-    var fatm=document.getElementById('ev-firing-atmosphere').value;
-    var fpurp=document.getElementById('ev-firing-purpose').value;
-    if(!fmethod){toast('Избери метод');return;}
-    if(!fatm){toast('Избери атмосфера');return;}
-    if(!fpurp){toast('Избери тип изпичане');return;}
-    ev.data.method=fmethod;
-    ev.data.atmosphere=fatm;
-    ev.data.firingPurpose=fpurp;
-    var ftemp=document.getElementById('ev-firing-temp').value;
-    if(ftemp)ev.data.temp=parseFloat(ftemp);
-    var fdur=document.getElementById('ev-firing-duration').value;
-    if(fdur)ev.data.duration=parseFloat(fdur);
-    // Profile only meaningful for electric
-    if(fmethod==='electric'){
-      var fpid=document.getElementById('ev-firing-profile-id').value;
-      if(fpid)ev.data.profileId=fpid;
+    // v1.11.0: linked to a run? Then the run owns method / atmosphere / temp and
+    // the event stores none of them. Unlinked events behave exactly as before.
+    var _runEl=document.getElementById('ev-firing-run');
+    var _runId=_runEl?_runEl.value:'';
+    if(_runId){
+      ev.data.firingRunId=_runId;
+      delete ev.data.method;delete ev.data.atmosphere;delete ev.data.firingPurpose;
+      delete ev.data.temp;delete ev.data.duration;delete ev.data.profileId;
+    } else {
+      delete ev.data.firingRunId;
+      var fmethod=document.getElementById('ev-firing-method').value;
+      var fatm=document.getElementById('ev-firing-atmosphere').value;
+      var fpurp=document.getElementById('ev-firing-purpose').value;
+      if(!fmethod){toast('Избери метод');return;}
+      if(!fatm){toast('Избери атмосфера');return;}
+      if(!fpurp){toast('Избери тип изпичане');return;}
+      ev.data.method=fmethod;
+      ev.data.atmosphere=fatm;
+      ev.data.firingPurpose=fpurp;
+      var ftemp=document.getElementById('ev-firing-temp').value;
+      if(ftemp)ev.data.temp=parseFloat(ftemp);
+      var fdur=document.getElementById('ev-firing-duration').value;
+      if(fdur)ev.data.duration=parseFloat(fdur);
+      // Profile only meaningful for electric
+      if(fmethod==='electric'){
+        var fpid=document.getElementById('ev-firing-profile-id').value;
+        if(fpid)ev.data.profileId=fpid;
+      }
     }
+    var _wrEl=document.getElementById('ev-firing-wrapping');
+    if(_wrEl&&_wrEl.value)ev.data.wrapping=_wrEl.value;else delete ev.data.wrapping;
     var fdet=document.getElementById('ev-firing-details').value;
     if(fdet)ev.data.details=fdet;
     var fres=document.getElementById('ev-firing-result').value;
@@ -3004,7 +3196,7 @@ function addNew(){
   else if(cur==='recipes'){editId=null;openRecipeMo();}
   else if(cur==='materials'){if(matTab==='mass'){openMassMo(null);}else{editId=null;openMatMo();}}
   else if(cur==='tests'){editId=null;openTestMo();}
-  else if(cur==='fp'){editId=null;openFPMo(null);}
+  else if(cur==='fp'){editId=null;if(fpTab==='profiles')openFPMo(null);else openRunMo(null);}
 }
 
 // ══ RENDER ══
@@ -3014,7 +3206,7 @@ function render(s){
   else if(s==='materials')renderMaterials();
   else if(s==='tests')renderTests();
   else if(s==='lib')renderLib();
-  else if(s==='fp')renderFiringProfiles();
+  else if(s==='fp'){renderFiringRuns();renderFiringProfiles();}
   updateNotifBadge();
 }
 
@@ -4740,6 +4932,14 @@ function openTestMo(t){
   if(_kEl)_kEl.value=_k;
   onTestKindChange();
   _populateTestBodyPicker(t);
+  // v1.11.0: optional link to the firing this test came out of
+  var _trEl=document.getElementById('ti-run');
+  if(_trEl){
+    var _runs=DB.firingRuns.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+    _trEl.innerHTML='<option value="">— самостоятелно —</option>'
+      +_runs.map(function(r){return '<option value="'+r.id+'">'+_runLabel(r)+'</option>';}).join('');
+    _trEl.value=(t&&t.firingRunId)||'';
+  }
   var _b=(t&&t.body)||{};
   var _set=function(id,v){var e=document.getElementById(id);if(e)e.value=(v!=null&&v!=='')?v:'';};
   _set('ti-plast',_b.plasticity);
@@ -4814,6 +5014,9 @@ function saveTest(){
   else if(_tGlzVal.indexOf('mat:')===0){_tMatId=_tGlzVal.slice(4);}
   else if(_tGlzVal){_tRecId=_tGlzVal;}
   const t={id:editId||uid(),kind:_kind,updatedAt:new Date().toISOString(),recipeId:_tRecId,materialId:_tMatId,firingProfileId:(document.getElementById('ti-fp')?document.getElementById('ti-fp').value||null:null),clay:document.getElementById('ti-clay').value,date:dateVal,temp:tempVal,hold:holdVal,flow:document.getElementById('ti-flow').value,surf:document.getElementById('ti-surf').value,def:document.getElementById('ti-def').value,rat:document.getElementById('ti-rat').value,notes:document.getElementById('ti-notes').value,glazeLayers:layersEl?layersEl.value:'',photos:[...tPh]};
+  // v1.11.0: firing run link
+  var _trSave=document.getElementById('ti-run');
+  if(_trSave&&_trSave.value)t.firingRunId=_trSave.value;
   // v1.8.0: body-test fields
   if(_isBody){
     var _bref=document.getElementById('ti-body-ref');
@@ -5870,6 +6073,317 @@ var FP_TYPES=[
   {v:'other', l:'Друго'},
 ];
 function fpTypeLabel(v){var t=FP_TYPES.find(function(x){return x.v===v;});return t?t.l:v||'—';}
+
+// ── ИЗПИЧАНЕ (firing run) — v1.11.0 ──────────────────────────
+// A profile is the programme: reusable, a template, never happened.
+// A run is the firing that did happen — once, on a date, with these pieces in it.
+//
+// The run does NOT keep a list of pieces. The piece's own firing event carries
+// firingRunId, and the run's list is derived by scanning for it — the same
+// "derived, not duplicated" rule the related-records lists have always used.
+// That's also what makes attaching a piece cheap: it's one field on an event
+// that already exists, so a quick-added piece gets adopted rather than copied.
+var fpTab='runs';
+var runAdditives=[];      // ['mat:<id>' | free text]
+var curRun=null;
+
+function switchFP(t){
+  fpTab=t;
+  ['runs','profiles'].forEach(function(k){
+    var b=document.getElementById('fptab-'+k);if(b)b.classList.toggle('on',k===t);
+  });
+  var rl=document.getElementById('run-list');if(rl)rl.style.display=t==='runs'?'':'none';
+  var fl=document.getElementById('fp-list');if(fl)fl.style.display=t==='profiles'?'':'none';
+  _updateFPCount();
+}
+function _updateFPCount(){
+  var el=document.getElementById('cnt-fp');if(!el)return;
+  if(fpTab==='profiles'){
+    var n=DB.firingProfiles.length;
+    el.textContent=n+' '+(n===1?'профил':'профила');
+  } else {
+    var m=DB.firingRuns.length;
+    el.textContent=m+' '+(m===1?'изпичане':'изпичания');
+  }
+}
+
+// Electric firings follow a programme; everything else is fuel, additives and time.
+function _runIsAlt(method){return !!method&&method!=='electric';}
+function onRunMethodChange(){
+  var m=document.getElementById('rn-method').value;
+  var alt=document.getElementById('rn-alt-wrap');
+  if(alt)alt.style.display=_runIsAlt(m)?'block':'none';
+  var pw=document.getElementById('rn-profile-wrap');
+  if(pw)pw.style.display=(m==='electric'||m==='gas'||!m)?'':'none';
+}
+
+// Additives are either a material from stock ('mat:<id>') or free text.
+// Same shape as decoration materials — _resolveMaterialRef already reads both.
+function _renderRunAdditives(){
+  var c=document.getElementById('rn-add-chips');if(!c)return;
+  if(!runAdditives.length){c.innerHTML='';return;}
+  c.innerHTML=runAdditives.map(function(a,i){
+    var label=(a.indexOf('mat:')===0||a.indexOf('rec:')===0)?_resolveMaterialRef(a):a;
+    var isMat=a.indexOf('mat:')===0;
+    return '<span style="display:inline-flex;align-items:center;gap:5px;margin:0 5px 5px 0;padding:4px 9px;background:'+(isMat?'var(--primary-soft)':'var(--surf)')+';border:1px solid var(--bdr2);border-radius:12px;font-size:12px;color:var(--tx2);">'
+      +(isMat?'📦 ':'')+label
+      +'<button type="button" onclick="removeRunAdditive('+i+')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;line-height:1;">×</button></span>';
+  }).join('');
+}
+function _populateRunAdditivePicker(){
+  var sel=document.getElementById('rn-add-picker');if(!sel)return;
+  var cats=[['ox','Оксиди / оцветители'],['base','Базови суровини'],['raw','Суровини'],['glaze','Готови глазури']];
+  var html='<option value="">— от материалите —</option>';
+  cats.forEach(function(g){
+    var items=DB.materials.filter(function(m){
+      return m.cat===g[0]&&!m.wishlist&&runAdditives.indexOf('mat:'+m.id)<0;
+    });
+    if(!items.length)return;
+    html+='<optgroup label="'+g[1]+'">'
+      +items.map(function(m){return '<option value="mat:'+m.id+'">'+m.name+'</option>';}).join('')
+      +'</optgroup>';
+  });
+  sel.innerHTML=html;sel.value='';
+}
+function addRunAdditive(){
+  var sel=document.getElementById('rn-add-picker');
+  if(!sel.value)return;
+  if(runAdditives.indexOf(sel.value)<0)runAdditives.push(sel.value);
+  _renderRunAdditives();_populateRunAdditivePicker();
+}
+function addRunAdditiveFree(){
+  var el=document.getElementById('rn-add-free');
+  var v=(el.value||'').trim();
+  if(!v)return;
+  if(runAdditives.indexOf(v)<0)runAdditives.push(v);
+  el.value='';
+  _renderRunAdditives();
+}
+function removeRunAdditive(i){
+  runAdditives.splice(i,1);
+  _renderRunAdditives();_populateRunAdditivePicker();
+}
+// Autocomplete from what's been typed before — keeps "сол" from becoming
+// "Сол" / "солта" / "сол морска" across runs.
+function _refreshRunDatalists(){
+  var fuels={},adds={};
+  DB.firingRuns.forEach(function(r){
+    if(r.fuel)fuels[r.fuel]=1;
+    (r.additives||[]).forEach(function(a){if(a.indexOf('mat:')!==0)adds[a]=1;});
+  });
+  var fl=document.getElementById('rn-fuel-list');
+  if(fl)fl.innerHTML=Object.keys(fuels).map(function(f){return '<option value="'+f+'">';}).join('');
+  var al=document.getElementById('rn-add-list');
+  if(al)al.innerHTML=Object.keys(adds).map(function(a){return '<option value="'+a+'">';}).join('');
+}
+
+// Pieces in a run — derived, never stored.
+function _runPieces(runId){
+  var out=[];
+  DB.pieces.forEach(function(p){
+    if(!Array.isArray(p.events))return;
+    p.events.forEach(function(e){
+      if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===runId)out.push({piece:p,ev:e});
+    });
+  });
+  return out;
+}
+function _runTests(runId){
+  return DB.tests.filter(function(t){return t.firingRunId===runId;});
+}
+function _runLabel(r){
+  if(!r)return '—';
+  if(r.name)return r.name;
+  return firingMethodLabel(r.method)+(r.date?' · '+r.date:'');
+}
+
+// v1.11.0: the run detail — its pieces and tests are computed here, not stored.
+function openRunDet(id){
+  var r=DB.firingRuns.find(function(x){return x.id===id;});if(!r)return;
+  curRun=id;
+  document.getElementById('drn-t').textContent=_runLabel(r);
+  document.getElementById('drn-m').textContent=[r.date,firingMethodLabel(r.method)].filter(Boolean).join(' · ');
+  document.getElementById('drn-photos').innerHTML=(r.photos||[]).map(function(src){
+    return '<img src="'+src+'" style="width:80px;height:80px;border-radius:var(--rs);object-fit:cover;flex-shrink:0;" alt="">';
+  }).join('');
+  var fp=r.firingProfileId?DB.firingProfiles.find(function(x){return x.id===r.firingProfileId;}):null;
+  var atmL={oxidation:'Окислително',reduction:'Редукционно'};
+  var purL={bisque:'Бисквит',glaze:'Глазурно','single-fire':'Еднопек',alternative:'Алтернативно'};
+  document.getElementById('drn-rows').innerHTML=[
+    dr('Метод',firingMethodLabel(r.method)),
+    dr('Тип',purL[r.purpose]||''),
+    dr('Атмосфера',atmL[r.atmosphere]||''),
+    dr('Профил (планирано)',fp?fp.name:(r.firingProfileId?'Изтрит профил':'')),
+    dr('Пикова температура',r.peakTemp!=null?r.peakTemp+'°C':''),
+    dr('Задръжка',r.holdMin!=null?r.holdMin+' мин':''),
+    dr('Конуси',r.cones)
+  ].join('');
+  var altRow=document.getElementById('drn-alt-row');
+  if(_runIsAlt(r.method)&&(r.fuel||(r.additives&&r.additives.length)||r.duration!=null)){
+    altRow.style.display='';
+    var adds=(r.additives||[]).map(function(a){
+      return (a.indexOf('mat:')===0||a.indexOf('rec:')===0)?_resolveMaterialRef(a):a;
+    }).join(', ');
+    document.getElementById('drn-alt').innerHTML=[
+      dr('Гориво',r.fuel),
+      dr('Добавки',adds),
+      dr('Времетраене',r.duration!=null?r.duration+' ч':'')
+    ].join('');
+  } else altRow.style.display='none';
+  // Derived: pieces whose firing event points here
+  var wrapL={bare:'голо',foil:'фолио',saggar:'сагар',other:'друго'};
+  var ps=_runPieces(id);
+  document.getElementById('drn-pieces').innerHTML=ps.length
+    ? ps.map(function(x){
+        var bits=[];
+        var w=x.ev.data&&x.ev.data.wrapping;
+        if(w)bits.push(wrapL[w]||w);
+        if(x.ev.note)bits.push(x.ev.note);
+        return '<div class="li" style="padding:8px 0;" onclick="closeDet(\'det-run\');openPieceDet(\''+x.piece.id+'\')">'
+          +'<div class="li-ic" style="width:34px;height:34px;">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
+          +'<div class="li-body"><div class="li-t" style="font-size:13px;">'+x.piece.name+'</div>'
+          +(bits.length?'<div class="li-s" style="font-size:11px;">'+bits.join(' · ')+'</div>':'')+'</div>'
+          +'<div class="li-r">›</div></div>';
+      }).join('')
+    : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Няма закачени изделия. Отвори изделие → Процес → стъпка „Изпичане" → избери това изпичане.</div>';
+  var ts=_runTests(id);
+  document.getElementById('drn-tests').innerHTML=ts.length
+    ? ts.map(function(t){
+        var rec=DB.recipes.find(function(x){return x.id===t.recipeId;});
+        var nm=testKind(t)==='body'
+          ? '🧱 '+(t.bodyRef?_resolveMaterialRef(t.bodyRef):'тест на маса')
+          : (rec?_recDisplayName(rec):'тест');
+        return '<div class="li" style="padding:8px 0;" onclick="closeDet(\'det-run\');openTestDet(\''+t.id+'\')">'
+          +'<div class="li-body"><div class="li-t" style="font-size:13px;">'+nm+'</div></div><div class="li-r">›</div></div>';
+      }).join('')
+    : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Няма закачени тестове.</div>';
+  document.getElementById('drn-notes').textContent=r.notes||'—';
+  _openDet('det-run');
+}
+
+function openRunMo(id){
+  curRun=id||null;
+  editId=id||null;
+  rnPh=[];runAdditives=[];
+  var r=id?DB.firingRuns.find(function(x){return x.id===id;}):null;
+  document.getElementById('mo-run-t').textContent=r?'Редактирай изпичане':'Ново изпичане';
+  var _s=function(k,v){var e=document.getElementById(k);if(e)e.value=(v!=null&&v!=='')?v:'';};
+  _s('rn-name',r&&r.name);
+  _s('rn-date',(r&&r.date)||new Date().toISOString().slice(0,10));
+  _s('rn-method',r&&r.method);
+  _s('rn-atm',r&&r.atmosphere);
+  _s('rn-purpose',r&&r.purpose);
+  _s('rn-peak',r&&r.peakTemp);
+  _s('rn-hold',r&&r.holdMin);
+  _s('rn-cones',r&&r.cones);
+  _s('rn-fuel',r&&r.fuel);
+  _s('rn-duration',r&&r.duration);
+  _s('rn-notes',r&&r.notes);
+  _s('rn-add-free','');
+  if(r&&Array.isArray(r.additives))runAdditives=r.additives.slice();
+  if(r&&Array.isArray(r.photos))rnPh=r.photos.slice();
+  // profile picker
+  var ps=document.getElementById('rn-profile');
+  if(ps){
+    ps.innerHTML='<option value="">— без профил —</option>'
+      +DB.firingProfiles.map(function(f){return '<option value="'+f.id+'">'+f.name+'</option>';}).join('');
+    ps.value=(r&&r.firingProfileId)||'';
+  }
+  onRunMethodChange();
+  _renderRunAdditives();_populateRunAdditivePicker();_refreshRunDatalists();
+  renderPrev('rn-prev',rnPh);
+  openMo('mo-run');
+}
+
+function saveRun(){
+  var date=document.getElementById('rn-date').value;
+  if(!date||!vDate(date)){toast('Датата е задължителна');focusEl('rn-date');return;}
+  var method=document.getElementById('rn-method').value;
+  if(!method){toast('Избери метод');focusEl('rn-method');return;}
+  var _n=function(k){var e=document.getElementById(k);if(!e||e.value==='')return null;var v=parseFloat(e.value);return isNaN(v)?null:v;};
+  var _v=function(k){var e=document.getElementById(k);return (e&&e.value)?e.value.trim():'';};
+  var r={
+    id:curRun||uid(),
+    name:_v('rn-name'),
+    date:date,
+    method:method,
+    atmosphere:_v('rn-atm'),
+    purpose:_v('rn-purpose'),
+    firingProfileId:(document.getElementById('rn-profile')?document.getElementById('rn-profile').value||null:null),
+    notes:_v('rn-notes'),
+    photos:[...rnPh],
+    updatedAt:new Date().toISOString()
+  };
+  var peak=_n('rn-peak');if(peak!=null)r.peakTemp=peak;
+  var hold=_n('rn-hold');if(hold!=null)r.holdMin=hold;
+  var cones=_v('rn-cones');if(cones)r.cones=cones;
+  if(_runIsAlt(method)){
+    var fuel=_v('rn-fuel');if(fuel)r.fuel=fuel;
+    if(runAdditives.length)r.additives=runAdditives.slice();
+    var dur=_n('rn-duration');if(dur!=null)r.duration=dur;
+  }
+  if(curRun){
+    var old=DB.firingRuns.find(function(x){return x.id===curRun;});
+    if(old&&old.createdAt)r.createdAt=old.createdAt;
+    var i=DB.firingRuns.findIndex(function(x){return x.id===curRun;});
+    if(i>=0)DB.firingRuns[i]=r;else DB.firingRuns.push(r);
+  } else {
+    r.createdAt=new Date().toISOString();
+    DB.firingRuns.push(r);
+  }
+  save();closeMo('mo-run');
+  renderFiringRuns();
+  toast(curRun?'Обновено':'Добавено!');
+  var _id=r.id;curRun=null;editId=null;
+  openRunDet(_id);
+}
+
+function deleteRun(){
+  if(!curRun)return;
+  var linked=_runPieces(curRun).length+_runTests(curRun).length;
+  var msg=linked>0
+    ? 'Изтрий това изпичане?\n\n'+linked+' '+(linked===1?'запис сочи':'записа сочат')+' към него. Те няма да се изтрият — просто ще спрат да сочат насам и ще си останат със собствените данни.'
+    : 'Изтрий това изпичане?';
+  if(!confirm(msg))return;
+  var id=curRun;
+  // Detach, don't cascade: the events keep whatever they hold on their own.
+  DB.pieces.forEach(function(p){
+    if(!Array.isArray(p.events))return;
+    p.events.forEach(function(e){
+      if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===id)delete e.data.firingRunId;
+    });
+  });
+  DB.tests.forEach(function(t){if(t.firingRunId===id)delete t.firingRunId;});
+  DB.firingRuns=DB.firingRuns.filter(function(x){return x.id!==id;});
+  save();closeDet('det-run');renderFiringRuns();toast('Изтрито');curRun=null;
+}
+
+function renderFiringRuns(){
+  _updateFPCount();
+  var l=document.getElementById('run-list');if(!l)return;
+  var items=DB.firingRuns.slice().sort(function(a,b){
+    return (b.date||'').localeCompare(a.date||'');
+  });
+  if(!items.length){
+    l.innerHTML='<div style="padding:40px 18px;text-align:center;color:var(--tx3);"><div style="font-size:32px;opacity:.35;margin-bottom:10px;">🔥</div><div style="font-size:13px;line-height:1.6;">Още няма изпичания.<br>Изпичането е това, което наистина се е случило — с дата и с парчетата вътре.</div></div>';
+    return;
+  }
+  l.innerHTML=items.map(function(r){
+    var np=_runPieces(r.id).length, nt=_runTests(r.id).length;
+    var load=[];
+    if(np)load.push(np+(np===1?' изделие':' изделия'));
+    if(nt)load.push(nt+(nt===1?' тест':' теста'));
+    var sub=[r.date,firingMethodLabel(r.method),r.peakTemp?r.peakTemp+'°C':'',load.join(' · ')].filter(Boolean).join(' · ');
+    return '<div class="li" onclick="openRunDet(\''+r.id+'\')">'
+      +'<div class="li-ic">'+(r.photos&&r.photos[0]?'<img src="'+r.photos[0]+'" alt="" style="width:100%;height:100%;object-fit:cover;">':'<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;">'+firingMethodIcon(r.method)+'</div>')+'</div>'
+      +'<div class="li-body"><div class="li-t">'+_runLabel(r)+'</div><div class="li-s">'+sub+'</div></div>'
+      +'<div class="li-r">›</div></div>';
+  }).join('');
+}
+
+function firingMethodIcon(m){
+  return {electric:'⚡',gas:'🔵',wood:'🪵',raku:'🔥',chushkopek:'🌶',pit:'🕳',barrel:'🛢',sagar:'📦',sawdust:'💨',soda:'🧂',salt:'🧂',obvara:'🫧',other:'🔥'}[m]||'🔥';
+}
 
 function renderFiringProfiles(){
   var l=document.getElementById('fp-list');if(!l)return;

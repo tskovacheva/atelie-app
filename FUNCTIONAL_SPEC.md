@@ -1,46 +1,42 @@
 # Глина — Functional Specification
 
-**Version:** v1.7.0.1 · `atelie-v45`
+**Version:** v1.11.0 · `atelie-v49`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
 
-> This document describes what the application currently does, module by module,
-> at the level of detail needed to (a) compare it against other ceramics
-> software, (b) audit it for over-engineering, and (c) identify missing
-> activities from a working ceramicist's practice.
->
-> It describes the **built state**, not aspirations. Planned work is confined to
-> §10.
+> A description of what the application does, module by module. It describes the
+> built state; planned work lives in [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
-## 1. Purpose and context
+## 1. Purpose and scope
 
-**Глина** ("Clay") is a personal record-keeping application for a working
-ceramic studio. It tracks the full life of handmade ceramic work — from raw
-material through forming, decoration, and firing, to the finished piece — plus
-the glaze recipes, materials, and test results that feed into it.
+**Глина** ("Clay") is a personal record-keeping application for a working ceramic
+studio. It tracks the life of handmade ceramic work — from raw material through
+forming, decoration, and firing, to the finished piece — plus the glaze recipes,
+materials, and test results that feed into it.
 
-**Who it is for.** One ceramicist, in one studio (Crafty Place, Vlado Trichkov,
-Bulgaria). It is not a commercial product and has no users other than its owner.
-Design decisions consistently favour "what this practice actually needs" over
-"what a general product would need."
+**Audience.** One ceramicist, one studio (Crafty Place, Vlado Trichkov,
+Bulgaria). Not a commercial product. Design decisions consistently favour what
+this practice needs over what a general product would need.
 
-**What kind of tool it is.** Closer to a studio notebook than to management
-software. It records what happened. It does not schedule, cost, invoice, or
-optimise. There is no sales, customer, order, or commission tracking, and none is
-planned.
+**Kind of tool.** Closer to a studio notebook than to management software. It
+records what happened. It does not schedule, cost, invoice, or optimise. There is
+no sales, customer, order, or commission tracking, and none is planned.
 
-**Distinguishing characteristic.** Most pottery software assumes an electric
-kiln and a linear bisque → glaze → done workflow. This application treats
-alternative firing (raku, pit, barrel, saggar, sawdust, soda, salt, obvara,
-чушкопек/"pepper roaster") as first-class, and models a piece's history as an
-event stream rather than a status field. It also, as of v1.6–v1.7, models the
-processing of wild-dug clay and the composition of custom clay bodies.
+**Distinguishing characteristics.**
 
-**Language.** Bulgarian UI throughout. No i18n layer. English is a possible
-future addition, not a current gap the owner wants closed.
+- Most pottery software assumes an electric kiln and a linear bisque → glaze →
+  done workflow. This application treats alternative firing (raku, pit, barrel,
+  saggar, sawdust, soda, salt, obvara, чушкопек) as first-class.
+- A piece's history is an event stream, not a status field.
+- Raw dug clay is modelled as a material with a processing biography of its own,
+  before it can be used.
+- Custom clay bodies are compositions with a traceable lineage.
+- A firing is a record in its own right — one event, many pieces.
+
+**Language.** Bulgarian UI throughout. No i18n layer.
 
 ---
 
@@ -49,57 +45,57 @@ future addition, not a current gap the owner wants closed.
 | Aspect | Choice |
 |---|---|
 | Form factor | Progressive Web App, installed on Android via Chrome |
-| Code | Single `index.html` (~5,500 lines): inline CSS + vanilla JS, no framework |
+| Code | Single `index.html` (~6,700 lines): inline CSS + vanilla JS, no framework |
 | Build step | None. Edit the file, commit, GitHub Pages serves it. |
 | Supporting files | `sw.js` (service worker), `app.webmanifest`, icons |
 | Hosting | GitHub Pages, static |
 | Backend | None. No accounts, no server, no sync. |
-| Offline | Full. Service worker caches the app shell. |
+| Offline | Full, and required. The application never depends on the network. |
 
 ### Storage
 
-- **Primary:** IndexedDB (key `atelie_idb`), practical ceiling ~1 GB+
+- **Store:** IndexedDB, key `atelie_idb`. Library articles live separately under
+  `atelie_userlib`.
 - **Access pattern:** an in-memory cache (`_storageCache`) is hydrated at boot by
-  `bootStorage()`; reads are synchronous against the cache, writes are async to
+  `bootStorage()`. Reads are synchronous against the cache; writes are async to
   IndexedDB. This keeps a synchronous API (`safeLoadJSON` / `safeSaveJSON`) over
   an async store, avoiding a full async refactor.
-- **Secondary:** `localStorage` still written as a backup mirror. Slated for
-  removal once IndexedDB proves stable.
-- **Keys:** `atelie_v6` (main DB), `atelie_userlib` (library), `atelie_v6_pre_*`
-  (pre-migration snapshots, removable via the storage tool)
+- **localStorage** is a fallback used only where IndexedDB is unavailable. It
+  holds no live data on a device where IndexedDB works.
 
-Migration from localStorage to IndexedDB happened in v1.5.0 and was driven by a
-real ceiling: photos are stored as base64 inside the DB object, and localStorage's
-UTF-16 encoding doubled their cost. The main DB had reached 1.99 MB, of which
-~98% was images, against a 5 MB limit.
+The migration from localStorage to IndexedDB (v1.5.0) was driven by a real
+ceiling: photos are stored as base64 inside the DB object, and localStorage's
+UTF-16 encoding doubled their cost. The database had reached 1.99 MB, of which
+~98% was images, against a 5 MB limit. localStorage cannot serve as a mirror for
+the same reason.
+
+**Failure handling.** A flag (`atelie_idb_active`) records that IndexedDB is the
+live store. If IndexedDB later fails to open on such a device, the application
+reports that storage is unavailable and refuses to write, rather than presenting
+an empty or stale database as current. Recovery is by restart, or by restoring a
+backup.
 
 ### Photos
 
-Stored inline as base64 JPEG data URLs. Client-side resized to **max 800px** on
-the long edge at **quality 0.75** before storage. No external image hosting.
+Stored inline as base64 JPEG data URLs, resized client-side to **max 800px** on
+the long edge at **quality 0.75**. No external image hosting.
 
-Photo capacity is **inconsistent by entity** and worth noting for the
-over-engineering audit:
+Capacity by entity:
 
-| Entity | Photos | Field |
-|---|---|---|
-| Piece | up to 5 | `photos[]` |
-| Piece event | up to 5 | `photos[]` |
-| Test | up to 5 | `photos[]` |
-| Raw material process event | up to 5 | `photos[]` |
-| Recipe | 1 | `photo` |
-| Material (all categories incl. mass) | 1 | `photo` |
+| Entity | Photos |
+|---|---|
+| Piece, piece event, test, raw-material process event, firing run | up to 5 |
+| Recipe, material (all categories) | 1 |
 
 ### Data root
 
 ```js
-DB = { pieces: [], recipes: [], materials: [], tests: [], firingProfiles: [] }
+DB = { pieces, recipes, materials, tests, firingProfiles, firingRuns, _migrations }
 ```
 
-Library articles live outside `DB` under their own key. Every entity is a plain
-array of plain objects; there is no state layer, ORM, or reactive system. All
-schema changes are additive and backward-compatible — old records simply lack
-new fields.
+Every entity is a plain array of plain objects. No state layer, ORM, or reactive
+system. Schema changes are additive and backward-compatible — older records
+simply lack newer fields and are read with defaults.
 
 ### Conventions
 
@@ -108,18 +104,26 @@ new fields.
   by `_resolveMaterialRef()`
 - Stage values are normalised through `normalizeStageValue()` (legacy
   `greenware` → `wet`, `glaze-fired` → `finished`)
+- Related-record lists are **derived, never stored** — no reverse foreign keys
 - `APP_VERSION` and `CACHE_NAME` are bumped together on every deploy
+
+### Single-owner rule
+
+Where two mechanisms could write the same value, exactly one owns it at any
+moment, and the owner is determined by the data rather than by the UI. This
+applies in three places:
+
+| Value | Owner |
+|---|---|
+| `piece.stage` | the Процес events when stage events exist; the Add/Edit dropdown when they don't |
+| firing method / temperature / atmosphere on an event | the linked firing run when `firingRunId` is set; the event itself when it isn't |
+| a recipe's composition as a test saw it | the specific recipe version the test points to |
 
 ---
 
-## 3. Module: Изделия (Pieces)
+## 3. Изделия (Pieces)
 
-The primary module and the reason the app exists.
-
-### Purpose
-
-Catalogue every piece made, and record its history from wet clay to finished
-object.
+The primary module.
 
 ### Entity
 
@@ -129,40 +133,29 @@ recipe, material, bisqueTemp, glazeTemp, date, stage, notes, events[]
 ```
 
 - `type` — free text with autocomplete from previously used values (vase, cup,
-  musical instrument, …). Deliberately not a fixed list.
+  musical instrument…). Deliberately not a fixed list.
 - `technique` — fixed list: throwing, coiling, slabs, hand-building, mould,
   kurinuki, other
-- `clay` — either a material ID (clays or mass category) or a free-text legacy
+- `clay` — a material reference (clays or mass category) or a free-text legacy
   name
-- `recipe` / `material` — the glaze, as either a recipe reference or a
-  ready-made glaze material
-- Two temperatures (`bisqueTemp`, `glazeTemp`) rather than one — a piece is
-  fired at least twice
+- Two temperatures rather than one — a piece is fired at least twice
 
 ### Stages
 
 Six ordered values: `wet` → `leather-hard` → `bone-dry` → `bisque` → `glazed` →
 `finished`.
 
-Displayed as a six-dot progress indicator with ‹ › arrows and a stage label.
-This replaced two large stage-advance buttons in v1.5.2 after external UX review
-found they read as primary calls to action and competed with the actual content.
+Shown as a six-dot indicator with a stage label in the piece detail, and as a
+badge in the list. The indicator is **display only**.
 
-**Note for the audit:** the slider updates `piece.stage` directly and does *not*
-create an event. The owner reports not using it — stage is advanced by adding
-process events instead. This is a candidate for removal.
+### Процес — the event timeline
 
-### Process — the event timeline
-
-Each piece has `events[]`. This is the app's most distinctive feature and its
-largest single investment.
-
-Event shape: `{ id, type, date, note, photos[], data{} }`
+Each piece has `events[]`. Event shape: `{ id, type, date, note, photos[], data{} }`
 
 | Type | Meaning | `data` fields |
 |---|---|---|
 | `stage` | transition to a new stage | `stageValue` |
-| `firing` | a firing | `method`, `atmosphere`, `firingPurpose`, `temp`, `firingProfileId` |
+| `firing` | a firing | `firingRunId`, `wrapping`, or standalone: `method`, `atmosphere`, `firingPurpose`, `temp`, `duration`, `profileId` |
 | `decoration` | decoration applied | `technique`, `materialIds[]`, `appliedAtStage` |
 | `progress` | photo/note with no stage change | `atStage` |
 
@@ -173,17 +166,17 @@ saggar, sawdust, soda, salt, обвара, other
 oxide wash, underglaze, glaze, burnishing, carving, slip-trailing, other
 
 Decoration and progress events carry an optional "at which stage" field, because
-the same technique means different things at different moisture states (sgraffito
-at leather-hard vs at bone-dry). Firing and stage events do not carry it — they
+the same technique means different things at different moisture states
+(sgraffito at leather-hard vs at bone-dry). Firing and stage events do not — they
 *are* stage transitions.
 
-Decoration events can reference the materials used, as `mat:` or `rec:`
-references, with an inline "add new material" flow that returns to the event
-being edited.
+Firing events carry `wrapping` (bare / foil / saggar / other). This is per piece,
+not per firing: bare and saggared work comes out of the same pit unrecognisably
+different. It is a decision rather than an observation, which is why it is a
+field and not a note.
 
-`recomputePieceStage()` derives the current stage from the events; legacy pieces
-without events get synthetic ones from their flat fields
-(`synthesizeLegacyEvents`).
+`recomputePieceStage()` derives the current stage from the events. Pieces without
+events get synthetic ones from their flat fields (`synthesizeLegacyEvents`).
 
 Timeline sorting is reverse-chronological, with a tie-break: same-date events
 sort by stage order descending, so a bisque firing appears above a leather-hard
@@ -193,59 +186,79 @@ decoration recorded the same day.
 
 When adding a piece that is already finished, the modal offers a collapsed
 section for firing method / atmosphere / purpose and a decoration technique. On
-save, these become real events. This exists because the owner's current habit is
-to enter pieces retrospectively, all at once — the intended future habit
-(entering at the start and updating stage by stage) has not arrived yet.
+save these become real events, unlinked to any firing run. This supports
+retrospective entry — recording a piece whose history was never captured.
 
-**Note for the audit:** this is a second entry path for the same data. If the
-habit shifts, it becomes dead weight.
+### Add-piece modal
 
-### Add-piece modal structure
-
-Two-tier, introduced in v1.5.3 after UX review found every field carried equal
-visual weight:
+Two-tier:
 
 - **Always visible:** photo, name*, clay (+add new), stage, date
-- **Collapsed under "Допълнителни детайли":** type, technique, glaze/recipe
-  (+add new), bisque temp, glaze temp
-- Auto-expands on edit if the piece has any of the secondary fields filled
+- **Collapsed under "Допълнителни детайли":** type, technique, glaze/recipe (+add
+  new), bisque temp, glaze temp
+- Auto-expands on edit if any secondary field has a value
 
-### List, filter, sort
+The stage dropdown is disabled, with an explanatory hint, when the piece has
+stage events — see the single-owner rule (§2).
 
-Collapsible filter panel (v1.5.2) with an active-filter count badge. Filter by
-stage chips; sort by name/date. Search across name and type.
+### List
+
+Collapsible filter panel with an active-filter count badge. Filter by stage
+chips; sort by name or date. Search across name and type.
 
 ---
 
-## 4. Module: Рецепти (Recipes)
+## 4. Рецепти (Recipes)
 
-### Purpose
-
-Glaze recipes — mixtures the ceramicist **applies** to a surface.
+Glaze recipes — mixtures that get **applied** to a surface.
 
 ### Entity
 
 ```
 id, name*, photo, temp, cone, glazeType, notes,
-recommendedFiringProfileId, fav, ingredients[{matId, pct}]
+recommendedFiringProfileId, fav, ingredients[{matId, pct}],
+lineageId, version, versionNote
 ```
 
-### Features
+### Versions
 
-- Ingredients as material references with percentages
+A version is a **separate recipe record with a lineage**, not a nested structure.
+Because tests point at `recipeId` and every version has its own id, a test made
+against v1 keeps describing v1 permanently. The test model needs no version
+awareness at all.
+
+- `lineageId` groups versions; `version` is 1, 2, 3…
+- Legacy recipes have neither field and read as `lineage = own id`, `version = 1`.
+  The fields are stamped in when a second version is first created.
+- The list shows one row per lineage — the latest version, badged `v3`. A
+  "Всички версии" filter chip reveals the rest. The recipe detail lists the whole
+  lineage with dates, test counts, and version notes, each clickable.
+
+**The guard.** On save, if the composition changed *and* tests point at this
+recipe, a confirmation offers to save as a new version instead, so the existing
+tests keep describing the mixture they were made with. It fires only when both
+conditions hold: editing notes, name, or temperature is unaffected, as is
+changing the composition of a recipe with no tests. Ingredient comparison is
+order-insensitive and numeric.
+
+A version can also be branched by hand from the recipe detail.
+
+"Дублирай" remains distinct: an independent copy with a new lineage, for starting
+from an existing recipe to make a different glaze.
+
+### Other features
+
 - **Batch calculator** — enter a batch size in grams, get each ingredient's
   weight. Read-only, non-destructive.
 - Favourites flag with a favourites-only filter
 - Links to a recommended firing profile
 - Filter by temperature band; sort by name
-- Referenced from pieces (as the glaze), tests (as the subject), and — since
-  v1.7.0 — from masses (as a component)
 
 ---
 
-## 5. Module: Материали (Materials)
+## 5. Материали (Materials)
 
-The widest module. Nine tabs.
+Nine tabs.
 
 ### Categories
 
@@ -257,61 +270,65 @@ The widest module. Nine tabs.
 | `glaze` | Готова глазура | ✨ | ready-made |
 | `engobe` | Ангоба | 🎭 | |
 | `underglaze` | Подглазурна боя | 🖌 | |
-| `raw` | Суровина (дива глина) | ⛏ | **v1.6.0** — wild-dug, unprocessed |
-| `mass` | Маса | 🧱 | **v1.7.0** — composed clay body |
+| `raw` | Суровина (дива глина) | ⛏ | wild-dug, unprocessed |
+| `mass` | Маса | 🧱 | composed clay body |
 | — | Wishlist | | a flag, not a category |
 
 ### Common entity
 
 ```
 id, name*, cat, formula, brand, stock, alertAt,
-notes, photo, wishlist, cost, costUnit
+notes, photo, wishlist, cost, costUnit, chem
 ```
 
-- `stock` in grams, with `alertAt` low-stock threshold and a ⚠️ badge
+- `stock` in grams, with an `alertAt` low-stock threshold and a ⚠️ badge. Stock is
+  edited by hand only — nothing in the application changes it.
 - `cost` + `costUnit` (g / kg / L / ml / бр / m / other), currency fixed to EUR
 - Category-conditional fields: clays get `fireBisqueTemp` / `fireGlazeTemp`;
   glazes get their own block
 - Search, filter (low stock, wishlist), sort
 
-### 5.1 Суровина (raw material) — v1.6.0
+### 5.1 Суровина (raw material)
 
 Models wild clay dug from a specific place, which is itself an experiment before
-it can be a material.
+it can become a material.
 
-**Identity fields** — `raw: { location, coords, date, weight, geonotes }`
-Where it came from, coordinates, extraction date, initial dry weight, and free
-notes for geology, legal status, and layer descriptions.
+**Identity** — `raw: { location, coords, date, weight, geonotes }`
+Origin, coordinates, extraction date, initial dry weight, and free notes for
+geology, legal status, and layer descriptions. Distinct layers from one dig are
+recorded as one batch with notes, not as separate records, because they are
+processed in parallel.
 
-**Process biography** — `raw.events[]`, a simplified timeline distinct from
-piece events (the fields are too specific to share: ppm, mesh, water ratio).
+**Process biography** — `raw.events[]`, a simplified timeline distinct from piece
+events; the fields are too specific to share.
 
 | Type | Icon | `data` fields |
 |---|---|---|
-| Добиване (extraction) | ⛏ | `weight` |
-| Диагностика (diagnostic) | 🔬 | `vinegar` (strong/weak/none — carbonate test) |
-| Промивка (wash) | 💧 | `washNum`, `ratio`, `ppmBefore`, `ppmAfter`, `settleHours`, `waterTemp` |
-| Пресяване (sieve) | 🕸 | `mesh`, `weightBefore`, `weightAfter`, `observations` |
-| Отлежаване (aging) | ⏳ | `method`, `duration`, `consistency` |
+| Добиване | ⛏ | `weight` |
+| Диагностика | 🔬 | `vinegar` (strong/weak/none — carbonate test) |
+| Промивка | 💧 | `washNum`, `ratio`, `ppmBefore`, `ppmAfter`, `settleHours`, `waterTemp` |
+| Пресяване | 🕸 | `mesh`, `weightBefore`, `weightAfter`, `observations` |
+| Отлежаване | ⏳ | `method`, `duration`, `consistency` |
 
 Each event also has date, note, and up to 5 photos. The timeline is reverse-
-chronological and shows a compact summary per row
-(e.g. "Промивка #3 · 7000→5020 ppm · 1:3 · 24ч утаяване").
+chronological with a compact per-row summary (e.g. "Промивка #3 · 7000→5020 ppm ·
+1:3 · 24ч утаяване").
 
-**A raw material is deliberately NOT selectable** as the clay of a piece or a
-test. It must first become a маса (§5.2). The reason: the same raw batch can
-feed several different bodies, so it cannot simultaneously *be* the plain version
-and the version with grog.
+**A raw material is not selectable** as the clay of a piece or a test. It must
+first become a маса (§5.2). The reason: one dug batch can feed several different
+bodies, so it cannot simultaneously *be* the plain version and the version with
+grog. A button on the raw-material detail opens the маса modal pre-filled at 100%,
+making the plain case two clicks.
 
-### 5.2 Маса (clay body) — v1.7.0
+### 5.2 Маса (clay body)
 
-A маса is a **normal material that knows what it is made of**. Because it is a
-material with a category, it appears in clay pickers automatically — no picker
-special-casing beyond `cat==='clays' || cat==='mass'`.
+A маса is a **material that knows what it is made of**. Because it is a material
+with a category, it appears in clay pickers automatically; the only accommodation
+anywhere is `cat==='clays' || cat==='mass'`.
 
 ```
 blend: {
-  components: [ { ref: 'mat:<id>' | 'rec:<id>', pct: <number> }, … ],
+  components: [ { ref: 'mat:<id>' | 'rec:<id>', pct }, … ],
   mixDate, readyDate
 }
 ```
@@ -321,28 +338,20 @@ blend: {
   picker.
 - **Recursion is free.** A component may be another маса, because a маса is a
   material and components are material references. "Take T2 and add 5% oxide"
-  needs no new code.
+  needed no new code.
 - **Cycle guard.** `_massContains()` walks the blend tree; anything that would
-  create a cycle (including indirectly) is excluded from the picker, as is the
+  create a cycle, directly or indirectly, is excluded from the picker, as is the
   маса itself.
 - **Percentages are advisory.** The sum is displayed live (✓ at 100, ⚠
-  otherwise) but never blocks saving — additions "on top" are a real practice.
+  otherwise) but never blocks saving — additions "on top" are real practice.
 - **No stock.** A маса has composition and dates, not inventory.
-- Component rows in the detail view link through to the component's own detail,
-  so a body links back to the wild clay's washing history.
-
-Worked example — three parallel test bodies from one dug batch:
-
-```
-T1 Baseline    100% Xi Beach                             ✓ 100%
-T2 Обогатена   70% Xi Beach · 15% kaolin · 15% grog      ✓ 100%
-T3 С шамот     85% Xi Beach · 15% grog                   ✓ 100%
-```
+- Component rows in the detail link through to the component's own detail, so a
+  body links back to the wild clay's washing history.
 
 ### Naming rationale
 
 The module is called **Маса**, not **Смес** ("mixture"), because Рецепти are
-already mixtures. This gives a clean, professionally accurate split:
+already mixtures. The split is clean and professionally accurate:
 
 - **Рецепти** — mixtures you *apply* (glazes)
 - **Маси** — mixtures you *form* (bodies)
@@ -351,21 +360,26 @@ Oxide-stained clay is a маса. There is no third module and no planned merge.
 
 ---
 
-## 6. Module: Тестове (Tests)
+## 6. Тестове (Tests)
 
-### Purpose
+A test has a **kind**: `glaze` (the original) or `body`. Legacy tests have no
+`kind` field and read as `glaze`.
 
-A log of glaze test outcomes — what a given glaze did on a given clay at a given
-temperature.
-
-### Entity
+### Common fields
 
 ```
-id, updatedAt, recipeId, materialId, firingProfileId, clay,
-date*, temp*, hold*, flow, surf, def, rat, glazeLayers, notes, photos[] (max 5)
+id, kind, date*, temp, hold, firingProfileId, firingRunId,
+rat, notes, photos[] (max 5), updatedAt
 ```
 
-### Result vocabulary
+Temperature and hold are required for glaze tests. For body tests both are
+optional — a plasticity test is a bent coil, not a fired tile.
+
+### Glaze test
+
+```
+recipeId, materialId, clay, glazeLayers, flow, surf, def
+```
 
 - **Flow:** low / medium / strong / very strong
 - **Surface:** matte / satin / gloss / crystalline / textured / raw-underfired
@@ -373,94 +387,135 @@ date*, temp*, hold*, flow, surf, def, rat, glazeLayers, notes, photos[] (max 5)
   unsettled quartz / blisters
 - **Rating:** 1–5 stars
 
-### Stock deduction
+The recipe is named with its version wherever it appears (§4).
 
-**This is the one place the app mutates inventory.** On test *creation* with a
-batch size, each ingredient of the recipe is deducted from the corresponding
-material's `stock`, pro-rata.
+### Body test
 
-Deliberately limited:
-- Runs on create only
-- Edits never re-deduct
-- Deletes never restore
+```
+bodyRef, body: {
+  plasticity, plasticityNote,
+  shrMarked, shrDry, shrFired,
+  poroDry, poroWet,
+  color, deformation, sound, limePopping, limeNote,
+  longTerm, longTermDate
+}
+```
 
-The code carries an explicit TODO noting that a proper inventory ledger /
-stock-movements table would be needed to make this auditable.
+| Field | Entry | Derived |
+|---|---|---|
+| Plasticity | poor / fair / good / excellent + note | — |
+| Shrinkage | marked / dry / fired lengths in mm | wet→dry %, dry→fired %, total % |
+| Porosity | dry and 24h-soaked weights in g | water absorption % |
+| Colour | text | — |
+| Deformation | none / slight / moderate / severe | — |
+| Sound | ringing (vitrified) / dull (porous) / cracked | — |
+| Lime popping | none / slight / severe + note | — |
+| Long-term | date + note (scumming, cracks) | — |
 
-**Note for the audit:** this is a half-implemented feature. It is either worth
-finishing (ledger) or worth removing (manual stock only). Its current state —
-silent, one-directional, uncorrectable — is arguably the weakest point in the
-data model.
+Percentages are computed live as the measurements are typed.
+
+**Granularity:** one test record per specimen per condition. A body tested at four
+temperatures is four records; plasticity, having no temperature, is its own.
 
 ### Filters
 
-By defect presence (has defects / no defects), rating, temperature.
+Kind (✨ Глазурни / 🧱 На маси, mutually exclusive), defect presence, rating,
+temperature.
 
 ---
 
-## 7. Module: Изпичания (Firing profiles)
+## 7. Изпичания (Firings)
 
-### Purpose
+Two tabs: **Изпичания** (runs) and **Профили** (profiles).
 
-Reusable kiln programs.
+### Профил — the programme
 
-### Entity
+A reusable template. It has not happened; it can happen many times.
 
 ```
-id, name*, updatedAt, type, ramp1Rate, ramp1To,
-ramp2Rate, ramp2To, holdMin, notes
+id, name*, type (bisque/glaze/other),
+ramp1Rate, ramp1To, ramp2Rate, ramp2To, holdMin, notes
 ```
 
-- **Types:** Бисквит / Глазурно / Друго
-- Two ramp segments (rate °C/h + target °C), then a hold in minutes
-- List shows peak temperature (`ramp2To`, falling back to `ramp1To`)
-- Referenced from recipes (recommended profile), tests, and firing events
+Two ramp segments (rate °C/h + target °C), then a hold in minutes. The list shows
+peak temperature (`ramp2To`, falling back to `ramp1To`).
 
-**Note for the audit:** two ramps is a simplification. Real electric kiln
-controllers support more segments, and alternative firings often aren't
-programmable at all. Whether two is the right number is worth questioning in both
-directions.
+Referenced from recipes (recommended profile), tests, firing runs, and firing
+events.
+
+### Изпичане — the event
+
+A firing that happened: once, on a date, with these pieces in it.
+
+```
+id, name, date*, method*, atmosphere, purpose,
+firingProfileId,                    ← what was planned
+peakTemp, holdMin, cones,           ← what actually happened
+fuel, additives[], duration,        ← non-electric only
+notes, photos[]
+```
+
+The profile records the intent; the run records the outcome.
+
+**Additives** are either a material reference (`mat:<id>`, from stock) or free
+text, in one list — the same shape decoration materials use. Copper carbonate
+comes from the materials module; banana skins are typed. Fuel and free-text
+additives autocomplete from previous runs.
+
+**The run does not store its pieces.** `_runPieces()` scans pieces for firing
+events carrying this `firingRunId`, following the derived-not-duplicated rule
+(§2). Three consequences fall out of that choice:
+
+- Attaching a piece is one field on an event that already exists, so a
+  quick-added piece is adopted rather than copied
+- There is no reverse direction to keep in sync, because nothing stores it
+- Deleting a run detaches rather than cascades: events keep whatever they hold on
+  their own
+
+**Linking.** When a firing event has a `firingRunId`, the event's own method,
+atmosphere, temperature, and purpose are deleted, not hidden — the run answers for
+them (§2). Timelines read through. Unlinked events, including all legacy ones,
+behave exactly as before.
+
+Tests may also carry an optional `firingRunId`.
 
 ---
 
-## 8. Module: Библиотека (Library)
+## 8. Библиотека (Library)
 
-### Purpose
+A personal knowledge base plus the settings drawer.
 
-A personal knowledge base plus the app's settings drawer.
-
-### Content
-
-Articles with `{ id, num, cat, title, sub, content }` where content is HTML.
-Ships with built-in reference guides (ceramic technology, clay types, glaze
+**Content.** Articles with `{ id, num, cat, title, sub, content }` where content is
+HTML. Ships with built-in reference guides (ceramic technology, clay types, glaze
 chemistry, raw materials, firing types, temperature curves, effects,
 recipes/testing, ash glazes, Japanese ceramics). User articles can be added,
 edited, and deleted. Built-ins are editable.
 
-Stored separately from `DB` under `atelie_userlib`.
+**Also housed here:**
 
-### Also housed here
-
-- **Backup** — export the whole DB as a JSON file; import to restore
-- **Място на устройството** ("Space on device") — storage diagnostics, rewritten
-  in v1.5.3 to remove all technical vocabulary. Reports used space, a semantic
-  free-space verdict (plenty / medium / low), a breakdown by data type, and two
-  cleanup actions: remove pre-migration snapshots, and recompress oversized
-  photos.
+- **Backup** — export the whole database as a JSON file; import to restore.
+  Import **replaces**; it does not merge. A guard warns when the imported file is
+  older than the latest local change.
+- **Място на устройството** — storage diagnostics in plain language: space used,
+  a semantic free-space verdict (plenty / medium / low), a breakdown by data type,
+  and cleanup actions for pre-migration snapshots and oversized photos.
 
 ---
 
 ## 9. Cross-cutting behaviour
 
 **Nested add.** From within a piece or event modal, a new clay / glaze material /
-recipe / decoration material can be created without losing the work in progress.
-Implemented via `_nestedAddCallback` plus an edit-ID save/restore, and a
-z-index boost so the nested modal renders above its parent.
+recipe / decoration material can be created without losing work in progress.
+Implemented via `_nestedAddCallback` plus an edit-ID save/restore, and a z-index
+boost so the nested modal renders above its parent.
 
 **Android PWA photo handling.** Returning from the native file picker can suspend
 the PWA and lose the read. Mitigated with a retry-once mechanism, an immediate
 `e.target.value=''` to release the Android file lock, and a 50ms deferred
 processing step.
+
+**Android back button.** History API integration — back closes a modal or detail
+rather than the app.
 
 **Validation.** Name required on most entities; dates and positive numbers
 validated with focus-on-error. Toast feedback throughout.
@@ -468,56 +523,42 @@ validated with focus-on-error. Toast feedback throughout.
 **Backward compatibility.** Every version reads data written by every previous
 version. New fields are optional; legacy values are normalised on read.
 
+**Deploy validation.** Two checks run before every deploy: JavaScript syntax, and
+that every `getElementById` target exists in the HTML. The second exists because
+a missing element is valid JavaScript that fails only at runtime — a class of
+error the syntax check cannot see, and one that has caused a shipped bug.
+
 ---
 
-## 10. Deliberate non-goals
+## 10. Non-goals
 
-Named here so a reviewer doesn't propose them as gaps:
+Named so they are not mistaken for gaps:
 
 - **No commerce** — no sales, customers, orders, commissions, pricing of finished
   work
 - **No scheduling** — no kiln calendar, no reminders, no deadlines
 - **No multi-user** — no accounts, sharing, or permissions
-- **No cloud sync** — single device by design (Google Drive sync is a "maybe
-  someday")
-- **No i18n** — Bulgarian only, deliberately
+- **No cloud sync** — single device by design
+- **No i18n** — Bulgarian only
 - **No framework migration** — vanilla JS is a constraint, not an oversight
 - **No general-purpose ambitions** — this is one studio's tool
 
 ---
 
-## 11. Known trade-offs and open questions
+## 11. Known trade-offs
 
-Listed for the audit, in rough order of how much they bother the author:
+- **Import replaces rather than merges.** Moving work between devices requires
+  strict serial discipline: export from A, work on B, import back to A, with no
+  edits to A in between. The staleness guard catches the obvious mistake but not
+  the subtle one.
+- **Photo limits are inconsistent** — 5 for some entities, 1 for others, with no
+  principle behind the split.
+- **Two ramp segments** may be the wrong abstraction. Real controllers support
+  more, and alternative firings often aren't programmable at all.
+- **Рецепти and Маси are structurally similar** — both are
+  components-with-percentages. Kept separate deliberately; the duplication is
+  conscious.
+- **Library built-ins are editable**, so a user edit cannot be distinguished from
+  shipped content or reverted.
 
-1. **Stock deduction is half-built** (§6). Silent, one-way, uncorrectable.
-   Finish it or cut it.
-2. **The stage slider may be dead weight** (§3). The owner doesn't use it; events
-   drive stage anyway.
-3. **Quick-final is a second entry path** (§3). Justified by current habit; dead
-   weight if the habit changes.
-4. **Photo limits are inconsistent** (§2). 5 for some entities, 1 for others,
-   with no principle behind the split.
-5. **Two ramp segments may be the wrong abstraction** (§7).
-6. **Рецепти and Маси are structurally similar** (§5.2) — both are
-   components-with-percentages. Kept separate on purpose, but a reviewer should
-   know the duplication is conscious.
-7. **localStorage mirror is still written** (§2) alongside IndexedDB. Scheduled
-   for removal.
-8. **Library built-ins are editable**, which means a user edit can't be
-   distinguished from shipped content or restored.
-
----
-
-## 12. What a reviewer is being asked
-
-1. **Positioning** — how does this compare to existing ceramics software
-   (Glazy, Glaze Chem, Pottery Pal, ceramic-notes apps, or plain spreadsheets)?
-   Where is it ahead, where behind, and where is it solving a problem nobody else
-   is solving?
-2. **Over-engineering** — what here is more machinery than a one-person studio
-   needs? §11 lists the author's own suspicions; a fresh reading may find more,
-   or may defend some of them.
-3. **Gaps** — what does a working ceramicist actually do that this doesn't
-   record? Bear §10 in mind: proposing commerce or scheduling is not useful.
-   Proposing something about *making* is.
+For what is planned, deferred, or rejected, see [`ROADMAP.md`](ROADMAP.md).
