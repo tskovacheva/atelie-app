@@ -1539,7 +1539,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.11.0';
+const APP_VERSION = 'v1.11.0.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1981,6 +1981,8 @@ var _FIRING_METHOD_LABELS={
   'obvara':'Обвара',
   'other':'Друго'
 };
+// v1.11.0.1: the firing-run module called this from four places; it never existed.
+function firingMethodLabel(m){return _FIRING_METHOD_LABELS[m]||m||'—';}
 
 // Bulgarian labels for decoration techniques
 var _DECORATION_LABELS={
@@ -6388,7 +6390,8 @@ function firingMethodIcon(m){
 function renderFiringProfiles(){
   var l=document.getElementById('fp-list');if(!l)return;
   var items=DB.firingProfiles;
-  var cntEl=document.getElementById('cnt-fp');if(cntEl)cntEl.textContent=items.length+' профила';
+  // v1.11.0.1: the count belongs to whichever tab is showing — _updateFPCount owns it.
+  _updateFPCount();
   if(!items.length){l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">Няма профили</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   l.innerHTML=items.map(function(fp){
     // v1.5.4.2: Show peak temperature (ramp2To) — that's the meaningful one.
