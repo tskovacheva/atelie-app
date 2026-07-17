@@ -384,6 +384,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
   <div class="fchips">
     <button class="fchip" id="fc-rec-fav" onclick="toggleFChip('rec','fav')">♡ Любими</button>
+    <button class="fchip" id="fc-rec-allver" onclick="toggleFChip('rec','allver')">Всички версии</button>
     <button class="fchip" id="fc-rec-lt1200" onclick="toggleFChip('rec','lt1200')">&lt;1200°C</button>
     <button class="fchip" id="fc-rec-1200" onclick="toggleFChip('rec','1200')">1200–1240°C</button>
     <button class="fchip" id="fc-rec-gt1240" onclick="toggleFChip('rec','gt1240')">&gt;1240°C</button>
@@ -1404,7 +1405,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.9.0';
+const APP_VERSION = 'v1.10.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3166,6 +3167,9 @@ function renderRecipes(){
   var q=srchVal('rec-search');
   var f=activeFilters.rec||{};
   var items=DB.recipes.filter(function(r){
+    // v1.10.0: show one row per lineage — the latest version. Older ones stay
+    // reachable from the version history, or via the "Всички версии" chip.
+    if(!activeFilters.rec.allver&&!_recIsLatest(r))return false;
     if(f.fav&&!r.fav)return false;
     if(f.lt1200&&!(r.temp&&parseFloat(r.temp)<1200))return false;
     if(f['1200']&&!(r.temp&&parseFloat(r.temp)>=1200&&parseFloat(r.temp)<=1240))return false;
@@ -3179,7 +3183,10 @@ function renderRecipes(){
     }
     return true;
   });
-  if(activeSort.rec==='name'){items=items.slice().sort(function(a,b){return a.name.localeCompare(b.name,'bg');});}
+  if(activeSort.rec==='name'){items=items.slice().sort(function(a,b){
+    var c=a.name.localeCompare(b.name,'bg');
+    return c!==0?c:_recVersion(a)-_recVersion(b);
+  });}
   else{items=items.slice().sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);});}
   var hasQ=q||(Object.keys(f).some(function(k){return f[k];}));
   document.getElementById('cnt-recipes').textContent=items.length+' рецепти'+(hasQ?' (филтрирано)':'');
@@ -3200,7 +3207,8 @@ function renderRecipes(){
     return '<div class="li" onclick="openRecipeDet(\''+r.id+'\')">'
       +'<div class="li-ic">'+ic+'</div>'
       +'<div class="li-body">'
-      +'<div class="li-t">'+(r.fav?'<span class="li-fav" style="color:#c0392b">♥</span>':'')+r.name+'</div>'
+      +'<div class="li-t">'+(r.fav?'<span class="li-fav" style="color:#c0392b">♥</span>':'')+r.name
+        +(_recVersionLabel(r)?'<span style="margin-left:6px;padding:1px 6px;background:var(--primary-soft);color:var(--primary);border-radius:7px;font-size:10px;font-weight:600;">'+_recVersionLabel(r)+'</span>':'')+'</div>'
       +'<div class="li-s">'+(r.temp?r.temp+'°C · ':'')+'Σ <b style="color:'+(ok?'var(--ok)':'var(--err)')+'">'+sum.toFixed(0)+'%</b>'+(test?' · 📷 тест':'')+(r.updatedAt?' · '+timeAgo(r.updatedAt):'')+'</div>'
       +(tTag||cTag?'<div style="margin-top:5px;">'+tTag+cTag+'</div>':'')
       +'</div><div class="li-r">›</div></div>';
@@ -3317,7 +3325,7 @@ function renderTests(){
     if(testKind(t)==='body')return t.bodyRef?_resolveMaterialRef(t.bodyRef):'—';
     var r=DB.recipes.find(function(x){return x.id===t.recipeId;});
     var m=t.materialId?DB.materials.find(function(x){return x.id===t.materialId;}):null;
-    return (r&&r.name)||(m&&m.name)||'—';
+    return (r&&_recDisplayName(r))||(m&&m.name)||'—';
   };
   items=items.slice().sort(function(a,b){
     return _tTitle(a).localeCompare(_tTitle(b),'bg');
@@ -3346,7 +3354,8 @@ function renderTests(){
     } else {
       var rec=DB.recipes.find(function(r){return r.id===t.recipeId;});
       var mat=t.materialId?DB.materials.find(function(m){return m.id===t.materialId;}):null;
-      title=(rec&&rec.name)||(t.recipeId?'Изтрита рецепта':(mat?mat.name+' (готова)':(t.materialId?'Изтрита глазура':'—')));
+      // v1.10.0: name the exact version — that's the whole point of versioning
+      title=(rec&&_recDisplayName(rec))||(t.recipeId?'Изтрита рецепта':(mat?mat.name+' (готова)':(t.materialId?'Изтрита глазура':'—')));
       sub=[t.date,clayName(t.clay),t.temp?t.temp+'°C':'',rating,t.updatedAt&&t.updatedAt.slice(0,10)!==t.date?timeAgo(t.updatedAt):''].filter(Boolean).join(' · ');
     }
     return '<div class="li" onclick="openTestDet(\''+t.id+'\')">'
@@ -3496,7 +3505,8 @@ function resolveStageIdx(v){
 
 function openRecipeDet(id){
   const r=DB.recipes.find(x=>x.id===id);if(!r)return;curRec=id;
-  document.getElementById('drec-t').textContent=r.name;
+  // v1.10.0: name carries the version whenever the lineage has more than one
+  document.getElementById('drec-t').textContent=_recDisplayName(r);
   const typeLabels2={ash:'Пепелна',matte:'Матова',gloss:'Гланцова',crystal:'Кристална',shino:'Shino',celadon:'Celadon',tenmoku:'Tenmoku',other:'Друго'};
   const typeClass2={ash:'rtag-ash',matte:'rtag-matte',gloss:'rtag-gloss',crystal:'rtag-crystal',shino:'rtag-shino',celadon:'rtag-celadon',tenmoku:'rtag-tenmoku',other:'rtag-other'};
   const metaParts=[];
@@ -3564,6 +3574,8 @@ function openRecipeDet(id){
   var _rfpV=document.getElementById('drec-fp-val');if(_rfpV)_rfpV.textContent=_rrfpN||'';
   if(r.updatedAt){var ud=document.getElementById('drec-updated');if(!ud){ud=document.createElement('div');ud.id='drec-updated';ud.style.cssText='font-size:10px;color:var(--tx3);margin-top:8px;';document.getElementById('drec-notes').after(ud);}ud.textContent='Последно редактирано: '+new Date(r.updatedAt).toLocaleDateString('bg-BG');}
   document.getElementById('drec-batch').value='';document.getElementById('drec-grams').innerHTML='';
+  // v1.10.0: version history + branch button
+  _renderRecVersions(r);
   _openDet('det-recipe');
 }
 
@@ -3600,7 +3612,7 @@ function openTestDet(id){
   document.getElementById('dtest-photos').innerHTML=t.photos?.map(s=>`<img src="${s}" style="width:80px;height:80px;border-radius:var(--rs);object-fit:cover;" alt="">`).join('')||'';
   var _tfp=t.firingProfileId?DB.firingProfiles.find(function(x){return x.id===t.firingProfileId;}):null;
   var _tfpN=_tfp?_tfp.name:(t.firingProfileId?'Изтрит профил':null);
-  var _glzParam=rec?rec.name:(t.recipeId?'Изтрита рецепта':(_tMat?_tMat.name+' (готова)':(t.materialId?'Изтрита глазура':null)));
+  var _glzParam=rec?_recDisplayName(rec):(t.recipeId?'Изтрита рецепта':(_tMat?_tMat.name+' (готова)':(t.materialId?'Изтрита глазура':null)));
   if(_isBodyT){
     // v1.8.0: body test — measurements instead of glaze behaviour
     var _b=t.body||{};
@@ -4419,6 +4431,117 @@ function toggleCone(val,btn){
     b.style.borderColor=b===btn?'var(--acc)':'var(--bdr2)';
   });
 }
+// ── ВЕРСИИ НА РЕЦЕПТИ (v1.10.0) ──────────────────────────────
+// A version is a separate recipe record with a lineage, not a nested structure.
+// That choice matters: tests point at recipeId, and every version has its own id,
+// so a test made against v1 keeps describing v1 forever. Nothing in the test
+// model changes. Legacy recipes have neither field and read as lineage=own id,
+// version=1.
+function _recLineage(r){return (r&&(r.lineageId||r.id))||'';}
+function _recVersion(r){return (r&&r.version)||1;}
+function _recVersionsOf(lineageId){
+  return DB.recipes.filter(function(r){return _recLineage(r)===lineageId;})
+    .sort(function(a,b){return _recVersion(a)-_recVersion(b);});
+}
+function _recLatestInLineage(lineageId){
+  var v=_recVersionsOf(lineageId);
+  return v.length?v[v.length-1]:null;
+}
+function _recIsLatest(r){
+  if(!r)return true;
+  var latest=_recLatestInLineage(_recLineage(r));
+  return !latest||latest.id===r.id;
+}
+// Does this lineage have more than one version? Only then is a badge worth showing.
+function _recHasVersions(r){return _recVersionsOf(_recLineage(r)).length>1;}
+function _recVersionLabel(r){return _recHasVersions(r)?('v'+_recVersion(r)):'';}
+// Name as it should appear anywhere a specific version is meant — including in tests.
+function _recDisplayName(r){
+  if(!r)return '';
+  var v=_recVersionLabel(r);
+  return r.name+(v?' '+v:'');
+}
+// Composition equality — the only change that makes older tests lie.
+function _ingredientsEqual(a,b){
+  if(!Array.isArray(a)||!Array.isArray(b))return false;
+  if(a.length!==b.length)return false;
+  var key=function(i){return (i.matId||i.name||'')+'|'+parseFloat(i.pct);};
+  var ka=a.map(key).sort(), kb=b.map(key).sort();
+  return ka.every(function(x,i){return x===kb[i];});
+}
+function _testsForRecipe(recId){
+  return DB.tests.filter(function(t){return t.recipeId===recId;});
+}
+
+// Build the next version in a lineage from a set of already-validated fields.
+function _makeRecVersion(base, fields, note){
+  var lineage=_recLineage(base);
+  var versions=_recVersionsOf(lineage);
+  var maxV=versions.reduce(function(m,x){return Math.max(m,_recVersion(x));},0);
+  var nv=JSON.parse(JSON.stringify(fields));
+  nv.id=uid();
+  nv.lineageId=lineage;
+  nv.version=maxV+1;
+  nv.fav=false;
+  nv.createdAt=new Date().toISOString();
+  nv.updatedAt=nv.createdAt;
+  if(note)nv.versionNote=note;
+  // The first version of a legacy lineage has no lineageId — stamp it now so the
+  // grouping works from here on.
+  versions.forEach(function(x){
+    if(!x.lineageId)x.lineageId=lineage;
+    if(!x.version)x.version=1;
+  });
+  return nv;
+}
+
+// v1.10.0: Version history in the recipe detail — every sibling version, with the
+// current one marked, plus the button to branch a new one by hand.
+function _renderRecVersions(r){
+  var anchor=document.getElementById('drec-notes').parentNode;
+  var row=document.getElementById('drec-ver-row');
+  if(!row){
+    row=document.createElement('div');row.id='drec-ver-row';row.className='ds';
+    row.innerHTML='<div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">'
+      +'<span>Версии</span>'
+      +'<button onclick="newRecipeVersion()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Нова версия</button>'
+      +'</div><div id="drec-ver-val"></div>';
+    anchor.insertBefore(row,anchor.querySelector('.ds:last-of-type'));
+  }
+  var val=document.getElementById('drec-ver-val');
+  var versions=_recVersionsOf(_recLineage(r));
+  if(versions.length<=1){
+    val.innerHTML='<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Една версия. Нова се прави автоматично, ако смениш състава на рецепта със свързани тестове — или на ръка с бутона горе.</div>';
+    return;
+  }
+  val.innerHTML=versions.slice().reverse().map(function(v){
+    var isCur=(v.id===r.id);
+    var nTests=_testsForRecipe(v.id).length;
+    var sub=[v.updatedAt?v.updatedAt.slice(0,10):'',nTests?nTests+(nTests===1?' тест':' теста'):'без тестове',v.versionNote||''].filter(Boolean).join(' · ');
+    return '<div '+(isCur?'':'onclick="openRecipeDet(\''+v.id+'\')" ')+'style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);'+(isCur?'':'cursor:pointer;')+'">'
+      +'<div style="width:34px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;'
+        +(isCur?'background:var(--primary);color:white;':'background:var(--primary-soft);color:var(--primary);')+'">v'+_recVersion(v)+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;color:var(--tx2);">'+sub+'</div></div>'
+      +(isCur?'<div style="font-size:10px;color:var(--primary);font-weight:600;">сегашна</div>':'<div style="color:var(--tx3);">›</div>')
+      +'</div>';
+  }).join('');
+}
+
+// Branch a version by hand — opens the modal on a copy; saving creates the next
+// version instead of overwriting.
+var _recVersionBaseId=null;
+function newRecipeVersion(){
+  var r=DB.recipes.find(function(x){return x.id===curRec;});if(!r)return;
+  var base=JSON.parse(JSON.stringify(r));
+  _recVersionBaseId=r.id;
+  closeDet('det-recipe');
+  editId=null;
+  openRecipeMo(base);
+  var nextV=_recVersionsOf(_recLineage(r)).reduce(function(m,x){return Math.max(m,_recVersion(x));},0)+1;
+  var t=document.getElementById('mo-rec-t');
+  if(t)t.textContent='Нова версия v'+nextV;
+}
+
 function saveRecipe(){
   const name=document.getElementById('ri-name').value.trim();
   if(!name){toast('Въведи наименование');focusEl('ri-name');return;}
@@ -4445,7 +4568,59 @@ function saveRecipe(){
     recommendedFiringProfileId:(document.getElementById('ri-fp')?document.getElementById('ri-fp').value||null:null),
     fav:false,photo:rPh[0]||null,
     ingredients:validIngs};
-  if(editId){const idx=DB.recipes.findIndex(x=>x.id===editId);r.fav=DB.recipes[idx].fav;DB.recipes[idx]=r;}else DB.recipes.push(r);
+  if(editId){
+    const idx=DB.recipes.findIndex(x=>x.id===editId);
+    const _old=DB.recipes[idx];
+    r.fav=_old.fav;
+    // Carry the lineage forward — editing in place must not orphan a version.
+    if(_old.lineageId)r.lineageId=_old.lineageId;
+    if(_old.version)r.version=_old.version;
+    if(_old.versionNote)r.versionNote=_old.versionNote;
+    if(_old.createdAt)r.createdAt=_old.createdAt;
+    // ── The guard (v1.10.0) ──────────────────────────────────────────────
+    // Versions only help if they're actually made. Left to habit, the composition
+    // gets edited in place and the old tests quietly start describing a mixture
+    // that no longer exists. So: intercept exactly the dangerous case — the
+    // composition changed AND tests point here — and offer the safe path first.
+    var _linkedTests=_testsForRecipe(editId);
+    var _compChanged=!_ingredientsEqual(_old.ingredients,r.ingredients);
+    if(_compChanged&&_linkedTests.length>0){
+      var _nextV=_recVersionsOf(_recLineage(_old)).reduce(function(m,x){return Math.max(m,_recVersion(x));},0)+1;
+      var _msg='Съставът се променя, а '+_linkedTests.length+' '
+        +(_linkedTests.length===1?'тест сочи':'теста сочат')+' към тази рецепта.\n\n'
+        +'ОК — запази като НОВА ВЕРСИЯ (v'+_nextV+').\n'
+        +(_linkedTests.length===1?'Тестът остава':'Тестовете остават')+' при v'+_recVersion(_old)+' и продължава да описва състава, с който е правен.\n\n'
+        +'Отказ — запази ВЪРХУ сегашната.\n'
+        +(_linkedTests.length===1?'Тестът ще описва':'Тестовете ще описват')+' състав, който вече го няма.';
+      if(confirm(_msg)){
+        var _nv=_makeRecVersion(_old,r,'');
+        DB.recipes.push(_nv);
+        save();
+        closeMo('mo-recipe');renderRecipes();
+        openRecipeDet(_nv.id);
+        toast('Създадена версия v'+_nv.version);
+        editId=null;
+        return;
+      }
+    }
+    DB.recipes[idx]=r;
+  } else if(_recVersionBaseId){
+    // v1.10.0: manual branch — the modal was opened on a copy, so this save
+    // becomes the next version of that lineage rather than a new recipe.
+    var _base=DB.recipes.find(function(x){return x.id===_recVersionBaseId;});
+    _recVersionBaseId=null;
+    if(_base){
+      var _nv2=_makeRecVersion(_base,r,'');
+      DB.recipes.push(_nv2);
+      save();
+      closeMo('mo-recipe');renderRecipes();
+      openRecipeDet(_nv2.id);
+      toast('Създадена версия v'+_nv2.version);
+      editId=null;
+      return;
+    }
+    DB.recipes.push(r);
+  } else DB.recipes.push(r);
   save();
   // v1.4.6: If we're in nested-add mode, hand off to caller
   if(_nestedAddCallback && !editId){
@@ -5007,6 +5182,8 @@ function openMo(id){
   _pushOverlay('modal', id);
 }
 function closeMo(id){
+  // v1.10.0: leaving the recipe modal cancels any pending manual version branch
+  if(id==='mo-recipe')_recVersionBaseId=null;
   document.getElementById(id).classList.remove('on');
   // v1.4.6: If closing a nested-add target (without saving), clear callback
   if (_nestedAddCallback && (id === 'mo-mat' || id === 'mo-recipe')) {
