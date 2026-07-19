@@ -1592,7 +1592,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.12.0';
+const APP_VERSION = 'v1.12.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -4572,7 +4572,7 @@ function openNewMaterialFromDecoration(){
     if(typeof toggleMatFields === 'function') toggleMatFields();
   }
 }
-function editPiece(){closeDet('det-piece');editId=curPiece;openPieceMo(DB.pieces.find(p=>p.id===editId));}
+function editPiece(){closeDet('det-piece',true);editId=curPiece;openPieceMo(DB.pieces.find(p=>p.id===editId));}
 function delPiece(){if(!confirm('Изтрий?'))return;DB.pieces=DB.pieces.filter(p=>p.id!==curPiece);save();closeDet('det-piece');renderPieces();toast('Изтрито');}
 
 // ══ RECIPE MODAL ══
@@ -4878,7 +4878,7 @@ function saveRecipe(){
   }
   closeMo('mo-recipe');renderRecipes();toast(editId?'Обновено':'Добавено!');editId=null;
 }
-function editRecipe(){closeDet('det-recipe');editId=curRec;openRecipeMo(DB.recipes.find(r=>r.id===editId));}
+function editRecipe(){closeDet('det-recipe',true);editId=curRec;openRecipeMo(DB.recipes.find(r=>r.id===editId));}
 function dupRecipe(){
   var r=DB.recipes.find(function(x){return x.id===curRec;});if(!r)return;
   var copy=JSON.parse(JSON.stringify(r));
@@ -5111,7 +5111,7 @@ function saveTest(){
   if(editId)DB.tests[DB.tests.findIndex(x=>x.id===editId)]=t;else DB.tests.unshift(t);
   save();closeMo('mo-test');renderTests();updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
 }
-function editTest(){closeDet('det-test');editId=curTest;openTestMo(DB.tests.find(t=>t.id===editId));}
+function editTest(){closeDet('det-test',true);editId=curTest;openTestMo(DB.tests.find(t=>t.id===editId));}
 function dupTest(){
   var t=DB.tests.find(function(x){return x.id===curTest;});if(!t)return;
   var copy=JSON.parse(JSON.stringify(t));
@@ -5292,7 +5292,7 @@ function saveMat(){
   }
   closeMo('mo-mat');renderMaterials();switchMat(isWishlist?'wish':cat);updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
 }
-function editMat(){var _m=DB.materials.find(m=>m.id===curMat);closeDet('det-mat');if(_m&&_m.cat==='mass'){openMassMo(_m);}else{openMatMo(_m);}}
+function editMat(){var _m=DB.materials.find(m=>m.id===curMat);closeDet('det-mat',true);if(_m&&_m.cat==='mass'){openMassMo(_m);}else{openMatMo(_m);}}
 function delMat(){
   var linkedRecipes = DB.recipes.filter(function(r){
     return r.ingredients&&r.ingredients.some(function(i){return i.matId===curMat;});
@@ -5461,14 +5461,19 @@ function closeMo(id){
   _popOverlayHistory();
 }
 function closeBg(e,id){if(e.target===e.currentTarget)closeMo(id);}
-function closeDet(id){
+function closeDet(id, _keepHistory){
   document.getElementById(id).classList.remove('on');
   var i = _overlayStack.length - 1;
   while (i >= 0) {
     if (_overlayStack[i].id === id) { _overlayStack.splice(i,1); break; }
     i--;
   }
-  _popOverlayHistory();
+  // v1.12.1: when we're closing a detail only to open a modal in the same breath
+  // (edit flows: editRecipe, editMat…), don't touch history. closeDet's
+  // history.back() is async — it fires popstate *after* openMo has already pushed
+  // the modal's state, desyncing the stack so one back exits the app. Sharing the
+  // detail's history entry with the modal keeps one back = one close.
+  if (!_keepHistory) _popOverlayHistory();
   var sv=_scrollPos[cur];if(sv){var mx=document.getElementById('main');if(mx)setTimeout(function(){mx.scrollTop=sv;},50);}
 }
 // v1.4.4: Helper for opening detail views with history support
@@ -6897,7 +6902,7 @@ function saveFP(){
   save();closeMo('mo-fp');renderFiringProfiles();toast(editId?'Обновено':'Добавено!');editId=null;
 }
 
-function editFP(){closeDet('det-fp');openFPMo(DB.firingProfiles.find(function(x){return x.id===curFP;})||null);}
+function editFP(){closeDet('det-fp',true);openFPMo(DB.firingProfiles.find(function(x){return x.id===curFP;})||null);}
 function dupFP(){
   var fp=DB.firingProfiles.find(function(x){return x.id===curFP;});if(!fp)return;
   var copy=JSON.parse(JSON.stringify(fp));
