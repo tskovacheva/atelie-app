@@ -352,6 +352,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button class="fchip pf-chip" data-stage="bone-dry" onclick="setPieceStageFilter('bone-dry')">Сухо</button>
       <button class="fchip pf-chip" data-stage="bisque" onclick="setPieceStageFilter('bisque')">Бисквит</button>
       <button class="fchip pf-chip" data-stage="glazed" onclick="setPieceStageFilter('glazed')">Глазирано</button>
+      <button class="fchip pf-chip" data-stage="fired" onclick="setPieceStageFilter('fired')">Изпечено</button>
       <button class="fchip pf-chip" data-stage="finished" onclick="setPieceStageFilter('finished')">Готово</button>
     </div>
     <div class="fchips">
@@ -1643,7 +1644,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.14.0';
+const APP_VERSION = 'v1.15.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1652,6 +1653,7 @@ var STAGES=[
   {v:'bone-dry',     l:'Сухо'},
   {v:'bisque',       l:'Бисквит'},
   {v:'glazed',       l:'Глазирано'},
+  {v:'fired',        l:'Изпечено'},
   {v:'finished',     l:'Готово'},
 ];
 // Legacy stage value mapping (auto-migrated during recompute)
@@ -1919,6 +1921,22 @@ function runMigrations(){
     if(dupsRemoved>0)console.log('[migration v1.4.2.3] removed',dupsRemoved,'duplicate stage events');
   }
 
+  // v1.15.0: firing events now move the stage (bisque→bisque, glaze/single/alt→
+  // fired). Recompute every piece so existing data reflects the new model — e.g. a
+  // piece bisque-fired then pit-fired that was stuck at "Бисквит" becomes "Изпечено".
+  if(!DB._migrations['v1.15.0']){
+    var restaged=0;
+    DB.pieces.forEach(function(p){
+      if(!p)return;
+      var before=p.stage;
+      recomputePieceStage(p);
+      if(p.stage!==before)restaged++;
+    });
+    DB._migrations['v1.15.0']=new Date().toISOString();
+    changes+=restaged;
+    if(restaged>0)console.log('[migration v1.15.0] restaged',restaged,'pieces under the new firing-moves-stage rule');
+  }
+
   if(changes>0){
     try{toast('Данните са актуализирани (миграция)');}catch(e){}
   }
@@ -2055,6 +2073,7 @@ var _STAGE_LABELS={
   'bone-dry':'Сухо',
   'bisque':'Бисквит',
   'glazed':'Глазирано',
+  'fired':'Изпечено',
   'finished':'Готово',
   // Legacy stage values (from v1.3.x)
   'greenware':'Сурово',
@@ -2884,22 +2903,64 @@ function deleteRawEvent(eventId){
 // current status — its quick-action buttons never write events.
 // v1.9.0: Does this piece have real stage events? If so, Процес owns the stage
 // and no dropdown or slider may write it.
+// v1.15.0: Процес owns the stage when it contains anything that moves the stage —
+// a stage event OR a typed firing. Only then is the dropdown locked. But "finished"
+// is always a manual decision, so the lock must not trap her below it: when the
+// computed stage is "fired", the dropdown stays available so she can mark the piece
+// Готово (or step back) by hand. See openPieceMo for how the lock is applied.
+function _hasStageMovers(piece){
+  if(!piece||!Array.isArray(piece.events))return false;
+  return piece.events.some(function(e){
+    if(!e)return false;
+    if(e.type==='stage'&&e.data&&e.data.stageValue)return true;
+    if(e.type==='firing'&&_firingStageValue(e))return true;
+    return false;
+  });
+}
+// Kept as an alias — callers that only care about explicit stage steps.
 function _hasStageEvents(piece){
   if(!piece||!Array.isArray(piece.events))return false;
   return piece.events.some(function(e){
     return e&&e.type==='stage'&&e.data&&e.data.stageValue;
   });
 }
+// v1.15.0: The stage is now moved by BOTH stage events and firing events.
+// A firing changes the state of the clay, but which state depends on its type:
+//   bisque      → bisque
+//   glaze       → fired   (fired ≠ finished — she may wax, lacquer, re-glaze)
+//   single-fire → fired
+//   alternative → fired   (pit/raku/obvara — almost always final in practice,
+//                          but "finished" stays a manual decision, never automatic)
+//   (untyped)   → doesn't move the stage; we don't guess
+// Decoration and progress events never move the stage — they happen WITHIN a
+// state, carrying "at which stage" context. "finished" is never set automatically.
+function _firingStageValue(ev){
+  if(!ev||ev.type!=='firing'||!ev.data)return null;
+  // A linked run answers for the purpose; otherwise the event's own field does.
+  var purpose=ev.data.firingPurpose;
+  if(!purpose){
+    var run=(typeof _evFiringRun==='function')?_evFiringRun(ev):null;
+    if(run)purpose=run.purpose;
+  }
+  if(purpose==='bisque')return 'bisque';
+  if(purpose==='glaze'||purpose==='single-fire'||purpose==='alternative')return 'fired';
+  return null; // untyped firing — don't move the stage
+}
 function recomputePieceStage(piece){
   if(!piece||!Array.isArray(piece.events))return;
-  var stageEventsWithIdx=[];
+  // Collect everything that moves the stage: stage events + typed firing events.
+  var movers=[];
   piece.events.forEach(function(e,i){
-    if(e&&e.type==='stage'&&e.date&&e.data&&e.data.stageValue){
-      stageEventsWithIdx.push({ev:e,idx:i});
+    if(!e||!e.date)return;
+    if(e.type==='stage'&&e.data&&e.data.stageValue){
+      movers.push({val:e.data.stageValue,date:e.date,idx:i});
+    } else if(e.type==='firing'){
+      var fv=_firingStageValue(e);
+      if(fv)movers.push({val:fv,date:e.date,idx:i});
     }
   });
-  if(stageEventsWithIdx.length===0){
-    // No dated stage events — check undated, fall back
+  if(movers.length===0){
+    // No dated movers — fall back to an undated stage event if any.
     var undated=piece.events.filter(function(e){
       return e&&e.type==='stage'&&!e.date&&e.data&&e.data.stageValue;
     });
@@ -2908,13 +2969,13 @@ function recomputePieceStage(piece){
     }
     return;
   }
-  // Sort by date desc; tie-break: later inserted wins
-  stageEventsWithIdx.sort(function(a,b){
-    var cmp=b.ev.date.localeCompare(a.ev.date);
+  // Latest by date wins; tie-break: later inserted wins.
+  movers.sort(function(a,b){
+    var cmp=b.date.localeCompare(a.date);
     if(cmp!==0)return cmp;
     return b.idx-a.idx;
   });
-  piece.stage=normalizeStageValue(stageEventsWithIdx[0].ev.data.stageValue);
+  piece.stage=normalizeStageValue(movers[0].val);
 }
 
 // ── STORAGE LAYER (v1.5.0) ──────────────────────────────────
@@ -4355,16 +4416,26 @@ function openPieceMo(p){
   buildGlzDropdown('pi-rec','');
   var _ss=document.getElementById('pi-stage');
   if(_ss)_ss.value=p&&p.stage?normalizeStageValue(p.stage):'wet';
-  // v1.9.0: Lock the dropdown when Процес owns the stage — editing it here would
+  // v1.15.0: Lock the dropdown when Процес owns the stage — editing it here would
   // silently diverge from the events and get reverted on the next recompute.
-  var _stageOwned=_hasStageEvents(p);
+  // Exception: when the piece is at "fired", leave it open. Firing lands the piece
+  // there, but "Готово" is always a manual step — she must be able to set it (or
+  // step back) from here without adding a stage event just to unlock the field.
+  var _owned=_hasStageMovers(p);
+  var _atFired=p&&normalizeStageValue(p.stage)==='fired';
+  var _stageLocked=_owned&&!_atFired;
   if(_ss){
-    _ss.disabled=_stageOwned;
-    _ss.style.opacity=_stageOwned?'.55':'';
-    _ss.style.cursor=_stageOwned?'not-allowed':'';
+    _ss.disabled=_stageLocked;
+    _ss.style.opacity=_stageLocked?'.55':'';
+    _ss.style.cursor=_stageLocked?'not-allowed':'';
   }
   var _sh=document.getElementById('pi-stage-hint');
-  if(_sh)_sh.style.display=_stageOwned?'block':'none';
+  if(_sh){
+    _sh.style.display=(_stageLocked||_atFired)?'block':'none';
+    _sh.textContent=_atFired
+      ? 'Изпечено е. Можеш да сложиш „Готово" тук, когато решиш — или добави стъпка в Процес.'
+      : 'Етапът се променя от Процес — добави стъпка „Етап" в детайла на изделието.';
+  }
   // v1.4.5: Reset quick-final section (closed + cleared) — hide on edit
   resetPiQuickFinal();
   var _qfWrap=document.getElementById('pi-quickfinal-wrap');
@@ -4437,10 +4508,22 @@ function savePiece(){
     if(_existing&&Array.isArray(_existing.events))p.events=_existing.events;
   }
   ensurePieceEvents(p);
-  // v1.9.0: The dropdown set p.stage above. If this piece has stage events, they
-  // are the truth — recompute overrides whatever the dropdown said. If it has
-  // none, recompute returns without touching it and the dropdown value stands.
-  // This is the one rule that keeps a single owner at any moment.
+  // v1.15.0: The dropdown set p.stage above. Normally recompute is the single
+  // owner and overrides it. But there's one move recompute can't represent: the
+  // manual jump from "fired" to "finished". Firing lands the piece at "fired", and
+  // "finished" is never automatic — so when she picks a stage the dropdown was
+  // allowed to offer (piece is at "fired" and she chose something else), record it
+  // as a real stage event dated today. That makes it the latest mover, so it wins
+  // over the firing instead of being wiped by the next recompute.
+  var _dropdownStage=_stEl?normalizeStageValue(_stEl.value||'wet'):null;
+  var _wasFired=false;
+  if(editId){
+    var _pre=DB.pieces.find(function(x){return x.id===editId;});
+    _wasFired=_pre&&normalizeStageValue(_pre.stage)==='fired';
+  }
+  if(_wasFired&&_dropdownStage&&_dropdownStage!=='fired'){
+    p.events.push({id:uid(),type:'stage',date:new Date().toISOString().slice(0,10),note:'',photos:[],data:{stageValue:_dropdownStage}});
+  }
   recomputePieceStage(p);
   // v1.4.5: Auto-create firing/decoration events from quick-final inputs (only on new piece)
   if(!editId){

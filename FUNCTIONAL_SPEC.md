@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.11.0 · `atelie-v49`
+**Version:** v1.15.0 · `atelie-v55`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -115,7 +115,7 @@ applies in three places:
 
 | Value | Owner |
 |---|---|
-| `piece.stage` | the Процес events when stage events exist; the Add/Edit dropdown when they don't |
+| `piece.stage` | the Процес events (stage steps AND typed firings) when any exist; the Add/Edit dropdown when none do |
 | firing method / temperature / atmosphere on an event | the linked firing run when `firingRunId` is set; the event itself when it isn't |
 | a recipe's composition as a test saw it | the specific recipe version the test points to |
 
@@ -142,11 +142,59 @@ recipe, material, bisqueTemp, glazeTemp, date, stage, notes, events[]
 
 ### Stages
 
-Six ordered values: `wet` → `leather-hard` → `bone-dry` → `bisque` → `glazed` →
-`finished`.
+Seven ordered values, each describing the physical state of the clay:
 
-Shown as a six-dot indicator with a stage label in the piece detail, and as a
+| Stage | `value` | Meaning |
+|---|---|---|
+| Сурово | `wet` | wet, workable — just formed |
+| Кожна влажност | `leather-hard` | firm but still damp — trimming, handles, burnishing |
+| Сухо | `bone-dry` | fully dry, fragile — before the first firing |
+| Бисквит | `bisque` | first firing done, porous — ready to glaze |
+| Глазирано | `glazed` | glaze applied, **not yet fired** |
+| Изпечено | `fired` | out of the kiln — **may still be worked on** |
+| Готово | `finished` | she has decided the piece is done |
+
+Shown as a seven-dot indicator with a stage label in the piece detail, and as a
 badge in the list. The indicator is **display only**.
+
+**Two principles govern the last stages:**
+
+- **Fired ≠ finished.** A firing describes the clay (it came out of the kiln), not
+  her decision (she is done). So `Изпечено` exists as a distinct state between
+  `Глазирано` and `Готово` — after firing she may wax, lacquer, or re-glaze. A
+  firing never lands a piece at `Готово`.
+- **`Готово` is never automatic.** It is always a manual choice, recorded when she
+  decides the piece is complete.
+
+**Pieces may skip stages.** A pit firing on bare bisque goes
+`Бисквит → Изпечено`, skipping `Глазирано`. The order is a scale, not a required
+path.
+
+### What moves the stage
+
+The stage is derived by `recomputePieceStage()` from the events that move it —
+the latest by date wins. Not every event type moves it:
+
+| Event | Moves the stage? | To |
+|---|---|---|
+| Stage step | yes | the chosen value |
+| Firing — bisque | yes | `bisque` |
+| Firing — glaze | yes | `fired` |
+| Firing — single-fire | yes | `fired` |
+| Firing — alternative | yes | `fired` |
+| Firing — untyped | no | (won't guess) |
+| Decoration | no | — |
+| Progress | no | — |
+
+A firing's type comes from its own `firingPurpose`, or from the linked run's
+`purpose` when it points at one. Decoration and progress events happen *within* a
+state and carry an "at which stage" context — they do not change it; this is
+correct, not a gap.
+
+When a piece is at `fired`, the Add/Edit stage dropdown stays available (unlike
+the general lock) specifically so `Готово` can be set by hand. Choosing it there
+records a real stage step dated today, which then wins over the firing on the next
+recompute — so the manual decision survives.
 
 ### Процес — the event timeline
 
@@ -167,8 +215,8 @@ oxide wash, underglaze, glaze, burnishing, carving, slip-trailing, other
 
 Decoration and progress events carry an optional "at which stage" field, because
 the same technique means different things at different moisture states
-(sgraffito at leather-hard vs at bone-dry). Firing and stage events do not — they
-*are* stage transitions.
+(sgraffito at leather-hard vs at bone-dry) — and, as noted above, they do not move
+the stage. Stage steps and typed firings do (see "What moves the stage").
 
 Firing events carry `wrapping` (bare / foil / saggar / other). This is per piece,
 not per firing: bare and saggared work comes out of the same pit unrecognisably
