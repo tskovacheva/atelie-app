@@ -465,6 +465,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
   <div style="padding-top:10px;" id="lib-list"></div>
   <div style="margin:20px 16px 8px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
+    <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Инструменти</div>
+    <button onclick="openSgCalc()" class="btn bg btn-sm" style="width:100%;padding:10px;">🧪 Калкулатор за плътност (SG)</button>
+  </div>
+  <div style="margin:12px 16px 8px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
     <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Backup</div>
     <div style="display:flex;gap:8px;">
       <button onclick="exportBackup()" class="btn bg btn-sm" style="flex:1;padding:10px;">📤 Експорт</button>
@@ -1364,6 +1368,47 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- MODAL: SG калкулатор (v1.14.0) -->
+<div class="mo" id="mo-sg" onclick="closeBg(event,'mo-sg')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t">Плътност на глазурата (SG)</div><button class="mo-x" onclick="closeMo('mo-sg')">×</button></div>
+      <div class="mo-b">
+
+        <div style="font-size:12px;color:var(--tx3);line-height:1.6;margin-bottom:16px;">
+          Специфичната плътност (SG) показва колко гъста е глазурната суспензия — колко дебел слой ще хване при потапяне. Вода = 1.00.
+        </div>
+
+        <!-- Режим 1: измерване -->
+        <div style="background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:10px;">1 · ИЗМЕРИ</div>
+          <div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:10px;">Претегли празен съд, после същия съд пълен с глазура. Въведи разликата (само глазурата) и обема.</div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Тегло на глазурата (г)</label><input type="number" id="sg-weight" step="0.1" placeholder="напр. 145" oninput="_sgMeasure()"></div>
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Обем (мл)</label><input type="number" id="sg-vol" step="1" placeholder="напр. 100" value="100" oninput="_sgMeasure()"></div>
+          </div>
+          <div id="sg-measure-out" style="text-align:center;font-size:15px;font-weight:600;color:var(--primary);min-height:20px;"></div>
+        </div>
+
+        <!-- Режим 2: цел -->
+        <div style="background:var(--bg2);border-radius:12px;padding:14px;">
+          <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:10px;">2 · КОРИГИРАЙ</div>
+          <div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:10px;">Имаш измерена плътност и искаш друга. Въведи колко глазура имаш сега.</div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Сега SG</label><input type="number" id="sg-cur" step="0.01" placeholder="напр. 1.55" oninput="_sgTarget()"></div>
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;">Искам SG</label><input type="number" id="sg-want" step="0.01" placeholder="напр. 1.45" oninput="_sgTarget()"></div>
+          </div>
+          <div class="f" style="margin-bottom:8px;"><label style="font-size:10px;">Количество глазура сега (г или мл)</label><input type="number" id="sg-amount" step="1" placeholder="напр. 500" oninput="_sgTarget()"></div>
+          <div id="sg-target-out" style="text-align:center;font-size:13px;font-weight:500;color:var(--primary);min-height:20px;line-height:1.5;"></div>
+        </div>
+
+        <button class="btn bg" onclick="closeMo('mo-sg')" style="margin-top:16px;">Затвори</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Изпичане (firing run) — v1.11.0 -->
 <div class="mo" id="mo-run" onclick="closeBg(event,'mo-run')">
   <div class="mo-sh">
@@ -1598,7 +1643,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.13.0';
+const APP_VERSION = 'v1.14.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -5760,6 +5805,47 @@ function _findMigrationBackups(){
 }
 
 // Open analysis modal and populate
+// ── SG калкулатор (v1.14.0) ──────────────────────────────────
+// SG = weight of a volume of glaze / weight of the same volume of water.
+// Since 1 ml water = 1 g, SG = weight(g) / volume(ml). No stored state — the
+// calculator computes and forgets, like a pocket calculator.
+function openSgCalc(){
+  ['sg-weight','sg-cur','sg-want','sg-amount'].forEach(function(id){
+    var e=document.getElementById(id);if(e)e.value='';
+  });
+  var v=document.getElementById('sg-vol');if(v)v.value='100';
+  document.getElementById('sg-measure-out').textContent='';
+  document.getElementById('sg-target-out').textContent='';
+  openMo('mo-sg');
+}
+function _sgMeasure(){
+  var w=parseFloat(document.getElementById('sg-weight').value);
+  var vol=parseFloat(document.getElementById('sg-vol').value);
+  var out=document.getElementById('sg-measure-out');
+  if(!isNaN(w)&&!isNaN(vol)&&vol>0){
+    out.textContent='SG = '+(w/vol).toFixed(3);
+  } else out.textContent='';
+}
+// Adding water lowers SG. Derived from want = (M+W)/(M/cur + W), solved for W:
+//   W = M · (1 - want/cur) / (want - 1)
+// where M is the current amount (g). Positive W → add water; if want > cur the
+// result is negative → the glaze is too thin, settle and pour water off.
+function _sgTarget(){
+  var cur=parseFloat(document.getElementById('sg-cur').value);
+  var want=parseFloat(document.getElementById('sg-want').value);
+  var amt=parseFloat(document.getElementById('sg-amount').value);
+  var out=document.getElementById('sg-target-out');
+  if(isNaN(cur)||isNaN(want)||isNaN(amt)||amt<=0){out.textContent='';return;}
+  if(cur<=1||want<=1){out.textContent='SG трябва да е над 1.00';return;}
+  if(Math.abs(cur-want)<0.001){out.textContent='Вече е на тази плътност.';return;}
+  var W=amt*(1-want/cur)/(want-1);
+  if(W>=0){
+    out.textContent='Добави ~'+Math.round(W)+' мл вода';
+  } else {
+    out.textContent='Твърде рядка. Остави да утаи и излей ~'+Math.round(-W)+' мл бистра вода отгоре.';
+  }
+}
+
 function openStorageAnalysis(){
   openMo('mo-storage-analysis');
   var body=document.getElementById('storage-analysis-body');
