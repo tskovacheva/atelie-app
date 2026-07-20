@@ -1648,7 +1648,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.16.0';
+const APP_VERSION = 'v1.16.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -4769,7 +4769,6 @@ function showIngSearch(){
   if(!res)return;
   if(!q){res.style.display='none';return;}
   var matches=DB.materials.filter(function(m){return m.name.toLowerCase().includes(q);}).slice(0,8);
-  if(!matches.length){res.style.display='none';return;}
   res.style.display='block';
   var html='';
   matches.forEach(function(m,i){
@@ -4779,10 +4778,13 @@ function showIngSearch(){
       +(m.formula?'<span style="font-size:10px;color:var(--tx3);margin-left:6px;">'+m.formula+'</span>':'')
       +'</div>';
   });
+  // v1.16.1: always offer to create a new material with the typed name — this is
+  // the only path when the material doesn't exist yet. Previously search returned
+  // nothing and there was no way to add a missing material from the recipe.
+  var typed=(document.getElementById('ri-ing-search').value||'').trim();
+  html+='<div data-newmat="1" style="padding:11px 14px;cursor:pointer;font-size:13px;color:var(--acc);font-weight:500;'+(matches.length?'border-top:1px solid var(--bdr2);':'')+'">+ Създай материал „'+typed+'"</div>';
   res.innerHTML=html;
-  // Store matches for click handler
   res._matches=matches;
-  // Attach click handlers
   var divs=res.querySelectorAll('div[data-mid]');
   divs.forEach(function(d){
     var idx2=parseInt(d.getAttribute('data-mid'));
@@ -4793,6 +4795,30 @@ function showIngSearch(){
     d.addEventListener('mouseover',function(){this.style.background='var(--bg2)';});
     d.addEventListener('mouseout',function(){this.style.background='';});
   });
+  var newBtn=res.querySelector('div[data-newmat]');
+  if(newBtn){
+    newBtn.addEventListener('click',function(){addNewIngMaterial(typed);});
+    newBtn.addEventListener('mouseover',function(){this.style.background='var(--bg2)';});
+    newBtn.addEventListener('mouseout',function(){this.style.background='';});
+  }
+}
+// v1.16.1: create a material inline from the recipe modal, then drop it straight
+// into the ingredient list. recIngs / rPh are globals so they survive; the recipe
+// modal stays open underneath (boosted z-index), like the decoration flow.
+function addNewIngMaterial(prefillName){
+  var savedEditId=editId;
+  editId=null;
+  _nestedAddCallback=function(newMat,kind){
+    editId=savedEditId;
+    if(kind!=='material')return;
+    addIng(newMat.id,newMat.name);
+    toast('Материалът „'+(newMat.name||'')+'" е добавен');
+  };
+  openMatMo(null);
+  // Pre-fill the name the user already typed.
+  var nm=document.getElementById('mi-name');
+  if(nm&&prefillName)nm.value=prefillName;
+  _boostNestedModal('mo-mat');
 }
 function renderIngRows(){
   const searchEl = document.getElementById('ri-ing-search');
