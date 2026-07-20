@@ -738,6 +738,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <div class="f" style="flex:1"><label>Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
             <div class="f" style="flex:1"><label>Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
           </div>
+          <!-- v1.13.0: descriptive size/weight — for catalogue and exhibition, no
+               calculation. Shrinkage lives in body tests, not here. -->
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:2"><label>Размери (см)</label><input type="text" id="pi-dimensions" placeholder="напр. в18 × ⌀12"></div>
+            <div class="f" style="flex:1"><label>Тегло (г)</label><input type="number" id="pi-weight" placeholder="напр. 640"></div>
+          </div>
         </div>
       </div>
 
@@ -1592,7 +1598,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.12.1';
+const APP_VERSION = 'v1.13.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3636,7 +3642,11 @@ function openPieceDet(id){
   if(_bisque)_tempRows.push(dr('Бисквит',_bisque+'°C'));
   if(_glaze)_tempRows.push(dr('Глазурно',_glaze+'°C'));
   var _typeRow=p.type?dr('Тип',p.type):'';
-  document.getElementById('dpi-info').innerHTML=[_typeRow,dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',clayName(p.clay)),dr('Глазура',_glzLabel)].concat(_tempRows).join('');
+  // v1.13.0: descriptive size/weight rows
+  var _dimRows=[];
+  if(p.dimensions)_dimRows.push(dr('Размери',p.dimensions+' см'));
+  if(p.weight!=null)_dimRows.push(dr('Тегло',p.weight+' г'));
+  document.getElementById('dpi-info').innerHTML=[_typeRow,dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',clayName(p.clay)),dr('Глазура',_glzLabel)].concat(_tempRows).concat(_dimRows).join('');
   var _sa=document.getElementById('dpi-stage-actions');
   if(_sa){
     var _idx=resolveStageIdx(p.stage);
@@ -4280,6 +4290,9 @@ function openPieceMo(p){
   setupPieceTypeDropdown();
   document.getElementById('pi-bisque-temp').value=(p&&p.bisqueTemp)||'';
   document.getElementById('pi-glaze-temp').value=(p&&(p.glazeTemp||p.temp))||'';
+  // v1.13.0: size/weight
+  document.getElementById('pi-dimensions').value=(p&&p.dimensions)||'';
+  document.getElementById('pi-weight').value=(p&&p.weight!=null)?p.weight:'';
   document.getElementById('pi-date').value=p?.date||new Date().toISOString().split('T')[0];
   document.getElementById('pi-tech').value=p?.technique||'';
   document.getElementById('pi-notes').value=p?.notes||'';
@@ -4314,7 +4327,7 @@ function openPieceMo(p){
   // v1.5.3: Auto-open "More details" if any additional field has a value on edit
   var hasMoreData=false;
   if(p){
-    if(p.type||p.technique||p.recipe||p.material||p.bisqueTemp||p.glazeTemp)hasMoreData=true;
+    if(p.type||p.technique||p.recipe||p.material||p.bisqueTemp||p.glazeTemp||p.dimensions||p.weight!=null)hasMoreData=true;
   }
   setPiMoreOpen(hasMoreData);
   renderPrev('pi-prev',pPh);
@@ -4368,6 +4381,11 @@ function savePiece(){
   else if(_glzVal.indexOf('mat:')===0){_matId=_glzVal.slice(4);}
   else if(_glzVal){_recId=_glzVal;}
   const p={id:editId||uid(),name,photos:[...pPh],type:(document.getElementById('pi-type')?document.getElementById('pi-type').value:'')||'',clay:document.getElementById('pi-clay').value,technique:document.getElementById('pi-tech').value,recipe:_recId,material:_matId,bisqueTemp:bisqueVal,glazeTemp:glazeVal,date:dateVal,stage:normalizeStageValue(_stEl?_stEl.value||'wet':'wet'),notes:document.getElementById('pi-notes').value};
+  // v1.13.0: descriptive size/weight — plain fields, no calculation
+  var _dim=(document.getElementById('pi-dimensions')||{value:''}).value.trim();
+  if(_dim)p.dimensions=_dim;
+  var _wt=(document.getElementById('pi-weight')||{value:''}).value;
+  if(_wt!==''&&!isNaN(parseFloat(_wt)))p.weight=parseFloat(_wt);
   // Preserve events on edit; initialize on new
   if(editId){
     var _existing=DB.pieces.find(function(x){return x.id===editId;});
