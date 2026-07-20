@@ -464,11 +464,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ph-left"><div class="pt">Библиотека</div><div class="ps" id="lib-count">справочни материали</div></div>
     <div class="ph-right"><button class="ic-btn" onclick="openLibAdd()" style="font-size:22px;line-height:1;">+</button></div>
   </div>
-  <div style="padding-top:10px;" id="lib-list"></div>
-  <div style="margin:20px 16px 8px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
-    <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Инструменти</div>
-    <button onclick="openSgCalc()" class="btn bg btn-sm" style="width:100%;padding:10px;">🧪 Калкулатор за плътност (SG)</button>
-  </div>
+  <!-- v1.15.1: Инструменти + Backup moved above the guide list — with a large
+       library, scrolling to the bottom for a backup or the version was tedious. -->
   <div style="margin:12px 16px 8px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
     <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Backup</div>
     <div style="display:flex;gap:8px;">
@@ -482,6 +479,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="storage-label"></div>
     <div style="text-align:right;margin-top:4px;font-size:10px;color:var(--tx3);letter-spacing:.06em;" id="ver-label"></div>
   </div>
+  <div style="margin:12px 16px 16px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
+    <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Инструменти</div>
+    <button onclick="openSgCalc()" class="btn bg btn-sm" style="width:100%;padding:10px;">🧪 Калкулатор за плътност (SG)</button>
+  </div>
+  <div style="padding-top:4px;" id="lib-list"></div>
 </div>
 
 
@@ -714,6 +716,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="finished">Готово</option>
         </select>
         <div id="pi-stage-hint" style="display:none;font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;">Етапът се променя от Процес — добави стъпка „Етап" в детайла на изделието.</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5;">„Изпечено" се добавя чрез стъпка изпичане в Процес.</div>
       </div>
       <div class="f"><label>Дата</label><input type="date" id="pi-date"></div>
 
@@ -1148,6 +1151,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <option value="glazed">Глазирано</option>
             <option value="finished">Готово</option>
           </select>
+          <div style="font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5;">„Изпечено" се добавя чрез стъпка изпичане, не оттук.</div>
         </div>
       </div>
 
@@ -1644,7 +1648,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.15.0';
+const APP_VERSION = 'v1.15.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[

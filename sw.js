@@ -5,7 +5,7 @@
 // Bump CACHE_NAME on every deploy to trigger cache refresh.
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'atelie-v55';
+const CACHE_NAME = 'atelie-v56';
 
 const PRECACHE_URLS = [
   './',
