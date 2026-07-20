@@ -1648,7 +1648,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.15.1';
+const APP_VERSION = 'v1.16.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -4055,7 +4055,9 @@ function openTestDet(id){
   }
   if(_tfp){
     _tFpRow.style.display='';
-    var _fpSub=[fpTypeLabel&&fpTypeLabel(_tfp.type)||'',_tfp.holdMin?_tfp.holdMin+' мин задр.':''].filter(Boolean).join(' · ');
+    var _tfpRamps=_fpRamps(_tfp);var _tfpHold=null;
+    for(var _hi=_tfpRamps.length-1;_hi>=0;_hi--){if(_tfpRamps[_hi].hold!=null){_tfpHold=_tfpRamps[_hi].hold;break;}}
+    var _fpSub=[fpTypeLabel&&fpTypeLabel(_tfp.type)||'',_tfpHold!=null?_tfpHold+' мин задр.':''].filter(Boolean).join(' · ');
     document.getElementById('dtest-fp-val').innerHTML='<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-test\');openFPDet(\''+_tfp.id+'\')">'
       +'<div class="li-ic">'+K(20)+'</div>'
       +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(_tfp.name||'—')+'</div><div class="li-s">'+_fpSub+'</div></div>'
@@ -6984,10 +6986,13 @@ function renderFiringProfiles(){
   _updateFPCount();
   if(!items.length){l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">Няма профили</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   l.innerHTML=items.map(function(fp){
-    // v1.5.4.2: Show peak temperature (ramp2To) — that's the meaningful one.
-    // Fall back to ramp1To if no second ramp (single-ramp programs).
-    var peakTemp=fp.ramp2To||fp.ramp1To;
-    var sub=[fpTypeLabel(fp.type),peakTemp?peakTemp+'°C':'',fp.holdMin?fp.holdMin+' мин':''].filter(Boolean).join(' · ');
+    // v1.16.0: peak and last hold come from the ramp array (legacy shape migrated
+    // on read by _fpRamps / _fpPeak).
+    var peakTemp=_fpPeak(fp);
+    var _rr=_fpRamps(fp);
+    var _lastHold=null;
+    for(var _i=_rr.length-1;_i>=0;_i--){if(_rr[_i].hold!=null){_lastHold=_rr[_i].hold;break;}}
+    var sub=[fpTypeLabel(fp.type),peakTemp!=null?peakTemp+'°C':'',_lastHold!=null?_lastHold+' мин':''].filter(Boolean).join(' · ');
     return '<div class="li" onclick="openFPDet(\''+fp.id+'\')">'
       +'<div class="li-ic" style="font-size:18px;">🔥</div>'
       +'<div class="li-body"><div class="li-t">'+fp.name+'</div><div class="li-s">'+sub+'</div></div>'
@@ -7002,16 +7007,40 @@ function openFPDet(id){
   document.getElementById('dfp-t').textContent=fp.name;
   document.getElementById('dfp-m').textContent=fpTypeLabel(fp.type)||'—';
   var val=function(v){return(v!=null&&v!=='')?v:'—';};
+  // v1.16.0: ramps as a list + the profile curve
+  var ramps=_fpRamps(fp);
+  var rampRows=ramps.length
+    ? ramps.map(function(s,i){
+        var parts=[];
+        if(s.rate!=null)parts.push(s.rate+' °C/ч');
+        if(s.to!=null)parts.push('до '+s.to+'°C');
+        if(s.hold!=null)parts.push('задръжка '+s.hold+' мин');
+        return dr('Сегмент '+(i+1), parts.join(' · ')||'—');
+      }).join('')
+    : dr('Сегменти','—');
+  var dur=_fpDuration(fp);
   var rows=[
     dr('Вид', fpTypeLabel(fp.type)||'—'),
-    dr('Ramp 1 °C/ч', val(fp.ramp1Rate)),
-    dr('Ramp 1 до °C', val(fp.ramp1To)),
-    dr('Ramp 2 °C/ч', val(fp.ramp2Rate)),
-    dr('Ramp 2 до °C', val(fp.ramp2To)),
-    dr('Задръжка (мин)', val(fp.holdMin)),
+    rampRows,
+    (dur&&dur.minutes>0?dr('Продължителност', _fmtDuration(dur.minutes)+(dur.complete?'':' (прибл.)')):''),
     dr('Редакция', fp.updatedAt?new Date(fp.updatedAt).toLocaleDateString('bg-BG'):'—'),
   ].join('');
   document.getElementById('dfp-rows').innerHTML=rows;
+  // Curve, injected above the notes section
+  var _curveRow=document.getElementById('dfp-curve-row');
+  if(!_curveRow){
+    _curveRow=document.createElement('div');_curveRow.id='dfp-curve-row';_curveRow.className='ds';
+    _curveRow.innerHTML='<div class="ds-t">Крива на изпичане</div><div id="dfp-curve-val"></div>';
+    document.getElementById('dfp-rows').parentNode.after(_curveRow);
+  }
+  var _curveSvg=_fpCurveSvg(fp,false);
+  if(_curveSvg){
+    _curveRow.style.display='';
+    document.getElementById('dfp-curve-val').innerHTML=_curveSvg
+      +(dur&&dur.minutes>0?'<div style="text-align:center;font-size:11px;color:var(--tx2);margin-top:6px;">Обща продължителност: <strong>'+_fmtDuration(dur.minutes)+'</strong>'+(dur.complete?'':' <span style="color:var(--tx3);">(приблизително)</span>')+'</div>':'');
+  } else {
+    _curveRow.style.display='none';
+  }
   document.getElementById('dfp-notes').textContent=fp.notes||'—';
   // Related tests (derived)
   var _ftRow=document.getElementById('dfp-tests-row');
@@ -7061,36 +7090,175 @@ function openFPDet(id){
   _openDet('det-fp');
 }
 
+// Edit-time working copy of the segments.
+var fpRampsEdit=[];
+function _renderFpRamps(){
+  var c=document.getElementById('fp-ramps');if(!c)return;
+  if(!fpRampsEdit.length){
+    c.innerHTML='<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Няма сегменти. Добави поне един.</div>';
+  } else {
+    c.innerHTML=fpRampsEdit.map(function(s,i){
+      return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:7px;">'
+        +'<div style="width:18px;font-size:11px;color:var(--tx3);flex-shrink:0;">'+(i+1)+'.</div>'
+        +'<input type="number" min="0" value="'+(s.rate!=null?s.rate:'')+'" placeholder="°C/ч" oninput="_fpRampEdit('+i+',\'rate\',this.value)" style="flex:1;min-width:0;padding:8px;border:1.5px solid var(--bdr2);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;">'
+        +'<span style="font-size:11px;color:var(--tx3);flex-shrink:0;">до</span>'
+        +'<input type="number" min="0" value="'+(s.to!=null?s.to:'')+'" placeholder="°C" oninput="_fpRampEdit('+i+',\'to\',this.value)" style="flex:1;min-width:0;padding:8px;border:1.5px solid var(--bdr2);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;">'
+        +'<input type="number" min="0" value="'+(s.hold!=null?s.hold:'')+'" placeholder="задр." oninput="_fpRampEdit('+i+',\'hold\',this.value)" style="width:62px;flex-shrink:0;padding:8px;border:1.5px solid var(--bdr2);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;">'
+        +'<button type="button" onclick="_fpRampDel('+i+')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:16px;padding:2px 4px;flex-shrink:0;">×</button>'
+        +'</div>';
+    }).join('');
+  }
+  _renderFpCurve();
+}
+function _fpRampEdit(i,key,val){
+  if(!fpRampsEdit[i])return;
+  fpRampsEdit[i][key]=_numOrNull(val);
+  _renderFpCurve(); // live redraw, but don't re-render inputs (would lose focus)
+}
+function _fpRampDel(i){fpRampsEdit.splice(i,1);_renderFpRamps();}
+function addFpRamp(){fpRampsEdit.push({rate:null,to:null,hold:null});_renderFpRamps();}
+
+// The profile curve — temperature vs time, drawn from the segment array.
+function _renderFpCurve(){
+  var wrap=document.getElementById('fp-curve-wrap');if(!wrap)return;
+  var ramps=fpRampsEdit.filter(function(s){return s.to!=null;});
+  if(ramps.length===0){wrap.innerHTML='';return;}
+  wrap.innerHTML=_fpCurveSvg({ramps:fpRampsEdit},true);
+}
+// Builds an SVG line of the programme. Also used read-only in the profile detail.
+function _fpCurveSvg(fp,withDuration){
+  var ramps=_fpRamps(fp).filter(function(s){return s.to!=null;});
+  if(!ramps.length)return '';
+  // Build points: (time-minutes, temp). Start at ambient 20°C, t=0.
+  var pts=[{t:0,temp:20}], t=0, from=20;
+  ramps.forEach(function(s){
+    if(s.rate!=null&&s.rate>0){ t+=Math.abs(s.to-from)/s.rate*60; }
+    else { t+=30; } // unknown rate → nominal gap so the line still advances
+    pts.push({t:t,temp:s.to});
+    from=s.to;
+    if(s.hold!=null&&s.hold>0){ t+=s.hold; pts.push({t:t,temp:s.to}); }
+  });
+  var maxT=pts[pts.length-1].t||1;
+  var maxTemp=pts.reduce(function(m,p){return Math.max(m,p.temp);},0)||1;
+  var W=300,H=140,padL=34,padB=22,padT=10,padR=10;
+  var plotW=W-padL-padR, plotH=H-padT-padB;
+  function X(tt){return padL+(tt/maxT)*plotW;}
+  function Y(tp){return padT+plotH-(tp/maxTemp)*plotH;}
+  var line=pts.map(function(p,i){return (i?'L':'M')+X(p.t).toFixed(1)+' '+Y(p.temp).toFixed(1);}).join(' ');
+  // Axis ticks: peak temp + a couple of gridlines
+  var peak=_fpPeak(fp);
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;background:var(--bg2);border-radius:10px;border:1px solid var(--bdr);">';
+  // horizontal gridlines at 0, peak
+  [0,maxTemp].forEach(function(tp){
+    var y=Y(tp).toFixed(1);
+    svg+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="var(--bdr)" stroke-width="1"/>';
+    svg+='<text x="'+(padL-4)+'" y="'+(parseFloat(y)+3)+'" text-anchor="end" font-size="9" fill="var(--tx3)" font-family="sans-serif">'+Math.round(tp)+'°</text>';
+  });
+  svg+='<path d="'+line+'" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  // dots at each vertex
+  pts.forEach(function(p){svg+='<circle cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.temp).toFixed(1)+'" r="2.5" fill="var(--primary)"/>';});
+  svg+='</svg>';
+  if(withDuration){
+    var dur=_fpDuration(fp);
+    if(dur&&dur.minutes>0){
+      svg+='<div style="text-align:center;font-size:11px;color:var(--tx2);margin-top:6px;">'
+        +'Обща продължителност: <strong>'+_fmtDuration(dur.minutes)+'</strong>'
+        +(dur.complete?'':' <span style="color:var(--tx3);">(приблизително — липсва скорост на сегмент)</span>')
+        +(peak!=null?' · връх '+peak+'°C':'')
+        +'</div>';
+    }
+  }
+  return svg;
+}
+
 function openFPMo(fp){
   editId=fp?fp.id:null;
   document.getElementById('mo-fp-t').textContent=fp?'Редактирай':'Нов профил';
   document.getElementById('fp-name').value=fp?fp.name:'';
   document.getElementById('fp-type').value=fp?fp.type||'glaze':'glaze';
-  document.getElementById('fp-r1rate').value=fp?fp.ramp1Rate||'':'';
-  document.getElementById('fp-r1to').value=fp?fp.ramp1To||'':'';
-  document.getElementById('fp-r2rate').value=fp?fp.ramp2Rate||'':'';
-  document.getElementById('fp-r2to').value=fp?fp.ramp2To||'':'';
-  document.getElementById('fp-hold').value=fp?fp.holdMin||'':'';
   document.getElementById('fp-notes').value=fp?fp.notes||'':'';
+  // v1.16.0: load ramps as a working array (migrating legacy shape on the fly)
+  var loaded=fp?_fpRamps(fp):[];
+  fpRampsEdit=loaded.length?loaded.map(function(s){return {rate:s.rate,to:s.to,hold:s.hold};}):[{rate:null,to:null,hold:null}];
+  _renderFpRamps();
   openMo('mo-fp');
 }
 
 function saveFP(){
   var name=document.getElementById('fp-name').value.trim();
   if(!name){toast('Въведи име');focusEl('fp-name');return;}
-  var nf=['fp-r1rate','fp-r1to','fp-r2rate','fp-r2to','fp-hold'];
-  for(var ni=0;ni<nf.length;ni++){var nv=document.getElementById(nf[ni]).value;if(nv!==''&&(isNaN(parseFloat(nv))||parseFloat(nv)<0)){toast('Числата трябва да са неотрицателни');return;}}
+  // Keep only segments with at least a target; validate non-negative.
+  var ramps=[];
+  for(var i=0;i<fpRampsEdit.length;i++){
+    var s=fpRampsEdit[i];
+    if(s.rate==null&&s.to==null&&s.hold==null)continue;
+    if((s.rate!=null&&s.rate<0)||(s.to!=null&&s.to<0)||(s.hold!=null&&s.hold<0)){
+      toast('Числата трябва да са неотрицателни');return;
+    }
+    ramps.push({rate:s.rate,to:s.to,hold:s.hold});
+  }
   var fp2={id:editId||uid(),name:name,updatedAt:new Date().toISOString(),
     type:document.getElementById('fp-type').value,
-    ramp1Rate:document.getElementById('fp-r1rate').value||null,
-    ramp1To:document.getElementById('fp-r1to').value||null,
-    ramp2Rate:document.getElementById('fp-r2rate').value||null,
-    ramp2To:document.getElementById('fp-r2to').value||null,
-    holdMin:document.getElementById('fp-hold').value||null,
+    ramps:ramps,
     notes:document.getElementById('fp-notes').value};
   if(editId){DB.firingProfiles[DB.firingProfiles.findIndex(function(x){return x.id===editId;})]=fp2;}
   else{DB.firingProfiles.push(fp2);}
   save();closeMo('mo-fp');renderFiringProfiles();toast(editId?'Обновено':'Добавено!');editId=null;
+}
+
+// ── ФИРИНГ ПРОФИЛ: ramps като масив (v1.16.0) ────────────────
+// A profile's programme is a list of segments: {rate °C/h, to °C, hold min}.
+// Legacy profiles carry ramp1Rate/ramp1To/ramp2Rate/ramp2To/holdMin — read them
+// as a two-segment array so old data just works. The hold sits on the last
+// segment it applies to (legacy holdMin belongs to the final ramp).
+function _fpRamps(fp){
+  if(!fp)return [];
+  if(Array.isArray(fp.ramps))return fp.ramps;
+  // Legacy → array
+  var out=[];
+  if(fp.ramp1Rate!=null||fp.ramp1To!=null){
+    out.push({rate:_numOrNull(fp.ramp1Rate),to:_numOrNull(fp.ramp1To),hold:null});
+  }
+  if(fp.ramp2Rate!=null||fp.ramp2To!=null){
+    out.push({rate:_numOrNull(fp.ramp2Rate),to:_numOrNull(fp.ramp2To),hold:_numOrNull(fp.holdMin)});
+  } else if(out.length&&fp.holdMin!=null){
+    out[out.length-1].hold=_numOrNull(fp.holdMin);
+  }
+  return out;
+}
+function _numOrNull(v){if(v==null||v==='')return null;var n=parseFloat(v);return isNaN(n)?null:n;}
+
+// Peak = the highest 'to' across segments.
+function _fpPeak(fp){
+  var r=_fpRamps(fp),peak=null;
+  r.forEach(function(s){if(s.to!=null&&(peak==null||s.to>peak))peak=s.to;});
+  return peak;
+}
+// Total time (minutes) = sum of each ramp's climb time + its hold.
+// Climb time for a segment = |to - from| / rate × 60. 'from' is the previous
+// segment's 'to' (or 20°C ambient for the first). Segments without a rate can't
+// contribute a climb time — the total is then marked approximate.
+function _fpDuration(fp){
+  var r=_fpRamps(fp);
+  if(!r.length)return null;
+  var mins=0, from=20, complete=true;
+  r.forEach(function(s){
+    if(s.to!=null&&s.rate!=null&&s.rate>0){
+      mins+=Math.abs(s.to-from)/s.rate*60;
+      from=s.to;
+    } else if(s.to!=null){
+      from=s.to; complete=false; // known target, unknown rate
+    } else complete=false;
+    if(s.hold!=null)mins+=s.hold;
+  });
+  return {minutes:Math.round(mins),complete:complete};
+}
+function _fmtDuration(mins){
+  if(mins==null)return '';
+  var h=Math.floor(mins/60), m=Math.round(mins%60);
+  if(h&&m)return h+' ч '+m+' мин';
+  if(h)return h+' ч';
+  return m+' мин';
 }
 
 function editFP(){closeDet('det-fp',true);openFPMo(DB.firingProfiles.find(function(x){return x.id===curFP;})||null);}
@@ -7275,14 +7443,13 @@ function showUpdateToast(waitingWorker) {
           <option value="other">Друго</option>
         </select>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div class="f"><label>Ramp 1 °C/ч</label><input type="number" id="fp-r1rate" placeholder="100" min="0"></div>
-        <div class="f"><label>Ramp 1 до °C</label><input type="number" id="fp-r1to" placeholder="580" min="0"></div>
-        <div class="f"><label>Ramp 2 °C/ч</label><input type="number" id="fp-r2rate" placeholder="80" min="0"></div>
-        <div class="f"><label>Ramp 2 до °C</label><input type="number" id="fp-r2to" placeholder="1240" min="0"></div>
+      <!-- v1.16.0: arbitrary ramp segments -->
+      <div class="f"><label>Сегменти на изпичане</label>
+        <div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:8px;">Всеки сегмент: скорост на качване (°C/ч), докъде (°C), и задръжка (мин) на върха му.</div>
+        <div id="fp-ramps"></div>
+        <button type="button" class="btn bg btn-sm" onclick="addFpRamp()" style="width:100%;padding:9px;margin-top:2px;">+ Сегмент</button>
       </div>
-      <div class="f"><label>Задръжка (мин)</label>
-        <input type="number" id="fp-hold" placeholder="30" min="0"></div>
+      <div id="fp-curve-wrap" style="margin:6px 0 14px;"></div>
       <div class="f"><label>Бележки</label>
         <textarea id="fp-notes" placeholder="наблюдения..."></textarea></div>
       <button class="btn bp" onclick="saveFP()">Запази</button>
