@@ -1648,7 +1648,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.16.1';
+const APP_VERSION = 'v1.16.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1811,7 +1811,7 @@ function vDate(val){
   return !isNaN(Date.parse(val));
 }
 function focusEl(id){try{var el=document.getElementById(id);if(el)el.focus();}catch(e){}}
-function save(){safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();}
+function save(){safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();}
 function load(){
   var d=safeLoadJSON('atelie_v6',null);
   if(d&&typeof d==='object'){
@@ -7325,6 +7325,28 @@ function seedGuides(){
 // ─────────────────────────────────────────────────────────────────────────────
 // ══ INIT ══
 // v1.5.0: Wait for IDB to boot before loading data
+// v1.16.2: Ask the browser to keep our data persistent. Without this, storage is
+// "best-effort" — the browser (especially Android for an installed PWA) may evict
+// IndexedDB under memory pressure or after inactivity, which looks exactly like
+// "my data reverted to an old backup": the DB is wiped, space drops, and any
+// leftover localStorage copy gets re-migrated on next open. persist() tells the
+// browser not to evict without permission; for an installed PWA it's almost always
+// granted. This is best-effort itself (older browsers lack it) — the backup safety
+// net below is the second line of defence.
+function _requestPersistentStorage(){
+  try{
+    if(navigator.storage&&navigator.storage.persist){
+      navigator.storage.persisted().then(function(already){
+        if(already){console.log('[storage] already persistent');return;}
+        navigator.storage.persist().then(function(granted){
+          console.log('[storage] persist request:',granted?'GRANTED':'denied');
+        });
+      });
+    }
+  }catch(e){console.warn('[storage] persist not available',e);}
+}
+_requestPersistentStorage();
+
 bootStorage().then(function(){
   // v1.9.0: If IDB won't open on a device that was already using it, the data is
   // intact but unreachable. Say so plainly instead of rendering an empty app —
@@ -7340,6 +7362,7 @@ bootStorage().then(function(){
   load();
   render('pieces');
   updateStorageLabel();
+  _checkDataShrink();
 }).catch(function(err){
   console.error('[storage] Boot failed, falling back:',err);
   seedGuides();
@@ -7369,6 +7392,69 @@ function updateStorageLabel(){
       el.style.color=warn?'var(--accent)':'var(--muted)';
     }
   }catch(e){el.textContent='';}
+}
+
+// v1.16.2: Safety net against silent data loss. We remember the record counts and
+// byte size from the last session (in localStorage, which survives an IndexedDB
+// eviction). If the app opens and finds far fewer records than last time, the
+// data was likely evicted — warn loudly and prompt to restore from backup, rather
+// than letting the user re-enter data on top of a reverted state (which is how the
+// loss went unnoticed before). Counts, not just bytes: deleting photos shrinks
+// bytes legitimately, but pieces/materials/tests don't vanish in normal use.
+function _dataFingerprint(){
+  return {
+    pieces:(DB.pieces||[]).length,
+    materials:(DB.materials||[]).length,
+    recipes:(DB.recipes||[]).length,
+    tests:(DB.tests||[]).length,
+    firingRuns:(DB.firingRuns||[]).length,
+    firingProfiles:(DB.firingProfiles||[]).length,
+    ts:Date.now()
+  };
+}
+function _checkDataShrink(){
+  var prev=null;
+  try{prev=JSON.parse(localStorage.getItem('atelie_fingerprint')||'null');}catch(e){}
+  var now=_dataFingerprint();
+  var totalNow=now.pieces+now.materials+now.recipes+now.tests+now.firingRuns+now.firingProfiles;
+  if(prev){
+    var totalPrev=prev.pieces+prev.materials+prev.recipes+prev.tests+prev.firingRuns+prev.firingProfiles;
+    // Trigger if the total collapsed to less than half of what it was AND we lost
+    // at least a meaningful number of records — avoids false alarms on tiny DBs.
+    if(totalPrev>=6 && totalNow < totalPrev*0.5){
+      var lost=[];
+      if(now.pieces<prev.pieces)lost.push((prev.pieces-now.pieces)+' изделия');
+      if(now.materials<prev.materials)lost.push((prev.materials-now.materials)+' материала');
+      if(now.tests<prev.tests)lost.push((prev.tests-now.tests)+' теста');
+      if(now.firingRuns<prev.firingRuns)lost.push((prev.firingRuns-now.firingRuns)+' изпичания');
+      if(now.firingProfiles<prev.firingProfiles)lost.push((prev.firingProfiles-now.firingProfiles)+' профила');
+      if(now.recipes<prev.recipes)lost.push((prev.recipes-now.recipes)+' рецепти');
+      // Don't overwrite the fingerprint — keep the last-good one so the warning
+      // persists across reopens until data is restored.
+      setTimeout(function(){
+        alert('⚠ ВНИМАНИЕ: липсват данни\n\n'
+          +'При това отваряне има значително по-малко записи, отколкото при последното ползване.\n\n'
+          +'Липсва спрямо преди: '+lost.join(', ')+'.\n\n'
+          +'Вероятно телефонът е изчистил хранилището. НЕ въвеждай нови данни върху това състояние.\n\n'
+          +'Възстанови последния си архив (Библиотека → Импорт). Ако нямаш скорошен архив, кажи ми преди да пипаш нещо.');
+      },400);
+      return; // keep old fingerprint
+    }
+  }
+  // Healthy (or first run): record the current state as the new baseline.
+  try{localStorage.setItem('atelie_fingerprint',JSON.stringify(now));}catch(e){}
+}
+// Called after every save so the baseline reflects real growth. Never shrinks the
+// stored baseline on its own — only save() (a deliberate user action) moves it, so
+// an eviction between sessions still trips _checkDataShrink on next open.
+function _updateFingerprint(){
+  try{
+    var now=_dataFingerprint();
+    var prev=JSON.parse(localStorage.getItem('atelie_fingerprint')||'null');
+    // A save legitimately reflects the current state — record it. (A user really
+    // can delete records; we trust an in-app save, unlike a between-session drop.)
+    localStorage.setItem('atelie_fingerprint',JSON.stringify(now));
+  }catch(e){}
 }
 (function(){var sp=document.getElementById('splash');if(!sp)return;setTimeout(function(){sp.classList.add('hide');setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},500);},600);})();
 </script>
