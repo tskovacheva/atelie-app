@@ -82,7 +82,23 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 /* cards */
 .grid{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* v1.18.0: pieces list is single-column horizontal cards */
+#pieces-grid{grid-template-columns:1fr;gap:10px;}
 .pc{background:var(--surface);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s ease, box-shadow .15s ease;}
+/* v1.18.0: horizontal piece card — photo left, fields right, like the mockup */
+.pc-h{display:flex;gap:0;align-items:stretch;}
+.pc-h .pch-img{width:118px;flex-shrink:0;aspect-ratio:1;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pc-h .pch-img img{width:100%;height:100%;object-fit:cover;}
+.pc-h .pch-body{flex:1;min-width:0;padding:12px 14px;display:flex;flex-direction:column;}
+.pc-h .pch-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.pc-h .pch-name{font-family:'Tenor Sans',sans-serif;font-size:16px;color:var(--text);line-height:1.2;}
+.pc-h .pch-clay{font-size:11px;color:var(--tx2);margin-top:2px;}
+.pc-h .pch-rows{margin-top:9px;padding-top:9px;border-top:1px solid var(--bdr);display:flex;flex-direction:column;gap:5px;}
+.pc-h .pchr{display:flex;align-items:center;gap:7px;font-size:11px;}
+.pc-h .pchr svg{flex-shrink:0;opacity:.5;}
+.pc-h .pchr-l{color:var(--tx3);min-width:52px;}
+.pc-h .pchr-v{color:var(--tx);margin-left:auto;text-align:right;}
+.pc-h .pch-date{font-size:10px;color:var(--tx3);margin-top:auto;padding-top:8px;}
 .pc:active{transform:scale(0.98);}
 @media(hover:hover){.pc:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,0.06);}}
 .pc-img{width:100%;aspect-ratio:1;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;}
@@ -91,12 +107,13 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .pc-name{font-family:'Tenor Sans',sans-serif;font-size:15px;color:var(--text);line-height:1.25;}
 .pc-sub{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;}
 /* v1.4.4: Stage badge color variants — conservative palette (sage + earth tones) */
-.stage-badge.sb-wet{background:#e9efe8;color:#5e7261;}
-.stage-badge.sb-leather-hard{background:#e9efe8;color:#5e7261;}
-.stage-badge.sb-bone-dry{background:#ede9df;color:#7a6c54;}
-.stage-badge.sb-bisque{background:#f0e3d4;color:#8a6845;}
-.stage-badge.sb-glazed{background:#d8e3d6;color:#4f6952;}
-.stage-badge.sb-finished{background:#c4d3c1;color:#384a3b;}
+.stage-badge.sb-wet{background:#e3ebe6;color:#4a5d52;}
+.stage-badge.sb-leather-hard{background:#dde8e0;color:#425647;}
+.stage-badge.sb-bone-dry{background:#efe7d6;color:#7a6238;}
+.stage-badge.sb-bisque{background:#f0dcc4;color:#8a5a2f;}
+.stage-badge.sb-glazed{background:#cfe0d2;color:#3d5942;}
+.stage-badge.sb-fired{background:#e6d3c0;color:#8a5c38;}
+.stage-badge.sb-finished{background:#b6c9b3;color:#2c3d2f;}
 
 /* list */
 .li{display:flex;align-items:center;gap:13px;padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s;}
@@ -1651,7 +1668,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.17.0';
+const APP_VERSION = 'v1.18.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3430,17 +3447,44 @@ function renderPieces(){
   g.innerHTML=items.map(function(p){
     var sn=normalizeStageValue(p.stage||'wet');
     var sl=stageLabel(sn);
-    // Latest photo from most recent event with photos; fallback to piece.photos[0]
     var thumb=getLatestPhoto(p);
-    var ic=thumb?'<img src="'+thumb+'" alt="" style="width:100%;height:100%;object-fit:cover;">':K(36);
-    return '<div class="pc" onclick="openPieceDet(\''+p.id+'\')"><div class="pc-img">'+ic+'</div>'
-      +'<div class="pc-info"><div class="pc-name">'+(p.name||'')+'</div>'
-      +(p.type?'<div class="pc-sub" style="font-style:italic">'+p.type+'</div>':'')
-      +'<div class="pc-sub">'+(p.date||'')+'</div>'
-      +'<div class="pc-sub" style="color:var(--tx2)">'+clayName(p.clay)+'</div>'
-      +(sl?'<div style="margin-top:3px;"><span class="stage-badge sb-'+sn+'">'+sl+'</span></div>':'')
+    var ic=thumb?'<img src="'+thumb+'" alt="">':K(40);
+    // v1.18.0: horizontal card with inline fields + icons, coloured stage chip.
+    var glz=(p.recipe||p.material)?_glazeNameFor(p):'';
+    var _ruler='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="1"/><line x1="7" y1="7" x2="7" y2="11"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="17" y1="7" x2="17" y2="11"/></svg>';
+    var _clayIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 Q4 20 12 20 Q20 20 20 14"/><path d="M6 14 Q6 9 12 9 Q18 9 18 14"/></svg>';
+    var _dropIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/></svg>';
+    var rows='';
+    if(p.dimensions)rows+='<div class="pchr">'+_ruler+'<span class="pchr-l">Размер</span><span class="pchr-v">'+p.dimensions+' см</span></div>';
+    var cn=clayName(p.clay);
+    if(cn)rows+='<div class="pchr">'+_clayIc+'<span class="pchr-l">Глина</span><span class="pchr-v">'+cn+'</span></div>';
+    rows+='<div class="pchr">'+_dropIc+'<span class="pchr-l">Глазура</span><span class="pchr-v">'+(glz||'—')+'</span></div>';
+    return '<div class="pc pc-h" onclick="openPieceDet(\''+p.id+'\')">'
+      +'<div class="pch-img">'+ic+'</div>'
+      +'<div class="pch-body">'
+        +'<div class="pch-top">'
+          +'<div style="min-width:0;"><div class="pch-name">'+(p.name||'')+'</div>'
+            +(p.type?'<div class="pch-clay" style="font-style:italic;">'+p.type+'</div>':'')+'</div>'
+          +(sl?'<span class="stage-badge sb-'+sn+'" style="flex-shrink:0;">'+sl+'</span>':'')
+        +'</div>'
+        +'<div class="pch-rows">'+rows+'</div>'
+        +(p.date?'<div class="pch-date">'+p.date+'</div>':'')
       +'</div></div>';
   }).join('');
+}
+
+// v1.18.0: resolve a display name for a piece's glaze (recipe or ready material).
+function _glazeNameFor(p){
+  if(!p)return '';
+  if(p.recipe){
+    var r=DB.recipes.find(function(x){return x.id===p.recipe;});
+    if(r)return (typeof _recDisplayName==='function')?_recDisplayName(r):r.name;
+  }
+  if(p.material){
+    var m=DB.materials.find(function(x){return x.id===p.material;});
+    if(m)return m.name;
+  }
+  return '';
 }
 
 // v1.4.2.1: Get latest photo for a piece — from most recent event with photos,
