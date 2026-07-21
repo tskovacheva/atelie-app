@@ -272,6 +272,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .sort-row{display:flex;gap:8px;padding:4px 16px 10px;align-items:center;flex-wrap:wrap;}
 .sort-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
 .stage-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--text);}
+/* v1.18.1: stock level chip in material list */
+.stock-chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;background:#cfe0d2;color:#3d5942;white-space:nowrap;}
+.stock-chip.sc-low{background:#eeccbe;color:#a3502f;}
 /* recipe tags — earthy, desaturated palette */
 .rtag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-right:4px;margin-top:4px;}
 .rtag-ash{background:#EFE8DC;color:#7A624A;}
@@ -1668,7 +1671,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.18.0';
+const APP_VERSION = 'v1.18.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3406,6 +3409,24 @@ function render(s){
 }
 
 function K(sz=48){var s=sz;return `<svg viewBox="0 0 64 64" width="${s}" height="${s}" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity:.4"><rect x="12" y="24" width="40" height="4" rx="2" fill="var(--primary)"/><path d="M16 30 Q16 44 32 44 Q48 44 48 30" stroke="var(--primary)" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="32" y1="44" x2="32" y2="50" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/><line x1="26" y1="52" x2="38" y2="52" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round"/></svg>`;}
+
+// v1.18.1: consistent SVG placeholders per material category, replacing emoji —
+// same visual language as the piece placeholder K(). Drawn at 22px in the .li-ic.
+function matIcon(cat){
+  var st='stroke="var(--primary)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  var paths={
+    clays:'<path d="M4 15 Q4 20 12 20 Q20 20 20 15" '+st+'/><path d="M6 15 Q6 9 12 9 Q18 9 18 15" '+st+'/>',
+    base:'<path d="M8 4 h8 M10 4 v6 l-5 9 a3 3 0 0 0 3 4 h8 a3 3 0 0 0 3-4 l-5-9 v-6" '+st+'/>',
+    ox:'<circle cx="12" cy="12" r="8" '+st+'/><circle cx="12" cy="12" r="3" '+st+'/>',
+    glaze:'<path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z" '+st+'/>',
+    engobe:'<path d="M4 18 Q8 14 12 18 Q16 22 20 18" '+st+'/><path d="M4 12 Q8 8 12 12 Q16 16 20 12" '+st+'/>',
+    underglaze:'<path d="M6 18 L16 8 a2 2 0 0 1 3 3 L9 21 L5 21 L5 17" '+st+'/>',
+    raw:'<path d="M3 20 L9 9 L14 14 L18 7 L21 20 Z" '+st+'/>',
+    mass:'<rect x="4" y="10" width="7" height="7" rx="1" '+st+'/><rect x="13" y="10" width="7" height="7" rx="1" '+st+'/><rect x="8.5" y="4" width="7" height="6" rx="1" '+st+'/>'
+  };
+  var p=paths[cat]||paths.base;
+  return '<svg viewBox="0 0 24 24" width="22" height="22" style="opacity:.55">'+p+'</svg>';
+}
 function dr(l,v){return v?`<div class="dr"><span class="dr-l">${l}</span><span class="dr-v">${v}</span></div>`:'';}
 
 // PIECES
@@ -3658,7 +3679,6 @@ function renderMaterials(){
   var gs=document.getElementById("st-glazes");if(gs)gs.textContent=cats.glaze.length;
   var sl=document.getElementById("st-low");if(sl)sl.textContent=low;
   var lsChip=document.getElementById("fc-mat-lowstock");if(lsChip)lsChip.textContent=low>0?('Само ниски ('+low+')'):'Само ниски';
-  var icons={clays:"🏔",base:"🧪",ox:"🎨",glaze:"✨",engobe:"🎭",underglaze:"🖌",raw:"⛏",mass:"🧱"};
   var hasQ=q||f.lowstock;
   var lowEmpty='<div class="empty" style="padding:30px"><div class="empty-k">∅</div><div class="empty-t">Няма материали под прага</div><div class="empty-s">Всички наличности са в норма</div></div>';
   ["clays","base","ox","glaze","engobe","underglaze","raw","mass"].forEach(function(cat){
@@ -3668,16 +3688,22 @@ function renderMaterials(){
     var html="";
     items.forEach(function(m){
       var low2=m.alertAt&&m.stock!=null&&parseFloat(m.stock)<=parseFloat(m.alertAt);
-      var ic=m.photo?"<img src=\""+m.photo+"\" style=\"width:100%;height:100%;object-fit:cover\">":icons[cat];
+      var ic=m.photo?"<img src=\""+m.photo+"\" style=\"width:100%;height:100%;object-fit:cover\">":matIcon(cat);
       // v1.5.4: Include cost in sub-text if available
       var _unitL={g:'г',kg:'кг',L:'л',ml:'мл','бр':'бр',m:'м',other:''};
       var costStr=(m.cost!=null)?(' · '+m.cost.toFixed(2)+'€'+(m.costUnit?'/'+(_unitL[m.costUnit]||m.costUnit):'')):'';
-      var sub=(m.formula||"")+(m.brand?" · "+m.brand:"")+(m.stock!=null?" · "+m.stock+"г":"")+costStr+(low2?" ⚠️":"")+(m.updatedAt?" · ред. "+timeAgo(m.updatedAt):"");
+      // v1.18.1: stock shown as a coloured chip (green ok / terracotta low) instead of inline "⚠️".
+      var stockChip='';
+      if(m.stock!=null){
+        stockChip='<span class="stock-chip'+(low2?' sc-low':'')+'">'+m.stock+'г</span>';
+      }
+      var sub=(m.formula||"")+(m.brand?" · "+m.brand:"")+costStr+(m.updatedAt?" · ред. "+timeAgo(m.updatedAt):"");
       // v1.7.0: A маса shows its composition instead of formula/brand/stock
       if(m.cat==='mass')sub=_massSummary(m);
       html+='<div class="li" onclick="openMatDet(\''+m.id+'\')">'
         +'<div class="li-ic">'+ic+'</div>'
         +'<div class="li-body"><div class="li-t">'+m.name+'</div><div class="li-s">'+sub+'</div></div>'
+        +(stockChip?'<div style="flex-shrink:0;margin-right:6px;">'+stockChip+'</div>':'')
         +'<div class="li-r">›</div></div>';
     });
     el.innerHTML=html;
