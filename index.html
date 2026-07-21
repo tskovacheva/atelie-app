@@ -468,6 +468,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
        library, scrolling to the bottom for a backup or the version was tedious. -->
   <div style="margin:12px 16px 8px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
     <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Backup</div>
+    <div id="backup-reminder" style="display:none;margin-bottom:10px;padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5;"></div>
     <div style="display:flex;gap:8px;">
       <button onclick="exportBackup()" class="btn bg btn-sm" style="flex:1;padding:10px;">📤 Експорт</button>
       <label class="btn bg btn-sm" style="flex:1;padding:10px;text-align:center;cursor:pointer;">
@@ -1650,7 +1651,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.16.3';
+const APP_VERSION = 'v1.17.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -5712,6 +5713,7 @@ function getAllLib(){
 
 function renderLib(){
   userLibrary = loadUserLib();
+  if(typeof _updateBackupReminder==='function')_updateBackupReminder();
   var all=getAllLib();
   var cntEl=document.getElementById("lib-count");
   if(cntEl)cntEl.textContent=all.length+" статии";
@@ -6246,7 +6248,7 @@ function exportBackup(){
   var device=isMobile?'mobile':'desktop';
   var now=new Date();
   var payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exportedAt: now.toISOString(),
     device: device,
     appVersion: (typeof APP_VERSION!=='undefined')?APP_VERSION:'',
@@ -6255,7 +6257,10 @@ function exportBackup(){
       recipes:        DB.recipes,
       materials:      DB.materials,
       tests:          DB.tests,
-      firingProfiles: DB.firingProfiles
+      firingProfiles: DB.firingProfiles,
+      // v1.17.0: firingRuns were added in v1.11.0 but never included in the backup —
+      // exported firings were silently lost on restore. schemaVersion bumped to 3.
+      firingRuns:     DB.firingRuns
     },
     userLibrary: userLibrary
   };
@@ -6266,6 +6271,9 @@ function exportBackup(){
   a.download = 'atelie_'+ts+'_'+device+'.json';
   a.click();
   URL.revokeObjectURL(a.href);
+  // v1.17.0: remember when we last exported, for the staleness reminder.
+  try{localStorage.setItem('atelie_last_export',now.toISOString());localStorage.setItem('atelie_changes_since_export','0');}catch(e){}
+  _updateBackupReminder();
   toast('Backup файлът е свален');
 }
 
@@ -6321,10 +6329,19 @@ function importBackup(e){
     if(Array.isArray(d.firingProfiles)){
       DB.firingProfiles = d.firingProfiles;
     }
+    // v1.17.0: firingRuns (schemaVersion 3+). Older backups don't have them —
+    // preserve current rather than wipe, same policy as firingProfiles.
+    if(Array.isArray(d.firingRuns)){
+      DB.firingRuns = d.firingRuns;
+    }
     if(Array.isArray(parsed.userLibrary)){
       saveUserLib(parsed.userLibrary);
     }
     save();
+    // v1.17.0: a fresh import means the data matches a file on disk — treat it as
+    // a known-good backup point so the reminder doesn't nag immediately after.
+    try{localStorage.setItem('atelie_last_export',new Date().toISOString());localStorage.setItem('atelie_changes_since_export','0');}catch(e){}
+    _updateBackupReminder();
     show('pieces');
     toast('Данните са заредени успешно!');
   };
@@ -7463,7 +7480,46 @@ function _updateFingerprint(){
     // A save legitimately reflects the current state — record it. (A user really
     // can delete records; we trust an in-app save, unlike a between-session drop.)
     localStorage.setItem('atelie_fingerprint',JSON.stringify(now));
+    // v1.17.0: count changes since the last export, to drive the backup reminder.
+    var c=parseInt(localStorage.getItem('atelie_changes_since_export')||'0',10)||0;
+    localStorage.setItem('atelie_changes_since_export',(c+1));
   }catch(e){}
+}
+
+// v1.17.0 (В2 Ниво 1): a gentle staleness reminder. No cloud, no account — just a
+// note that shows in the Backup panel when the last export is old OR many changes
+// have piled up since. Exporting or importing resets both counters. Thresholds are
+// deliberately soft: 7 days or 25 changes. Reminds, never blocks.
+function _updateBackupReminder(){
+  var el=document.getElementById('backup-reminder');if(!el)return;
+  var lastExport=null,changes=0;
+  try{
+    lastExport=localStorage.getItem('atelie_last_export');
+    changes=parseInt(localStorage.getItem('atelie_changes_since_export')||'0',10)||0;
+  }catch(e){}
+  // Reset the change counter on export/import.
+  var DAYS=7, CHANGES=25;
+  var reasons=[];
+  var daysSince=null;
+  if(lastExport){
+    daysSince=Math.floor((Date.now()-new Date(lastExport).getTime())/86400000);
+    if(daysSince>=DAYS)reasons.push('последен архив преди '+daysSince+' дни');
+  } else {
+    // Never exported on this device — nudge once there's something to lose.
+    var fp=null;try{fp=JSON.parse(localStorage.getItem('atelie_fingerprint')||'null');}catch(e){}
+    var total=fp?(fp.pieces+fp.materials+fp.recipes+fp.tests+fp.firingRuns+fp.firingProfiles):0;
+    if(total>=5)reasons.push('още нямаш архив на това устройство');
+  }
+  if(changes>=CHANGES)reasons.push(changes+' промени от последния архив');
+  if(reasons.length){
+    el.style.display='block';
+    el.style.background='var(--primary-soft)';
+    el.style.color='var(--text)';
+    el.innerHTML='💾 Време е за архив — '+reasons.join(', ')+'.'
+      +'<br><span style="color:var(--tx3);">Натисни „Експорт" и запази файла на сигурно място.</span>';
+  } else {
+    el.style.display='none';
+  }
 }
 (function(){var sp=document.getElementById('splash');if(!sp)return;setTimeout(function(){sp.classList.add('hide');setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},500);},600);})();
 </script>
