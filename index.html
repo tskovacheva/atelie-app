@@ -713,6 +713,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="bone-dry">Сухо</option>
           <option value="bisque">Бисквит</option>
           <option value="glazed">Глазирано</option>
+          <option value="fired" disabled>Изпечено (от изпичане)</option>
           <option value="finished">Готово</option>
         </select>
         <div id="pi-stage-hint" style="display:none;font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;">Етапът се променя от Процес — добави стъпка „Етап" в детайла на изделието.</div>
@@ -1149,6 +1150,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <option value="bone-dry">Сухо</option>
             <option value="bisque">Бисквит</option>
             <option value="glazed">Глазирано</option>
+            <option value="fired" disabled>Изпечено (от изпичане)</option>
             <option value="finished">Готово</option>
           </select>
           <div style="font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5;">„Изпечено" се добавя чрез стъпка изпичане, не оттук.</div>
@@ -1648,7 +1650,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.16.2';
+const APP_VERSION = 'v1.16.3';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2558,6 +2560,10 @@ function saveEvent(){
   recomputePieceStage(piece);
   save();
   closeMo('mo-event');
+  // v1.16.3: refresh the pieces list too, not just the detail — otherwise the
+  // list keeps showing the old getLatestPhoto until the screen is re-rendered by
+  // navigating away and back.
+  if(typeof renderPieces==='function')renderPieces();
   openPieceDet(curPiece); // refresh timeline
   toast(curEventEditId?'Обновено':'Добавено!');
   curEventType=null;
@@ -5586,7 +5592,10 @@ function renderPrev(id,arr){
   el.innerHTML=arr.map(function(s,i){
     return '<div style="position:relative;display:inline-block;margin:2px;">'
       +'<img class="ph-th" src="'+s+'" style="display:block;">'
-      +'<button onclick="removePh(\''+id+'\','+i+')" type="button" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;border:2px solid var(--surface);font-size:14px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);">×</button>'
+      // v1.16.3: stopPropagation — the × sits inside the .pha container whose click
+      // opens the gallery picker. Without it, deleting a photo bubbled up and
+      // immediately reopened the picker.
+      +'<button onclick="event.stopPropagation();removePh(\''+id+'\','+i+')" type="button" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;border:2px solid var(--surface);font-size:14px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);">×</button>'
       +'</div>';
   }).join('');
 }
