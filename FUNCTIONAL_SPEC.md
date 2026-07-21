@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.15.0 · `atelie-v55`
+**Version:** v1.16.3 · `atelie-v60`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -74,6 +74,26 @@ live store. If IndexedDB later fails to open on such a device, the application
 reports that storage is unavailable and refuses to write, rather than presenting
 an empty or stale database as current. Recovery is by restart, or by restoring a
 backup.
+
+**Persistence and eviction protection (v1.16.2).** Browser storage is
+"best-effort" by default: the browser — Android especially, for an installed PWA —
+may evict IndexedDB under memory pressure or after inactivity. This once wiped a
+device between sessions (storage dropped from 2.40 MB to 0.42 MB), looking exactly
+like a reverted backup. Two defences now exist:
+
+- `navigator.storage.persist()` is requested at startup, asking the browser not to
+  evict without permission. For an installed PWA this is almost always granted.
+  It is best-effort itself, so it is backed by:
+- A **data-shrink safety net.** A fingerprint of record counts (pieces, materials,
+  recipes, tests, runs, profiles) is written to localStorage after every save —
+  localStorage survives an IndexedDB eviction. On open, if the total has collapsed
+  to under half of the last-seen count (and at least six records are gone), the app
+  warns loudly and prompts a restore from backup **before** any new data is entered
+  on top of the reverted state. The last-good fingerprint is kept, not overwritten,
+  so the warning persists across reopens until data is restored.
+
+Neither is a substitute for regular exported backups, which remain the real
+guarantee.
 
 ### Photos
 
@@ -482,11 +502,26 @@ A reusable template. It has not happened; it can happen many times.
 
 ```
 id, name*, type (bisque/glaze/other),
-ramp1Rate, ramp1To, ramp2Rate, ramp2To, holdMin, notes
+ramps: [ { rate °C/h, to °C, hold min }, … ],
+notes, updatedAt
 ```
 
-Two ramp segments (rate °C/h + target °C), then a hold in minutes. The list shows
-peak temperature (`ramp2To`, falling back to `ramp1To`).
+The programme is an **arbitrary list of ramp segments** (v1.16.0). Each segment is
+a climb rate, a target temperature, and an optional hold at that target. Legacy
+profiles carried a fixed `ramp1Rate/ramp1To/ramp2Rate/ramp2To/holdMin` shape;
+`_fpRamps()` reads them as a two-segment array on the fly, so old data works
+unchanged and is rewritten to the array form on first save.
+
+**Derived values.** `_fpPeak()` is the highest `to` across segments. `_fpDuration()`
+computes the total programme time — each segment's climb time (`|to − from| / rate
+× 60`, starting from 20 °C ambient) plus its hold — and marks the result
+approximate when a segment lacks a rate.
+
+**The curve.** Both the profile modal (live, while editing) and the profile detail
+render an SVG of temperature against time, drawn from the segment array, with the
+computed total duration beneath it. Only the *profile* is drawn — a firing run
+stores just peak and hold, not a per-minute curve, so the run has no curve of its
+own.
 
 Referenced from recipes (recommended profile), tests, firing runs, and firing
 events.
