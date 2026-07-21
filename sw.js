@@ -5,7 +5,7 @@
 // Bump CACHE_NAME on every deploy to trigger cache refresh.
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'atelie-v63';
+const CACHE_NAME = 'atelie-v64';
 
 const PRECACHE_URLS = [
   './',
@@ -75,7 +75,25 @@ self.addEventListener('fetch', function (event) {
   if (req.method !== 'GET') return;
   if (!req.url.startsWith('http')) return;
 
-  // Skip cross-origin requests (e.g. Google Fonts)
+  // v1.18.2: Google Fonts are cross-origin but we want them offline (Cormorant
+  // titles). Cache-first for the font CSS and font files specifically; everything
+  // else cross-origin is still skipped.
+  var isFonts = req.url.indexOf('fonts.googleapis.com')>-1 || req.url.indexOf('fonts.gstatic.com')>-1;
+  if (isFonts) {
+    event.respondWith(
+      caches.match(req).then(function (cached) {
+        if (cached) return cached;
+        return fetch(req).then(function (netRes) {
+          var clone = netRes.clone();
+          caches.open(CACHE_NAME).then(function (cache) { cache.put(req, clone); });
+          return netRes;
+        }).catch(function(){ return cached; });
+      })
+    );
+    return;
+  }
+
+  // Skip other cross-origin requests
   var isSameOrigin = req.url.startsWith(self.location.origin);
   if (!isSameOrigin) return;
 
