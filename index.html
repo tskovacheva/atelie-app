@@ -580,21 +580,21 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18"/><path d="M5 10c0 5 3 8 7 8s7-3 7-8"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>
     <span>Изделия</span><div class="nb-dot"></div>
   </button>
-  <button class="nb" onclick="show('recipes')" id="nb-recipes">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/></svg>
-    <span>Рецепти</span><div class="nb-dot"></div>
-  </button>
   <button class="nb" onclick="show('materials')" id="nb-materials">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
     <span>Материали</span><div class="nb-dot"></div>
   </button>
-  <button class="nb" onclick="show('tests')" id="nb-tests">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5z"/><path d="M9 3v5h10M9 13h6M9 17h4"/></svg>
-    <span>Тестове</span><div class="nb-dot"></div>
-  </button>
   <button class="nb" onclick="show('fp')" id="nb-fp">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c1 3.5 5 5 5 9.5a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5-.3 2 1 3 1 3 1.5-1 1-4.5-1.5-7z"/></svg>
     <span>Изпичания</span><div class="nb-dot"></div>
+  </button>
+  <button class="nb" onclick="show('recipes')" id="nb-recipes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/></svg>
+    <span>Рецепти</span><div class="nb-dot"></div>
+  </button>
+  <button class="nb" onclick="show('tests')" id="nb-tests">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5z"/><path d="M9 3v5h10M9 13h6M9 17h4"/></svg>
+    <span>Тестове</span><div class="nb-dot"></div>
   </button>
   <button class="nb" onclick="show('lib')" id="nb-lib">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -1671,7 +1671,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.18.4';
+const APP_VERSION = 'v1.18.5';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2181,13 +2181,48 @@ function eventLabel(e){
 }
 
 // Returns an icon (SVG or emoji) for event type
+// v1.18.5: SVG icons for process-timeline events. For stage events the icon
+// reflects the specific stage (7 candidates); the other three types get their own.
+// Returns an inline SVG string, drawn at 18px inside the .li-ic container.
+// Bisque and fired are both firings (similar flame form) but differ by colour:
+// bisque muted grey-sage (first, porous), fired warm ochre (final ware).
+function _evSvg(paths,colour){
+  var c=colour?(' style="color:'+colour+'"'):'';
+  return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"'+c+'>'+paths+'</svg>';
+}
+function _stageIcon(stageV){
+  var v=normalizeStageValue(stageV||'wet');
+  var icons={
+    // wet — a soft lump of wet clay
+    'wet':'<path d="M4 15 Q4 20 12 20 Q20 20 20 15 Q20 10 12 10 Q4 10 4 15 Z"/><path d="M8 13 Q12 11 16 13"/>',
+    // leather-hard — clay taking form on the wheel (bowl profile)
+    'leather-hard':'<path d="M4 13 Q4 19 12 19 Q20 19 20 13"/><path d="M6 13 Q6 9 12 9 Q18 9 18 13"/><line x1="3" y1="13" x2="21" y2="13"/>',
+    // bone-dry — dry / airy (waves fading)
+    'bone-dry':'<path d="M4 9 Q8 6 12 9 Q16 12 20 9"/><path d="M4 15 Q8 12 12 15 Q16 18 20 15"/>',
+    // bisque — first firing (small flame), muted grey-sage
+    'bisque':'<path d="M12 4c.7 2.5 3.5 3.5 3.5 6.8a3.5 3.5 0 0 1-7 0c0-1.4.7-2.5 1.8-3.2-.2 1.4.7 2.1.7 2.1 1-.7.7-3.1-1-4.7z"/>',
+    // glazed — a drop (matches the glaze/recipe icon)
+    'glazed':'<path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/>',
+    // fired — flame (finished firing), warm ochre
+    'fired':'<path d="M12 2.5c1 3.5 5 5 5 9.5a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5-.3 2 1 3 1 3 1.5-1 1-4.5-1.5-7z"/>',
+    // finished — a check/seal, the piece is done
+    'finished':'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'
+  };
+  var colour=null;
+  if(v==='bisque')colour='#9AA69E';   // muted grey-sage
+  if(v==='fired')colour='#C08A3E';    // warm ochre
+  return _evSvg(icons[v]||icons['wet'],colour);
+}
 function eventIcon(e){
-  if(!e||!e.type)return '•';
-  if(e.type==='stage')return '◆';
-  if(e.type==='firing')return '🔥';
-  if(e.type==='decoration')return '✦';
-  if(e.type==='progress')return '○';
-  return '•';
+  if(!e||!e.type)return _evSvg('<circle cx="12" cy="12" r="2"/>');
+  if(e.type==='stage')return _stageIcon(e.data&&e.data.stageValue);
+  // firing — flame, warm ochre (same family as fired)
+  if(e.type==='firing')return _evSvg('<path d="M12 2.5c1 3.5 5 5 5 9.5a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5-.3 2 1 3 1 3 1.5-1 1-4.5-1.5-7z"/>','#C08A3E');
+  // decoration — a brush stroke / mark
+  if(e.type==='decoration')return _evSvg('<path d="M4 20 L14 10 a2 2 0 0 1 3 3 L7 23"/><path d="M14 6 l4 4"/><path d="M16 4 a2.8 2.8 0 0 1 4 4 l-2 2 -4-4 z"/>');
+  // progress — a note / photo dot
+  if(e.type==='progress')return _evSvg('<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 16 l4-3 3 2 4-4 5 4"/>');
+  return _evSvg('<circle cx="12" cy="12" r="2"/>');
 }
 
 // ── EVENT MODAL (v1.4.2) ─────────────────────────────────────
