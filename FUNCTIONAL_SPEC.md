@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.16.3 · `atelie-v60`
+**Version:** v1.18.3 · `atelie-v65`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -576,9 +576,12 @@ edited, and deleted. Built-ins are editable.
 
 **Also housed here:**
 
-- **Backup** — export the whole database as a JSON file; import to restore.
-  Import **replaces**; it does not merge. A guard warns when the imported file is
-  older than the latest local change.
+- **Backup** — export the whole database as a JSON file (schemaVersion 3, since
+  v1.17.0 including firingRuns, which earlier backups silently omitted); import to
+  restore. Import **replaces**; it does not merge. A guard warns when the imported
+  file is older than the latest local change. A staleness reminder (v1.17.0) shows
+  in this panel when the last export is over a week old, or 25+ changes have
+  accumulated, or the device has no backup yet.
 - **Място на устройството** — storage diagnostics in plain language: space used,
   a semantic free-space verdict (plenty / medium / low), a breakdown by data type,
   and cleanup actions for pre-migration snapshots and oversized photos.
