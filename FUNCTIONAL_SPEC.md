@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.20.0 · `atelie-v69`
+**Version:** v1.21.0 · `atelie-v70`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -253,10 +253,41 @@ a batch has no related tests and no per-piece divergence yet.
 standalone pieces, mirroring how deleting a firing run detaches rather than
 destroys.
 
-**Not yet built (phase 3):** splitting a piece or a group out of the batch, the
-merged timeline (`series.events` + `piece.events`), the mixed-stage summary, and
-the rule that a terminal piece stops absorbing shared events. The fields exist and
-the counts already handle `qty`; nothing writes them.
+### Splitting and the merged timeline (v1.21.0)
+
+A piece is split off the moment it becomes distinguishable, not before. The split
+carries a **count**, because "4 yellow ones" is one decision, not four. Splitting
+again from a member subdivides it — 4 yellow, one of which breaks, becomes 3 + 1.
+One gesture, applied recursively.
+
+The split inherits the series' identity (type, clay, technique, glaze,
+temperatures, dimensions) but **not its events**. Copying the shared process would
+create a second owner for it. Instead `_effectiveEvents(piece)` merges at read
+time: shared events (shallow-copied and flagged `_fromSeries`) followed by the
+piece's own. `recomputePieceStage`, `getTimelineEvents` and `getLatestPhoto` all
+read through it, so a shared glaze firing moves the member's stage and a member
+with no photos of its own shows the batch shot.
+
+Shared rows appear in the member's Процес with an "от серията" tag and no edit or
+delete buttons — they are edited only from the series screen, where they belong.
+
+**The brake.** A piece with a terminal state stops absorbing shared events: shared
+events dated after the *earliest* own terminal stage step are dropped from the
+merge. Without it, the plate that broke at bisque would be glaze-fired along with
+the rest. Undated shared events pass through — having no place in the order, they
+cannot be "after" anything.
+
+**Mixed stage.** `_seriesStageSummary` tallies every member by `qty` plus the
+undifferentiated remainder at the series' own stage. One value means the normal dot
+indicator; more than one shows the breakdown with counts, since "смесен" alone says
+nothing. Outcomes sort last.
+
+**Merging back is not offered.** Splitting records a decision already taken on the
+clay. A data-entry mistake is removed by deleting the piece. "Извади от серията"
+exists separately: it detaches a piece into a standalone record, keeping its own
+events and dropping the shared ones.
+
+**Still to come (phase 4):** attaching a whole series to a firing run, and yield.
 
 ### What moves the stage
 

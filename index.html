@@ -645,6 +645,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t">Партида</div><div id="dse-count"></div></div>
     <div class="ds"><div class="ds-t">Информация</div><div id="dse-info"></div></div>
     <div id="dse-stage-actions" style="display:flex;gap:9px;margin:2px 0 4px;"></div>
+    <div class="ds"><div class="ds-t">Отделени парчета</div><div id="dse-members"></div>
+      <button onclick="openSplitMo()" id="dse-split-btn" style="width:100%;margin-top:12px;padding:12px;background:var(--primary-soft);color:var(--primary);border:1.5px dashed var(--primary);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">+ Отдели парче или група</button>
+    </div>
     <div class="ds"><div class="ds-t">Процес</div><div id="dse-timeline"></div>
       <button onclick="showEventTypePopup()" style="width:100%;margin-top:12px;padding:12px;background:var(--primary-soft);color:var(--primary);border:1.5px dashed var(--primary);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">+ Добави стъпка от процеса</button>
     </div>
@@ -1384,6 +1387,27 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- MODAL: Отделяне от серия (v1.21.0, А7 фаза 3) -->
+<div class="mo" id="mo-split" onclick="closeBg(event,'mo-split')">
+  <div class="mo-sh">
+    <div class="mo-h"></div>
+    <div class="mo-hdr"><div class="mo-t">Отдели от серията</div><button class="mo-x" onclick="closeMo('mo-split')">×</button></div>
+    <div class="mo-b">
+      <div id="sp-context" style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:14px;"></div>
+      <div class="f"><label>Брой</label>
+        <input type="number" id="sp-count" min="1" step="1" value="1">
+        <div id="sp-count-hint" style="font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;"></div>
+      </div>
+      <div class="f"><label>Наименование *</label><input type="text" id="sp-name" placeholder="напр. Чиния #1"></div>
+      <div style="font-size:11px;color:var(--tx3);font-style:italic;line-height:1.6;">Отделеното носи целия процес на серията до този момент. Оттук нататък му добавяш собствени стъпки — глазура, декорация или изход.</div>
+    </div>
+    <div class="mo-f">
+      <button class="btn bp" onclick="saveSplit()">Отдели</button>
+      <button class="btn bg" onclick="closeMo('mo-split')">Откажи</button>
+    </div>
+  </div>
+</div>
+
 <!-- POPUP: Event type chooser -->
 <div id="ev-type-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center;" onclick="closeEvTypePopup(event)">
   <div style="background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;width:100%;max-width:480px;padding:18px;animation:slideUp 0.2s ease;">
@@ -1721,7 +1745,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.20.0';
+const APP_VERSION = 'v1.21.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -2128,7 +2152,7 @@ function synthesizeLegacyEvents(piece){
 // Real events first; if none, synthesized.
 function getTimelineEvents(piece){
   if(!piece)return {events:[],isSynthetic:false};
-  var real=Array.isArray(piece.events)?piece.events:[];
+  var real=(typeof _effectiveEvents==='function')?_effectiveEvents(piece):(Array.isArray(piece.events)?piece.events:[]);
   if(real.length>0){
     // v1.5.1: When dates tie, use stage context as secondary sort key
     // Stage order: wet(0) < leather-hard(1) < bone-dry(2) < bisque(3) < glazed(4) < finished(5)
@@ -3121,9 +3145,12 @@ function _firingStageValue(ev){
 }
 function recomputePieceStage(piece){
   if(!piece||!Array.isArray(piece.events))return;
+  // v1.21.0: за отделено парче етапът се извежда от слятия списък — общото
+  // глазурно изпичане на серията мести и него.
+  var _src=(typeof _effectiveEvents==='function')?_effectiveEvents(piece):piece.events;
   // Collect everything that moves the stage: stage events + typed firing events.
   var movers=[];
-  piece.events.forEach(function(e,i){
+  _src.forEach(function(e,i){
     if(!e||!e.date)return;
     if(e.type==='stage'&&e.data&&e.data.stageValue){
       movers.push({val:e.data.stageValue,date:e.date,idx:i});
@@ -3134,7 +3161,7 @@ function recomputePieceStage(piece){
   });
   if(movers.length===0){
     // No dated movers — fall back to an undated stage event if any.
-    var undated=piece.events.filter(function(e){
+    var undated=_src.filter(function(e){
       return e&&e.type==='stage'&&!e.date&&e.data&&e.data.stageValue;
     });
     if(undated.length>0){
@@ -3182,6 +3209,63 @@ function _seriesRemaining(se){
   var total=parseInt(se.count,10);
   if(isNaN(total)||total<1)total=1;
   return Math.max(0,total-_seriesSplitCount(se.id));
+}
+// v1.21.0 (А7 фаза 3): процесът на отделено парче е сливане — събитията на
+// серията плюс собствените му. Общите се копират плитко и се маркират
+// `_fromSeries`, за да не може нищо надолу по веригата да ги запише обратно в
+// парчето: собственикът им остава серията.
+//
+// Спирачката: парче с изходно състояние спира да поема общи събития. Без нея
+// счупената чиния би се „изпекла" глазурно заедно с останалите. За граница се
+// взима НАЙ-РАННИЯТ собствен изход — щом веднъж е счупено, по-късен общ ход не го
+// засяга. Общите без дата минават: те нямат място в реда, значи няма как да са
+// „след" изхода.
+function _effectiveEvents(o){
+  if(!o||typeof o!=='object')return [];
+  var own=Array.isArray(o.events)?o.events:[];
+  if(!o.seriesId)return own;
+  var se=findSeries(o.seriesId);
+  if(!se||!Array.isArray(se.events)||se.events.length===0)return own;
+  var stopDate=null;
+  own.forEach(function(e){
+    if(e&&e.type==='stage'&&e.date&&e.data&&isTerminalStage(e.data.stageValue)){
+      if(stopDate===null||e.date<stopDate)stopDate=e.date;
+    }
+  });
+  var shared=[];
+  se.events.forEach(function(e){
+    if(!e)return;
+    if(stopDate&&e.date&&e.date>stopDate)return;
+    var c={};for(var k in e){if(Object.prototype.hasOwnProperty.call(e,k))c[k]=e[k];}
+    c._fromSeries=true;
+    shared.push(c);
+  });
+  return shared.concat(own);
+}
+// Обобщение на етапа на серията: съвпадат ли всички, или е смесен. Остатъкът
+// (неразграничените) стои на етапа на самата серия.
+function _seriesStageSummary(se){
+  if(!se)return {mixed:false,stage:'wet',parts:[]};
+  var tally={};
+  var _add=function(stage,n){
+    if(n<=0)return;
+    var v=normalizeStageValue(stage||'wet');
+    tally[v]=(tally[v]||0)+n;
+  };
+  _add(se.stage,_seriesRemaining(se));
+  _seriesMembers(se.id).forEach(function(m){
+    var q=parseInt(m.qty,10);if(isNaN(q)||q<1)q=1;
+    _add(m.stage,q);
+  });
+  var keys=Object.keys(tally);
+  var parts=keys.map(function(v){return {stage:v,count:tally[v]};});
+  // Подредба по хода на процеса; изходите отиват накрая.
+  parts.sort(function(a,b){
+    var ai=isTerminalStage(a.stage)?99:resolveStageIdx(a.stage);
+    var bi=isTerminalStage(b.stage)?99:resolveStageIdx(b.stage);
+    return ai-bi;
+  });
+  return {mixed:keys.length>1,stage:keys.length===1?keys[0]:null,parts:parts};
 }
 function _seriesTotal(se){
   var n=se?parseInt(se.count,10):1;
@@ -3668,6 +3752,11 @@ function renderPieces(){
     var cn=clayName(p.clay);
     if(cn)rows+='<div class="pchr">'+_clayIc+'<span class="pchr-l">Глина</span><span class="pchr-v">'+cn+'</span></div>';
     rows+='<div class="pchr">'+_dropIc+'<span class="pchr-l">Глазура</span><span class="pchr-v">'+(glz||'—')+'</span></div>';
+    var _mSe=p.seriesId?findSeries(p.seriesId):null;
+    if(_mSe){
+      var _mq=parseInt(p.qty,10);if(isNaN(_mq)||_mq<1)_mq=1;
+      rows='<div class="pchr">'+_stackIc+'<span class="pchr-l">От серия</span><span class="pchr-v">'+(_mSe.name||'')+' · '+_mq+' бр.</span></div>'+rows;
+    }
     var _se=!!findSeries(p.id);
     if(_se){
       var _tot=_seriesTotal(p),_split=_seriesSplitCount(p.id);
@@ -3706,9 +3795,11 @@ function _glazeNameFor(p){
 // fallback to piece.photos[0] (legacy).
 function getLatestPhoto(p){
   if(!p)return null;
-  if(Array.isArray(p.events)&&p.events.length>0){
+  // v1.21.0: отделено парче без собствени снимки показва груповата на серията.
+  var _evs=(typeof _effectiveEvents==='function')?_effectiveEvents(p):(Array.isArray(p.events)?p.events:[]);
+  if(_evs.length>0){
     // Sort events by date desc, find first with photos
-    var sorted=p.events.slice().sort(function(a,b){
+    var sorted=_evs.slice().sort(function(a,b){
       if(!a.date&&!b.date)return 0;
       if(!a.date)return 1;
       if(!b.date)return -1;
@@ -3722,6 +3813,10 @@ function getLatestPhoto(p){
     }
   }
   if(Array.isArray(p.photos)&&p.photos.length>0)return p.photos[0];
+  if(p.seriesId){
+    var _se=findSeries(p.seriesId);
+    if(_se&&Array.isArray(_se.photos)&&_se.photos.length>0)return _se.photos[0];
+  }
   return null;
 }
 function togglePcChip(key){
@@ -4034,6 +4129,20 @@ function _stageIndicatorHtml(o){
       +'<div style="font-size:11px;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;font-weight:500;">'+(_curStage?_curStage.l:'')+'</div>'
     +'</div>';
 }
+// v1.21.0: етапът на серията е обобщение. Съвпадат ли всички парчета — показва
+// нормалния индикатор. Разминат ли се — показва разбивката, защото „смесен" без
+// числа не казва нищо.
+function _seriesStageHtml(se){
+  var sum=_seriesStageSummary(se);
+  if(!sum.mixed)return _stageIndicatorHtml({stage:sum.stage});
+  var chips=sum.parts.map(function(pt){
+    return '<span class="stage-badge sb-'+pt.stage+'" style="font-size:11px;">'+stageLabel(pt.stage)+' · '+pt.count+'</span>';
+  }).join('');
+  return '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;width:100%;">'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">'+chips+'</div>'
+    +'<div style="font-size:11px;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;font-weight:500;">Смесен</div>'
+  +'</div>';
+}
 function _timelineRowHtml(ev,isSynthetic){
   var icon=eventIcon(ev);
   var label=eventLabel(ev);
@@ -4050,11 +4159,14 @@ function _timelineRowHtml(ev,isSynthetic){
       stageContext='<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--bg2);border-radius:8px;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);">на '+stageLabelText.toLowerCase()+'</span>';
     }
   }
-  var actions=isSynthetic?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
+  // v1.21.0: общата стъпка се редактира само от екрана на серията — там ѝ е
+  // собственикът. Тук носи маркер и няма бутони.
+  var seriesTag=ev._fromSeries?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">от серията</span>':'';
+  var actions=(isSynthetic||ev._fromSeries)?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
   return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
     +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
     +'<div class="li-body">'
-    +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+stageContext+photoBadge+'</div>'
+    +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+seriesTag+stageContext+photoBadge+'</div>'
     +'<div class="li-s" style="font-size:11px;">'+dateStr+(noteSnippet?' · '+noteSnippet:'')+'</div>'
     +'</div>'
     +(actions?'<div style="display:flex;align-items:center;">'+actions+'</div>':'')
@@ -4121,6 +4233,30 @@ function openPieceDet(id){
     _piRecRow.style.display='none';
   }
 
+  // v1.21.0: отделеното парче показва откъде идва — обратната връзка към
+  // партидата, изведена от seriesId.
+  var _seRow=document.getElementById('dpi-series-row');
+  if(!_seRow){
+    _seRow=document.createElement('div');_seRow.id='dpi-series-row';_seRow.className='ds';
+    _seRow.innerHTML='<div class="ds-t">Серия</div><div id="dpi-series-val"></div>';
+    var _seAnchor=document.getElementById('dpi-notes').parentNode.parentNode;
+    _seAnchor.appendChild(_seRow);
+  }
+  var _pSe=p.seriesId?findSeries(p.seriesId):null;
+  if(_pSe){
+    var _q=parseInt(p.qty,10);if(isNaN(_q)||_q<1)_q=1;
+    _seRow.style.display='';
+    document.getElementById('dpi-series-val').innerHTML=
+      '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-piece\');openSeriesDet(\''+_pSe.id+'\')">'
+        +'<div class="li-ic">'+K(20)+'</div>'
+        +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(_pSe.name||'—')+'</div>'
+        +'<div class="li-s">'+_q+' от '+_seriesTotal(_pSe)+' бр.</div></div>'
+        +'<div class="li-r">›</div></div>'
+      +'<button onclick="detachFromSeries()" style="width:100%;margin-top:10px;padding:9px;background:none;color:var(--tx2);border:1px solid var(--bdr2);border-radius:9px;font-size:12px;cursor:pointer;font-family:inherit;">Извади от серията</button>';
+  } else {
+    _seRow.style.display='none';
+  }
+
   // ── TIMELINE (v1.4.1, read-only) ───────────────────────────
   var _tlRow=document.getElementById('dpi-timeline-row');
   if(!_tlRow){
@@ -4178,7 +4314,28 @@ function openSeriesDet(id){
   document.getElementById('dse-info').innerHTML=_rows.join('');
 
   var _sa=document.getElementById('dse-stage-actions');
-  if(_sa)_sa.innerHTML=_stageIndicatorHtml(se);
+  if(_sa)_sa.innerHTML=_seriesStageHtml(se);
+
+  var _mv=document.getElementById('dse-members');
+  var _members=_seriesMembers(id);
+  if(_members.length===0){
+    _mv.innerHTML='<div style="padding:10px 0;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">партидата е еднородна — нищо не е отделено</div>';
+  } else {
+    _mv.innerHTML=_members.map(function(m){
+      var q=parseInt(m.qty,10);if(isNaN(q)||q<1)q=1;
+      var ms=normalizeStageValue(m.stage||'wet');
+      var _th=getLatestPhoto(m);
+      var _mg=_glazeNameFor(m);
+      return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);" onclick="closeDet(\'det-series\');openPieceDet(\''+m.id+'\')">'
+        +'<div class="li-ic" style="width:32px;height:32px;">'+(_th?'<img src="'+_th+'" alt="">':K(18))+'</div>'
+        +'<div class="li-body"><div class="li-t" style="font-size:13px;font-weight:600;">'+(m.name||'')+'</div>'
+        +'<div class="li-s" style="font-size:11px;">'+q+' бр.'+(_mg?' · '+_mg:'')+'</div></div>'
+        +'<span class="stage-badge sb-'+ms+'" style="flex-shrink:0;">'+stageLabel(ms)+'</span>'
+      +'</div>';
+    }).join('');
+  }
+  var _sb=document.getElementById('dse-split-btn');
+  if(_sb)_sb.style.display=(_seriesRemaining(se)>0)?'':'none';
 
   var _tl=getTimelineEvents(se);
   var _tv=document.getElementById('dse-timeline');
@@ -4190,6 +4347,75 @@ function openSeriesDet(id){
   document.getElementById('dse-notes').textContent=se.notes||'—';
   _openDet('det-series');
 }
+// v1.21.0 (А7 фаза 3): отделянето. Парче се отделя чак когато се разграничи —
+// дотогава партидата е еднородна и няма какво да се пази поотделно. Отделеното
+// носи брой, защото „4 жълти" е едно решение, не четири.
+function openSplitMo(){
+  var se=findSeries(curSeries);if(!se)return;
+  var rem=_seriesRemaining(se);
+  if(rem<1){toast('Няма неразграничени парчета');return;}
+  document.getElementById('sp-context').textContent=
+    'От „'+(se.name||'')+'" остават '+rem+' неразграничени от общо '+_seriesTotal(se)+'.';
+  var c=document.getElementById('sp-count');
+  c.value=1;c.max=rem;
+  document.getElementById('sp-count-hint').textContent='Най-много '+rem+'.';
+  document.getElementById('sp-name').value=_nextSeriesName(se);
+  openMo('mo-split');
+}
+// Авто-номер, който може да се презапише. Брои от най-високия вече раздаден,
+// не от броя членове — иначе триене на член би раздало номер втори път.
+function _nextSeriesName(se){
+  var max=0;
+  _seriesMembers(se.id).forEach(function(m){
+    var n=parseInt(m.seriesNo,10);
+    if(!isNaN(n)&&n>max)max=n;
+  });
+  return (se.name||'Парче')+' #'+(max+1);
+}
+function saveSplit(){
+  var se=findSeries(curSeries);if(!se)return;
+  var rem=_seriesRemaining(se);
+  var n=parseInt(document.getElementById('sp-count').value,10);
+  if(isNaN(n)||n<1){toast('Въведи брой');focusEl('sp-count');return;}
+  if(n>rem){toast('Остават само '+rem+' неразграничени');focusEl('sp-count');return;}
+  var name=document.getElementById('sp-name').value.trim();
+  if(!name){toast('Въведи наименование');focusEl('sp-name');return;}
+  var max=0;
+  _seriesMembers(se.id).forEach(function(m){
+    var k=parseInt(m.seriesNo,10);if(!isNaN(k)&&k>max)max=k;
+  });
+  // Самоличността се наследява от серията. Процесът НЕ се копира — той се сливa
+  // при четене, за да остане един собственик на общите стъпки.
+  var p={
+    id:uid(),name:name,photos:[],
+    type:se.type||'',clay:se.clay||'',technique:se.technique||'',
+    recipe:se.recipe||'',material:se.material||'',
+    bisqueTemp:se.bisqueTemp||'',glazeTemp:se.glazeTemp||'',
+    date:se.date||'',notes:'',
+    seriesId:se.id,seriesNo:max+1,qty:n,
+    events:[],stage:normalizeStageValue(se.stage||'wet'),
+    createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+  };
+  if(se.dimensions)p.dimensions=se.dimensions;
+  if(se.weight!=null&&se.weight!=='')p.weight=se.weight;
+  DB.pieces.unshift(p);
+  recomputePieceStage(p);
+  save();closeMo('mo-split');renderPieces();openSeriesDet(curSeries);
+  toast(n>1?(n+' парчета са отделени'):'Отделено');
+}
+// Връщане на парче в партидата не се прави — отделянето отразява решение, вече
+// взето върху глината. Грешка при въвеждане се маха с триене на изделието.
+function detachFromSeries(){
+  var pc=DB.pieces.find(function(x){return x.id===curPiece;});
+  if(!pc||!pc.seriesId)return;
+  if(!confirm('Извади изделието от серията? Общите стъпки спират да важат за него, собствените остават.'))return;
+  delete pc.seriesId;delete pc.seriesNo;delete pc.qty;
+  pc.updatedAt=new Date().toISOString();
+  recomputePieceStage(pc);
+  save();renderPieces();openPieceDet(curPiece);
+  toast('Изделието е самостоятелно');
+}
+
 function editSeries(){
   closeDet('det-series',true);
   editId=curSeries;editKind='series';
