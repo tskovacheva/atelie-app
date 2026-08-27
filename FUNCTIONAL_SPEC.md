@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.18.3 · `atelie-v65`
+**Version:** v1.19.0 · `atelie-v68`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -176,6 +176,30 @@ Seven ordered values, each describing the physical state of the clay:
 
 Shown as a seven-dot indicator with a stage label in the piece detail, and as a
 badge in the list. The indicator is **display only**.
+
+### Outcomes (v1.19.0)
+
+`Готово` is not the only way a piece ends. Four **terminal states** sit alongside
+the seven stages, stored in the same `piece.stage` field so the piece keeps one
+owner for its state and one badge in the list:
+
+| Outcome | `value` | Meaning |
+|---|---|---|
+| Счупено | `broken` | it broke — at any stage, from wet to fired |
+| Бракувано | `scrapped` | it survived but was rejected |
+| Подарено | `gifted` | it left the studio as a gift |
+| Продадено | `sold` | it left the studio sold |
+
+Failure is data: which body cracks, which glaze crawls. Gifted and sold are not
+sales records — no buyer, no price, no date of sale. They are the fact that the
+object is no longer in the studio, and nothing more. Anything beyond that label
+is customer/order tracking, which is out of scope permanently.
+
+`isTerminalStage(value)` answers whether a state closes the piece. A terminal
+piece shows its outcome badge instead of the dot indicator, because the dots draw
+a path and an outcome is a stop. The record stays in the list and stays
+filterable. Outcomes are chosen from the same places a stage is — the Add/Edit
+dropdown when it owns the stage, and a Процес stage step when the events do.
 
 **Two principles govern the last stages:**
 
