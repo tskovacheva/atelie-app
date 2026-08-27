@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.21.0 · `atelie-v70`
+**Version:** v1.22.0 · `atelie-v71`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -287,7 +287,35 @@ clay. A data-entry mistake is removed by deleting the piece. "Извади от 
 exists separately: it detaches a piece into a standalone record, keeping its own
 events and dropping the shared ones.
 
-**Still to come (phase 4):** attaching a whole series to a firing run, and yield.
+### Firing a series, and yield (v1.22.0)
+
+`_runPieces` scans series alongside pieces, so a batch in the kiln is **one row,
+not ten**: the shared firing event carries `firingRunId` and speaks for the whole
+series. A split member is not listed separately while its series is in the run —
+it absorbs the shared event through the merge, so two rows would be the same
+fact twice. The section header shows the physical count (`_runRowQty`), which is
+the series' `count` for a series row and the member's `qty` for a member.
+
+Attaching, detaching and deleting a run all treat a series exactly as they treat a
+piece, including handing the method/temperature back to the event on detach. After
+any of these, members are recomputed, since their stage is derived through the
+merge but stored on the record.
+
+**Yield** (`_seriesYield`) is derived from outcomes, not a separate field: alive is
+whatever has not reached a terminal state. It returns `null` until something has
+actually finished, because a batch still in progress has no yield to claim. When
+the series itself carries a terminal state, the undifferentiated remainder counts
+as finished that way.
+
+### Reverse links (audit, v1.22.0)
+
+- **Run → pieces / series:** attach picker, both in one list. Attaching only links
+  *existing* records; a run cannot create a new piece.
+- **Run → tests:** its own picker (`openRunTestAttach`), unchanged.
+- **Test → pieces:** `t.pieces` is read but **nothing in the app ever wrote it**, so
+  the piece's "Свързани тестове" section was permanently empty. It now derives the
+  link from the shared recipe — the same relation the test screen already showed
+  from its side — while still honouring `t.pieces` if an old record carries it.
 
 ### What moves the stage
 

@@ -548,7 +548,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t">Параметри</div><div id="drn-rows"></div></div>
     <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t">Алтернативно изпичане</div><div id="drn-alt"></div></div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
-      <span>Изделия в това изпичане</span>
+      <span>Изделия в това изпичане <span id="drn-pieces-count" style="color:var(--tx3);font-weight:400;"></span></span>
       <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Добави</button>
     </div><div id="drn-pieces"></div></div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
@@ -645,6 +645,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t">Партида</div><div id="dse-count"></div></div>
     <div class="ds"><div class="ds-t">Информация</div><div id="dse-info"></div></div>
     <div id="dse-stage-actions" style="display:flex;gap:9px;margin:2px 0 4px;"></div>
+    <div class="ds" id="dse-yield-row" style="display:none;"><div class="ds-t">Добив</div><div id="dse-yield"></div></div>
     <div class="ds"><div class="ds-t">Отделени парчета</div><div id="dse-members"></div>
       <button onclick="openSplitMo()" id="dse-split-btn" style="width:100%;margin-top:12px;padding:12px;background:var(--primary-soft);color:var(--primary);border:1.5px dashed var(--primary);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">+ Отдели парче или група</button>
     </div>
@@ -1745,7 +1746,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.21.0';
+const APP_VERSION = 'v1.22.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3267,6 +3268,28 @@ function _seriesStageSummary(se){
   });
   return {mixed:keys.length>1,stage:keys.length===1?keys[0]:null,parts:parts};
 }
+// v1.22.0 (А7 фаза 4): добивът. От 10 чинии колко излизат готови — числото, което
+// днес няма къде да отиде. Изведено от изходите, не отделно поле: живо е всичко,
+// което още не е стигнало до изход.
+function _seriesYield(se){
+  if(!se)return null;
+  var total=_seriesTotal(se),out={},terminal=0;
+  _seriesMembers(se.id).forEach(function(m){
+    var q=parseInt(m.qty,10);if(isNaN(q)||q<1)q=1;
+    var v=normalizeStageValue(m.stage||'wet');
+    if(isTerminalStage(v)){out[v]=(out[v]||0)+q;terminal+=q;}
+  });
+  // Остатъкът и неизходните членове са още в процес — освен ако самата серия
+  // не е на изход, което значи, че цялата партида е приключила така.
+  if(isTerminalStage(se.stage)){
+    var rem=_seriesRemaining(se);
+    if(rem>0){var sv=normalizeStageValue(se.stage);out[sv]=(out[sv]||0)+rem;terminal+=rem;}
+  }
+  if(terminal===0)return null; // нищо не е приключило — няма какво да се твърди
+  return {total:total,terminal:terminal,alive:total-terminal,parts:Object.keys(out).map(function(k){
+    return {stage:k,count:out[k]};
+  })};
+}
 function _seriesTotal(se){
   var n=se?parseInt(se.count,10):1;
   return (isNaN(n)||n<1)?1:n;
@@ -4198,7 +4221,16 @@ function openPieceDet(id){
   document.getElementById('dpi-info').innerHTML=[_typeRow,dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',clayName(p.clay)),dr('Глазура',_glzLabel)].concat(_tempRows).concat(_dimRows).join('');
   var _sa=document.getElementById('dpi-stage-actions');
   if(_sa){_sa.innerHTML=_stageIndicatorHtml(p);_sa.style.display='block';}
-  const tests=DB.tests.filter(t=>t.pieces?.includes(id));
+  // v1.22.0: досега това четеше `t.pieces` — поле, което нищо в приложението не
+  // пише, значи секцията беше винаги празна. Тестът вече показва „свързани
+  // изделия (същата рецепта)"; тук е същата връзка, погледната от другата страна,
+  // плюс наследеното поле, ако стар запис го носи.
+  var _pRec=p.recipe||'';
+  const tests=DB.tests.filter(function(t){
+    if(!t)return false;
+    if(Array.isArray(t.pieces)&&t.pieces.indexOf(id)>=0)return true;
+    return !!_pRec&&t.recipeId===_pRec;
+  });
   document.getElementById('dpi-tests').innerHTML=tests.length?tests.map(t=>`<div style="font-size:13px;color:var(--tx2);padding:6px 0;border-bottom:1px solid var(--bdr)">${DB.recipes.find(r=>r.id===t.recipeId)?.name||'Тест'} · ${t.date||''}</div>`).join(''):'<div style="font-size:12px;color:var(--tx3);padding:8px 0">Няма свързани тестове</div>';
   document.getElementById('dpi-notes').textContent=p.notes||'—';
   // Related recipe (derived, clickable) — shows only when piece has a valid recipe link
@@ -4336,6 +4368,25 @@ function openSeriesDet(id){
   }
   var _sb=document.getElementById('dse-split-btn');
   if(_sb)_sb.style.display=(_seriesRemaining(se)>0)?'':'none';
+
+  // Добив — показва се само когато има какво да каже.
+  var _yRow=document.getElementById('dse-yield-row');
+  var _y=_seriesYield(se);
+  if(_yRow){
+    if(!_y){_yRow.style.display='none';}
+    else{
+      _yRow.style.display='';
+      var _finished=_y.parts.filter(function(x){return x.stage==='gifted'||x.stage==='sold';})
+        .reduce(function(n,x){return n+x.count;},0);
+      var _lost=_y.parts.filter(function(x){return x.stage==='broken'||x.stage==='scrapped';})
+        .reduce(function(n,x){return n+x.count;},0);
+      document.getElementById('dse-yield').innerHTML=
+        dr('От партида',_y.total+' бр.')
+        +(_y.alive>0?dr('Още в процес',_y.alive+' бр.'):'')
+        +_y.parts.map(function(x){return dr(stageLabel(x.stage),x.count+' бр.');}).join('')
+        +(_lost>0?'<div style="font-size:11px;color:var(--tx3);font-style:italic;margin-top:8px;line-height:1.5;">Загуба '+Math.round(_lost/_y.total*100)+'% от партидата.</div>':'');
+    }
+  }
 
   var _tl=getTimelineEvents(se);
   var _tv=document.getElementById('dse-timeline');
@@ -7105,15 +7156,39 @@ function _refreshRunDatalists(){
 }
 
 // Pieces in a run — derived, never stored.
+// v1.22.0 (А7 фаза 4): сериите се сканират по същия начин. Партида в пещта е един
+// ред, не десет — общото събитие носи firingRunId и важи за цялата серия.
+// Отделено парче НЕ се показва отделно, когато серията му вече е в изпичането:
+// то поема общото събитие през сливането, значи двата реда биха били едно и също.
 function _runPieces(runId){
   var out=[];
+  var seriesIn={};
+  (DB.series||[]).forEach(function(se){
+    if(!se||!Array.isArray(se.events))return;
+    se.events.forEach(function(e){
+      if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===runId){
+        seriesIn[se.id]=1;
+        out.push({piece:se,ev:e,isSeries:true});
+      }
+    });
+  });
   DB.pieces.forEach(function(p){
     if(!Array.isArray(p.events))return;
     p.events.forEach(function(e){
-      if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===runId)out.push({piece:p,ev:e});
+      if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===runId){
+        if(p.seriesId&&seriesIn[p.seriesId])return; // покрито от реда на серията
+        out.push({piece:p,ev:e});
+      }
     });
   });
   return out;
+}
+// Колко физически парчета влизат в пещта от този ред.
+function _runRowQty(x){
+  if(!x||!x.piece)return 1;
+  if(x.isSeries)return _seriesTotal(x.piece);
+  var q=parseInt(x.piece.qty,10);
+  return (isNaN(q)||q<1)?1:q;
 }
 function _runTests(runId){
   return DB.tests.filter(function(t){return t.firingRunId===runId;});
@@ -7160,15 +7235,21 @@ function openRunDet(id){
   // Derived: pieces whose firing event points here
   var wrapL={bare:'голо',foil:'фолио',saggar:'сагар',other:'друго'};
   var ps=_runPieces(id);
+  var _totQty=ps.reduce(function(n,x){return n+_runRowQty(x);},0);
+  var _pcHdr=document.getElementById('drn-pieces-count');
+  if(_pcHdr)_pcHdr.textContent=ps.length?(_totQty+' бр.'):'';
   document.getElementById('drn-pieces').innerHTML=ps.length
     ? ps.map(function(x){
         var bits=[];
         var w=x.ev.data&&x.ev.data.wrapping;
         if(w)bits.push(wrapL[w]||w);
         if(x.ev.note)bits.push(x.ev.note);
+        var _open=x.isSeries?'openSeriesDet':'openPieceDet';
+        if(x.isSeries)bits.unshift(_seriesTotal(x.piece)+' бр.');
+        else if(x.piece.seriesId){var _q=parseInt(x.piece.qty,10);bits.unshift(((isNaN(_q)||_q<1)?1:_q)+' бр.');}
         return '<div class="li" style="padding:8px 0;">'
-          +'<div class="li-ic" style="width:34px;height:34px;" onclick="closeDet(\'det-run\');openPieceDet(\''+x.piece.id+'\')">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
-          +'<div class="li-body" onclick="closeDet(\'det-run\');openPieceDet(\''+x.piece.id+'\')" style="cursor:pointer;"><div class="li-t" style="font-size:13px;">'+x.piece.name+'</div>'
+          +'<div class="li-ic" style="width:34px;height:34px;" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
+          +'<div class="li-body" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')" style="cursor:pointer;"><div class="li-t" style="font-size:13px;">'+x.piece.name+'</div>'
           +(bits.length?'<div class="li-s" style="font-size:11px;">'+bits.join(' · ')+'</div>':'')+'</div>'
           +'<button type="button" onclick="event.stopPropagation();detachPieceFromRun(\''+x.piece.id+'\',\''+x.ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:15px;padding:4px 6px;">×</button>'
           +'</div>';
@@ -7268,155 +7349,6 @@ function saveRun(){
   openRunDet(_id);
 }
 
-// v1.12.0: Detaching an event from a run must hand its data back.
-// Linking deletes method / atmosphere / temp / purpose from the event, because
-// the run answers for them. So "just remove the link" would leave the event
-// holding nothing at all — a firing that records no firing. Copy first, unlink
-// second. The piece was fired either way; only the bookkeeping changes.
-function _detachEventFromRun(ev, run){
-  if(!ev||!ev.data)return;
-  if(run){
-    if(run.method)ev.data.method=run.method;
-    if(run.atmosphere)ev.data.atmosphere=run.atmosphere;
-    if(run.purpose)ev.data.firingPurpose=run.purpose;
-    if(run.peakTemp!=null)ev.data.temp=run.peakTemp;
-    if(run.duration!=null)ev.data.duration=run.duration;
-    if(run.firingProfileId)ev.data.profileId=run.firingProfileId;
-  }
-  delete ev.data.firingRunId;
-}
-
-// What would attaching this piece do? Shown per row so the result isn't a surprise.
-// An unlinked firing event on the same date is the quick-final case: the piece
-// already records this firing, so adopt it instead of adding a second one.
-// A different date means a different firing (bisque in March, glaze in July) —
-// that gets its own event.
-function _runAttachPlan(piece, run){
-  var evs=(piece.events||[]).filter(function(e){
-    return e&&e.type==='firing'&&e.data&&!e.data.firingRunId;
-  });
-  var same=evs.filter(function(e){return e.date===run.date;})[0];
-  return same?{action:'adopt',ev:same}:{action:'create'};
-}
-function _attachPieceToRun(piece, run){
-  var plan=_runAttachPlan(piece,run);
-  if(plan.action==='adopt'){
-    var e=plan.ev;
-    e.data.firingRunId=run.id;
-    delete e.data.method;delete e.data.atmosphere;delete e.data.firingPurpose;
-    delete e.data.temp;delete e.data.duration;delete e.data.profileId;
-  } else {
-    ensurePieceEvents(piece);
-    piece.events.push({id:uid(),type:'firing',date:run.date,note:'',photos:[],
-      data:{firingRunId:run.id}});
-  }
-  piece.updatedAt=new Date().toISOString();
-}
-
-// ── Attach picker ────────────────────────────────────────────────────────────
-var _raMode='pieces';
-var _raSel={};
-function openRunAttach(mode){
-  if(!curRun)return;
-  _raMode=mode||'pieces';
-  _raSel={};
-  document.getElementById('mo-ra-t').textContent=_raMode==='pieces'?'Добави изделия':'Добави тестове';
-  var srch=document.getElementById('ra-srch');if(srch)srch.value='';
-  _renderRunAttachList();
-  openMo('mo-run-attach');
-}
-function _renderRunAttachList(){
-  var l=document.getElementById('ra-list');if(!l)return;
-  var run=DB.firingRuns.find(function(x){return x.id===curRun;});if(!run)return;
-  var q=(document.getElementById('ra-srch').value||'').toLowerCase().trim();
-  var rows=[];
-  if(_raMode==='pieces'){
-    var inRun={};
-    _runPieces(run.id).forEach(function(x){inRun[x.piece.id]=1;});
-    DB.pieces.forEach(function(p){
-      if(inRun[p.id])return;
-      if(q&&((p.name||'')+' '+(p.type||'')).toLowerCase().indexOf(q)<0)return;
-      var plan=_runAttachPlan(p,run);
-      var hint=plan.action==='adopt'
-        ? '<span style="color:var(--primary);">закача съществуваща стъпка</span>'
-        : '<span style="color:var(--tx3);">нова стъпка</span>';
-      rows.push({id:p.id,name:p.name,sub:[stageLabel(normalizeStageValue(p.stage||'wet')),hint].join(' · '),
-        ph:getLatestPhoto(p)});
-    });
-  } else {
-    var inRunT={};
-    _runTests(run.id).forEach(function(t){inRunT[t.id]=1;});
-    DB.tests.forEach(function(t){
-      if(inRunT[t.id])return;
-      var rec=DB.recipes.find(function(x){return x.id===t.recipeId;});
-      var nm=testKind(t)==='body'
-        ? '🧱 '+(t.bodyRef?_resolveMaterialRef(t.bodyRef):'тест на маса')
-        : (rec?_recDisplayName(rec):'глазурен тест');
-      if(q&&nm.toLowerCase().indexOf(q)<0)return;
-      rows.push({id:t.id,name:nm,sub:[t.date,t.temp?t.temp+'°C':''].filter(Boolean).join(' · '),
-        ph:(t.photos&&t.photos[0])||null});
-    });
-  }
-  if(!rows.length){
-    l.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx3);font-style:italic;font-size:12px;">'
-      +(q?'Няма съвпадения.':'Няма какво да се добави — всичко вече е тук.')+'</div>';
-    return;
-  }
-  l.innerHTML=rows.map(function(r){
-    var on=!!_raSel[r.id];
-    return '<div onclick="toggleRunAttach(\''+r.id+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);cursor:pointer;">'
-      +'<div style="width:20px;height:20px;flex-shrink:0;border-radius:5px;border:2px solid '+(on?'var(--primary)':'var(--bdr2)')+';background:'+(on?'var(--primary)':'transparent')+';display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">'+(on?'✓':'')+'</div>'
-      +'<div style="width:32px;height:32px;flex-shrink:0;border-radius:7px;overflow:hidden;background:var(--surf);">'+(r.ph?'<img src="'+r.ph+'" style="width:100%;height:100%;object-fit:cover;" alt="">':'')+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--text);">'+r.name+'</div>'
-      +'<div style="font-size:11px;color:var(--tx3);">'+r.sub+'</div></div>'
-      +'</div>';
-  }).join('');
-}
-function toggleRunAttach(id){
-  if(_raSel[id])delete _raSel[id];else _raSel[id]=1;
-  _renderRunAttachList();
-  var n=Object.keys(_raSel).length;
-  var b=document.getElementById('ra-confirm');
-  if(b){b.textContent=n?('Добави ('+n+')'):'Добави';b.disabled=!n;b.style.opacity=n?'':'.5';}
-}
-function confirmRunAttach(){
-  var run=DB.firingRuns.find(function(x){return x.id===curRun;});if(!run)return;
-  var ids=Object.keys(_raSel);
-  if(!ids.length){toast('Нищо не е избрано');return;}
-  if(_raMode==='pieces'){
-    ids.forEach(function(id){
-      var p=DB.pieces.find(function(x){return x.id===id;});
-      if(p)_attachPieceToRun(p,run);
-    });
-  } else {
-    ids.forEach(function(id){
-      var t=DB.tests.find(function(x){return x.id===id;});
-      if(t){t.firingRunId=run.id;t.updatedAt=new Date().toISOString();}
-    });
-  }
-  save();closeMo('mo-run-attach');openRunDet(curRun);
-  toast('Добавени: '+ids.length);
-}
-
-// Remove from the run — the piece keeps its firing, it just stops pointing here.
-function detachPieceFromRun(pieceId,evId){
-  var run=DB.firingRuns.find(function(x){return x.id===curRun;});
-  var p=DB.pieces.find(function(x){return x.id===pieceId;});
-  if(!p||!Array.isArray(p.events))return;
-  var ev=p.events.filter(function(e){return e.id===evId;})[0];
-  if(!ev)return;
-  if(!confirm('Махни „'+p.name+'" от това изпичане?\n\nСтъпката остава в изделието и запазва данните на изпичането.'))return;
-  _detachEventFromRun(ev,run);
-  p.updatedAt=new Date().toISOString();
-  save();openRunDet(curRun);toast('Махнато');
-}
-function detachTestFromRun(testId){
-  var t=DB.tests.find(function(x){return x.id===testId;});if(!t)return;
-  delete t.firingRunId;
-  t.updatedAt=new Date().toISOString();
-  save();openRunDet(curRun);toast('Махнато');
-}
-
 // v1.12.0: Detaching has to hand the data back. Linking deleted the event's own
 // method / atmosphere / temp because the run answered for them — so simply
 // dropping firingRunId would leave an empty firing step behind. The event has to
@@ -7446,6 +7378,13 @@ function deleteRun(){
   DB.pieces.forEach(function(p){
     if(!Array.isArray(p.events))return;
     p.events.forEach(function(e){
+      if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===id)_detachEventFromRun(e,run);
+    });
+  });
+  // v1.22.0: същото за сериите — стъпката оцелява и си взима данните обратно.
+  (DB.series||[]).forEach(function(se){
+    if(!Array.isArray(se.events))return;
+    se.events.forEach(function(e){
       if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===id)_detachEventFromRun(e,run);
     });
   });
@@ -7556,13 +7495,20 @@ function confirmRunAttach(){
 }
 
 function detachPieceFromRun(pieceId,evId){
-  if(!confirm('Извади изделието от това изпичане?\n\nСтъпката остава при изделието и запазва метода и температурата на изпичането.'))return;
-  var p=DB.pieces.find(function(x){return x.id===pieceId;});
+  // v1.22.0: работи и за серия — изваждането ѝ вади цялата партида наведнъж.
+  var _se=findSeries(pieceId);
+  var _msg=_se
+    ? 'Извади серията „'+(_se.name||'')+'" от това изпичане?\n\nСтъпката остава при серията и запазва метода и температурата.'
+    : 'Извади изделието от това изпичане?\n\nСтъпката остава при изделието и запазва метода и температурата на изпичането.';
+  if(!confirm(_msg))return;
+  var p=DB.pieces.find(function(x){return x.id===pieceId;})||_se;
   if(!p||!Array.isArray(p.events))return;
   var ev=p.events.find(function(e){return e.id===evId;});
   var run=DB.firingRuns.find(function(x){return x.id===curRun;});
   if(ev)_detachEventFromRun(ev,run);
   p.updatedAt=new Date().toISOString();
+  recomputePieceStage(p);
+  if(_se)_seriesMembers(p.id).forEach(recomputePieceStage);
   save();openRunDet(curRun);toast('Извадено');
 }
 function detachTestFromRun(testId){
