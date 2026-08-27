@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.19.0 · `atelie-v68`
+**Version:** v1.20.0 · `atelie-v69`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -136,6 +136,8 @@ applies in three places:
 | Value | Owner |
 |---|---|
 | `piece.stage` | the Процес events (stage steps AND typed firings) when any exist; the Add/Edit dropdown when none do |
+| `series.stage` | the same rule, applied to the series' own events |
+| a step being written | the open detail decides — series if one is open, otherwise the piece (`_evSubject`) |
 | firing method / temperature / atmosphere on an event | the linked firing run when `firingRunId` is set; the event itself when it isn't |
 | a recipe's composition as a test saw it | the specific recipe version the test points to |
 
@@ -213,6 +215,48 @@ dropdown when it owns the stage, and a Процес stage step when the events d
 **Pieces may skip stages.** A pit firing on bare bisque goes
 `Бисквит → Изпечено`, skipping `Глазирано`. The order is a scale, not a required
 path.
+
+## Series (v1.20.0)
+
+Ten plates of the same kind move through one process — bisque together, decorated
+together, glaze-fired together — yet they diverge: one is yellow, another blue, a
+third cracks while drying. A series is therefore **a shared process over several
+real pieces**, not a piece with a quantity.
+
+```
+series: id, name, type, clay, technique, dimensions, weight, notes, date,
+        recipe, material, bisqueTemp, glazeTemp,
+        count, photos[] (<=5), events[], stage, createdAt, updatedAt
+```
+
+`events[]` has exactly the same shape as `piece.events[]`, so
+`recomputePieceStage`, `getTimelineEvents`, `getLatestPhoto` and `eventIcon` all
+operate on a series unchanged. Its `photos[]` are the shots of the whole batch.
+
+A piece gains three optional fields — `seriesId`, `qty` (default 1), `seriesNo`.
+Absent, they mean today's behaviour exactly; nothing migrates.
+
+**The member list is derived**, never stored: `_seriesMembers` scans `seriesId`,
+`_seriesSplitCount` sums their `qty`, and `_seriesRemaining` is
+`count - split`. The undifferentiated remainder is not a record at all. This is
+the same policy by which a firing run finds its pieces.
+
+**Entry is one field.** The Add Piece dialog has a Брой input. Left at 1 it makes
+a piece; raised above 1 it makes a series. There is no second button and no second
+flow — `savePiece` branches on `editKind` and the count.
+
+**In the list** a series is one card carrying a Серия row with its count, opening
+its own screen (`det-series`). That screen is deliberately narrower than a piece's:
+a batch has no related tests and no per-piece divergence yet.
+
+**Deleting a series does not cascade.** Members lose `seriesId` and survive as
+standalone pieces, mirroring how deleting a firing run detaches rather than
+destroys.
+
+**Not yet built (phase 3):** splitting a piece or a group out of the batch, the
+merged timeline (`series.events` + `piece.events`), the mixed-stage summary, and
+the rule that a terminal piece stops absorbing shared events. The fields exist and
+the counts already handle `qty`; nothing writes them.
 
 ### What moves the stage
 

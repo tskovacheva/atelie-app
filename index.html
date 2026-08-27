@@ -634,6 +634,28 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- DETAIL: Серия (v1.20.0, А7 фаза 2) -->
+<div class="det" id="det-series">
+  <div style="position:relative">
+    <div class="det-hero" id="dse-hero"></div>
+    <button class="det-back" onclick="closeDet('det-series')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+  </div>
+  <div class="det-body">
+    <div class="det-t" id="dse-t"></div><div class="det-m" id="dse-m"></div>
+    <div class="ds"><div class="ds-t">Партида</div><div id="dse-count"></div></div>
+    <div class="ds"><div class="ds-t">Информация</div><div id="dse-info"></div></div>
+    <div id="dse-stage-actions" style="display:flex;gap:9px;margin:2px 0 4px;"></div>
+    <div class="ds"><div class="ds-t">Процес</div><div id="dse-timeline"></div>
+      <button onclick="showEventTypePopup()" style="width:100%;margin-top:12px;padding:12px;background:var(--primary-soft);color:var(--primary);border:1.5px dashed var(--primary);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">+ Добави стъпка от процеса</button>
+    </div>
+    <div class="ds"><div class="ds-t">Бележки</div><div id="dse-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
+    <div style="display:flex;gap:9px;margin-top:6px;">
+      <button class="btn bg" style="flex:1" onclick="editSeries()">Редактирай</button>
+      <button class="btn bd" style="flex:1;margin-top:0" onclick="delSeries()">Изтрий</button>
+    </div>
+  </div>
+</div>
+
 <!-- DETAIL: Рецепта -->
 <div class="det" id="det-recipe">
   <div style="position:relative;background:var(--bg2);padding:62px 18px 18px;">
@@ -736,6 +758,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="f"><label>Глина</label>
         <select id="pi-clay"><option value="">—</option></select>
         <button type="button" onclick="openNewClayFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:2px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">+ Добави нова глина</button>
+      </div>
+      <!-- v1.20.0 (А7): едно поле, не втори поток. Остане ли 1 — изделие; стане ли
+           повече — серия с общ процес. -->
+      <div class="f" id="pi-count-wrap"><label>Брой</label>
+        <input type="number" id="pi-count" min="1" step="1" value="1" placeholder="1">
+        <div id="pi-count-hint" style="font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;">Повече от 1 създава серия — партида с общ процес.</div>
       </div>
       <div class="f"><label>Етап</label>
         <select id="pi-stage">
@@ -1693,7 +1721,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.19.0';
+const APP_VERSION = 'v1.20.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1741,8 +1769,12 @@ function stageLabel(v){
 }
 var pieceStageFilter='';
 
-const DB={pieces:[],recipes:[],materials:[],tests:[],firingProfiles:[],firingRuns:[]};
+// v1.20.0 (А7 фаза 2): `series` — партида изделия с общ процес. Изделието получава
+// `seriesId`; списъкът с членове е изведен, не съхранен.
+const DB={pieces:[],recipes:[],materials:[],tests:[],firingProfiles:[],firingRuns:[],series:[]};
 let cur='pieces',editId=null,curRec=null,curPiece=null,curTest=null,curMat=null;
+// v1.20.0: коя серия е отворена, и какво редактира mo-piece — изделие или серия.
+let curSeries=null,editKind='piece';
 // v1.4.6: Nested-add state — when set, a save handler should call this instead of normal close.
 // Callback receives the newly created entity (m or r) and the entity kind ('material'|'recipe').
 var _nestedAddCallback=null;
@@ -1886,6 +1918,8 @@ function load(){
     DB.firingProfiles=Array.isArray(d.firingProfiles)?d.firingProfiles:[];
     // v1.11.0: an actual firing that happened — profiles are the programme, runs are the event
     DB.firingRuns=Array.isArray(d.firingRuns)?d.firingRuns:[];
+    // v1.20.0: серии. Старите бази ги нямат — празен масив, нищо не мигрира.
+    DB.series=Array.isArray(d.series)?d.series:[];
     DB._migrations=d._migrations||{};
     DEF_MATS.forEach(function(def){
       if(!DB.materials.find(function(m){return m.id===def.id;})){
@@ -1893,6 +1927,7 @@ function load(){
       }
     });
     DB.pieces.forEach(ensurePieceEvents);
+    DB.series.forEach(ensurePieceEvents);
     runMigrations();
     save();
   } else {
@@ -2352,6 +2387,19 @@ function closeEvTypePopup(e){
 }
 
 // Open event modal with chosen type (called from popup buttons or edit)
+// v1.20.0: стъпката се пише или върху изделие, или върху серия. Един собственик
+// във всеки момент — отворената детайлна страница решава кой е той.
+function _evSubject(){
+  if(curSeries){
+    var se=findSeries(curSeries);
+    if(se)return {obj:se,kind:'series'};
+  }
+  if(curPiece){
+    var pc=DB.pieces.find(function(x){return x.id===curPiece;});
+    if(pc)return {obj:pc,kind:'piece'};
+  }
+  return null;
+}
 function openEventMo(type,editId){
   // Close popup if open (via helper so history stack stays consistent)
   var pop=document.getElementById('ev-type-popup');
@@ -2367,10 +2415,10 @@ function openEventMo(type,editId){
 
   // Resolve existing event if editing
   var ev=null;
-  if(editId&&curPiece){
-    var piece=DB.pieces.find(function(x){return x.id===curPiece;});
-    if(piece&&Array.isArray(piece.events)){
-      ev=piece.events.find(function(x){return x.id===editId;});
+  if(editId){
+    var _subj=_evSubject();
+    if(_subj&&Array.isArray(_subj.obj.events)){
+      ev=_subj.obj.events.find(function(x){return x.id===editId;});
     }
   }
 
@@ -2584,9 +2632,9 @@ function _resolveMaterialRef(ref){
 
 // Save event
 function saveEvent(){
-  if(!curPiece){toast('Грешка: няма избрано изделие');return;}
-  var piece=DB.pieces.find(function(x){return x.id===curPiece;});
-  if(!piece){toast('Грешка: изделието не е намерено');return;}
+  var _subj=_evSubject();
+  if(!_subj){toast('Грешка: няма избрано изделие');return;}
+  var piece=_subj.obj;
   ensurePieceEvents(piece);
 
   var ev={
@@ -2677,7 +2725,7 @@ function saveEvent(){
   // list keeps showing the old getLatestPhoto until the screen is re-rendered by
   // navigating away and back.
   if(typeof renderPieces==='function')renderPieces();
-  openPieceDet(curPiece); // refresh timeline
+  if(_subj.kind==='series')openSeriesDet(curSeries);else openPieceDet(curPiece); // refresh timeline
   toast(curEventEditId?'Обновено':'Добавено!');
   curEventType=null;
   curEventEditId=null;
@@ -2888,15 +2936,17 @@ function _renderMassSection(m){
 }
 
 function deleteEvent(eventId){
-  if(!curPiece)return;
+  var _subj=_evSubject();
+  if(!_subj)return;
   if(!confirm('Изтрий тази стъпка?'))return;
-  var piece=DB.pieces.find(function(x){return x.id===curPiece;});
-  if(!piece||!Array.isArray(piece.events))return;
+  var piece=_subj.obj;
+  if(!Array.isArray(piece.events))return;
   piece.events=piece.events.filter(function(x){return x.id!==eventId;});
   piece.updatedAt=new Date().toISOString();
   recomputePieceStage(piece);
   save();
-  openPieceDet(curPiece);
+  if(typeof renderPieces==='function')renderPieces();
+  if(_subj.kind==='series')openSeriesDet(curSeries);else openPieceDet(curPiece);
   toast('Изтрито');
 }
 
@@ -3099,6 +3149,43 @@ function recomputePieceStage(piece){
     return b.idx-a.idx;
   });
   piece.stage=normalizeStageValue(movers[0].val);
+}
+
+// ── СЕРИИ (v1.20.0, А7 фаза 2) ───────────────────────────────
+// Серията е партида изделия с общ процес. Държи самоличността (вид, глина,
+// техника, размери), броя и собствен timeline в същата форма като piece.events —
+// затова recomputePieceStage, getTimelineEvents, getLatestPhoto и eventIcon
+// работят върху нея без промяна.
+//
+// Фаза 2 е еднородната партида: всички парчета минават по един поток. Отделянето
+// на парче с различна глазура или изход е фаза 3 — дотогава `seriesId` и `qty`
+// стоят в модела, но нищо не ги пише.
+function findSeries(id){
+  if(!id||!Array.isArray(DB.series))return null;
+  return DB.series.find(function(x){return x&&x.id===id;})||null;
+}
+// Изведен списък с отделените членове — сканиране, не съхранен масив (принципът
+// е същият, по който изпичането намира парчетата си).
+function _seriesMembers(sid){
+  if(!sid||!Array.isArray(DB.pieces))return [];
+  return DB.pieces.filter(function(p){return p&&p.seriesId===sid;});
+}
+// Колко парчета са отделени (всяко носи брой) и колко остават неразграничени.
+function _seriesSplitCount(sid){
+  return _seriesMembers(sid).reduce(function(n,p){
+    var q=parseInt(p.qty,10);
+    return n+(isNaN(q)||q<1?1:q);
+  },0);
+}
+function _seriesRemaining(se){
+  if(!se)return 0;
+  var total=parseInt(se.count,10);
+  if(isNaN(total)||total<1)total=1;
+  return Math.max(0,total-_seriesSplitCount(se.id));
+}
+function _seriesTotal(se){
+  var n=se?parseInt(se.count,10):1;
+  return (isNaN(n)||n<1)?1:n;
 }
 
 // ── STORAGE LAYER (v1.5.0) ──────────────────────────────────
@@ -3482,7 +3569,7 @@ function show(n){
 }
 
 function addNew(){
-  if(cur==='pieces'){editId=null;openPieceMo();}
+  if(cur==='pieces'){editId=null;editKind='piece';openPieceMo();}
   else if(cur==='recipes'){editId=null;openRecipeMo();}
   else if(cur==='materials'){if(matTab==='mass'){openMassMo(null);}else{editId=null;openMatMo();}}
   else if(cur==='tests'){editId=null;openTestMo();}
@@ -3532,7 +3619,13 @@ function clayName(v){
 function renderPieces(){
   var q=srchVal('pc-search');
   var f=activeFilters.pc||{};
+  // v1.20.0 (А7 фаза 2): сериите живеят в същия списък като изделията — една карта
+  // за партидата, не десет реда. Различават се по маркер `_isSeries`, за да минат
+  // през същите филтри и сортиране без второ копие на логиката.
   var _all=DB.pieces.slice();
+  (DB.series||[]).forEach(function(se){
+    if(se)_all.push(se);
+  });
   var total=_all.length;
   var items=_all.filter(function(p){
     // v1.5.2: Normalize both sides — legacy English values map to BG (greenware→wet, glaze-fired→finished)
@@ -3554,7 +3647,9 @@ function renderPieces(){
   else if(sortK==='date'){items.sort(function(a,b){var ad=a.date||a.updatedAt||0,bd=b.date||b.updatedAt||0;return new Date(bd)-new Date(ad);});}
   else{items.sort(function(a,b){var ad=a.updatedAt||a.date||0,bd=b.updatedAt||b.date||0;return new Date(bd)-new Date(ad);});}
   var hasF=!!pieceStageFilter||!!q||Object.keys(f).some(function(k){return f[k];});
-  document.getElementById('cnt-pieces').textContent=hasF?(items.length+' от '+total+' изделия'):(total+' изделия');
+  var _nSeries=(DB.series||[]).length;
+  var _totalTxt=total+' изделия'+(_nSeries?' · '+_nSeries+' серии':'');
+  document.getElementById('cnt-pieces').textContent=hasF?(items.length+' от '+total+' изделия'):_totalTxt;
   var g=document.getElementById('pieces-grid');
   if(!items.length){g.innerHTML=hasF?'<div class="empty" style="grid-column:1/-1"><div class="empty-k">∅</div><div class="empty-t">Няма съвпадения</div><div class="empty-s">Промени търсенето или филтрите</div></div>':'<div class="empty" style="grid-column:1/-1"><div class="empty-k">К</div><div class="empty-t">Няма изделия</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   g.innerHTML=items.map(function(p){
@@ -3567,12 +3662,19 @@ function renderPieces(){
     var _ruler='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="1"/><line x1="7" y1="7" x2="7" y2="11"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="17" y1="7" x2="17" y2="11"/></svg>';
     var _clayIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 Q4 20 12 20 Q20 20 20 14"/><path d="M6 14 Q6 9 12 9 Q18 9 18 14"/></svg>';
     var _dropIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/></svg>';
+    var _stackIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg>';
     var rows='';
     if(p.dimensions)rows+='<div class="pchr">'+_ruler+'<span class="pchr-l">Размер</span><span class="pchr-v">'+p.dimensions+' см</span></div>';
     var cn=clayName(p.clay);
     if(cn)rows+='<div class="pchr">'+_clayIc+'<span class="pchr-l">Глина</span><span class="pchr-v">'+cn+'</span></div>';
     rows+='<div class="pchr">'+_dropIc+'<span class="pchr-l">Глазура</span><span class="pchr-v">'+(glz||'—')+'</span></div>';
-    return '<div class="pc pc-h" onclick="openPieceDet(\''+p.id+'\')">'
+    var _se=!!findSeries(p.id);
+    if(_se){
+      var _tot=_seriesTotal(p),_split=_seriesSplitCount(p.id);
+      var _cntTxt=_tot+' бр.'+(_split>0?' · '+_split+' отделени':'');
+      rows='<div class="pchr">'+_stackIc+'<span class="pchr-l">Серия</span><span class="pchr-v">'+_cntTxt+'</span></div>'+rows;
+    }
+    return '<div class="pc pc-h" onclick="'+(_se?'openSeriesDet':'openPieceDet')+'(\''+p.id+'\')">'
       +'<div class="pch-img">'+ic+'</div>'
       +'<div class="pch-body">'
         +'<div class="pch-top">'
@@ -3902,8 +4004,64 @@ function renderTests(){
 
 
 // ══ DETAILS ══
+// v1.20.0: индикаторът за етап и редът от timeline са извадени, за да ги ползват
+// и изделието, и серията — един рендер, а не два, които се разминават.
+// v1.19.0 (Б2): изходът прекратява прогресията, значи точките нямат какво да
+// покажат — те чертаят път, а изходът е спиране. Вместо тях един ясен ред.
+function _stageIndicatorHtml(o){
+  if(o&&isTerminalStage(o.stage)){
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;width:100%;">'
+      +'<span class="stage-badge sb-'+normalizeStageValue(o.stage)+'" style="font-size:12px;padding:4px 12px;">'+stageLabel(o.stage)+'</span>'
+      +'<div style="font-size:11px;color:var(--tx3);font-style:italic;">Процесът е приключен. Записът остава.</div>'
+    +'</div>';
+  }
+  var _idx=resolveStageIdx(o&&o.stage);
+  var _curStage=STAGES[_idx];
+  // v1.5.2: Build progress-dot indicator — visual status, not action buttons
+  var _dotsHtml='';
+  for(var _i=0;_i<STAGES.length;_i++){
+    var _isActive=(_i===_idx);
+    var _isPassed=(_i<_idx);
+    var _dotColor=_isActive?'var(--primary)':(_isPassed?'var(--primary-soft)':'var(--bdr)');
+    var _dotSize=_isActive?'10px':'7px';
+    _dotsHtml+='<div title="'+STAGES[_i].l+'" style="width:'+_dotSize+';height:'+_dotSize+';border-radius:50%;background:'+_dotColor+';transition:all .2s ease;'+(_isActive?'box-shadow:0 0 0 3px var(--primary-soft);':'')+'"></div>';
+  }
+  // v1.9.0: Arrows removed. The dots were always a display; the arrows wrote
+  // piece.stage directly and competed with the events as a second source of
+  // truth. The stage now has exactly one owner — see savePiece / recomputePieceStage.
+  return '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;width:100%;">'
+      +'<div style="display:flex;align-items:center;gap:6px;justify-content:center;">'+_dotsHtml+'</div>'
+      +'<div style="font-size:11px;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;font-weight:500;">'+(_curStage?_curStage.l:'')+'</div>'
+    +'</div>';
+}
+function _timelineRowHtml(ev,isSynthetic){
+  var icon=eventIcon(ev);
+  var label=eventLabel(ev);
+  var dateStr=ev.date||'—';
+  var noteSnippet=ev.note?(ev.note.length>60?ev.note.slice(0,60)+'…':ev.note):'';
+  var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
+  var syntheticStyle=isSynthetic?'opacity:.6;':'';
+  // v1.5.1: Show stage context (appliedAtStage for decoration, atStage for progress)
+  var stageContext='';
+  if(ev.data){
+    var atStageVal=ev.data.appliedAtStage||ev.data.atStage;
+    if(atStageVal){
+      var stageLabelText=_STAGE_LABELS[atStageVal]||atStageVal;
+      stageContext='<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--bg2);border-radius:8px;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);">на '+stageLabelText.toLowerCase()+'</span>';
+    }
+  }
+  var actions=isSynthetic?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
+  return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
+    +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
+    +'<div class="li-body">'
+    +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+stageContext+photoBadge+'</div>'
+    +'<div class="li-s" style="font-size:11px;">'+dateStr+(noteSnippet?' · '+noteSnippet:'')+'</div>'
+    +'</div>'
+    +(actions?'<div style="display:flex;align-items:center;">'+actions+'</div>':'')
+    +'</div>';
+}
 function openPieceDet(id){
-  const p=DB.pieces.find(x=>x.id===id);if(!p)return;curPiece=id;
+  const p=DB.pieces.find(x=>x.id===id);if(!p)return;curPiece=id;curSeries=null;
   var _heroPhoto=getLatestPhoto(p);
   document.getElementById('dpi-hero').innerHTML=_heroPhoto?'<img src="'+_heroPhoto+'" alt="">':K(70);
   document.getElementById('dpi-t').textContent=p.name;
@@ -3927,37 +4085,7 @@ function openPieceDet(id){
   if(p.weight!=null)_dimRows.push(dr('Тегло',p.weight+' г'));
   document.getElementById('dpi-info').innerHTML=[_typeRow,dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',clayName(p.clay)),dr('Глазура',_glzLabel)].concat(_tempRows).concat(_dimRows).join('');
   var _sa=document.getElementById('dpi-stage-actions');
-  // v1.19.0 (Б2): изходът прекратява прогресията, значи точките нямат какво да
-  // покажат — те чертаят път, а изходът е спиране. Вместо тях един ясен ред.
-  if(_sa&&isTerminalStage(p.stage)){
-    _sa.innerHTML=
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;width:100%;">'
-        +'<span class="stage-badge sb-'+normalizeStageValue(p.stage)+'" style="font-size:12px;padding:4px 12px;">'+stageLabel(p.stage)+'</span>'
-        +'<div style="font-size:11px;color:var(--tx3);font-style:italic;">Процесът е приключен. Записът остава.</div>'
-      +'</div>';
-    _sa.style.display='block';
-  } else if(_sa){
-    var _idx=resolveStageIdx(p.stage);
-    var _curStage=STAGES[_idx];
-    // v1.5.2: Build progress-dot indicator — visual status, not action buttons
-    var _dotsHtml='';
-    for(var _i=0;_i<STAGES.length;_i++){
-      var _isActive=(_i===_idx);
-      var _isPassed=(_i<_idx);
-      var _dotColor=_isActive?'var(--primary)':(_isPassed?'var(--primary-soft)':'var(--bdr)');
-      var _dotSize=_isActive?'10px':'7px';
-      _dotsHtml+='<div title="'+STAGES[_i].l+'" style="width:'+_dotSize+';height:'+_dotSize+';border-radius:50%;background:'+_dotColor+';transition:all .2s ease;'+(_isActive?'box-shadow:0 0 0 3px var(--primary-soft);':'')+'"></div>';
-    }
-    // v1.9.0: Arrows removed. The dots were always a display; the arrows wrote
-    // piece.stage directly and competed with the events as a second source of
-    // truth. The stage now has exactly one owner — see savePiece / recomputePieceStage.
-    _sa.innerHTML=
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;width:100%;">'
-        +'<div style="display:flex;align-items:center;gap:6px;justify-content:center;">'+_dotsHtml+'</div>'
-        +'<div style="font-size:11px;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;font-weight:500;">'+(_curStage?_curStage.l:'')+'</div>'
-      +'</div>';
-    _sa.style.display='block';
-  }
+  if(_sa){_sa.innerHTML=_stageIndicatorHtml(p);_sa.style.display='block';}
   const tests=DB.tests.filter(t=>t.pieces?.includes(id));
   document.getElementById('dpi-tests').innerHTML=tests.length?tests.map(t=>`<div style="font-size:13px;color:var(--tx2);padding:6px 0;border-bottom:1px solid var(--bdr)">${DB.recipes.find(r=>r.id===t.recipeId)?.name||'Тест'} · ${t.date||''}</div>`).join(''):'<div style="font-size:12px;color:var(--tx3);padding:8px 0">Няма свързани тестове</div>';
   document.getElementById('dpi-notes').textContent=p.notes||'—';
@@ -4009,35 +4137,79 @@ function openPieceDet(id){
     _tlVal.innerHTML='<div style="padding:10px 0;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">все още няма отбелязани стъпки</div>';
   } else {
     _tlVal.innerHTML=_tl.events.map(function(ev){
-      var icon=eventIcon(ev);
-      var label=eventLabel(ev);
-      var dateStr=ev.date||'—';
-      var noteSnippet=ev.note?(ev.note.length>60?ev.note.slice(0,60)+'…':ev.note):'';
-      var photoBadge=(ev.photos&&ev.photos.length>0)?'<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--primary-soft);border-radius:8px;font-size:10px;color:var(--primary);">📷 '+ev.photos.length+'</span>':'';
-      var syntheticStyle=_tl.isSynthetic?'opacity:.6;':'';
-      // v1.5.1: Show stage context (appliedAtStage for decoration, atStage for progress)
-      var stageContext='';
-      if(ev.data){
-        var atStageVal=ev.data.appliedAtStage||ev.data.atStage;
-        if(atStageVal){
-          var stageLabelText=_STAGE_LABELS[atStageVal]||atStageVal;
-          stageContext='<span style="display:inline-block;margin-left:6px;padding:1px 6px;background:var(--bg2);border-radius:8px;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);">на '+stageLabelText.toLowerCase()+'</span>';
-        }
-      }
-      var actions=_tl.isSynthetic?'':'<button type="button" onclick="event.stopPropagation();openEventMo(\''+ev.type+'\',\''+ev.id+'\')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;padding:4px 6px;">✎</button><button type="button" onclick="event.stopPropagation();deleteEvent(\''+ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:4px 6px;">×</button>';
-      return '<div class="li" style="padding:9px 0;border-bottom:1px solid var(--bdr);'+syntheticStyle+'">'
-        +'<div class="li-ic" style="width:32px;height:32px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;">'+icon+'</div>'
-        +'<div class="li-body">'
-        +'<div class="li-t" style="font-size:13px;font-weight:600;">'+label+stageContext+photoBadge+'</div>'
-        +'<div class="li-s" style="font-size:11px;">'+dateStr+(noteSnippet?' · '+noteSnippet:'')+'</div>'
-        +'</div>'
-        +(actions?'<div style="display:flex;align-items:center;">'+actions+'</div>':'')
-        +'</div>';
+      return _timelineRowHtml(ev,_tl.isSynthetic);
     }).join('');
   }
 
   _openDet('det-piece');
 }
+// v1.20.0 (А7 фаза 2): екранът на серията. Съзнателно е по-тесен от този на
+// изделието — партидата няма свързани тестове и няма собствена глазура, докато
+// парчетата не се отделят (фаза 3).
+function openSeriesDet(id){
+  var se=findSeries(id);if(!se)return;
+  curSeries=id;curPiece=null;
+  ensurePieceEvents(se);
+  var hero=getLatestPhoto(se);
+  document.getElementById('dse-hero').innerHTML=hero?'<img src="'+hero+'" alt="">':K(70);
+  document.getElementById('dse-t').textContent=se.name||'';
+  document.getElementById('dse-m').textContent=[se.type,se.date,se.technique].filter(Boolean).join(' · ');
+
+  // Партида: общо / неразграничени / отделени. Отделените са нула във фаза 2,
+  // затова редът се показва само когато има какво да каже.
+  var _total=_seriesTotal(se),_split=_seriesSplitCount(id),_rem=_seriesRemaining(se);
+  var _cnt=dr('Общо',_total+' бр.');
+  if(_split>0){
+    _cnt+=dr('Отделени',_split+' бр.');
+    _cnt+=dr('Неразграничени',_rem+' бр.');
+  }
+  document.getElementById('dse-count').innerHTML=_cnt;
+
+  var _glz=_glazeNameFor(se);
+  var _rows=[];
+  if(se.type)_rows.push(dr('Тип',se.type));
+  _rows.push(dr('Етап',stageLabel(se.stage||'wet')||'—'));
+  _rows.push(dr('Глина',clayName(se.clay)));
+  if(_glz)_rows.push(dr('Глазура',_glz));
+  if(se.bisqueTemp)_rows.push(dr('Бисквит',se.bisqueTemp+'°C'));
+  if(se.glazeTemp)_rows.push(dr('Глазурно',se.glazeTemp+'°C'));
+  if(se.dimensions)_rows.push(dr('Размери',se.dimensions+' см'));
+  if(se.weight!=null&&se.weight!=='')_rows.push(dr('Тегло',se.weight+' г'));
+  document.getElementById('dse-info').innerHTML=_rows.join('');
+
+  var _sa=document.getElementById('dse-stage-actions');
+  if(_sa)_sa.innerHTML=_stageIndicatorHtml(se);
+
+  var _tl=getTimelineEvents(se);
+  var _tv=document.getElementById('dse-timeline');
+  if(_tl.events.length===0){
+    _tv.innerHTML='<div style="padding:10px 0;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">все още няма отбелязани стъпки</div>';
+  } else {
+    _tv.innerHTML=_tl.events.map(_timelineRowHtml).join('');
+  }
+  document.getElementById('dse-notes').textContent=se.notes||'—';
+  _openDet('det-series');
+}
+function editSeries(){
+  closeDet('det-series',true);
+  editId=curSeries;editKind='series';
+  openPieceMo(findSeries(curSeries));
+}
+function delSeries(){
+  var se=findSeries(curSeries);if(!se)return;
+  var members=_seriesMembers(curSeries);
+  var msg=members.length
+    ? 'Изтрий серията? '+members.length+' отделени изделия остават като самостоятелни записи.'
+    : 'Изтрий серията?';
+  if(!confirm(msg))return;
+  // Не каскадира: отделените парчета губят връзката, но остават. Същата политика
+  // като при триене на изпичане.
+  members.forEach(function(p){delete p.seriesId;delete p.seriesNo;});
+  DB.series=DB.series.filter(function(x){return x.id!==curSeries;});
+  save();closeDet('det-series');renderPieces();toast('Изтрито');
+  curSeries=null;
+}
+
 function resolveStageIdx(v){
   if(!v)return 0;
   v=normalizeStageValue(v);
@@ -4574,7 +4746,21 @@ function setupPieceTypeDropdown(){
 }
 function openPieceMo(p){
   pPh=p?.photos?[...p.photos]:[];
-  document.getElementById('mo-piece-t').textContent=p?'Редактирай':'Ново изделие';
+  // v1.20.0: същият модал обслужва и серията — полетата съвпадат едно към едно,
+  // различава ги само броят. Затова editKind, а не втори модал.
+  var _isSeries=(editKind==='series');
+  document.getElementById('mo-piece-t').textContent=p?(_isSeries?'Редактирай серия':'Редактирай'):'Ново изделие';
+  var _cEl=document.getElementById('pi-count');
+  if(_cEl)_cEl.value=(p&&_isSeries)?_seriesTotal(p):1;
+  var _cHint=document.getElementById('pi-count-hint');
+  if(_cHint){
+    // При редакция на изделие броят няма смисъл — едно изделие е едно парче.
+    var _cWrap=document.getElementById('pi-count-wrap');
+    if(_cWrap)_cWrap.style.display=(p&&!_isSeries)?'none':'';
+    _cHint.textContent=_isSeries
+      ? 'Колко парчета има партидата. Намаляване под вече отделените не се приема.'
+      : 'Повече от 1 създава серия — партида с общ процес.';
+  }
   document.getElementById('pi-name').value=p?.name||'';
   var _pType=document.getElementById('pi-type');if(_pType)_pType.value=(p&&p.type)||'';
   setupPieceTypeDropdown();
@@ -4623,7 +4809,7 @@ function openPieceMo(p){
   // v1.4.5: Reset quick-final section (closed + cleared) — hide on edit
   resetPiQuickFinal();
   var _qfWrap=document.getElementById('pi-quickfinal-wrap');
-  if(_qfWrap)_qfWrap.style.display=p?'none':''; // hide on edit (only for new pieces)
+  if(_qfWrap)_qfWrap.style.display=(p||_isSeries)?'none':''; // hide on edit (only for new pieces)
   // v1.5.3: Auto-open "More details" if any additional field has a value on edit
   var hasMoreData=false;
   if(p){
@@ -4686,6 +4872,36 @@ function savePiece(){
   if(_dim)p.dimensions=_dim;
   var _wt=(document.getElementById('pi-weight')||{value:''}).value;
   if(_wt!==''&&!isNaN(parseFloat(_wt)))p.weight=parseFloat(_wt);
+  // v1.20.0 (А7 фаза 2): броят решава дали това е изделие или серия. Едно поле,
+  // един поток — няма втори бутон „добави серия".
+  var _cntEl=document.getElementById('pi-count');
+  var _cnt=_cntEl?parseInt(_cntEl.value,10):1;
+  if(isNaN(_cnt)||_cnt<1)_cnt=1;
+  var _isSeries=(editKind==='series')||(!editId&&_cnt>1);
+  if(_isSeries){
+    p.count=_cnt;
+    var _prev=editId?findSeries(editId):null;
+    if(_prev&&Array.isArray(_prev.events))p.events=_prev.events;
+    ensurePieceEvents(p);
+    // Броят не може да падне под вече отделените парчета — това би направило
+    // остатъка отрицателен, тоест би излъгало за партидата.
+    if(_prev){
+      var _splitNow=_seriesSplitCount(editId);
+      if(_cnt<_splitNow){
+        toast('Броят не може да е под отделените ('+_splitNow+')');
+        focusEl('pi-count');return;
+      }
+    }
+    recomputePieceStage(p);
+    p.updatedAt=new Date().toISOString();
+    if(_prev){p.createdAt=_prev.createdAt;DB.series[DB.series.findIndex(function(x){return x.id===editId;})]=p;}
+    else {p.createdAt=new Date().toISOString();DB.series.unshift(p);}
+    save();closeMo('mo-piece');renderPieces();
+    toast(_prev?'Обновено':'Серията е добавена');
+    editId=null;editKind='piece';
+    if(_prev)openSeriesDet(p.id);
+    return;
+  }
   // Preserve events on edit; initialize on new
   if(editId){
     var _existing=DB.pieces.find(function(x){return x.id===editId;});
@@ -4730,7 +4946,7 @@ function savePiece(){
     }
   }
   if(editId)DB.pieces[DB.pieces.findIndex(x=>x.id===editId)]=p;else DB.pieces.unshift(p);
-  save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;
+  save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;editKind='piece';
 }
 
 // v1.4.5: Toggle quick-final collapsible
@@ -4902,7 +5118,7 @@ function openNewMaterialFromDecoration(){
     if(typeof toggleMatFields === 'function') toggleMatFields();
   }
 }
-function editPiece(){closeDet('det-piece',true);editId=curPiece;openPieceMo(DB.pieces.find(p=>p.id===editId));}
+function editPiece(){closeDet('det-piece',true);editId=curPiece;editKind='piece';openPieceMo(DB.pieces.find(p=>p.id===editId));}
 function delPiece(){if(!confirm('Изтрий?'))return;DB.pieces=DB.pieces.filter(p=>p.id!==curPiece);save();closeDet('det-piece');renderPieces();toast('Изтрито');}
 
 // ══ RECIPE MODAL ══
@@ -6419,7 +6635,7 @@ function exportBackup(){
   var device=isMobile?'mobile':'desktop';
   var now=new Date();
   var payload = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt: now.toISOString(),
     device: device,
     appVersion: (typeof APP_VERSION!=='undefined')?APP_VERSION:'',
@@ -6431,7 +6647,10 @@ function exportBackup(){
       firingProfiles: DB.firingProfiles,
       // v1.17.0: firingRuns were added in v1.11.0 but never included in the backup —
       // exported firings were silently lost on restore. schemaVersion bumped to 3.
-      firingRuns:     DB.firingRuns
+      firingRuns:     DB.firingRuns,
+      // v1.20.0: серии (schemaVersion 4). Пропускането им би повторило грешката
+      // от v1.11.0, когато изпичанията останаха извън архива за шест версии.
+      series:         DB.series
     },
     userLibrary: userLibrary
   };
@@ -6504,6 +6723,12 @@ function importBackup(e){
     // preserve current rather than wipe, same policy as firingProfiles.
     if(Array.isArray(d.firingRuns)){
       DB.firingRuns = d.firingRuns;
+    }
+    // v1.20.0: series (schemaVersion 4+). Същата политика — по-стар архив пази
+    // текущите вместо да ги изтрие.
+    if(Array.isArray(d.series)){
+      DB.series = d.series;
+      DB.series.forEach(ensurePieceEvents);
     }
     if(Array.isArray(parsed.userLibrary)){
       saveUserLib(parsed.userLibrary);
@@ -7606,6 +7831,7 @@ function _dataFingerprint(){
     tests:(DB.tests||[]).length,
     firingRuns:(DB.firingRuns||[]).length,
     firingProfiles:(DB.firingProfiles||[]).length,
+    series:(DB.series||[]).length,
     ts:Date.now()
   };
 }
