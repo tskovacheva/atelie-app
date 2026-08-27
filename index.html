@@ -499,6 +499,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div style="margin:12px 16px 8px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
     <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;">Backup</div>
     <div id="backup-reminder" style="display:none;margin-bottom:10px;padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5;"></div>
+    <div id="auto-archive-box" style="margin-bottom:10px;padding:10px 11px;border-radius:9px;background:var(--bg2);border:1px solid var(--bdr);"></div>
     <div style="display:flex;gap:8px;">
       <button onclick="exportBackup()" class="btn bg btn-sm" style="flex:1;padding:10px;">📤 Експорт</button>
       <label class="btn bg btn-sm" style="flex:1;padding:10px;text-align:center;cursor:pointer;">
@@ -1746,7 +1747,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.22.1';
+const APP_VERSION = 'v1.23.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -1932,7 +1933,7 @@ function vDate(val){
   return !isNaN(Date.parse(val));
 }
 function focusEl(id){try{var el=document.getElementById(id);if(el)el.focus();}catch(e){}}
-function save(){safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();}
+function save(){safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();if(typeof _maybeAutoArchive==='function')_maybeAutoArchive();}
 function load(){
   var d=safeLoadJSON('atelie_v6',null);
   if(d&&typeof d==='object'){
@@ -3723,6 +3724,15 @@ function clayName(v){
   if(m)return m.name;
   return v; // иначе е плайн име от CLAY_NAMES
 }
+// Съвпада ли записът с текущия филтър по етап. За изделие — собственият му етап;
+// за серия — кой да е етап в разбивката ѝ, включително този на остатъка.
+function _stageFilterMatches(p){
+  if(!pieceStageFilter)return true;
+  if(findSeries(p.id)){
+    return _seriesStageSummary(p).parts.some(function(x){return x.stage===pieceStageFilter;});
+  }
+  return normalizeStageValue(p.stage||'wet')===pieceStageFilter;
+}
 function renderPieces(){
   var q=srchVal('pc-search');
   var f=activeFilters.pc||{};
@@ -3736,7 +3746,10 @@ function renderPieces(){
   var total=_all.length;
   var items=_all.filter(function(p){
     // v1.5.2: Normalize both sides — legacy English values map to BG (greenware→wet, glaze-fired→finished)
-    if(pieceStageFilter&&normalizeStageValue(p.stage||'wet')!==pieceStageFilter)return false;
+    // v1.23.1: серия със смесен етап се четеше само по собствения си етап, тоест
+    // по остатъка. Филтър „Счупено" не намираше партидата, в която две чинии са
+    // счупени. Серията съвпада, ако кое да е от парчетата ѝ е на този етап.
+    if(pieceStageFilter&&!_stageFilterMatches(p))return false;
     var hasGlaze=!!(p.recipe||p.material);
     if(f.hasglz&&!hasGlaze)return false;
     if(f.noglz&&hasGlaze)return false;
@@ -6145,13 +6158,28 @@ function saveMat(){
 }
 function editMat(){var _m=DB.materials.find(m=>m.id===curMat);closeDet('det-mat',true);if(_m&&_m.cat==='mass'){openMassMo(_m);}else{openMatMo(_m);}}
 function delMat(){
+  // v1.23.1: предупреждението броеше само рецептите. Материалът обаче се ползва и
+  // като глина, и като готова глазура на изделие или серия, и като съставка на
+  // маса — изтриване на глина под двайсет изделия минаваше без нито дума.
   var linkedRecipes = DB.recipes.filter(function(r){
     return r.ingredients&&r.ingredients.some(function(i){return i.matId===curMat;});
   }).length;
+  var _all=DB.pieces.concat(DB.series||[]);
+  var linkedClay  = _all.filter(function(p){return p&&p.clay===curMat;}).length;
+  var linkedGlaze = _all.filter(function(p){return p&&p.material===curMat;}).length;
+  var linkedMass  = DB.materials.filter(function(m){
+    var cs=(m&&m.blend&&Array.isArray(m.blend.components))?m.blend.components:[];
+    return m&&m.id!==curMat&&cs.some(function(c){return c&&c.ref==='mat:'+curMat;});
+  }).length;
   var msg = 'Изтрий материала?';
-  if(linkedRecipes){
-    msg += '\n\nВнимание: '+linkedRecipes+' рецепти съдържат този материал.';
-    msg += '\nСъставките им ще покажат "(Изтрит материал)".';
+  var lines=[];
+  if(linkedRecipes)lines.push('• '+linkedRecipes+' рецепти го съдържат — съставките им ще покажат „(Изтрит материал)"');
+  if(linkedClay)   lines.push('• '+linkedClay+' записа го ползват като глина');
+  if(linkedGlaze)  lines.push('• '+linkedGlaze+' записа го ползват като готова глазура');
+  if(linkedMass)   lines.push('• '+linkedMass+' маси го съдържат като съставка');
+  if(lines.length){
+    msg += '\n\nВнимание: свързани записи, които ще останат без него:\n'+lines.join('\n');
+    msg += '\n\n(Те НЕ се изтриват — само материалът.)';
   }
   if(!confirm(msg))return;
   DB.materials=DB.materials.filter(function(m){return m.id!==curMat;});
@@ -6931,7 +6959,10 @@ function recompressOldPhotos(){
 
 
 // ── EXPORT / IMPORT ─────────────────────────────────────────────────────────
-function exportBackup(){
+// v1.23.0: съдържанието на архива се сглобява на едно място — ръчният експорт и
+// авто-архивът трябва да пишат едно и също, иначе едното мълчаливо изостава
+// (точно както изпичанията изостанаха до v1.17.0).
+function _backupPayload(){
   userLibrary = loadUserLib();
   var isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   var device=isMobile?'mobile':'desktop';
@@ -6956,6 +6987,11 @@ function exportBackup(){
     },
     userLibrary: userLibrary
   };
+  return {payload:payload,device:device,now:now};
+}
+function exportBackup(){
+  var _b=_backupPayload();
+  var payload=_b.payload,device=_b.device,now=_b.now;
   var ts=now.toISOString().slice(0,16).replace('T','_').replace(':','');
   var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   var a = document.createElement('a');
@@ -6966,6 +7002,7 @@ function exportBackup(){
   // v1.17.0: remember when we last exported, for the staleness reminder.
   try{localStorage.setItem('atelie_last_export',now.toISOString());localStorage.setItem('atelie_changes_since_export','0');}catch(e){}
   _updateBackupReminder();
+  if(typeof _renderAutoArchive==='function')_renderAutoArchive();
   toast('Backup файлът е свален');
 }
 
@@ -7982,6 +8019,12 @@ bootStorage().then(function(){
   render('pieces');
   updateStorageLabel();
   _checkDataShrink();
+  // v1.23.0: при отваряне пробваме тихо — ако разрешението още важи, файлът се
+  // изравнява без нищо да се пита.
+  if(typeof _renderAutoArchive==='function')_renderAutoArchive();
+  if(typeof _aaWrite==='function'&&_aaState().enabled){
+    _aaWrite(false).then(function(){if(typeof _renderAutoArchive==='function')_renderAutoArchive();});
+  }
 }).catch(function(err){
   console.error('[storage] Boot failed, falling back:',err);
   seedGuides();
@@ -8084,6 +8127,167 @@ function _updateFingerprint(){
   }catch(e){}
 }
 
+// ── АВТО-АРХИВ (v1.23.0, В2 Ниво 2) ─────────────────────────────────────────
+// Целта: копие на данните ИЗВЪН хранилището на приложението, което се обновява
+// само, без да чака да се сетиш. Android чисти IndexedDB между сесии; файл
+// извън origin-а не се чисти с него.
+//
+// Как работи: избираш файл ВЕДНЪЖ през системния диалог. Браузърът връща handle,
+// който се пази в IndexedDB и позволява повторно писане в СЪЩИЯ файл, без нов
+// диалог. Един файл, презаписва се на място — не се трупат стотици архиви.
+//
+// Ограничения, които не бива да се крият:
+//  · Иска File System Access API. Няма ли го — бутонът не се показва и Ниво 1
+//    (напомнянето) остава единствената защита.
+//  · Разрешението може да изтече при рестарт на браузъра. Тогава писането спира
+//    мълчаливо и панелът показва бутон за възобновяване — не се иска разрешение
+//    без твой жест, защото браузърът така или иначе би го отказал.
+//  · Handle-ът живее в IndexedDB, значи изчистване на данните го губи. Файлът
+//    обаче оцелява — точно за това е.
+var AA_KEY='atelie_auto_handle';
+var AA_MIN_CHANGES=5;      // пиши най-рано след толкова промени…
+var AA_MIN_MINUTES=15;     // …или толкова минути, което дойде първо
+var _aaBusy=false;
+
+function _aaSupported(){
+  return (typeof window!=='undefined')&&(typeof window.showSaveFilePicker==='function');
+}
+function _aaState(){
+  var o={name:'',last:null,enabled:false};
+  try{
+    o.name=localStorage.getItem('atelie_auto_name')||'';
+    o.last=localStorage.getItem('atelie_auto_last')||null;
+    o.enabled=localStorage.getItem('atelie_auto_on')==='1';
+  }catch(e){}
+  return o;
+}
+function _aaSetState(name,last,on){
+  try{
+    if(name!=null)localStorage.setItem('atelie_auto_name',name);
+    if(last!=null)localStorage.setItem('atelie_auto_last',last);
+    if(on!=null)localStorage.setItem('atelie_auto_on',on?'1':'0');
+  }catch(e){}
+}
+// Избор на файл — единственият момент, в който има диалог.
+function chooseAutoArchiveFile(){
+  if(!_aaSupported()){toast('Браузърът не поддържа тази функция');return;}
+  var ts=new Date().toISOString().slice(0,10);
+  window.showSaveFilePicker({
+    suggestedName:'atelie_auto_'+ts+'.json',
+    types:[{description:'Архив на Глина',accept:{'application/json':['.json']}}]
+  }).then(function(handle){
+    return _idbSet(AA_KEY,handle).then(function(){
+      _aaSetState(handle.name||'архив.json',null,true);
+      return _aaWrite(true);
+    });
+  }).then(function(res){
+    if(res&&res.ok){toast('Авто-архивът е включен');}
+    _renderAutoArchive();
+  }).catch(function(err){
+    if(err&&err.name==='AbortError')return; // отказала е диалога — нормално
+    console.warn('[auto-archive] избор неуспешен:',err);
+    toast('Файлът не можа да се избере');
+  });
+}
+function disableAutoArchive(){
+  if(!confirm('Изключи авто-архива?\n\nФайлът остава на телефона такъв, какъвто е сега. Спира само обновяването му.'))return;
+  _idbDelete(AA_KEY).then(function(){
+    _aaSetState('',null,false);
+    try{localStorage.removeItem('atelie_auto_last');localStorage.removeItem('atelie_auto_name');}catch(e){}
+    _renderAutoArchive();toast('Изключено');
+  });
+}
+// Записва текущото състояние във вече избрания файл.
+// `viaGesture` разрешава да се поиска разрешение — иначе само проверяваме.
+function _aaWrite(viaGesture){
+  if(_aaBusy)return Promise.resolve({ok:false,reason:'busy'});
+  _aaBusy=true;
+  var _done=function(r){_aaBusy=false;return r;};
+  return _idbGet(AA_KEY).then(function(handle){
+    if(!handle)return _done({ok:false,reason:'no-handle'});
+    var opts={mode:'readwrite'};
+    return handle.queryPermission(opts).then(function(perm){
+      if(perm==='granted')return 'granted';
+      if(!viaGesture)return perm; // без жест не питаме — браузърът пак ще откаже
+      return handle.requestPermission(opts);
+    }).then(function(perm){
+      if(perm!=='granted')return _done({ok:false,reason:'permission'});
+      var b=_backupPayload();
+      var blob=new Blob([JSON.stringify(b.payload,null,2)],{type:'application/json'});
+      return handle.createWritable().then(function(w){
+        return w.write(blob).then(function(){return w.close();});
+      }).then(function(){
+        var nowIso=new Date().toISOString();
+        _aaSetState(handle.name||null,nowIso,true);
+        try{localStorage.setItem('atelie_auto_changes','0');}catch(e){}
+        return _done({ok:true});
+      });
+    });
+  }).catch(function(err){
+    console.warn('[auto-archive] запис неуспешен:',err);
+    return _done({ok:false,reason:'error'});
+  });
+}
+// Ръчно възобновяване, когато разрешението е изтекло — от бутон, значи има жест.
+function resumeAutoArchive(){
+  _aaWrite(true).then(function(res){
+    toast(res&&res.ok?'Архивът е обновен':'Разрешението беше отказано');
+    _renderAutoArchive();
+  });
+}
+function archiveNow(){
+  _aaWrite(true).then(function(res){
+    toast(res&&res.ok?'Архивът е обновен':'Не се получи — провери разрешението');
+    _renderAutoArchive();
+  });
+}
+// Извиква се след save(). Не блокира нищо и мълчи при неуспех — тук не е място
+// за съобщения, тя работи, не архивира.
+function _maybeAutoArchive(){
+  if(!_aaSupported())return;
+  var st=_aaState();
+  if(!st.enabled)return;
+  var c=0;
+  try{c=parseInt(localStorage.getItem('atelie_auto_changes')||'0',10)||0;}catch(e){}
+  c++;
+  try{localStorage.setItem('atelie_auto_changes',String(c));}catch(e){}
+  var mins=st.last?((Date.now()-new Date(st.last).getTime())/60000):Infinity;
+  if(c<AA_MIN_CHANGES&&mins<AA_MIN_MINUTES)return;
+  _aaWrite(false).then(function(res){
+    if(res&&res.ok&&typeof _renderAutoArchive==='function')_renderAutoArchive();
+  });
+}
+function _aaAgeText(last){
+  if(!last)return 'още не е записван';
+  var mins=Math.floor((Date.now()-new Date(last).getTime())/60000);
+  if(mins<1)return 'преди по-малко от минута';
+  if(mins<60)return 'преди '+mins+' мин';
+  var h=Math.floor(mins/60);
+  if(h<24)return 'преди '+h+' ч';
+  var d=Math.floor(h/24);
+  return 'преди '+d+(d===1?' ден':' дни');
+}
+function _renderAutoArchive(){
+  var box=document.getElementById('auto-archive-box');if(!box)return;
+  if(!_aaSupported()){
+    box.innerHTML='<div style="font-size:11px;color:var(--tx3);line-height:1.5;">Този браузър не поддържа авто-архив. Прави ръчен експорт и пази файла извън телефона.</div>';
+    return;
+  }
+  var st=_aaState();
+  if(!st.enabled){
+    box.innerHTML='<div style="font-size:11px;color:var(--tx2);line-height:1.5;margin-bottom:8px;">Авто-архивът пази копие във файл извън приложението и го обновява сам. Избираш файла веднъж.</div>'
+      +'<button onclick="chooseAutoArchiveFile()" class="btn bg btn-sm" style="width:100%;padding:10px;">🛡 Включи авто-архив</button>';
+    return;
+  }
+  box.innerHTML='<div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:8px;">'
+      +'🛡 Авто-архив: <b>'+(st.name||'избран файл')+'</b><br>'
+      +'<span style="color:var(--tx3);">Обновен '+_aaAgeText(st.last)+'.</span></div>'
+    +'<div style="display:flex;gap:8px;">'
+      +'<button onclick="archiveNow()" class="btn bg btn-sm" style="flex:1;padding:9px;">Обнови сега</button>'
+      +'<button onclick="disableAutoArchive()" class="btn bg btn-sm" style="flex:1;padding:9px;color:var(--accent);">Изключи</button>'
+    +'</div>';
+}
+
 // v1.17.0 (В2 Ниво 1): a gentle staleness reminder. No cloud, no account — just a
 // note that shows in the Backup panel when the last export is old OR many changes
 // have piled up since. Exporting or importing resets both counters. Thresholds are
@@ -8109,6 +8313,13 @@ function _updateBackupReminder(){
     if(total>=5)reasons.push('още нямаш архив на това устройство');
   }
   if(changes>=CHANGES)reasons.push(changes+' промени от последния архив');
+  // v1.23.0: пресен авто-архив значи, че данните ги има извън приложението.
+  // Напомнянето за ръчен експорт става излишно и само шуми.
+  var _aa=(typeof _aaState==='function')?_aaState():{enabled:false};
+  if(_aa.enabled&&_aa.last){
+    var _aaHours=(Date.now()-new Date(_aa.last).getTime())/3600000;
+    if(_aaHours<24)reasons=[];
+  }
   if(reasons.length){
     el.style.display='block';
     el.style.background='var(--primary-soft)';
