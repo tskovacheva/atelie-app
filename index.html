@@ -211,7 +211,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%236E767B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
 
 /* buttons */
-.btn{display:block;width:100%;padding:13px;border-radius:10px;border:none;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:all .15s;text-align:center;}
+.btn{display:block;width:100%;padding:15px;border-radius:10px;border:none;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:all .15s;text-align:center;}
 .bp{background:var(--primary);color:white;}
 .bp:active{background:#6A7C75;}
 @media(hover:hover){.bp:hover{background:#6A7C75;}}
@@ -222,6 +222,13 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .bd:active{background:var(--warnbg);}
 @media(hover:hover){.bd:hover{background:var(--warnbg);}}
 .btn-sm{display:inline-block;width:auto;padding:8px 14px;border-radius:99px;font-size:10px;margin-bottom:16px;}
+/* v1.24.0 (Е2): редът Редактирай / Дублирай / Изтрий беше повторен седем пъти с
+   inline стилове и се беше разминал — пет различни разстояния отгоре, а вътре в
+   реда първият бутон носеше margin-top:9px от .bg, докато братята му го гасяха с
+   margin-top:0. Затова не стояха на една линия. Класът е една дефиниция;
+   .btn-row .btn бие margin-а на .bg и .bd, без всеки бутон да го гаси сам. */
+.btn-row{display:flex;gap:9px;margin-top:14px;}
+.btn-row .btn{flex:1;margin-top:0;}
 
 /* photo */
 .pha{border:1.5px dashed var(--bdr2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color .15s;}
@@ -557,9 +564,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button onclick="openRunTestAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Добави</button>
     </div><div id="drn-tests"></div></div>
     <div class="ds"><div class="ds-t">Бележки</div><div id="drn-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;margin-top:20px;">
-      <button class="btn bg" style="margin:0;" onclick="openRunMo(curRun)">Редактирай</button>
-      <button class="btn bg" style="margin:0;color:var(--accent);" onclick="deleteRun()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="openRunMo(curRun)">Редактирай</button>
+      <button class="btn bd" onclick="deleteRun()">Изтрий</button>
     </div>
   </div>
 </div>
@@ -577,10 +584,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t">Параметри</div><div id="dfp-rows"></div></div>
     <div class="ds"><div class="ds-t">Бележки</div>
       <div id="dfp-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;margin-top:8px;">
-      <button class="btn bg" style="flex:1" onclick="editFP()">Редактирай</button>
-      <button class="btn bg" style="flex:1;margin-top:0" onclick="dupFP()">Дублирай</button>
-      <button class="btn bd" style="flex:1;margin-top:0" onclick="delFP()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="editFP()">Редактирай</button>
+      <button class="btn bg" onclick="dupFP()">Дублирай</button>
+      <button class="btn bd" onclick="delFP()">Изтрий</button>
     </div>
   </div>
 </div>
@@ -628,9 +635,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div id="dpi-stage-actions" style="display:flex;gap:9px;margin:2px 0 4px;"></div>
     <div class="ds"><div class="ds-t">Свързани тестове</div><div id="dpi-tests"></div></div>
     <div class="ds"><div class="ds-t">Бележки</div><div id="dpi-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;margin-top:6px;">
-      <button class="btn bg" style="flex:1" onclick="editPiece()">Редактирай</button>
-      <button class="btn bd" style="flex:1;margin-top:0" onclick="delPiece()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="editPiece()">Редактирай</button>
+      <button class="btn bd" onclick="delPiece()">Изтрий</button>
     </div>
   </div>
 </div>
@@ -654,9 +661,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button onclick="showEventTypePopup()" style="width:100%;margin-top:12px;padding:12px;background:var(--primary-soft);color:var(--primary);border:1.5px dashed var(--primary);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">+ Добави стъпка от процеса</button>
     </div>
     <div class="ds"><div class="ds-t">Бележки</div><div id="dse-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;margin-top:6px;">
-      <button class="btn bg" style="flex:1" onclick="editSeries()">Редактирай</button>
-      <button class="btn bd" style="flex:1;margin-top:0" onclick="delSeries()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="editSeries()">Редактирай</button>
+      <button class="btn bd" onclick="delSeries()">Изтрий</button>
     </div>
   </div>
 </div>
@@ -688,10 +695,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
     <div class="ds"><div class="ds-t">Свързани тестове</div><div id="drec-tests"></div></div>
     <div class="ds"><div class="ds-t">Бележки</div><div id="drec-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;">
-      <button class="btn bg" style="flex:1" onclick="editRecipe()">Редактирай</button>
-      <button class="btn bg" style="flex:1;margin-top:0" onclick="dupRecipe()">Дублирай</button>
-      <button class="btn bd" style="flex:1;margin-top:0" onclick="delRecipe()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="editRecipe()">Редактирай</button>
+      <button class="btn bg" onclick="dupRecipe()">Дублирай</button>
+      <button class="btn bd" onclick="delRecipe()">Изтрий</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="btn bg btn-sm" style="flex:1;padding:10px;font-size:10px;" onclick="newTestFromRecipe()">+ Нов тест</button>
@@ -711,10 +718,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t">Параметри</div><div id="dtest-params"></div></div>
     <div class="ds"><div class="ds-t">Резултати</div><div id="dtest-res"></div></div>
     <div class="ds"><div class="ds-t">Изводи</div><div id="dtest-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;">
-      <button class="btn bg" style="flex:1" onclick="editTest()">Редактирай</button>
-      <button class="btn bg" style="flex:1;margin-top:0" onclick="dupTest()">Дублирай</button>
-      <button class="btn bd" style="flex:1;margin-top:0" onclick="delTest()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="editTest()">Редактирай</button>
+      <button class="btn bg" onclick="dupTest()">Дублирай</button>
+      <button class="btn bd" onclick="delTest()">Изтрий</button>
     </div>
   </div>
 </div>
@@ -729,9 +736,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="det-t" id="dmat-t"></div><div class="det-m" id="dmat-m"></div>
     <div class="ds"><div class="ds-t">Характеристики</div><div id="dmat-info"></div></div>
     <div class="ds"><div class="ds-t">Бележки</div><div id="dmat-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div style="display:flex;gap:9px;margin-top:6px;">
-      <button class="btn bg" style="flex:1" onclick="editMat()">Редактирай</button>
-      <button class="btn bd" style="flex:1;margin-top:0" onclick="delMat()">Изтрий</button>
+    <div class="btn-row">
+      <button class="btn bg" onclick="editMat()">Редактирай</button>
+      <button class="btn bd" onclick="delMat()">Изтрий</button>
     </div>
   </div>
 </div>
@@ -749,7 +756,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-piece" onclick="closeBg(event,'mo-piece')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t" id="mo-piece-t">Ново изделие</div><button class="mo-x" onclick="closeMo('mo-piece')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-piece-t">Ново изделие</div><button class="mo-x" onclick="closeMoAsk('mo-piece')">×</button></div>
     <div class="mo-b">
       <div class="pha" onclick="document.getElementById('pi-ph').click()">
         <div style="font-size:22px;margin-bottom:6px;opacity:.4">📷</div>
@@ -902,7 +909,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="f" style="margin-top:14px;"><label>Бележки</label><textarea id="pi-notes"></textarea></div>
 
       <button class="btn bp" onclick="savePiece()">Запази</button>
-      <button class="btn bg" onclick="closeMo('mo-piece')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-piece')">Откажи</button>
     </div>
   </div>
 </div>
@@ -911,7 +918,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-recipe" onclick="closeBg(event,'mo-recipe')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t" id="mo-rec-t">Нова рецепта</div><button class="mo-x" onclick="closeMo('mo-recipe')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-rec-t">Нова рецепта</div><button class="mo-x" onclick="closeMoAsk('mo-recipe')">×</button></div>
     <div class="mo-b">
       <div class="pha" onclick="document.getElementById('ri-ph').click()">
         <div style="font-size:18px;margin-bottom:5px;opacity:.4">📷</div>
@@ -955,7 +962,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="f"><label>Препоръчан профил</label><select id="ri-fp"><option value="">—</option></select></div>
       <div class="f"><label>Бележки</label><textarea id="ri-notes"></textarea></div>
       <button class="btn bp" onclick="saveRecipe()">Запази</button>
-      <button class="btn bg" onclick="closeMo('mo-recipe')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-recipe')">Откажи</button>
     </div>
   </div>
 </div>
@@ -964,7 +971,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-test" onclick="closeBg(event,'mo-test')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t" id="mo-test-t">Нов тест</div><button class="mo-x" onclick="closeMo('mo-test')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-test-t">Нов тест</div><button class="mo-x" onclick="closeMoAsk('mo-test')">×</button></div>
     <div class="mo-b">
       <div class="pha" onclick="document.getElementById('ti-ph').click()">
         <div style="font-size:18px;margin-bottom:5px;opacity:.4">📷</div>
@@ -1072,7 +1079,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="f"><label>Оценка</label><select id="ti-rat"><option value="">—</option><option>1 ★</option><option>2 ★★</option><option>3 ★★★</option><option>4 ★★★★</option><option>5 ★★★★★</option></select></div>
       <div class="f"><label>Изводи</label><textarea id="ti-notes"></textarea></div>
       <button class="btn bp" onclick="saveTest()">Запази</button>
-      <button class="btn bg" onclick="closeMo('mo-test')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-test')">Откажи</button>
     </div>
   </div>
 </div>
@@ -1081,7 +1088,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-mat" onclick="closeBg(event,'mo-mat')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t" id="mo-mat-t">Нов материал</div><button class="mo-x" onclick="closeMo('mo-mat')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-mat-t">Нов материал</div><button class="mo-x" onclick="closeMoAsk('mo-mat')">×</button></div>
     <div class="mo-b">
       <div class="pha" onclick="document.getElementById('mi-ph').click()">
         <div style="font-size:18px;margin-bottom:5px;opacity:.4">📷</div>
@@ -1194,7 +1201,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       </div>
       <div class="f"><label>Бележки</label><textarea id="mi-notes"></textarea></div>
       <button class="btn bp" onclick="saveMat()">Запази</button>
-      <button class="btn bg" onclick="closeMo('mo-mat')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-mat')">Откажи</button>
     </div>
   </div>
 </div>
@@ -1203,7 +1210,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-event" onclick="closeBg(event,'mo-event')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t" id="mo-event-t">Нова стъпка</div><button class="mo-x" onclick="closeMo('mo-event')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t" id="mo-event-t">Нова стъпка</div><button class="mo-x" onclick="closeMoAsk('mo-event')">×</button></div>
     <div class="mo-b">
       <!-- Type label (shown, not editable here — chosen via popup before opening modal) -->
       <div class="f"><label>Тип стъпка</label>
@@ -1384,7 +1391,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
     <div class="mo-f">
       <button class="btn bp" onclick="saveEvent()">Запази</button>
-      <button class="btn bg" onclick="closeMo('mo-event')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-event')">Откажи</button>
     </div>
   </div>
 </div>
@@ -1393,7 +1400,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-split" onclick="closeBg(event,'mo-split')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t">Отдели от серията</div><button class="mo-x" onclick="closeMo('mo-split')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t">Отдели от серията</div><button class="mo-x" onclick="closeMoAsk('mo-split')">×</button></div>
     <div class="mo-b">
       <div id="sp-context" style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:14px;"></div>
       <div class="f"><label>Брой</label>
@@ -1405,7 +1412,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
     <div class="mo-f">
       <button class="btn bp" onclick="saveSplit()">Отдели</button>
-      <button class="btn bg" onclick="closeMo('mo-split')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-split')">Откажи</button>
     </div>
   </div>
 </div>
@@ -1430,12 +1437,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t" id="mo-ra-t">Добави изделия</div><button class="mo-x" onclick="closeMo('mo-run-attach')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-ra-t">Добави изделия</div><button class="mo-x" onclick="closeMoAsk('mo-run-attach')">×</button></div>
       <div class="mo-b">
         <input type="search" id="ra-srch" placeholder="Търси…" oninput="_renderRunAttachList()" style="width:100%;padding:9px 12px;margin-bottom:10px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;">
         <div id="ra-list" style="max-height:46vh;overflow-y:auto;"></div>
         <button class="btn bp" id="ra-confirm" onclick="confirmRunAttach()" style="opacity:.5;" disabled>Добави</button>
-        <button class="btn bg" onclick="closeMo('mo-run-attach')">Откажи</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-run-attach')">Откажи</button>
       </div>
     </div>
   </div>
@@ -1446,12 +1453,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t">Добави изделия</div><button class="mo-x" onclick="closeMo('mo-run-attach')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t">Добави изделия</div><button class="mo-x" onclick="closeMoAsk('mo-run-attach')">×</button></div>
       <div class="mo-b">
         <input type="search" id="ra-srch" placeholder="Търси изделие…" oninput="_renderRunAttachList()" style="width:100%;padding:9px 12px;margin-bottom:8px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;">
         <div id="ra-list" style="max-height:52vh;overflow-y:auto;"></div>
         <button class="btn bp" id="ra-confirm" onclick="confirmRunAttach()" style="margin-top:14px;opacity:.5;" disabled>Добави</button>
-        <button class="btn bg" onclick="closeMo('mo-run-attach')">Откажи</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-run-attach')">Откажи</button>
       </div>
     </div>
   </div>
@@ -1462,11 +1469,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t">Добави тестове</div><button class="mo-x" onclick="closeMo('mo-run-tests')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t">Добави тестове</div><button class="mo-x" onclick="closeMoAsk('mo-run-tests')">×</button></div>
       <div class="mo-b">
         <div id="rt-list" style="max-height:56vh;overflow-y:auto;"></div>
         <button class="btn bp" id="rt-confirm" onclick="confirmRunTestAttach()" style="margin-top:14px;opacity:.5;" disabled>Добави</button>
-        <button class="btn bg" onclick="closeMo('mo-run-tests')">Откажи</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-run-tests')">Откажи</button>
       </div>
     </div>
   </div>
@@ -1477,7 +1484,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t">Плътност на глазурата (SG)</div><button class="mo-x" onclick="closeMo('mo-sg')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t">Плътност на глазурата (SG)</div><button class="mo-x" onclick="closeMoAsk('mo-sg')">×</button></div>
       <div class="mo-b">
 
         <div style="font-size:12px;color:var(--tx3);line-height:1.6;margin-bottom:16px;">
@@ -1507,7 +1514,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <div id="sg-target-out" style="text-align:center;font-size:13px;font-weight:500;color:var(--primary);min-height:20px;line-height:1.5;"></div>
         </div>
 
-        <button class="btn bg" onclick="closeMo('mo-sg')" style="margin-top:16px;">Затвори</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-sg')" style="margin-top:16px;">Затвори</button>
       </div>
     </div>
   </div>
@@ -1518,7 +1525,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t" id="mo-run-t">Ново изпичане</div><button class="mo-x" onclick="closeMo('mo-run')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-run-t">Ново изпичане</div><button class="mo-x" onclick="closeMoAsk('mo-run')">×</button></div>
       <div class="mo-b">
         <div class="f"><label>Име (по желание)</label><input type="text" id="rn-name" placeholder="напр. Трапно #3 — юли"></div>
         <div class="f"><label>Дата *</label><input type="date" id="rn-date"></div>
@@ -1589,7 +1596,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
 
         <button class="btn bp" onclick="saveRun()">Запази</button>
-        <button class="btn bg" onclick="closeMo('mo-run')">Откажи</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-run')">Откажи</button>
       </div>
     </div>
   </div>
@@ -1600,7 +1607,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t" id="mo-mass-t">Нова маса</div><button class="mo-x" onclick="closeMo('mo-mass')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-mass-t">Нова маса</div><button class="mo-x" onclick="closeMoAsk('mo-mass')">×</button></div>
       <div class="mo-b">
         <div class="f"><label>Име *</label><input type="text" id="ms-name" placeholder="напр. Дива глина Кефалония T2"></div>
 
@@ -1629,7 +1636,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
 
         <button class="btn bp" onclick="saveMass()">Запази</button>
-        <button class="btn bg" onclick="closeMo('mo-mass')">Откажи</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-mass')">Откажи</button>
       </div>
     </div>
   </div>
@@ -1640,7 +1647,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t" id="mo-raw-event-t">Нова стъпка</div><button class="mo-x" onclick="closeMo('mo-raw-event')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-raw-event-t">Нова стъпка</div><button class="mo-x" onclick="closeMoAsk('mo-raw-event')">×</button></div>
       <div class="mo-b">
         <!-- Type selector (only for new) -->
         <div class="f" id="raw-type-wrap"><label>Тип стъпка</label>
@@ -1723,7 +1730,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
 
         <button class="btn bp" onclick="saveRawEvent()">Запази</button>
-        <button class="btn bg" onclick="closeMo('mo-raw-event')">Откажи</button>
+        <button class="btn bg" onclick="closeMoAsk('mo-raw-event')">Откажи</button>
       </div>
     </div>
   </div>
@@ -1733,21 +1740,21 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="mo" id="mo-storage-analysis" onclick="closeBg(event,'mo-storage-analysis')">
   <div class="mo-sh">
     <div class="mo-h"></div>
-    <div class="mo-hdr"><div class="mo-t">📦 Място на устройството</div><button class="mo-x" onclick="closeMo('mo-storage-analysis')">×</button></div>
+    <div class="mo-hdr"><div class="mo-t">📦 Място на устройството</div><button class="mo-x" onclick="closeMoAsk('mo-storage-analysis')">×</button></div>
     <div class="mo-b">
       <div id="storage-analysis-body" style="font-size:12px;line-height:1.6;">
         <div style="color:var(--tx3);font-style:italic;">Изчисляване…</div>
       </div>
     </div>
     <div class="mo-f">
-      <button class="btn bg" onclick="closeMo('mo-storage-analysis')">Затвори</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-storage-analysis')">Затвори</button>
     </div>
   </div>
 </div>
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.23.1';
+const APP_VERSION = 'v1.24.0';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -6317,14 +6324,61 @@ function _popOverlayHistory(){
   }
 }
 
+// ── ЗАЩИТА СРЕЩУ ИЗГУБЕНА РАБОТА (v1.24.0, Е1) ───────────────────────────────
+// Досега редакция по средата изчезваше без дума при назад или при тап встрани.
+// Собственикът на приложението познава навика и го избягва; втори потребител — не.
+//
+// Формата е една защита над всички модали, а не правило, което всеки диалог
+// спазва поотделно: при отваряне се взима отпечатък от полетата, при опит за
+// затваряне се сравнява. Сравнението, а не флаг „пипано", защото писане и
+// изтриване обратно до първоначалното НЕ е незапазена работа.
+//
+// Разделението на двете затваряния е нарочно:
+//   closeMo(id)     — тихо, програмно. Ползва се от save() функциите.
+//   closeMoAsk(id)  — пита. Ползва се от ×, Откажи, тап встрани и бутона назад.
+// Така нито една от петнайсетте save() функции не се пипа и не може да се получи
+// „запазих, а то пита дали да отхвърли".
+var _moSnap={};
+// Пикери и справки, не формуляри — там няма работа за губене, а изборът се прави
+// пак с два тапа.
+var _MO_NO_GUARD={'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1};
+
+function _moSnapshot(id){
+  var el=document.getElementById(id);if(!el)return '';
+  var parts=[];
+  var fields=el.querySelectorAll('input,select,textarea');
+  for(var i=0;i<fields.length;i++){
+    var f=fields[i];
+    if(f.type==='file')continue; // стойността се чисти веднага след избор
+    if(f.type==='checkbox'||f.type==='radio')parts.push(f.checked?'1':'0');
+    else parts.push(f.value==null?'':String(f.value));
+  }
+  // Снимките не са полета — живеят в масиви и се рендерират като превю. Броим ги
+  // и мерим дължината им, вместо да мъкнем base64 в отпечатъка.
+  var ph=el.querySelectorAll('img.ph-th');
+  for(var j=0;j<ph.length;j++)parts.push('ph:'+(ph[j].getAttribute('src')||'').length);
+  return parts.join('\u001f');
+}
+function _moIsDirty(id){
+  if(_MO_NO_GUARD[id])return false;
+  if(!(id in _moSnap))return false;
+  return _moSnapshot(id)!==_moSnap[id];
+}
+function closeMoAsk(id){
+  if(_moIsDirty(id)&&!confirm('Има незапазени промени.\n\nДа ги отхвърля ли?'))return;
+  closeMo(id);
+}
+
 function openMo(id){
   document.getElementById(id).classList.add('on');
+  _moSnap[id]=_moSnapshot(id);
   _pushOverlay('modal', id);
 }
 function closeMo(id){
   // v1.10.0: leaving the recipe modal cancels any pending manual version branch
   if(id==='mo-recipe')_recVersionBaseId=null;
   document.getElementById(id).classList.remove('on');
+  delete _moSnap[id];
   // v1.4.6: If closing a nested-add target (without saving), clear callback
   if (_nestedAddCallback && (id === 'mo-mat' || id === 'mo-recipe')) {
     _nestedAddCallback = null;
@@ -6342,7 +6396,7 @@ function closeMo(id){
   }
   _popOverlayHistory();
 }
-function closeBg(e,id){if(e.target===e.currentTarget)closeMo(id);}
+function closeBg(e,id){if(e.target===e.currentTarget)closeMoAsk(id);}
 function closeDet(id, _keepHistory){
   document.getElementById(id).classList.remove('on');
   var i = _overlayStack.length - 1;
@@ -6372,7 +6426,18 @@ window.addEventListener('popstate', function(e){
   }
   // If we have any overlay open, close the topmost without going further back
   if (_overlayStack.length > 0) {
-    var top = _overlayStack.pop();
+    var top = _overlayStack[_overlayStack.length - 1];
+    // v1.24.0 (Е1): бутонът назад е най-честият начин да се загуби работа, значи
+    // минава през същата защита. Историята вече е изядена от back(), затова при
+    // „остани" я връщаме с pushState — той не задейства popstate, така че няма цикъл.
+    if (top.kind === 'modal' && _moIsDirty(top.id)) {
+      if (!confirm('Има незапазени промени.\n\nДа ги отхвърля ли?')) {
+        try { history.pushState({glina_overlay: true, kind: top.kind, id: top.id}, ''); } catch(e){}
+        return;
+      }
+      delete _moSnap[top.id];
+    }
+    _overlayStack.pop();
     var el = document.getElementById(top.id);
     if (el) {
       el.classList.remove('on');
@@ -8337,14 +8402,14 @@ function _updateBackupReminder(){
 <div class="mo" id="mo-lib" onclick="closeBg(event,'mo-lib')">
  <div class="mo-sh">
   <div class="mo-h"></div>
-  <div class="mo-hdr"><div class="mo-t" id="mo-lib-t">Нова статия</div><button class="mo-x" onclick="closeMo('mo-lib')">×</button></div>
+  <div class="mo-hdr"><div class="mo-t" id="mo-lib-t">Нова статия</div><button class="mo-x" onclick="closeMoAsk('mo-lib')">×</button></div>
   <div class="mo-b">
    <div class="f"><label>Категория</label><input type="text" id="li-cat" placeholder="напр. Практически гайд"></div>
    <div class="f"><label>Заглавие *</label><input type="text" id="li-title" placeholder="напр. Пепелни глазури"></div>
    <div class="f"><label>Подзаглавие</label><input type="text" id="li-sub" placeholder="кратко описание"></div>
    <div class="f"><label>Съдържание (HTML или обикновен текст)</label><textarea id="li-content" style="min-height:200px;font-size:12px;" placeholder="Въведи съдържание. Можеш да ползваш &lt;h4&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;table&gt; тагове..."></textarea></div>
    <button class="btn bp" onclick="saveLib()">Запази</button>
-   <button class="btn bg" onclick="closeMo('mo-lib')">Откажи</button>
+   <button class="btn bg" onclick="closeMoAsk('mo-lib')">Откажи</button>
   </div>
  </div>
 </div>
@@ -8418,7 +8483,7 @@ function showUpdateToast(waitingWorker) {
   <div class="mo-sh">
     <div class="mo-h"></div>
     <div class="mo-hdr"><div class="mo-t" id="mo-fp-t">Нов профил</div>
-      <button class="mo-x" onclick="closeMo('mo-fp')">×</button></div>
+      <button class="mo-x" onclick="closeMoAsk('mo-fp')">×</button></div>
     <div class="mo-b">
       <div class="f"><label>Наименование *</label>
         <input type="text" id="fp-name" placeholder="напр. Глазурно 1240°C"></div>
@@ -8439,7 +8504,7 @@ function showUpdateToast(waitingWorker) {
       <div class="f"><label>Бележки</label>
         <textarea id="fp-notes" placeholder="наблюдения..."></textarea></div>
       <button class="btn bp" onclick="saveFP()">Запази</button>
-      <button class="btn bg" onclick="closeMo('mo-fp')">Откажи</button>
+      <button class="btn bg" onclick="closeMoAsk('mo-fp')">Откажи</button>
     </div>
   </div>
 </div>

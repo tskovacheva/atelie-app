@@ -2,6 +2,7 @@
 //   1. syntax        — the code parses
 //   2. DOM refs      — every getElementById target exists in the HTML
 //   3. function refs — every function called is actually defined
+//   4. geometry      — every screen renders at phone width with 44px touch targets
 // (2) and (3) are the same underlying problem: valid JavaScript that fails only
 // when the line runs. (3) was added after v1.11.0 shipped calling a
 // firingMethodLabel() that was never written — four call sites, zero definitions.
@@ -146,6 +147,99 @@ while ((m = re8.exec(html)) !== null) {
 const missingHandlers = [...handlerFns].filter(n => !defined.has(n) && !BUILTINS.has(n));
 if (missingHandlers.length) fail('inline handler-и без функция: ' + missingHandlers.join(', '));
 else console.log('  ok - всеки inline handler сочи към дефинирана функция (' + handlerFns.size + ' проверени)');
+
+// ── 4. GEOMETRY ─────────────────────────────────────────────────────────────
+// Глина е телефонно приложение и размерите на бутоните се откриват с око, на
+// телефона, а после се развалят пак. Този слой рендерира разметката на телефонна
+// ширина и мери: 44px минимална височина за всичко, което се натиска, и бутони от
+// един ред на една линия. Открит така: седем реда Редактирай/Дублирай/Изтрий с
+// пет различни разстояния и разминат margin-top вътре в реда (поправено v1.24.0).
+//
+// jsdom не е задължителен — липсва ли, слоят се пропуска с бележка, вместо
+// проверката да спре да работи на машина без него.
+const MIN_TOUCH = 44;
+let JSDOM = null;
+try { JSDOM = require('jsdom').JSDOM; } catch (e) { /* по избор */ }
+
+if (!JSDOM) {
+  console.log('\nGEOMETRY:');
+  console.log('  - пропуснато (няма jsdom: npm install jsdom)');
+} else {
+  console.log('\nGEOMETRY:');
+  const dom = new JSDOM(s, { runScripts: 'outside-only', pretendToBeVisual: true });
+  const doc = dom.window.document;
+
+  // jsdom не смята оформление, затова височината се извежда от декларациите:
+  // padding + border + line-height на реалните класове.
+  const css = (s.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1];
+  function ruleFor(sel) {
+    const re = new RegExp('(?:^|[};\\n])\\s*' + sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}');
+    const m2 = css.match(re);
+    return m2 ? m2[1] : '';
+  }
+  function px(decls, prop) {
+    const m2 = decls.match(new RegExp('(?:^|;)\\s*' + prop + '\\s*:\\s*([0-9.]+)px'));
+    return m2 ? parseFloat(m2[1]) : null;
+  }
+  const btn = ruleFor('.btn');
+  const btnPad = px(btn, 'padding'), btnFont = px(btn, 'font-size');
+  const btnH = btnPad !== null && btnFont !== null ? btnPad * 2 + btnFont * 1.2 : null;
+  if (btnH === null) fail('не мога да отчета размерите на .btn от CSS-а');
+  else if (btnH < MIN_TOUCH) fail('.btn е ~' + Math.round(btnH) + 'px висок, под ' + MIN_TOUCH + 'px');
+  else console.log('  ok - .btn е ~' + Math.round(btnH) + 'px (минимум ' + MIN_TOUCH + 'px)');
+
+  // .btn-sm са вторични хапчета („Обнови сега", „Изключи"). Мерят се и се
+  // съобщават, но не са провал: 44px би ги направило неразличими от главните
+  // бутони, а това е естетическо решение, което се взима на телефон (Е3).
+  const bsm = ruleFor('.btn-sm');
+  const bsmPadV = (bsm.match(/padding\s*:\s*([0-9.]+)px/) || [, null])[1];
+  const bsmFont = px(bsm, 'font-size');
+  if (bsmPadV !== null && bsmFont !== null) {
+    const h = parseFloat(bsmPadV) * 2 + bsmFont * 1.2;
+    console.log('  - .btn-sm е ~' + Math.round(h) + 'px' + (h < MIN_TOUCH ? ' (под ' + MIN_TOUCH + 'px — за преценка на телефон)' : ''));
+  }
+
+  // Редовете от бутони: един клас, никакви inline стилове по бутоните вътре.
+  const rows = [...doc.querySelectorAll('.btn-row')];
+  let rowProblems = [];
+  rows.forEach((r, i) => {
+    const bs = [...r.querySelectorAll('button')];
+    bs.forEach(b => {
+      const st = b.getAttribute('style') || '';
+      if (/margin|flex|padding/.test(st)) {
+        rowProblems.push('btn-row #' + (i + 1) + ': бутон „' + (b.textContent || '').trim() + '" носи собствено оформление (' + st + ')');
+      }
+    });
+  });
+  // Бутони Редактирай/Дублирай/Изтрий, които стоят ИЗВЪН .btn-row — значи още
+  // някъде редът е сглобен на ръка и ще се разминава пак.
+  [...doc.querySelectorAll('button.btn')].forEach(b => {
+    const txt = (b.textContent || '').trim();
+    if (!/^(Редактирай|Дублирай|Изтрий)$/.test(txt)) return;
+    if (!b.closest('.btn-row')) rowProblems.push('бутон „' + txt + '" извън .btn-row');
+  });
+  if (rowProblems.length) { fail('редове от бутони:'); rowProblems.forEach(p2 => console.log('      ' + p2)); }
+  else console.log('  ok - ' + rows.length + ' реда от бутони, без собствено оформление');
+
+  // Всичко натискаемо с изрична височина под прага.
+  const small = [];
+  [...doc.querySelectorAll('button,[onclick]')].forEach(el => {
+    const st = el.getAttribute('style') || '';
+    const h = px(st, 'height');
+    if (h !== null && h < MIN_TOUCH) {
+      const label = (el.textContent || '').trim().slice(0, 24) || el.tagName.toLowerCase();
+      small.push(label + ' (' + h + 'px)');
+    }
+  });
+  // Проверява се само статичната разметка. Целите, които се сглобяват в JS
+  // (× по снимките, ✎ в timeline-а), не минават оттук — те са вътре в по-голяма
+  // натискаема област и се преценяват на телефона.
+  const KNOWN_SMALL = 0;
+  if (small.length > KNOWN_SMALL) {
+    fail(small.length + ' натискаеми елемента под ' + MIN_TOUCH + 'px (праг ' + KNOWN_SMALL + '):');
+    small.slice(0, 12).forEach(p2 => console.log('      ' + p2));
+  } else console.log('  ok - ' + small.length + ' малки цели, под прага от ' + KNOWN_SMALL);
+}
 
 console.log('\n' + (failed ? '=== FAIL ===' : '=== OK ==='));
 process.exit(failed ? 1 : 0);
