@@ -1754,7 +1754,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.24.0';
+const APP_VERSION = 'v1.24.1';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
@@ -3116,7 +3116,12 @@ function deleteRawEvent(eventId){
 // Готово (or step back) by hand. See openPieceMo for how the lock is applied.
 function _hasStageMovers(piece){
   if(!piece||!Array.isArray(piece.events))return false;
-  return piece.events.some(function(e){
+  // v1.24.1: за отделено парче етапът се извежда от СЛЕТИЯ списък — общото
+  // изпичане на серията също го мести. Ако тук се четат само собствените му
+  // събития, падащото меню изглежда свободно, тя избира етап, и recompute го
+  // презаписва мълчаливо. Заключването трябва да гледа същото, което решава.
+  var _src=(typeof _effectiveEvents==='function')?_effectiveEvents(piece):piece.events;
+  return _src.some(function(e){
     if(!e)return false;
     if(e.type==='stage'&&e.data&&e.data.stageValue)return true;
     if(e.type==='firing'&&_firingStageValue(e))return true;
@@ -5101,9 +5106,14 @@ function openPieceMo(p){
   var _sh=document.getElementById('pi-stage-hint');
   if(_sh){
     _sh.style.display=(_stageLocked||_atFired)?'block':'none';
+    // v1.24.1: за член на серия обяснението сочи вярното място — процесът е на
+    // партидата, не на парчето.
+    var _inSeries=p&&p.seriesId&&findSeries(p.seriesId);
     _sh.textContent=_atFired
       ? 'Изпечено е. Можеш да сложиш „Готово" тук, когато решиш — или добави стъпка в Процес.'
-      : 'Етапът се променя от Процес — добави стъпка „Етап" в детайла на изделието.';
+      : (_inSeries
+          ? 'Етапът идва от процеса на серията. Добави стъпка в детайла на парчето, за да го разграничиш от партидата.'
+          : 'Етапът се променя от Процес — добави стъпка „Етап" в детайла на изделието.');
   }
   // v1.4.5: Reset quick-final section (closed + cleared) — hide on edit
   resetPiQuickFinal();
@@ -5205,6 +5215,19 @@ function savePiece(){
   if(editId){
     var _existing=DB.pieces.find(function(x){return x.id===editId;});
     if(_existing&&Array.isArray(_existing.events))p.events=_existing.events;
+    // v1.24.1: `p` се сглобява наново от полетата, значи всяко поле, което живее
+    // в записа, но НЕ е във формуляра, се губи при редакция. Досега това бяха
+    // само events. От v1.21.0 членството в серия също — редактирането на отделено
+    // парче мълчаливо го изкарваше от партидата, а видимият симптом беше
+    // изчезналата снимка (тя идваше от серията).
+    //
+    // Изброяването е нарочно: полетата, които се пазят, са изрично написани, за
+    // да не се повтори същото при следващото ново поле.
+    if(_existing){
+      ['seriesId','seriesNo','qty','createdAt'].forEach(function(k){
+        if(_existing[k]!==undefined&&p[k]===undefined)p[k]=_existing[k];
+      });
+    }
   }
   ensurePieceEvents(p);
   // v1.15.0: The dropdown set p.stage above. Normally recompute is the single
