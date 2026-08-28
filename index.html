@@ -1845,31 +1845,140 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.25.0';
+const APP_VERSION = 'v1.26.0';
 
 // ── Stage constants ──────────────────────────────────────────
-var STAGES=[
-  {v:'wet',          l:'Сурово'},
-  {v:'leather-hard', l:'Кожна влажност'},
-  {v:'bone-dry',     l:'Сухо'},
-  {v:'bisque',       l:'Бисквит'},
-  {v:'glazed',       l:'Глазирано'},
-  {v:'fired',        l:'Изпечено'},
-  {v:'finished',     l:'Готово'},
-];
+// ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
+// Предпоставка за двуезичността, не част от нея. Тук няма видима промяна.
+//
+// Разграничението, което липсваше: в Глина има ТРИ вида текст и досега те живееха
+// смесени.
+//
+//   1. РЕЧНИК — затворен списък кодове, които приложението разбира:
+//      'leather-hard', 'raku', 'sgraffito'. Кодът е стойността; надписът е само
+//      как я показваме. ПРЕВЕЖДА СЕ.
+//   2. НАДПИСИ на интерфейса — заглавия, бутони, подсказки, съобщения.
+//      ПРЕВЕЖДАТ СЕ. Още не са изнесени (Е6б) — те са ~750 низа и са механична
+//      работа, докато речникът носи същинския въпрос: кои стойности изобщо са
+//      кодове и покрити ли са всички.
+//   3. АВТОРСКИ ТЕКСТ — твой. Имена на изделия, рецепти, материали и профили,
+//      бележките, съдържанието на статиите в библиотеката, свободните полета за
+//      размер и техника. НИКОГА НЕ СЕ ПРЕВЕЖДА. Бележката ти за пукнатината си
+//      остава на езика, на който си я написала.
+//
+// Стойностите вече бяха кодове — това беше половината. Липсваше речникът да е на
+// едно място и да се резолвира при рендер, вместо всеки надпис да е зашит в масива.
+var LANG='bg';
+var DICT={
+  bg:{
+    'stage.wet':'Сурово',
+    'stage.leather-hard':'Кожна влажност',
+    'stage.bone-dry':'Сухо',
+    'stage.bisque':'Бисквит',
+    'stage.glazed':'Глазирано',
+    'stage.fired':'Изпечено',
+    'stage.finished':'Готово',
+    'outcome.broken':'Счупено',
+    'outcome.scrapped':'Бракувано',
+    'outcome.gifted':'Подарено',
+    'outcome.sold':'Продадено',
+    'purpose.bisque':'Бисквит',
+    'purpose.glaze':'Глазурно',
+    'purpose.single-fire':'Еднопек',
+    'purpose.alternative':'Алтернативно',
+    'fptype.bisque':'Бисквит',
+    'fptype.glaze':'Глазурно',
+    'fptype.other':'Друго',
+    'method.electric':'Електрическа',
+    'method.gas':'Газова',
+    'method.wood':'Дървена',
+    'method.raku':'Раку',
+    'method.chushkopek':'Чушкопек',
+    'method.pit':'Pit firing',
+    'method.barrel':'Barrel firing',
+    'method.sagar':'Сагар',
+    'method.sawdust':'Стърготини',
+    'method.soda':'Soda firing',
+    'method.salt':'Salt firing',
+    'method.obvara':'Обвара',
+    'method.other':'Друго',
+    // v1.26.0: атмосферата беше речник без резолвер — надписите ѝ живееха само в
+    // <option> в разметката, значи не можеше да се покаже никъде другаде.
+    'atmosphere.oxidation':'Окислително',
+    'atmosphere.reduction':'Редукционно',
+    'atmosphere.neutral':'Неутрално',
+    'decoration.sgraffito':'Сграфито',
+    'decoration.stamp':'Печат / отпечатък',
+    'decoration.terra-sigillata':'Тера сигилата',
+    'decoration.engobe':'Ангоба',
+    'decoration.slip':'Slip',
+    'decoration.oxide-wash':'Окис (претриване)',
+    'decoration.underglaze':'Подглазурна боя',
+    'decoration.glaze':'Глазура',
+    'decoration.burnishing':'Полиране',
+    'decoration.carving':'Изрязване / релеф',
+    'decoration.slip-trailing':'Slip-trailing',
+    'decoration.other':'Друго'
+  }
+};
+// Липсващ ключ връща резервния текст, ако е подаден, иначе самия ключ — така
+// липсата се вижда на екрана вместо да стане празно.
+function t(key,fallback){
+  var d=DICT[LANG]||DICT.bg;
+  var v=d?d[key]:null;
+  if(v==null&&LANG!=='bg'&&DICT.bg)v=DICT.bg[key];
+  if(v==null)return (fallback!==undefined)?fallback:key;
+  return v;
+}
+// Речниковите списъци се строят от DICT, а не носят надписи сами. Пре-строяват се
+// при смяна на езика — затова е функция, а не литерал.
+var STAGES=[],OUTCOMES=[],STAGES_ALL=[],FP_TYPES=[],ATMOSPHERES=[];
+var _STAGE_LABELS={},_FIRING_PURPOSE_LABELS={},_FIRING_METHOD_LABELS={},
+    _DECORATION_LABELS={},_ATMOSPHERE_LABELS={};
+var _VOCAB={
+  stage:['wet','leather-hard','bone-dry','bisque','glazed','fired','finished'],
+  outcome:['broken','scrapped','gifted','sold'],
+  purpose:['bisque','glaze','single-fire','alternative'],
+  fptype:['bisque','glaze','other'],
+  method:['electric','gas','wood','raku','chushkopek','pit','barrel','sagar','sawdust','soda','salt','obvara','other'],
+  atmosphere:['oxidation','reduction','neutral'],
+  decoration:['sgraffito','stamp','terra-sigillata','engobe','slip','oxide-wash','underglaze','glaze','burnishing','carving','slip-trailing','other']
+};
+function buildVocabulary(){
+  var _list=function(kind){
+    return _VOCAB[kind].map(function(v){return {v:v,l:t(kind+'.'+v)};});
+  };
+  // Изчистването и попълването са разделени: етапът и изходът пишат в ЕДНА карта,
+  // затова второто попълване не бива да трие първото.
+  var _clear=function(into){for(var k in into)delete into[k];return into;};
+  var _fill=function(kind,into){
+    _VOCAB[kind].forEach(function(v){into[v]=t(kind+'.'+v);});
+    return into;
+  };
+  STAGES=_list('stage');
+  OUTCOMES=_list('outcome');
+  STAGES_ALL=STAGES.concat(OUTCOMES);
+  FP_TYPES=_list('fptype');
+  ATMOSPHERES=_list('atmosphere');
+  _clear(_STAGE_LABELS);
+  _fill('stage',_STAGE_LABELS);
+  _fill('outcome',_STAGE_LABELS);  // етапът и изходът делят едно поле, значи и една карта
+  _fill('purpose',_clear(_FIRING_PURPOSE_LABELS));
+  _fill('method',_clear(_FIRING_METHOD_LABELS));
+  _fill('atmosphere',_clear(_ATMOSPHERE_LABELS));
+  _fill('decoration',_clear(_DECORATION_LABELS));
+  // Наследени стойности от v1.3.x — не са речник, а миграция.
+  _STAGE_LABELS['greenware']=t('stage.wet');
+  _STAGE_LABELS['glaze-fired']=t('stage.finished');
+}
+buildVocabulary();
+function atmosphereLabel(v){return _ATMOSPHERE_LABELS[v]||v||'—';}
+
 // v1.19.0 (Б2): Изходни състояния. „Готово" не е единственият край — неуспехът е
 // данни (коя маса се пука, коя глазура лази), а подареното и продаденото просто
 // напускат ателието. Отделен списък, не осми етап: етапите са прогресия, изходите
 // я прекратяват. Пазят се като стойност на `piece.stage`, за да остане един
 // собственик на стойността и един чип в списъка.
-var OUTCOMES=[
-  {v:'broken',   l:'Счупено'},
-  {v:'scrapped', l:'Бракувано'},
-  {v:'gifted',   l:'Подарено'},
-  {v:'sold',     l:'Продадено'},
-];
-// Всички валидни стойности за етап — процесните плюс изходите.
-var STAGES_ALL=STAGES.concat(OUTCOMES);
 // Изходът затваря изделието: процесът спира дотам, но записът остава.
 function isTerminalStage(v){
   if(!v)return false;
@@ -2297,66 +2406,15 @@ function getTimelineEvents(piece){
 }
 
 // Bulgarian labels for stage values
-var _STAGE_LABELS={
-  'wet':'Сурово',
-  'leather-hard':'Кожна влажност',
-  'bone-dry':'Сухо',
-  'bisque':'Бисквит',
-  'glazed':'Глазирано',
-  'fired':'Изпечено',
-  'finished':'Готово',
-  // v1.19.0: изходни състояния (Б2)
-  'broken':'Счупено',
-  'scrapped':'Бракувано',
-  'gifted':'Подарено',
-  'sold':'Продадено',
-  // Legacy stage values (from v1.3.x)
-  'greenware':'Сурово',
-  'glaze-fired':'Готово'
-};
 
-// Bulgarian labels for firing purpose
-var _FIRING_PURPOSE_LABELS={
-  'bisque':'Бисквит',
-  'glaze':'Глазурно',
-  'single-fire':'Еднопек',
-  'alternative':'Алтернативно'
-};
 
-// Bulgarian labels for firing methods
-var _FIRING_METHOD_LABELS={
-  'electric':'Електрическа',
-  'gas':'Газова',
-  'wood':'Дървена',
-  'raku':'Раку',
-  'chushkopek':'Чушкопек',
-  'pit':'Pit firing',
-  'barrel':'Barrel firing',
-  'sagar':'Сагар',
-  'sawdust':'Стърготини',
-  'soda':'Soda firing',
-  'salt':'Salt firing',
-  'obvara':'Обвара',
-  'other':'Друго'
-};
+
+
+
 // v1.11.0.1: the firing-run module called this from four places; it never existed.
 function firingMethodLabel(m){return _FIRING_METHOD_LABELS[m]||m||'—';}
 
-// Bulgarian labels for decoration techniques
-var _DECORATION_LABELS={
-  'sgraffito':'Сграфито',
-  'stamp':'Печат / отпечатък',
-  'terra-sigillata':'Тера сигилата',
-  'engobe':'Ангоба',
-  'slip':'Slip',
-  'oxide-wash':'Окис (претриване)',
-  'underglaze':'Подглазурна боя',
-  'glaze':'Глазура',
-  'burnishing':'Полиране',
-  'carving':'Изрязване / релеф',
-  'slip-trailing':'Slip-trailing',
-  'other':'Друго'
-};
+
 
 // Returns short label for an event for timeline display
 function eventLabel(e){
@@ -7364,11 +7422,7 @@ function newPieceFromRecipe(){
 
 // ══ FIRING PROFILES ═════════════════════════════════════════
 var curFP=null;
-var FP_TYPES=[
-  {v:'bisque',l:'Бисквит'},
-  {v:'glaze', l:'Глазурно'},
-  {v:'other', l:'Друго'},
-];
+
 function fpTypeLabel(v){var t=FP_TYPES.find(function(x){return x.v===v;});return t?t.l:v||'—';}
 
 // ── ИЗПИЧАНЕ (firing run) — v1.11.0 ──────────────────────────
