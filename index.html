@@ -163,6 +163,18 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .det-hero img{width:100%;height:100%;object-fit:cover;}
 .det-back{position:absolute;top:14px;left:14px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);box-shadow:var(--shadow);border:none;}
 .det-body{padding:22px 18px 100px;}
+/* v1.24.2: на широк екран детайлът заемаше цялата ширина на прозореца, а
+   .det-hero е width:100% с aspect-ratio:4/3 — на телефон 380px това са 285px
+   височина, на лаптоп 1400px стават 1050px, тоест по-високо от екрана. Снимката
+   изяждаше екрана и всичко останало отиваше под сгъвката.
+   Две поправки, само за широки екрани — телефонът не се пипа:
+   1. детайлът се събира в четима колона, вместо да се разтяга;
+   2. снимката минава на по-нисък кадър с таван, за да остане банер, а не стена. */
+@media(min-width:760px){
+  .det > *{max-width:660px;margin-left:auto;margin-right:auto;}
+  .det-hero{aspect-ratio:16/9;max-height:min(38vh,300px);}
+  .det-body{padding-bottom:60px;}
+}
 .det-t{font-family:'Tenor Sans',sans-serif;font-size:32px;color:var(--text);line-height:1.15;margin-bottom:5px;letter-spacing:-0.005em;}
 .det-m{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:22px;}
 .ds{margin-bottom:24px;}
@@ -551,7 +563,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="det-t" id="drn-t"></div>
     <div class="det-m" id="drn-m"></div>
   </div>
-  <div style="padding:18px 18px 100px;">
+  <div class="det-body">
     <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
     <div class="ds"><div class="ds-t">Параметри</div><div id="drn-rows"></div></div>
     <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t">Алтернативно изпичане</div><div id="drn-alt"></div></div>
@@ -580,7 +592,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="det-t" id="dfp-t"></div>
     <div class="det-m" id="dfp-m"></div>
   </div>
-  <div style="padding:18px 18px 100px;">
+  <div class="det-body">
     <div class="ds"><div class="ds-t">Параметри</div><div id="dfp-rows"></div></div>
     <div class="ds"><div class="ds-t">Бележки</div>
       <div id="dfp-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
@@ -677,7 +689,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button onclick="toggleFav()" id="fav-btn" style="background:none;border:none;font-size:24px;cursor:pointer;margin-top:4px;"></button>
     </div>
   </div>
-  <div style="padding:18px 18px 100px;">
+  <div class="det-body">
     <!-- Result photo -->
     <div id="drec-photo" style="margin-bottom:18px;display:none;">
       <div class="ds-t" style="margin-bottom:8px;">Снимка на резултата</div>
@@ -713,7 +725,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <button class="det-back" onclick="closeDet('det-test')" style="background:var(--surf)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
     <div class="det-t" id="dtest-t"></div><div class="det-m" id="dtest-m"></div>
   </div>
-  <div style="padding:18px 18px 100px;">
+  <div class="det-body">
     <div id="dtest-photos" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;"></div>
     <div class="ds"><div class="ds-t">Параметри</div><div id="dtest-params"></div></div>
     <div class="ds"><div class="ds-t">Резултати</div><div id="dtest-res"></div></div>
@@ -1754,7 +1766,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.24.1';
+const APP_VERSION = 'v1.24.2';
 
 // ── Stage constants ──────────────────────────────────────────
 var STAGES=[
