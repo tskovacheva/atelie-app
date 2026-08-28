@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.24.2 · `atelie-v77`
+**Version:** v1.25.0 · `atelie-v78`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
