@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.27.0 · `atelie-v80`
+**Version:** v1.27.1 · `atelie-v81`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -94,6 +94,34 @@ like a reverted backup. Two defences now exist:
 
 Neither is a substitute for regular exported backups, which remain the real
 guarantee.
+
+**Never overwrite on doubt (v1.27.1).** A data-loss incident in October 2026 showed
+that the defences above could be defeated by the app itself. The whole database is
+one large value (`atelie_v6`, several MB). When it could not be read — Chrome on
+Android occasionally fails to read large IndexedDB values — the read error was
+treated as "no data", `load()` seeded the starter set and saved it **over** the real
+record. The safety net stayed silent because `load()` saved before the check ran,
+and the save moved the fingerprint to the empty state. Since v1.27.1:
+
+- Reads distinguish *absent* from *unreadable* (`_idbGetStrict`). An unreadable key
+  is retried once; if it still fails the app enters the broken state (no writes at
+  all, an explicit message), never the empty state. A boot failure does the same.
+- A record that is present but not valid JSON is never overwritten: a copy is kept
+  under `atelie_v6_unreadable_<timestamp>` and the app stops.
+- The shrink check runs **before** the first save on open. It also fires when any
+  single collection loses more than half (≥5 before), because the 45 starter
+  materials and 5 recipes otherwise mask the loss of every piece, and whenever
+  `atelie_v6` is missing on a device whose fingerprint shows data.
+- While data looks collapsed (`_dataCollapsed`) the fingerprint and the auto-archive
+  are frozen, and the starter set is not saved. The user either imports a backup or
+  explicitly confirms starting over.
+- The auto-archive never overwrites its file on its own with fewer than half the
+  records it last wrote (`atelie_auto_total`); from a button press it asks first.
+- IndexedDB writes count as done on `transaction.oncomplete`, not request success.
+- The storage label shows whether persistent storage was granted.
+
+What remains structural: everything still lives in one large value. Splitting it
+into per-record entries (as Багра does) is the next step.
 
 ### Photos
 

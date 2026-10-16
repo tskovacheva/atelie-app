@@ -1845,7 +1845,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.27.0';
+const APP_VERSION = 'v1.27.1';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -2650,9 +2650,30 @@ function vDate(val){
   return !isNaN(Date.parse(val));
 }
 function focusEl(id){try{var el=document.getElementById(id);if(el)el.focus();}catch(e){}}
-function save(){safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();if(typeof _maybeAutoArchive==='function')_maybeAutoArchive();}
+// v1.27.1: Докато данните изглеждат сринати (_dataCollapsed), отпечатъкът и
+// авто-архивът замръзват — иначе първият запис след срива щеше да обяви празното
+// за „нормално“ и да го копира и във външния файл.
+var _dataCollapsed=false;
+function save(){if(_storageBroken)return;safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();if(typeof _maybeAutoArchive==='function')_maybeAutoArchive();}
 function load(){
-  var d=safeLoadJSON('atelie_v6',null);
+  // v1.27.1: Три различни положения, които досега изглеждаха еднакво (null):
+  //  1) записът го няма        → стартови данни (освен ако отпечатъкът казва, че е имало)
+  //  2) записът е, но не се чете → НИЩО не се записва; копие се пази отделно
+  //  3) записът е и се чете     → нормално зареждане
+  // Преди: 2) водеше до стартови данни, записани ВЪРХУ повредения запис.
+  var raw=_storageCache['atelie_v6'];
+  if(raw==null){try{raw=localStorage.getItem('atelie_v6');}catch(e){}}
+  var d=null;
+  if(raw!=null){
+    d=safeParseJSON(raw,null);
+    if(!d||typeof d!=='object'){
+      _preserveUnreadable(raw);
+      _storageBroken=true;
+      _storageBrokenReason='parse';
+      console.error('[storage] atelie_v6 is present but unparsable — refusing to overwrite');
+      return;
+    }
+  }
   if(d&&typeof d==='object'){
     DB.pieces=Array.isArray(d.pieces)?d.pieces:[];
     DB.recipes=Array.isArray(d.recipes)?d.recipes:[];
@@ -2672,14 +2693,29 @@ function load(){
     DB.pieces.forEach(ensurePieceEvents);
     DB.series.forEach(ensurePieceEvents);
     runMigrations();
+    // v1.27.1: проверката за сринати данни е ПРЕДИ записа. Преди беше след него,
+    // а записът обновява отпечатъка — проверката сравняваше празно с празно.
+    _checkDataShrink();
     save();
   } else {
-    if(d!==null){toast(t('msg.dannite-izglezhdat-povredeni-zared'));}
     DB.materials=JSON.parse(JSON.stringify(DEF_MATS));
     DB.recipes=JSON.parse(JSON.stringify(DEF_REC));
     DB._migrations={'v1.3.2':new Date().toISOString()};
-    save();
+    _checkDataShrink(true);
+    // Стартовите данни се записват само при истински нова инсталация. Ако
+    // отпечатъкът казва, че тук е имало данни, не записваме нищо, докато не
+    // решиш какво става (импорт или „започвам отначало“).
+    if(!_dataCollapsed)save();
   }
+}
+// v1.27.1: запис, който не се чете, не се трие и не се презаписва — пази се
+// копие под отделен ключ, за да може да се извади после.
+function _preserveUnreadable(raw){
+  try{
+    var k='atelie_v6_unreadable_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    _storageCache[k]=raw;
+    if(_idbReady)_idbSet(k,raw);
+  }catch(e){}
 }
 
 // ── DATA MIGRATIONS ──────────────────────────────────────────
@@ -3978,6 +4014,7 @@ function _seriesTotal(se){
 var IDB_NAME='atelie_idb';
 var IDB_STORE='kv';
 var IDB_VERSION=1;
+var AA_KEY_RAW='atelie_auto_handle'; // v1.27.1: пропуска се при четене на текстовете
 var _storageCache={}; // { key: stringValue }
 var _idbReady=false;
 var _idbDB=null;
@@ -4033,10 +4070,42 @@ function _idbSet(key,value){
     try{
       var tx=_idbDB.transaction([IDB_STORE],'readwrite');
       var store=tx.objectStore(IDB_STORE);
-      var req=store.put(value,key);
-      req.onsuccess=function(){resolve(true);};
-      req.onerror=function(){resolve(false);};
+      store.put(value,key);
+      // v1.27.1: успех е чак когато транзакцията е записана (oncomplete), не
+      // когато заявката е приета (onsuccess) — между двете телефонът може да убие
+      // приложението и записът да не стане.
+      tx.oncomplete=function(){resolve(true);};
+      tx.onerror=function(){resolve(false);};
+      tx.onabort=function(){resolve(false);};
     }catch(e){resolve(false);}
+  });
+}
+
+// v1.27.1: Четене, което различава „няма такъв запис“ от „записът не можа да се
+// прочете“. Старото _idbGet връща null и в двата случая — и така грешка при
+// четене (Chrome на Android понякога не успява да прочете голяма стойност)
+// изглеждаше като празна база, а load() записваше стартовите данни ВЪРХУ
+// истинските. Тук грешката остава грешка.
+function _idbGetStrict(key){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve({ok:false,error:'no-db'});return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readonly');
+      var req=tx.objectStore(IDB_STORE).get(key);
+      req.onsuccess=function(){resolve({ok:true,value:req.result});};
+      req.onerror=function(){resolve({ok:false,error:(req.error&&req.error.message)||'read-error'});};
+    }catch(e){resolve({ok:false,error:(e&&e.message)||String(e)});}
+  });
+}
+function _idbGetAllKeysStrict(){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve({ok:false,error:'no-db'});return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readonly');
+      var req=tx.objectStore(IDB_STORE).getAllKeys();
+      req.onsuccess=function(){resolve({ok:true,value:req.result||[]});};
+      req.onerror=function(){resolve({ok:false,error:(req.error&&req.error.message)||'keys-error'});};
+    }catch(e){resolve({ok:false,error:(e&&e.message)||String(e)});}
   });
 }
 
@@ -4145,15 +4214,33 @@ function bootStorage(){
       return false;
     }
     _idbReady=true;
-    // Get all keys from IDB
-    return _idbGetAllKeys().then(function(keys){
-      // Load known keys into cache
-      var loadPromises=keys.map(function(k){
-        return _idbGet(k).then(function(v){
-          if(typeof v==='string')_storageCache[k]=v;
-        });
+    // v1.27.1: всеки ключ се чете строго; ако някой не се прочете, опитваме още
+    // веднъж след малко. Ако пак не стане — хранилището е „недостъпно“, а не
+    // „празно“. Празно би значело стартови данни върху истинските.
+    var _readAll=function(){
+      return _idbGetAllKeysStrict().then(function(r){
+        if(!r.ok)return {failed:['(списък с ключове)'],error:r.error};
+        var failed=[],lastErr='';
+        return Promise.all(r.value.map(function(k){
+          if(k===AA_KEY_RAW)return null; // handle на файл, не текст
+          return _idbGetStrict(k).then(function(g){
+            if(!g.ok){failed.push(String(k));lastErr=g.error;return;}
+            if(typeof g.value==='string')_storageCache[k]=g.value;
+          });
+        })).then(function(){return {failed:failed,error:lastErr};});
       });
-      return Promise.all(loadPromises);
+    };
+    return _readAll().then(function(res){
+      if(!res.failed.length)return res;
+      console.warn('[storage] read failed, retrying:',res.failed,res.error);
+      return new Promise(function(r){setTimeout(r,400);}).then(_readAll);
+    }).then(function(res){
+      if(res.failed.length){
+        _storageBroken=true;
+        _storageBrokenReason='read';
+        console.error('[storage] unreadable after retry:',res.failed,res.error);
+        throw {_glinaUnreadable:true};
+      }
     }).then(function(){
       // One-time migration from localStorage to IDB
       return _migrateLocalStorageToIDB();
@@ -4231,6 +4318,7 @@ function safeLoadJSON(key, fallback){
 // it. In that state the real data is in IDB, unreachable — writing anything
 // would create a second, divergent copy. So we write nothing at all.
 var _storageBroken=false;
+var _storageBrokenReason=''; // v1.27.1: 'open' | 'read' | 'parse'
 
 function safeSaveJSON(key, value){
   if(_storageBroken){
@@ -7897,6 +7985,9 @@ function importBackup(e){
     if(Array.isArray(parsed.userLibrary)){
       saveUserLib(parsed.userLibrary);
     }
+    // v1.27.1: импортът е съзнателно възстановяване — сривът е решен.
+    _dataCollapsed=false;
+    try{localStorage.removeItem('atelie_auto_total');}catch(e){}
     save();
     // v1.17.0: a fresh import means the data matches a file on disk — treat it as
     // a known-good backup point so the reminder doesn't nag immediately after.
@@ -8835,19 +8926,14 @@ bootStorage().then(function(){
   // v1.9.0: If IDB won't open on a device that was already using it, the data is
   // intact but unreachable. Say so plainly instead of rendering an empty app —
   // an empty app looks like total loss and invites re-entry into a second copy.
-  if(_storageBroken){
-    alert('Хранилището не се отваря.\n\n'
-      +'Данните ти са в приложението и са непокътнати, но точно сега не са достъпни.\n\n'
-      +'НЕ въвеждай нищо — нищо няма да се запази.\n\n'
-      +'Затвори приложението напълно и го отвори пак. Ако това не помогне, рестартирай телефона.');
-    return;
-  }
+  if(_storageBroken){_showStorageBroken();return;}
   seedGuides();
   load();
+  if(_storageBroken){_showStorageBroken();return;} // v1.27.1: load() откри нечетим запис
   applyDict();
   render('pieces');
   updateStorageLabel();
-  _checkDataShrink();
+  // v1.27.1: _checkDataShrink() вече се вика от load(), преди първия запис.
   // v1.23.0: при отваряне пробваме тихо — ако разрешението още важи, файлът се
   // изравнява без нищо да се пита.
   if(typeof _renderAutoArchive==='function')_renderAutoArchive();
@@ -8855,13 +8941,21 @@ bootStorage().then(function(){
     _aaWrite(false).then(function(){if(typeof _renderAutoArchive==='function')_renderAutoArchive();});
   }
 }).catch(function(err){
-  console.error('[storage] Boot failed, falling back:',err);
-  seedGuides();
-  load();
-  applyDict();
-  render('pieces');
-  updateStorageLabel();
+  // v1.27.1: преди тук се зареждаше „наготово“ — с празен кеш, т.е. стартови
+  // данни върху истинските. Срив при отваряне вече значи: нищо не пипаме.
+  console.error('[storage] Boot failed:',err);
+  _storageBroken=true;
+  if(!_storageBrokenReason)_storageBrokenReason='open';
+  _showStorageBroken();
 });
+function _showStorageBroken(){
+  var why=_storageBrokenReason==='parse'
+    ?'Записът с данните е на мястото си, но не може да се разчете. Не е изтрит и няма да бъде презаписан — пазя копие отделно.'
+    :'Телефонът не позволи данните да се прочетат точно сега. Те не са изтрити.';
+  alert('Хранилището не се отваря.\n\n'+why+'\n\n'
+    +'НЕ въвеждай нищо — нищо няма да се запази.\n\n'
+    +'Затвори приложението напълно и го отвори пак. Ако това не помогне, рестартирай телефона.');
+}
 (function(){var vl=document.getElementById('ver-label');if(vl)vl.textContent='Глина '+APP_VERSION+' · by Crafty Place';})();
 function updateStorageLabel(){
   var el=document.getElementById('storage-label');if(!el)return;
@@ -8877,6 +8971,16 @@ function updateStorageLabel(){
       // v1.5.3: friendlier label
       el.textContent='Заето: '+mb+' MB';
       el.style.color='var(--muted)';
+      // v1.27.1: дали Android е обещал да не чисти данните. Досега това се
+      // виждаше само в конзолата.
+      try{
+        if(navigator.storage&&navigator.storage.persisted){
+          navigator.storage.persisted().then(function(p){
+            el.textContent='Заето: '+mb+' MB · '+(p?'защитено от изчистване':'⚠ не е защитено от изчистване');
+            if(!p)el.style.color='var(--accent)';
+          });
+        }
+      }catch(e){}
     } else {
       var pct=Math.round(total/(5*1024*1024)*100);
       var warn=pct>=75;
@@ -8905,7 +9009,9 @@ function _dataFingerprint(){
     ts:Date.now()
   };
 }
-function _checkDataShrink(){
+// v1.27.1: _v6Missing — записът с данните изобщо липсва. Ако преди е имало
+// данни, това е срив по дефиниция, колкото и стартови записи да има сега.
+function _checkDataShrink(_v6Missing){
   var prev=null;
   try{prev=JSON.parse(localStorage.getItem('atelie_fingerprint')||'null');}catch(e){}
   var now=_dataFingerprint();
@@ -8917,7 +9023,13 @@ function _checkDataShrink(){
     var totalPrev=_sum(prev);
     // Trigger if the total collapsed to less than half of what it was AND we lost
     // at least a meaningful number of records — avoids false alarms on tiny DBs.
-    if(totalPrev>=6 && totalNow < totalPrev*0.5){
+    // v1.27.1: освен общия сбор — и всяка колекция поотделно. Стартовите
+    // материали (45) и рецепти (5) се добавят към всяка база и така маскираха
+    // загубата на всички изделия, ако общият брой не падне наполовина.
+    var _collLost=['pieces','materials','recipes','tests','firingRuns','firingProfiles','series'].some(function(c){
+      var a=prev[c]||0,b=now[c]||0;return a>=5&&b<a*0.5;
+    });
+    if((totalPrev>=6 && totalNow < totalPrev*0.5)||_collLost||(_v6Missing&&totalPrev>=6)){
       var lost=[];
       if(now.pieces<prev.pieces)lost.push((prev.pieces-now.pieces)+' изделия');
       if(now.materials<prev.materials)lost.push((prev.materials-now.materials)+' материала');
@@ -8928,12 +9040,19 @@ function _checkDataShrink(){
       if((now.series||0)<(prev.series||0))lost.push(((prev.series||0)-(now.series||0))+' серии');
       // Don't overwrite the fingerprint — keep the last-good one so the warning
       // persists across reopens until data is restored.
+      // v1.27.1: флагът замразява отпечатъка и авто-архива, докато не решиш.
+      _dataCollapsed=true;
       setTimeout(function(){
         alert('⚠ ВНИМАНИЕ: липсват данни\n\n'
           +'При това отваряне има значително по-малко записи, отколкото при последното ползване.\n\n'
           +'Липсва спрямо преди: '+lost.join(', ')+'.\n\n'
-          +'Вероятно телефонът е изчистил хранилището. НЕ въвеждай нови данни върху това състояние.\n\n'
-          +'Възстанови последния си архив (Библиотека → Импорт). Ако нямаш скорошен архив, кажи ми преди да пипаш нещо.');
+          +'НЕ въвеждай нови данни върху това състояние. Авто-архивът е спрян, за да не презапише добрия файл.\n\n'
+          +'Възстанови архива си: Библиотека → Импорт.');
+        if(confirm('Нямаш архив и искаш да продължиш с това, което виждаш сега?\n\n'
+          +'OK — продължавам отначало (предупреждението спира).\n'
+          +'Отказ — ще възстановя от архив.')){
+          _acceptCurrentState();
+        }
       },400);
       return; // keep old fingerprint
     }
@@ -8941,10 +9060,19 @@ function _checkDataShrink(){
   // Healthy (or first run): record the current state as the new baseline.
   try{localStorage.setItem('atelie_fingerprint',JSON.stringify(now));}catch(e){}
 }
+// v1.27.1: изрично решение „продължавам с това, което е“. Отпечатъкът се
+// обновява, но авто-архивът пак няма да презапише по-пълен файл сам — пази го
+// собствената му проверка (_aaWrite).
+function _acceptCurrentState(){
+  _dataCollapsed=false;
+  try{localStorage.setItem('atelie_fingerprint',JSON.stringify(_dataFingerprint()));}catch(e){}
+  if(!_storageCache['atelie_v6'])save();
+}
 // Called after every save so the baseline reflects real growth. Never shrinks the
 // stored baseline on its own — only save() (a deliberate user action) moves it, so
 // an eviction between sessions still trips _checkDataShrink on next open.
 function _updateFingerprint(){
+  if(_dataCollapsed)return; // v1.27.1
   try{
     var now=_dataFingerprint();
     var prev=JSON.parse(localStorage.getItem('atelie_fingerprint')||'null');
@@ -9029,8 +9157,21 @@ function disableAutoArchive(){
 }
 // Записва текущото състояние във вече избрания файл.
 // `viaGesture` разрешава да се поиска разрешение — иначе само проверяваме.
+var _aaLastRefusal=''; // v1.27.1
+function _aaTotal(){var f=_dataFingerprint();return f.pieces+f.materials+f.recipes+f.tests+f.firingRuns+f.firingProfiles+(f.series||0);}
 function _aaWrite(viaGesture){
   if(_aaBusy)return Promise.resolve({ok:false,reason:'busy'});
+  // v1.27.1: файлът е последната защита — не бива да се презапише със срината база.
+  if(_storageBroken||_dataCollapsed){_aaLastRefusal='collapsed';return Promise.resolve({ok:false,reason:'collapsed'});}
+  var _prevTotal=0;try{_prevTotal=parseInt(localStorage.getItem('atelie_auto_total')||'0',10)||0;}catch(e){}
+  var _nowTotal=_aaTotal();
+  if(_prevTotal>=6&&_nowTotal<_prevTotal*0.5){
+    if(!viaGesture){_aaLastRefusal='shrunk';return Promise.resolve({ok:false,reason:'shrunk'});}
+    if(!confirm('Архивният файл съдържа '+_prevTotal+' записа, а приложението сега има '+_nowTotal+'.\n\nДа го презапиша ли с по-малкото? Ако се колебаеш — Отказ, и първо импортирай файла.')){
+      return Promise.resolve({ok:false,reason:'shrunk'});
+    }
+  }
+  _aaLastRefusal='';
   _aaBusy=true;
   var _done=function(r){_aaBusy=false;return r;};
   return _idbGet(AA_KEY).then(function(handle){
@@ -9049,7 +9190,7 @@ function _aaWrite(viaGesture){
       }).then(function(){
         var nowIso=new Date().toISOString();
         _aaSetState(handle.name||null,nowIso,true);
-        try{localStorage.setItem('atelie_auto_changes','0');}catch(e){}
+        try{localStorage.setItem('atelie_auto_changes','0');localStorage.setItem('atelie_auto_total',String(_nowTotal));}catch(e){}
         return _done({ok:true});
       });
     });
@@ -9111,7 +9252,9 @@ function _renderAutoArchive(){
   }
   box.innerHTML='<div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:8px;">'
       +'🛡 Авто-архив: <b>'+(st.name||'избран файл')+'</b><br>'
-      +'<span style="color:var(--tx3);">Обновен '+_aaAgeText(st.last)+'.</span></div>'
+      +'<span style="color:var(--tx3);">Обновен '+_aaAgeText(st.last)+'.</span>'
+      +(_aaLastRefusal?'<br><span style="color:var(--accent);">Спрян: файлът има повече данни от приложението. Импортирай го или натисни „Обнови сега“.</span>':'')
+      +'</div>'
     +'<div style="display:flex;gap:8px;">'
       +'<button onclick="archiveNow()" class="btn bg btn-sm" style="flex:1;padding:9px;">Обнови сега</button>'
       +'<button onclick="disableAutoArchive()" class="btn bg btn-sm" style="flex:1;padding:9px;color:var(--accent);">Изключи</button>'
