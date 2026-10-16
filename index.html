@@ -1845,7 +1845,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.27.1';
+const APP_VERSION = 'v1.28.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -2654,13 +2654,45 @@ function focusEl(id){try{var el=document.getElementById(id);if(el)el.focus();}ca
 // авто-архивът замръзват — иначе първият запис след срива щеше да обяви празното
 // за „нормално“ и да го копира и във външния файл.
 var _dataCollapsed=false;
-function save(){if(_storageBroken)return;safeSaveJSON('atelie_v6',DB);if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();if(typeof _maybeAutoArchive==='function')_maybeAutoArchive();}
+// v1.28.0: къде отива DB зависи от подредбата. В режим „записи“ се пишат само
+// променените записи; atelie_v6 вече не се пипа (той е резерва за 7 дни).
+function _persistDB(){
+  if(typeof _layout2!=='undefined'&&_layout2&&_idbReady){
+    var next=_recSerialize();
+    Object.keys(next).forEach(function(k){_storageCache[k]=next[k];});
+    Object.keys(_storageCache).forEach(function(k){if(_isRecKey(k)&&next[k]===undefined&&_unreadableRecs.indexOf(k)<0)delete _storageCache[k];});
+    _recWrite(next).then(function(ok){
+      if(!ok&&!_recWriteWarned){_recWriteWarned=true;try{toast('⚠ Записът не мина — провери мястото на телефона');}catch(e){}}
+      if(ok)_recWriteWarned=false;
+    });
+    return;
+  }
+  safeSaveJSON('atelie_v6',DB);
+}
+var _recWriteWarned=false;
+function save(){if(_storageBroken)return;_persistDB();if(typeof updateStorageLabel==='function')updateStorageLabel();if(typeof _updateFingerprint==='function')_updateFingerprint();if(typeof _maybeAutoArchive==='function')_maybeAutoArchive();}
 function load(){
   // v1.27.1: Три различни положения, които досега изглеждаха еднакво (null):
   //  1) записът го няма        → стартови данни (освен ако отпечатъкът казва, че е имало)
   //  2) записът е, но не се чете → НИЩО не се записва; копие се пази отделно
   //  3) записът е и се чете     → нормално зареждане
   // Преди: 2) водеше до стартови данни, записани ВЪРХУ повредения запис.
+  // v1.28.0: ако маркерът го има — данните са в отделните записи.
+  if(_idbReady&&typeof _storageCache[LAYOUT_KEY]==='string'){
+    _layout2=true;
+    var dr=_recAssemble();
+    if(dr){
+      // Дискът = това, което е прочетено (без нечетимите — тях не пипаме).
+      Object.keys(_storageCache).forEach(function(k){
+        if((_isRecKey(k)||k===REC_META)&&_unreadableRecs.indexOf(k)<0)_recDisk[k]=_storageCache[k];
+      });
+      _loadInto(dr);
+      return;
+    }
+    // Маркер без meta: записите липсват. Същото като липсващ atelie_v6.
+    _loadDefaults();
+    return;
+  }
   var raw=_storageCache['atelie_v6'];
   if(raw==null){try{raw=localStorage.getItem('atelie_v6');}catch(e){}}
   var d=null;
@@ -2675,6 +2707,17 @@ function load(){
     }
   }
   if(d&&typeof d==='object'){
+    _loadInto(d);
+    // v1.28.0: първо отваряне на тази версия — пренасяме към отделни записи.
+    if(_idbReady&&!_storageBroken&&!_dataCollapsed)_recMigrate();
+  } else {
+    _loadDefaults();
+    // v1.28.0: нова инсталация започва направо с отделни записи.
+    if(_idbReady&&!_storageBroken&&!_dataCollapsed)_recMigrate();
+  }
+}
+function _loadInto(d){
+  {
     DB.pieces=Array.isArray(d.pieces)?d.pieces:[];
     DB.recipes=Array.isArray(d.recipes)?d.recipes:[];
     DB.materials=Array.isArray(d.materials)?d.materials:[];
@@ -2697,7 +2740,10 @@ function load(){
     // а записът обновява отпечатъка — проверката сравняваше празно с празно.
     _checkDataShrink();
     save();
-  } else {
+  }
+}
+function _loadDefaults(){
+  {
     DB.materials=JSON.parse(JSON.stringify(DEF_MATS));
     DB.recipes=JSON.parse(JSON.stringify(DEF_REC));
     DB._migrations={'v1.3.2':new Date().toISOString()};
@@ -4235,6 +4281,11 @@ function bootStorage(){
       console.warn('[storage] read failed, retrying:',res.failed,res.error);
       return new Promise(function(r){setTimeout(r,400);}).then(_readAll);
     }).then(function(res){
+      // v1.28.0: нечетим ОТДЕЛЕН запис не спира приложението — пропуска се и се
+      // съобщава. Спира само ако не се чете нещо общо (meta, маркер, стара база).
+      var recFails=res.failed.filter(_isRecKey);
+      recFails.forEach(function(k){if(_unreadableRecs.indexOf(k)<0)_unreadableRecs.push(k);});
+      res.failed=res.failed.filter(function(k){return !_isRecKey(k);});
       if(res.failed.length){
         _storageBroken=true;
         _storageBrokenReason='read';
@@ -4356,6 +4407,155 @@ function safeRemoveKey(key){
   try{localStorage.removeItem(key);}catch(e){}
 }
 // (Legacy localStorage-only functions removed in v1.5.0 — replaced by IDB-backed storage above)
+
+// ── ПОДРЕДБА v2: ВСЕКИ ЗАПИС ОТДЕЛНО (v1.28.0) ─────────────────────────────
+// До v1.27 цялата база беше една стойност `atelie_v6` (~3 MB). Всяко запазване
+// я пишеше цялата, а едно неуспешно четене я правеше недостъпна цялата.
+// Сега всеки запис е отделен ключ в същото хранилище:
+//   rec:<колекция>:<id>   — един запис (изделие, рецепта, материал…), JSON
+//   rec:meta              — _migrations + реда на записите във всяка колекция
+//   atelie_layout         — маркер; появява се чак след проверено пренасяне
+// Записът пише само променените ключове, всички в една транзакция.
+// Нечетим запис не се изтрива и не се презаписва — пропуска се и се съобщава.
+// Подредбата в паметта (DB) не се променя — нищо извън този слой не я усеща.
+var REC_COLLS=['pieces','recipes','materials','tests','firingProfiles','firingRuns','series'];
+var REC_META='rec:meta';
+var LAYOUT_KEY='atelie_layout';
+var LEGACY_KEEP_DAYS=7;
+var _layout2=false;          // true → записите са истината, atelie_v6 е само резерва
+var _recDisk={};             // ключ → низ, както е ПОТВЪРДЕНО записан на диска
+var _unreadableRecs=[];      // ключове, които не се прочетоха при отваряне
+
+function _isRecKey(k){return typeof k==='string'&&k.indexOf('rec:')===0&&k!==REC_META;}
+
+// DB → {ключ: низ}. Ключът е от id-то; при липсващо или повторено id получава
+// суфикс, така че нито един запис не се губи заради лошо id.
+function _recSerialize(){
+  var out={},order={};
+  REC_COLLS.forEach(function(c){
+    order[c]=[];
+    (DB[c]||[]).forEach(function(rec,i){
+      var base='rec:'+c+':'+((rec&&rec.id!=null&&rec.id!=='')?String(rec.id):('_noid'+i));
+      var k=base,n=2;
+      while(out[k]!==undefined){k=base+'~'+n;n++;}
+      out[k]=JSON.stringify(rec);
+      order[c].push(k);
+    });
+  });
+  out[REC_META]=JSON.stringify({_migrations:DB._migrations||{},order:order});
+  return out;
+}
+
+// Една транзакция: put на променените, delete на махнатите. Успех = oncomplete.
+function _recWrite(next){
+  return new Promise(function(resolve){
+    if(!_idbDB){resolve(false);return;}
+    var puts=[],dels=[];
+    Object.keys(next).forEach(function(k){if(_recDisk[k]!==next[k])puts.push(k);});
+    Object.keys(_recDisk).forEach(function(k){if(next[k]===undefined)dels.push(k);});
+    if(!puts.length&&!dels.length){resolve(true);return;}
+    try{
+      var tx=_idbDB.transaction([IDB_STORE],'readwrite');
+      var st=tx.objectStore(IDB_STORE);
+      puts.forEach(function(k){st.put(next[k],k);});
+      dels.forEach(function(k){st.delete(k);});
+      tx.oncomplete=function(){
+        puts.forEach(function(k){_recDisk[k]=next[k];});
+        dels.forEach(function(k){delete _recDisk[k];});
+        resolve(true);
+      };
+      tx.onerror=tx.onabort=function(){
+        console.warn('[storage] record write failed:',tx.error);
+        resolve(false);
+      };
+    }catch(e){console.warn('[storage] record write exception:',e);resolve(false);}
+  });
+}
+
+// Записите в кеша → обект с колекции, като стария `atelie_v6`. null = няма meta.
+function _recAssemble(){
+  var metaRaw=_storageCache[REC_META];
+  if(typeof metaRaw!=='string')return null;
+  var meta=safeParseJSON(metaRaw,null);
+  if(!meta||typeof meta!=='object')return null;
+  var d={_migrations:meta._migrations||{}},used={};
+  var order=meta.order||{};
+  REC_COLLS.forEach(function(c){
+    d[c]=[];
+    (order[c]||[]).forEach(function(k){
+      var raw=_storageCache[k];
+      if(typeof raw!=='string')return; // нечетим или липсващ — пропуска се, не се трие
+      var r=safeParseJSON(raw,null);
+      if(r==null){if(_unreadableRecs.indexOf(k)<0)_unreadableRecs.push(k);return;}
+      d[c].push(r);used[k]=1;
+    });
+  });
+  // Ключ без място в реда (напр. запис, който е бил нечетим при предишен запис)
+  // се прибавя накрая — никога не се изоставя.
+  Object.keys(_storageCache).forEach(function(k){
+    if(!_isRecKey(k)||used[k])return;
+    var c=k.split(':')[1];
+    if(REC_COLLS.indexOf(c)<0)return;
+    var r=safeParseJSON(_storageCache[k],null);
+    if(r==null){if(_unreadableRecs.indexOf(k)<0)_unreadableRecs.push(k);return;}
+    d[c].push(r);
+  });
+  return d;
+}
+
+// Пренасяне от ателие_v6 → записи. Пише, чете обратно, сравнява низ по низ, и
+// чак тогава поставя маркера. Ако нещо не съвпадне — остава старата подредба.
+function _recMigrate(){
+  if(!_idbReady||_layout2||_storageBroken||_dataCollapsed)return Promise.resolve(false);
+  var next=_recSerialize();
+  var keys=Object.keys(next);
+  // Остатъци от прекъснат предишен опит се трият в същата транзакция — иначе
+  // запис, изтрит междувременно, би „възкръснал“ след пренасянето.
+  _recDisk={};
+  Object.keys(_storageCache).forEach(function(k){if(k.indexOf('rec:')===0)_recDisk[k]=_storageCache[k];});
+  return _recWrite(next).then(function(ok){
+    if(!ok)throw new Error('write');
+    return Promise.all(keys.map(function(k){return _idbGetStrict(k);}));
+  }).then(function(reads){
+    for(var i=0;i<keys.length;i++){
+      if(!reads[i].ok||reads[i].value!==next[keys[i]])throw new Error('verify '+keys[i]);
+    }
+    var now=Date.now();
+    var marker=JSON.stringify({v:2,migratedAt:new Date(now).toISOString(),
+      legacyUntil:new Date(now+LEGACY_KEEP_DAYS*86400000).toISOString(),records:keys.length-1});
+    return _idbSet(LAYOUT_KEY,marker).then(function(ok){
+      if(!ok)throw new Error('marker');
+      _storageCache[LAYOUT_KEY]=marker;
+      keys.forEach(function(k){_storageCache[k]=next[k];});
+      _layout2=true;
+      console.log('[storage] migrated to per-record layout:',keys.length-1,'records');
+      save(); // ако е имало промени по време на пренасянето — догонва ги
+      return true;
+    });
+  }).catch(function(e){
+    // Нищо не е загубено: atelie_v6 е непокътнат и остава истината. Полузаписаните
+    // rec: ключове се игнорират, докато маркерът липсва, и се презаписват при
+    // следващия опит.
+    console.warn('[storage] migration to records not completed, staying on legacy:',e&&e.message);
+    return false;
+  });
+}
+
+// Резервата atelie_v6 се трие сама след LEGACY_KEEP_DAYS — но само ако всички
+// записи се прочетоха. Ако има нечетим запис, резервата остава: тя е единственото
+// място, откъдето той може да се извади.
+function _recMaybeDropLegacy(){
+  if(!_layout2||_unreadableRecs.length||_storageCache['atelie_v6']==null)return;
+  var m=safeParseJSON(_storageCache[LAYOUT_KEY],null);
+  if(!m||!m.legacyUntil||Date.now()<new Date(m.legacyUntil).getTime())return;
+  safeRemoveKey('atelie_v6');
+  console.log('[storage] legacy atelie_v6 removed after',LEGACY_KEEP_DAYS,'days');
+}
+function _legacyUntilText(){
+  var m=safeParseJSON(_storageCache[LAYOUT_KEY],null);
+  if(!m||!m.legacyUntil)return '';
+  try{return new Date(m.legacyUntil).toLocaleDateString('bg-BG');}catch(e){return '';}
+}
 
 
 // ── Etap2: filter/sort/search helpers ────────────────────────
@@ -7626,6 +7826,13 @@ function _renderStorageAnalysis(body){
       totalLegacyLS+=_strBytes(lv);
     }
   }catch(e){}
+  // v1.28.0: стотиците отделни записи се показват като един ред.
+  var _recBytes=0,_recCount=0;
+  allKeys=allKeys.filter(function(k){
+    if(k.key.indexOf('rec:')===0||k.key===LAYOUT_KEY){_recBytes+=k.bytes;if(_isRecKey(k.key))_recCount++;return false;}
+    return true;
+  });
+  if(_recCount)allKeys.push({key:'__records',bytes:_recBytes,count:_recCount});
   allKeys.sort(function(a,b){return b.bytes-a.bytes;});
 
   // Migration backups
@@ -7685,7 +7892,9 @@ function _renderStorageAnalysis(body){
     // Skip migration backups from main list (shown separately as cleanup action)
     if(k.key.indexOf('atelie_v6_pre_')===0)return;
     var label=k.key;
-    if(k.key==='atelie_v6')label='Изделия, рецепти, материали';
+    if(k.key==='__records')label='Изделия, рецепти, материали ('+k.count+' записа)';
+    else if(k.key==='atelie_v6'&&_layout2)label='Резервно копие от старата подредба'+(_legacyUntilText()?' (изтрива се на '+_legacyUntilText()+')':'');
+    else if(k.key==='atelie_v6')label='Изделия, рецепти, материали';
     else if(k.key==='atelie_userlib')label='Библиотека (справочни)';
     html+='<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);">';
     html+='<span style="font-size:12px;color:var(--text);">'+label+'</span>';
@@ -7987,6 +8196,9 @@ function importBackup(e){
     }
     // v1.27.1: импортът е съзнателно възстановяване — сривът е решен.
     _dataCollapsed=false;
+    // v1.28.0: импортът заменя всичко — и нечетимите остатъци, иначе при
+    // следващо отваряне биха се появили до внесените данни.
+    if(_unreadableRecs.length){_unreadableRecs.forEach(function(k){safeRemoveKey(k);});_unreadableRecs=[];}
     try{localStorage.removeItem('atelie_auto_total');}catch(e){}
     save();
     // v1.17.0: a fresh import means the data matches a file on disk — treat it as
@@ -8934,6 +9146,15 @@ bootStorage().then(function(){
   render('pieces');
   updateStorageLabel();
   // v1.27.1: _checkDataShrink() вече се вика от load(), преди първия запис.
+  // v1.28.0: нечетими отделни записи — казваме, но работим с останалите.
+  if(_unreadableRecs.length){
+    setTimeout(function(){
+      alert(_unreadableRecs.length+(_unreadableRecs.length===1?' запис не можа':' записа не можаха')+' да се прочете при отваряне.\n\n'
+        +'Не са изтрити и няма да бъдат презаписани. Всичко останало работи нормално.\n\n'
+        +'Затвори приложението и го отвори пак — често това стига. Ако съобщението остане, направи експорт и ми пиши.');
+    },600);
+  }
+  _recMaybeDropLegacy();
   // v1.23.0: при отваряне пробваме тихо — ако разрешението още важи, файлът се
   // изравнява без нищо да се пита.
   if(typeof _renderAutoArchive==='function')_renderAutoArchive();
@@ -9066,7 +9287,7 @@ function _checkDataShrink(_v6Missing){
 function _acceptCurrentState(){
   _dataCollapsed=false;
   try{localStorage.setItem('atelie_fingerprint',JSON.stringify(_dataFingerprint()));}catch(e){}
-  if(!_storageCache['atelie_v6'])save();
+  save();
 }
 // Called after every save so the baseline reflects real growth. Never shrinks the
 // stored baseline on its own — only save() (a deliberate user action) moves it, so

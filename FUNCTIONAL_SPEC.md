@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.27.1 · `atelie-v81`
+**Version:** v1.28.0 · `atelie-v82`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -120,8 +120,31 @@ and the save moved the fingerprint to the empty state. Since v1.27.1:
 - IndexedDB writes count as done on `transaction.oncomplete`, not request success.
 - The storage label shows whether persistent storage was granted.
 
-What remains structural: everything still lives in one large value. Splitting it
-into per-record entries (as Багра does) is the next step.
+**Per-record storage (v1.28.0).** The single large value is gone. Each record is
+its own key in the same `kv` store: `rec:<collection>:<id>` (pieces, recipes,
+materials, tests, firingProfiles, firingRuns, series), plus `rec:meta` holding
+`_migrations` and the order of records in each collection, and `atelie_layout`, a
+marker written only after a verified migration. The in-memory `DB` is unchanged,
+so nothing outside the storage layer notices.
+
+- A save serialises the DB, compares each key with what is confirmed on disk
+  (`_recDisk`), and writes only the changed keys and deletions in one transaction.
+  Editing a piece writes that piece's key alone.
+- Photos stay inside their record (an image-heavy piece is still a large value),
+  but a failed read now costs one record, not the database.
+- A record that cannot be read on open is skipped, reported, never deleted or
+  overwritten, and comes back on the next open if it reads again. A key that is not
+  in the order list is appended, never dropped. Only shared keys (meta, marker,
+  legacy) failing still put the app in the broken state.
+- Migration on the first open of v1.28: write all records, read every key back and
+  compare string for string, then write the marker. Any failure leaves the app on
+  the old layout with `atelie_v6` intact; leftovers of an interrupted attempt are
+  deleted in the next attempt's transaction, so deleted records cannot reappear.
+- `atelie_v6` is kept untouched as a fallback for 7 days after migration, then
+  removed automatically — unless some record was unreadable on that open, in which
+  case it stays, as the only place that record could be recovered from.
+- New installs start on the per-record layout directly. The localStorage fallback
+  (no IndexedDB) still uses the single value.
 
 ### Photos
 
