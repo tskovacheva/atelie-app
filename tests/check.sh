@@ -7,6 +7,8 @@ cd "$(dirname "$0")/.."
 echo "== 1. validate.js — синтаксис, DOM, функции, модули и офлайн кеш"; node validate.js index.html
 echo "== 2. версии — APP_VERSION и CACHE_NAME"; node tests/versions.test.js
 echo "== 3. unit — чистите функции в модулите"; node tests/unit.test.js
+echo "== 3б. kiln — геометрията на подреждането (прототип v0)"; node tests/kiln.test.js
+echo "== 3в. kiln-ui — прототипът в браузър"; node tests/kiln-ui.test.js
 echo "== 4. golden — еталонни архиви, повторно отваряне, архив, липсващи файлове"; node tests/golden.test.js
 echo "== 5. edits — всяка редакция пази записа"; node tests/edits.test.js
 echo "== 6. migrate — схема, миграции, връщане към предишната версия"; node tests/migrate.test.js
