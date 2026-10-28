@@ -1,7 +1,7 @@
 # Глина — Functional Specification
 
-**Version:** v1.29.0 · `atelie-v83`
-**Last revised:** July 2026
+**Version:** v1.30.0 · `atelie-v84`
+**Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
 
@@ -12,14 +12,17 @@
 
 ## 1. Purpose and scope
 
-**Глина** ("Clay") is a personal record-keeping application for a working ceramic
+**Глина** ("Clay") is a record-keeping application for a working ceramic
 studio. It tracks the life of handmade ceramic work — from raw material through
 forming, decoration, and firing, to the finished piece — plus the glaze recipes,
 materials, and test results that feed into it.
 
-**Audience.** One ceramicist, one studio (Crafty Place, Vlado Trichkov,
-Bulgaria). Not a commercial product. Design decisions consistently favour what
-this practice needs over what a general product would need.
+**Audience.** Built in and for one studio (Crafty Place, Vlado Trichkov,
+Bulgaria). Since October 2026 it is being prepared as an application for other
+ceramicists, planned at glina.crafty.place, without losing the depth of the
+original tool; whether it will be free or paid is not decided. The preparation
+plan (tests, migrations, modules, neutral starter data, safe import, privacy
+policy, bilingual interface) is in [`ROADMAP.md`](ROADMAP.md), part Ж.
 
 **Kind of tool.** Closer to a studio notebook than to management software. It
 records what happened. It does not schedule, cost, invoice, or optimise. There is
@@ -36,7 +39,9 @@ no sales, customer, order, or commission tracking, and none is planned.
 - Custom clay bodies are compositions with a traceable lineage.
 - A firing is a record in its own right — one event, many pieces.
 
-**Language.** Bulgarian UI throughout. No i18n layer.
+**Language.** Bulgarian UI. Interface text goes through a dictionary (`DICT`,
+`t()`), prepared for a second language; author text (names, notes, articles) is
+never translated.
 
 ---
 
@@ -45,9 +50,9 @@ no sales, customer, order, or commission tracking, and none is planned.
 | Aspect | Choice |
 |---|---|
 | Form factor | Progressive Web App, installed on Android via Chrome |
-| Code | Single `index.html` (~6,700 lines): inline CSS + vanilla JS, no framework |
-| Build step | None. Edit the file, commit, GitHub Pages serves it. |
-| Supporting files | `sw.js` (service worker), `app.webmanifest`, icons |
+| Code | `index.html` (~9,700 lines, 0.56 MB): inline CSS + vanilla JS, no framework; plus native ES modules (`app.js`, `core/`, `calc/`, `domain/`) — see *Modules* below |
+| Build step | None. What is edited is what runs; GitHub Pages serves it. |
+| Supporting files | `sw.js` (service worker), `app.webmanifest`, icons, `seed/guides.json` (built-in library), `validate.js` and `tests/` (not used at runtime) |
 | Hosting | GitHub Pages, static |
 | Backend | None. No accounts, no server, no sync. |
 | Offline | Full, and required. The application never depends on the network. |
@@ -146,6 +151,59 @@ so nothing outside the storage layer notices.
 - New installs start on the per-record layout directly. The localStorage fallback
   (no IndexedDB) still uses the single value.
 
+### Schema version and migrations (v1.30.0)
+
+`SCHEMA_VERSION` is the version of the data format. It is written into `rec:meta`
+(`schema`) and into every backup (`schemaVersion`) — one number for both. It
+changes only when a migration changes the format, not with every app version;
+v1.30.0 is still 4.
+
+The three historical migrations (v1.3.2, v1.4.2.3, v1.15.0) stay in
+`runMigrations()` as they were. New ones are registered in `_SCHEMA_MIGRATIONS` as
+`{id, schema, about, select(db), apply(rec, db)}` and run by
+`_runSchemaMigrations()` after `load()`, before the first render:
+
+- **Only additive.** A migration adds; it never deletes or rewrites a value on a
+  guess.
+- **Snapshot first.** Before touching anything it writes a copy of exactly the
+  records it selected (`snap:<id>:<collection>:<record id>`) in one transaction and
+  waits for it to complete. No confirmed snapshot, no migration.
+- **Once.** Applied migrations are logged in `DB._migrations[id]` with the time,
+  the number of records changed and the snapshot expiry.
+- **Fails safe.** If `apply` throws half-way, the touched records are restored
+  from the snapshot and the chain stops; the app opens on the unmigrated data.
+- **Reversible.** `_restoreMigrationSnapshot(id)` puts the snapshotted records
+  back (from the console, if a migration turns out wrong). Snapshots expire after
+  7 days (`_dropOldSnapshots`).
+- **Rollback.** Because fields are only ever added, the previous release reads
+  data written by this one. The test suite opens such data in the previous
+  releases (`tests/previous/`) and back again.
+- Data stamped with a newer schema than the app knows still opens, with a console
+  warning.
+
+The list is empty in v1.30.0: the foundation is in place before the first
+migration that needs it (the kiln, phase 2).
+
+### Modules (v1.30.0)
+
+Modularisation is gradual. New code is born as a native ES module; old code moves
+when it is touched. `index.html` loads `app.js` as a module, which imports the
+modules and, while the classic code still calls their functions by name, puts them
+on `window` (the bridge). The bridge shrinks module by module as callers become
+modules themselves.
+
+| Module | Contents |
+|---|---|
+| `core/merge.js` | `_mergeEdit`, `_EDIT_OWNS` — edits merge into the stored record (see §9) |
+| `calc/shrink.js` | `_shrinkPcts`, `_poroPct` — body-test shrinkage and absorption |
+| `domain/profile.js` | `_fpRamps`, `_fpPeak`, `_fpDuration`, `_fmtDuration`, `_numOrNull` — firing programme |
+
+Modules run after the page is parsed. Boot waits for the bridge before it loads any
+data; if it does not arrive within 8 seconds (a file missing after an upload), the
+app says so, enters the broken state and writes nothing. Every module and every
+`seed/*.json` must be listed in `sw.js` `PRECACHE_URLS`, or it would silently stop
+updating offline — `validate.js` checks this.
+
 ### Photos
 
 Stored inline as base64 JPEG data URLs, resized client-side to **max 800px** on
@@ -161,7 +219,7 @@ Capacity by entity:
 ### Data root
 
 ```js
-DB = { pieces, recipes, materials, tests, firingProfiles, firingRuns, _migrations }
+DB = { pieces, recipes, materials, tests, firingProfiles, firingRuns, series, _migrations }
 ```
 
 Every entity is a plain array of plain objects. No state layer, ORM, or reactive
@@ -750,12 +808,20 @@ A personal knowledge base plus the settings drawer.
 HTML. Ships with built-in reference guides (ceramic technology, clay types, glaze
 chemistry, raw materials, firing types, temperature curves, effects,
 recipes/testing, ash glazes, Japanese ceramics). User articles can be added,
-edited, and deleted. Built-ins are editable.
+edited, and deleted. Built-ins are locked (v1.25.0): they are copied to be edited,
+and missing ones can be restored.
+
+**Where the built-ins live (v1.30.0).** `seed/guides.json` — about half of what
+used to be `index.html`. It is read at boot and cached by the service worker with
+the rest of the app, so it works offline. It matters only for a new install (the
+library is seeded once, into `atelie_userlib`) and for restoring missing guides. If
+the file cannot be read (first open with no network), the library is left
+untouched — nothing empty is saved — and the next open seeds it.
 
 **Also housed here:**
 
-- **Backup** — export the whole database as a JSON file (schemaVersion 3, since
-  v1.17.0 including firingRuns, which earlier backups silently omitted); import to
+- **Backup** — export the whole database as a JSON file (`schemaVersion`, now 4 —
+  including firingRuns since v1.17.0 and series since v1.20.0); import to
   restore. Import **replaces**; it does not merge. A guard warns when the imported
   file is older than the latest local change. A staleness reminder (v1.17.0) shows
   in this panel when the last export is over a week old, or 25+ changes have
@@ -797,10 +863,28 @@ level down (`event.data`, `test.body`, `material.raw`, `material.chem`,
 cleared. This is what lets new fields (kiln positions, piece codes) be added without
 every older form erasing them.
 
-**Deploy validation.** Two checks run before every deploy: JavaScript syntax, and
-that every `getElementById` target exists in the HTML. The second exists because
-a missing element is valid JavaScript that fails only at runtime — a class of
-error the syntax check cannot see, and one that has caused a shipped bug.
+**Deploy validation.** `sh tests/check.sh` runs every layer; each exists because
+something got through without it:
+
+1. `validate.js` — syntax; every `getElementById` target exists; every called
+   function is defined (module exports count); geometry at phone width (44 px
+   targets); modules exist, parse, and are in the offline cache.
+2. Versions — `APP_VERSION` and `CACHE_NAME` are both ahead of the previous
+   release, and the three documents name the current version.
+3. Unit — the pure module functions against hand-worked values.
+4. Golden — the real app in Chromium (Playwright, real IndexedDB) boots fixed
+   archives (representative, legacy shape, fresh install, any private archive in
+   `tests/fixtures/private/`, never committed) and everything derived — stages,
+   merged timelines, run lists, yields, versions, shrinkage, curves, backup shape,
+   the rendered list — must equal the stored snapshot; reopen gives the same;
+   export → import round-trips; a missing guides file or module is handled safely.
+5. Edits — for 13 kinds of record, an edit saved unchanged changes nothing; an
+   unknown field (top-level and nested) survives; a cleared field is removed.
+6. Migrate — schema stamp, snapshot, once-only, failure restores, expiry, rollback
+   to each release in `tests/previous/` and forward again. Also: every record of a
+   private archive survives an unchanged edit.
+7. Screens — 25 screens, tabs, details and editors show the same text as the
+   previous release.
 
 ---
 
@@ -812,10 +896,9 @@ Named so they are not mistaken for gaps:
   work
 - **No scheduling** — no kiln calendar, no reminders, no deadlines
 - **No multi-user** — no accounts, sharing, or permissions
-- **No cloud sync** — single device by design
-- **No i18n** — Bulgarian only
+- **No cloud sync** — outside the current plan; data stays on the device, moved
+  by export/import and the auto-archive file
 - **No framework migration** — vanilla JS is a constraint, not an oversight
-- **No general-purpose ambitions** — this is one studio's tool
 
 ---
 
@@ -827,12 +910,8 @@ Named so they are not mistaken for gaps:
   the subtle one.
 - **Photo limits are inconsistent** — 5 for some entities, 1 for others, with no
   principle behind the split.
-- **Two ramp segments** may be the wrong abstraction. Real controllers support
-  more, and alternative firings often aren't programmable at all.
 - **Рецепти and Маси are structurally similar** — both are
   components-with-percentages. Kept separate deliberately; the duplication is
   conscious.
-- **Library built-ins are editable**, so a user edit cannot be distinguished from
-  shipped content or reverted.
 
 For what is planned, deferred, or rejected, see [`ROADMAP.md`](ROADMAP.md).
