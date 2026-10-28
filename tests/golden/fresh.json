@@ -1,0 +1,77 @@
+{
+ "broken": false,
+ "counts": {
+  "pieces": 0,
+  "recipes": 5,
+  "materials": 45,
+  "tests": 0,
+  "firingProfiles": 0,
+  "firingRuns": 0,
+  "series": 0
+ },
+ "pieces": {},
+ "series": {},
+ "runs": {},
+ "recipes": {
+  "r1": {
+   "name": "Чиста пепел — диагностична",
+   "latest": true
+  },
+  "r2": {
+   "name": "Класическа пепелна",
+   "latest": true
+  },
+  "r3": {
+   "name": "Иглолистна — матова",
+   "latest": true
+  },
+  "r4": {
+   "name": "Пепел + Fe₂O₃ — земна",
+   "latest": true
+  },
+  "r5": {
+   "name": "Пепел + TiO₂ — кремава",
+   "latest": true
+  }
+ },
+ "masses": {},
+ "tests": {},
+ "profiles": {},
+ "backup": {
+  "schemaVersion": 4,
+  "db": [
+   "pieces:0",
+   "recipes:5",
+   "materials:45",
+   "tests:0",
+   "firingProfiles:0",
+   "firingRuns:0",
+   "series:0"
+  ],
+  "library": 12
+ },
+ "library": {
+  "count": 12,
+  "builtin": [
+   "builtin_4d2f0a38:1ceos5x",
+   "builtin_cde23786:14hq9gb",
+   "builtin_1f4c9e52:2aj692",
+   "builtin_60d0fc4d:zdze3l",
+   "builtin_3ba40b62:12s5pm1",
+   "builtin_4f133f2e:zgyodi",
+   "builtin_cc0d33c2:1y4igps",
+   "builtin_38e82c5c:1620yci",
+   "builtin_129831f5:15xg1zw",
+   "builtin_33c6a788:pn8cmw",
+   "builtin_2f6d3b67:qwr9ci",
+   "builtin_592879cc:bxmzr9"
+  ]
+ },
+ "dbHash": "tssyml",
+ "migrations": [
+  "v1.3.2"
+ ],
+ "ui": {
+  "cards": []
+ }
+}

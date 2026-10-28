@@ -1,0 +1,432 @@
+{
+ "broken": false,
+ "counts": {
+  "pieces": 8,
+  "recipes": 2,
+  "materials": 52,
+  "tests": 2,
+  "firingProfiles": 2,
+  "firingRuns": 3,
+  "series": 1
+ },
+ "pieces": {
+  "p-ocarina": {
+   "stage": "fired",
+   "recomputed": "fired",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "firing",
+      "2026-09-25",
+      "",
+      "run-pit"
+     ],
+     [
+      "firing",
+      "2026-09-10",
+      "",
+      "run-bis"
+     ],
+     [
+      "progress",
+      "2026-09-06",
+      "",
+      ""
+     ],
+     [
+      "stage",
+      "2026-09-05",
+      "",
+      "bone-dry"
+     ],
+     [
+      "stage",
+      "2026-09-01",
+      "",
+      "wet"
+     ],
+     [
+      "decoration",
+      "2026-09-01",
+      "",
+      "stamp"
+     ]
+    ]
+   },
+   "photo": "1pleck6"
+  },
+  "p-yellow": {
+   "stage": "fired",
+   "recomputed": "fired",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "firing",
+      "2026-09-20",
+      "S",
+      "run-gl"
+     ],
+     [
+      "decoration",
+      "2026-09-15",
+      "S",
+      "glaze"
+     ],
+     [
+      "decoration",
+      "2026-09-15",
+      "",
+      "underglaze"
+     ],
+     [
+      "firing",
+      "2026-09-10",
+      "S",
+      "run-bis"
+     ],
+     [
+      "stage",
+      "2026-08-20",
+      "S",
+      "wet"
+     ]
+    ]
+   },
+   "photo": "1plecp9"
+  },
+  "p-broken": {
+   "stage": "broken",
+   "recomputed": "broken",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "stage",
+      "2026-09-12",
+      "",
+      "broken"
+     ],
+     [
+      "firing",
+      "2026-09-10",
+      "S",
+      "run-bis"
+     ],
+     [
+      "stage",
+      "2026-08-20",
+      "S",
+      "wet"
+     ]
+    ]
+   },
+   "photo": "1plecp9"
+  },
+  "p-old": {
+   "stage": "bisque",
+   "recomputed": "bisque",
+   "timeline": {
+    "synthetic": true,
+    "ev": [
+     [
+      "stage",
+      "2026-03-01",
+      "",
+      "bisque"
+     ],
+     [
+      "firing",
+      "",
+      "",
+      "bisque"
+     ]
+    ]
+   },
+   "photo": "1plecls"
+  },
+  "p-standalone": {
+   "stage": "fired",
+   "recomputed": "fired",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "firing",
+      "2026-05-02",
+      "",
+      "glaze"
+     ]
+    ]
+   },
+   "photo": "45h"
+  },
+  "p-done": {
+   "stage": "finished",
+   "recomputed": "finished",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "stage",
+      "2026-09-22",
+      "",
+      "finished"
+     ],
+     [
+      "firing",
+      "2026-09-20",
+      "",
+      "run-gl"
+     ]
+    ]
+   },
+   "photo": "45h"
+  },
+  "p-gift": {
+   "stage": "gifted",
+   "recomputed": "gifted",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "stage",
+      "2026-07-01",
+      "",
+      "gifted"
+     ]
+    ]
+   },
+   "photo": "45h"
+  },
+  "p-untyped": {
+   "stage": "bone-dry",
+   "recomputed": "bone-dry",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "firing",
+      "2026-08-10",
+      "",
+      ""
+     ],
+     [
+      "stage",
+      "2026-08-01",
+      "",
+      "bone-dry"
+     ]
+    ]
+   },
+   "photo": "45h"
+  }
+ },
+ "series": {
+  "se-plates": {
+   "members": [
+    "p-yellow",
+    "p-broken"
+   ],
+   "remaining": 5,
+   "summary": {
+    "mixed": true,
+    "stage": null,
+    "parts": [
+     {
+      "stage": "fired",
+      "count": 9
+     },
+     {
+      "stage": "broken",
+      "count": 1
+     }
+    ]
+   },
+   "yield": {
+    "total": 10,
+    "terminal": 1,
+    "alive": 9,
+    "parts": [
+     {
+      "stage": "broken",
+      "count": 1
+     }
+    ]
+   },
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "firing",
+      "2026-09-20",
+      "",
+      "run-gl"
+     ],
+     [
+      "decoration",
+      "2026-09-15",
+      "",
+      "glaze"
+     ],
+     [
+      "firing",
+      "2026-09-10",
+      "",
+      "run-bis"
+     ],
+     [
+      "stage",
+      "2026-08-20",
+      "",
+      "wet"
+     ]
+    ]
+   }
+  }
+ },
+ "runs": {
+  "run-bis": {
+   "pieces": [
+    "se-plates*",
+    "p-ocarina"
+   ],
+   "tests": [
+    "t-body"
+   ]
+  },
+  "run-gl": {
+   "pieces": [
+    "se-plates*",
+    "p-done"
+   ],
+   "tests": [
+    "t-glaze"
+   ]
+  },
+  "run-pit": {
+   "pieces": [
+    "p-ocarina"
+   ],
+   "tests": []
+  }
+ },
+ "recipes": {
+  "rec-ash": {
+   "name": "Пепелна Б v1",
+   "latest": false
+  },
+  "rec-ash-2": {
+   "name": "Пепелна Б v2",
+   "latest": true
+  }
+ },
+ "masses": {
+  "mat-xi-mass": "100% Xi Beach",
+  "mat-xi-grog": "85% Xi Beach 100 · 15% PRNF Black"
+ },
+ "tests": {
+  "t-glaze": {
+   "shrink": null,
+   "poro": null
+  },
+  "t-body": {
+   "shrink": {
+    "wetDry": 6,
+    "dryFired": 5.319148936170213,
+    "total": 11
+   },
+   "poro": 15.500000000000009
+  }
+ },
+ "profiles": {
+  "fp-bisque": {
+   "ramps": [
+    {
+     "rate": 60,
+     "to": 600,
+     "hold": 0
+    },
+    {
+     "rate": 120,
+     "to": 980,
+     "hold": 10
+    }
+   ],
+   "peak": 980,
+   "duration": {
+    "minutes": 780,
+    "complete": true
+   }
+  },
+  "fp-glaze": {
+   "ramps": [
+    {
+     "rate": 150,
+     "to": 1000,
+     "hold": null
+    },
+    {
+     "rate": 80,
+     "to": 1240,
+     "hold": 15
+    }
+   ],
+   "peak": 1240,
+   "duration": {
+    "minutes": 587,
+    "complete": true
+   }
+  }
+ },
+ "backup": {
+  "schemaVersion": 4,
+  "db": [
+   "pieces:8",
+   "recipes:2",
+   "materials:52",
+   "tests:2",
+   "firingProfiles:2",
+   "firingRuns:3",
+   "series:1"
+  ],
+  "library": 12
+ },
+ "library": {
+  "count": 12,
+  "builtin": [
+   "builtin_4d2f0a38:1ceos5x",
+   "builtin_cde23786:14hq9gb",
+   "builtin_1f4c9e52:2aj692",
+   "builtin_60d0fc4d:zdze3l",
+   "builtin_3ba40b62:12s5pm1",
+   "builtin_4f133f2e:zgyodi",
+   "builtin_cc0d33c2:1y4igps",
+   "builtin_38e82c5c:1620yci",
+   "builtin_129831f5:15xg1zw",
+   "builtin_33c6a788:pn8cmw",
+   "builtin_2f6d3b67:qwr9ci",
+   "builtin_592879cc:bxmzr9"
+  ]
+ },
+ "dbHash": "14kcjvh",
+ "migrations": [
+  "v1.15.0",
+  "v1.3.2",
+  "v1.4.2.3"
+ ],
+ "ui": {
+  "cards": [
+   "Без типСухоГлазура—",
+   "ВазавазаИзпеченоГлинаPRNF BlackГлазураПепелна Б v1",
+   "ЖълтичинияИзпеченоОт серияЧинии 22 см · 4 бр.Размер⌀22 смГли",
+   "Окарина Xiмузикален инструментИзпеченоРазмерв8 × ⌀6 смГлинаX",
+   "ПодаръкПодареноГлазура—",
+   "Стара купакупаБисквитГлинаPRNF BlackГлазура—2026-03-01",
+   "СчупенаСчупеноОт серияЧинии 22 см · 1 бр.Глазура—",
+   "ЧашачашаГотовоГлинаTOFFEE CaramelГлазура—",
+   "Чинии 22 смчинияИзпеченоСерия10 бр. · 5 отделениРазмер⌀22 см"
+  ]
+ }
+}

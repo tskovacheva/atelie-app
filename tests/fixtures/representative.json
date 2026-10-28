@@ -1,0 +1,611 @@
+{
+ "pieces": [
+  {
+   "id": "p-ocarina",
+   "name": "Окарина Xi",
+   "type": "музикален инструмент",
+   "clay": "mat-xi-mass",
+   "technique": "Ръчно формоване",
+   "date": "2026-09-01",
+   "stage": "fired",
+   "recipe": "",
+   "dimensions": "в8 × ⌀6",
+   "weight": 120,
+   "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAAo1"
+   ],
+   "notes": "пробна",
+   "events": [
+    {
+     "id": "o-e1",
+     "type": "stage",
+     "date": "2026-09-01",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "wet"
+     }
+    },
+    {
+     "id": "o-e2",
+     "type": "decoration",
+     "date": "2026-09-01",
+     "note": "",
+     "photos": [],
+     "data": {
+      "technique": "stamp",
+      "appliedAtStage": "wet"
+     }
+    },
+    {
+     "id": "o-e3",
+     "type": "stage",
+     "date": "2026-09-05",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "bone-dry"
+     }
+    },
+    {
+     "id": "o-e4",
+     "type": "progress",
+     "date": "2026-09-06",
+     "note": "",
+     "photos": [
+      "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAAo2"
+     ],
+     "data": {
+      "atStage": "bone-dry"
+     }
+    },
+    {
+     "id": "o-e5",
+     "type": "firing",
+     "date": "2026-09-10",
+     "note": "",
+     "photos": [],
+     "data": {
+      "firingRunId": "run-bis",
+      "wrapping": "bare"
+     }
+    },
+    {
+     "id": "o-e6",
+     "type": "firing",
+     "date": "2026-09-25",
+     "note": "",
+     "photos": [],
+     "data": {
+      "firingRunId": "run-pit",
+      "wrapping": "foil"
+     }
+    }
+   ],
+   "createdAt": "2026-09-01T10:00:00.000Z",
+   "updatedAt": "2026-09-25T10:00:00.000Z"
+  },
+  {
+   "id": "p-yellow",
+   "name": "Жълти",
+   "seriesId": "se-plates",
+   "qty": 4,
+   "seriesNo": 1,
+   "stage": "fired",
+   "clay": "mat-toffee",
+   "type": "чиния",
+   "date": "2026-08-20",
+   "photos": [],
+   "notes": "",
+   "dimensions": "⌀22",
+   "events": [
+    {
+     "id": "y-e1",
+     "type": "decoration",
+     "date": "2026-09-15",
+     "note": "",
+     "photos": [],
+     "data": {
+      "technique": "underglaze",
+      "appliedAtStage": "bisque"
+     }
+    }
+   ],
+   "createdAt": "2026-09-15T10:00:00.000Z"
+  },
+  {
+   "id": "p-broken",
+   "name": "Счупена",
+   "seriesId": "se-plates",
+   "qty": 1,
+   "seriesNo": 2,
+   "stage": "broken",
+   "events": [
+    {
+     "id": "b-e1",
+     "type": "stage",
+     "date": "2026-09-12",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "broken"
+     }
+    }
+   ],
+   "createdAt": "2026-09-12T10:00:00.000Z"
+  },
+  {
+   "id": "p-old",
+   "name": "Стара купа",
+   "type": "купа",
+   "clay": "PRNF Black",
+   "stage": "bisque",
+   "bisqueTemp": 950,
+   "date": "2026-03-01",
+   "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAAol"
+   ]
+  },
+  {
+   "id": "p-standalone",
+   "name": "Ваза",
+   "type": "ваза",
+   "clay": "c1",
+   "recipe": "rec-ash",
+   "stage": "fired",
+   "events": [
+    {
+     "id": "s-e1",
+     "type": "firing",
+     "date": "2026-05-02",
+     "note": "",
+     "photos": [],
+     "data": {
+      "method": "electric",
+      "atmosphere": "oxidation",
+      "firingPurpose": "glaze",
+      "temp": 1240,
+      "profileId": "fp-glaze"
+     }
+    }
+   ]
+  },
+  {
+   "id": "p-done",
+   "name": "Чаша",
+   "type": "чаша",
+   "clay": "mat-toffee",
+   "stage": "finished",
+   "events": [
+    {
+     "id": "d-e1",
+     "type": "firing",
+     "date": "2026-09-20",
+     "note": "",
+     "photos": [],
+     "data": {
+      "firingRunId": "run-gl"
+     }
+    },
+    {
+     "id": "d-e2",
+     "type": "stage",
+     "date": "2026-09-22",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "finished"
+     }
+    }
+   ]
+  },
+  {
+   "id": "p-gift",
+   "name": "Подарък",
+   "stage": "gifted",
+   "events": [
+    {
+     "id": "g-e1",
+     "type": "stage",
+     "date": "2026-07-01",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "gifted"
+     }
+    }
+   ]
+  },
+  {
+   "id": "p-untyped",
+   "name": "Без тип",
+   "stage": "bone-dry",
+   "events": [
+    {
+     "id": "u-e1",
+     "type": "stage",
+     "date": "2026-08-01",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "bone-dry"
+     }
+    },
+    {
+     "id": "u-e2",
+     "type": "firing",
+     "date": "2026-08-10",
+     "note": "",
+     "photos": [],
+     "data": {
+      "method": "electric"
+     }
+    }
+   ]
+  }
+ ],
+ "recipes": [
+  {
+   "id": "rec-ash",
+   "name": "Пепелна Б",
+   "temp": "1240",
+   "cone": "6",
+   "glazeType": "gloss",
+   "fav": true,
+   "lineageId": "rec-ash",
+   "version": 1,
+   "ingredients": [
+    {
+     "matId": "m1",
+     "name": "Пепел бук+дъб",
+     "pct": 50
+    },
+    {
+     "matId": "mat-feldspar",
+     "name": "Фелдшпат K",
+     "pct": 30
+    },
+    {
+     "matId": "m3",
+     "name": "Каолин",
+     "pct": 20
+    }
+   ],
+   "notes": "v1"
+  },
+  {
+   "id": "rec-ash-2",
+   "name": "Пепелна Б",
+   "temp": "1240",
+   "cone": "6",
+   "glazeType": "gloss",
+   "fav": false,
+   "lineageId": "rec-ash",
+   "version": 2,
+   "versionNote": "повече фелдшпат",
+   "notes": "",
+   "ingredients": [
+    {
+     "matId": "m1",
+     "name": "Пепел бук+дъб",
+     "pct": 45
+    },
+    {
+     "matId": "mat-feldspar",
+     "name": "Фелдшпат K",
+     "pct": 35
+    },
+    {
+     "matId": "m3",
+     "name": "Каолин",
+     "pct": 20
+    }
+   ],
+   "recommendedFiringProfileId": "fp-glaze",
+   "photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAArc"
+  }
+ ],
+ "materials": [
+  {
+   "id": "mat-toffee",
+   "name": "TOFFEE Caramel",
+   "cat": "clays",
+   "brand": "Goerg & Schneider",
+   "stock": 10,
+   "alertAt": "2",
+   "cost": 1.4,
+   "costUnit": "kg",
+   "notes": "стонуер",
+   "photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAAmt"
+  },
+  {
+   "id": "mat-xi",
+   "name": "Xi Beach",
+   "cat": "raw",
+   "raw": {
+    "location": "Xi Beach, Кефалония",
+    "coords": "38.17,20.43",
+    "date": "2026-06-10",
+    "weight": 4.5,
+    "geonotes": "морска",
+    "events": [
+     {
+      "id": "rx1",
+      "type": "extraction",
+      "date": "2026-06-10",
+      "note": "",
+      "photos": [],
+      "data": {
+       "weight": 4.5
+      }
+     },
+     {
+      "id": "rx2",
+      "type": "wash",
+      "date": "2026-07-01",
+      "note": "първо",
+      "photos": [
+       "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAArw"
+      ],
+      "data": {
+       "washNum": 1,
+       "ppmBefore": 4200,
+       "ppmAfter": 900
+      }
+     },
+     {
+      "id": "rx3",
+      "type": "sieve",
+      "date": "2026-08-01",
+      "note": "",
+      "photos": [],
+      "data": {
+       "mesh": "80",
+       "weightBefore": 3.9,
+       "weightAfter": 3.2
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "mat-xi-mass",
+   "name": "Xi Beach 100",
+   "cat": "mass",
+   "blend": {
+    "components": [
+     {
+      "ref": "mat:mat-xi",
+      "pct": 100
+     }
+    ],
+    "mixDate": "2026-09-01"
+   }
+  },
+  {
+   "id": "mat-xi-grog",
+   "name": "Xi Beach + шамот",
+   "cat": "mass",
+   "blend": {
+    "components": [
+     {
+      "ref": "mat:mat-xi-mass",
+      "pct": 85
+     },
+     {
+      "ref": "mat:c1",
+      "pct": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "mat-engobe",
+   "name": "Бяла ангоба",
+   "cat": "engobe",
+   "notes": ""
+  },
+  {
+   "id": "mat-wish",
+   "name": "Rutile",
+   "cat": "ox",
+   "wishlist": true
+  },
+  {
+   "id": "mat-feldspar",
+   "name": "Фелдшпат K",
+   "cat": "base",
+   "chem": {
+    "sio2": 65.5,
+    "al2o3": 18.3,
+    "k2o": 12.1
+   },
+   "cost": 3,
+   "costUnit": "kg"
+  }
+ ],
+ "tests": [
+  {
+   "id": "t-glaze",
+   "kind": "glaze",
+   "date": "2026-09-20",
+   "temp": "1240",
+   "hold": "15",
+   "recipeId": "rec-ash-2",
+   "firingRunId": "run-gl",
+   "firingProfileId": "fp-glaze",
+   "clay": "TOFFEE Caramel",
+   "rat": "4 ★★★★",
+   "glazeLayers": "2",
+   "flow": "Ниско",
+   "surf": "Гланцова",
+   "def": "",
+   "notes": "",
+   "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAAtg"
+   ]
+  },
+  {
+   "id": "t-body",
+   "kind": "body",
+   "date": "2026-09-10",
+   "temp": "980",
+   "hold": "10",
+   "firingRunId": "run-bis",
+   "clay": "",
+   "notes": "",
+   "bodyRef": "mat:mat-xi-mass",
+   "body": {
+    "plasticity": "добра",
+    "shrMarked": 100,
+    "shrDry": 94,
+    "shrFired": 89,
+    "poroDry": 20,
+    "poroWet": 23.1,
+    "limePopping": "няма"
+   },
+   "photos": []
+  }
+ ],
+ "firingProfiles": [
+  {
+   "id": "fp-bisque",
+   "name": "Бисквит 980",
+   "type": "bisque",
+   "ramps": [
+    {
+     "rate": 60,
+     "to": 600,
+     "hold": 0
+    },
+    {
+     "rate": 120,
+     "to": 980,
+     "hold": 10
+    }
+   ],
+   "updatedAt": "2026-07-01T10:00:00.000Z"
+  },
+  {
+   "id": "fp-glaze",
+   "name": "Глазурно 1240 (стар формат)",
+   "type": "glaze",
+   "ramp1Rate": 150,
+   "ramp1To": 1000,
+   "ramp2Rate": 80,
+   "ramp2To": 1240,
+   "holdMin": 15
+  }
+ ],
+ "firingRuns": [
+  {
+   "id": "run-bis",
+   "name": "Бисквит октомври",
+   "date": "2026-09-10",
+   "method": "electric",
+   "atmosphere": "oxidation",
+   "purpose": "bisque",
+   "firingProfileId": "fp-bisque",
+   "peakTemp": 980,
+   "holdMin": 10,
+   "cones": "06",
+   "notes": "",
+   "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAArb"
+   ],
+   "createdAt": "2026-09-10T08:00:00.000Z"
+  },
+  {
+   "id": "run-gl",
+   "name": "",
+   "date": "2026-09-20",
+   "method": "electric",
+   "atmosphere": "oxidation",
+   "purpose": "glaze",
+   "firingProfileId": "fp-glaze",
+   "peakTemp": 1240,
+   "photos": []
+  },
+  {
+   "id": "run-pit",
+   "name": "Трап на терасата",
+   "date": "2026-09-25",
+   "method": "pit",
+   "purpose": "alternative",
+   "fuel": "дърва, стърготини",
+   "duration": 6,
+   "additives": [
+    "mat:mat-engobe",
+    "мед сулфат"
+   ],
+   "photos": []
+  }
+ ],
+ "series": [
+  {
+   "id": "se-plates",
+   "name": "Чинии 22 см",
+   "type": "чиния",
+   "clay": "mat-toffee",
+   "count": 10,
+   "date": "2026-08-20",
+   "stage": "fired",
+   "dimensions": "⌀22",
+   "photos": [
+    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/AAAAAAAAAAAAAAAAAAAAse"
+   ],
+   "events": [
+    {
+     "id": "se1",
+     "type": "stage",
+     "date": "2026-08-20",
+     "note": "",
+     "photos": [],
+     "data": {
+      "stageValue": "wet"
+     }
+    },
+    {
+     "id": "se2",
+     "type": "firing",
+     "date": "2026-09-10",
+     "note": "",
+     "photos": [],
+     "data": {
+      "firingRunId": "run-bis"
+     }
+    },
+    {
+     "id": "se3",
+     "type": "decoration",
+     "date": "2026-09-15",
+     "note": "",
+     "photos": [],
+     "data": {
+      "technique": "glaze",
+      "materialIds": [
+       "rec:rec-ash-2"
+      ],
+      "appliedAtStage": "bisque"
+     }
+    },
+    {
+     "id": "se4",
+     "type": "firing",
+     "date": "2026-09-20",
+     "note": "",
+     "photos": [],
+     "data": {
+      "firingRunId": "run-gl"
+     }
+    }
+   ],
+   "createdAt": "2026-08-20T10:00:00.000Z"
+  }
+ ],
+ "_migrations": {
+  "v1.3.2": "2026-04-01T10:00:00.000Z",
+  "v1.4.2.3": "2026-06-01T10:00:00.000Z",
+  "v1.15.0": "2026-07-20T10:00:00.000Z"
+ }
+}

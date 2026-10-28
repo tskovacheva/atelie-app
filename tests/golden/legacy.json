@@ -1,0 +1,150 @@
+{
+ "broken": false,
+ "counts": {
+  "pieces": 3,
+  "recipes": 0,
+  "materials": 46,
+  "tests": 0,
+  "firingProfiles": 1,
+  "firingRuns": 0,
+  "series": 0
+ },
+ "pieces": {
+  "l1": {
+   "stage": "greenware",
+   "recomputed": "greenware",
+   "timeline": {
+    "synthetic": true,
+    "ev": [
+     [
+      "stage",
+      "",
+      "",
+      "greenware"
+     ],
+     [
+      "firing",
+      "",
+      "",
+      "glaze"
+     ]
+    ]
+   },
+   "photo": "45h"
+  },
+  "l2": {
+   "stage": "glaze-fired",
+   "recomputed": "glaze-fired",
+   "timeline": {
+    "synthetic": true,
+    "ev": [
+     [
+      "stage",
+      "",
+      "",
+      "glaze-fired"
+     ],
+     [
+      "firing",
+      "",
+      "",
+      "bisque"
+     ],
+     [
+      "firing",
+      "",
+      "",
+      "glaze"
+     ]
+    ]
+   },
+   "photo": "45h"
+  },
+  "l3": {
+   "stage": "fired",
+   "recomputed": "fired",
+   "timeline": {
+    "synthetic": false,
+    "ev": [
+     [
+      "firing",
+      "2026-05-10",
+      "",
+      "alternative"
+     ],
+     [
+      "stage",
+      "2026-05-01",
+      "",
+      "wet"
+     ]
+    ]
+   },
+   "photo": "45h"
+  }
+ },
+ "series": {},
+ "runs": {},
+ "recipes": {},
+ "masses": {},
+ "tests": {},
+ "profiles": {
+  "lfp": {
+   "ramps": [
+    {
+     "rate": 100,
+     "to": 600,
+     "hold": 5
+    }
+   ],
+   "peak": 600,
+   "duration": {
+    "minutes": 353,
+    "complete": true
+   }
+  }
+ },
+ "backup": {
+  "schemaVersion": 4,
+  "db": [
+   "pieces:3",
+   "recipes:0",
+   "materials:46",
+   "tests:0",
+   "firingProfiles:1",
+   "firingRuns:0",
+   "series:0"
+  ],
+  "library": 12
+ },
+ "library": {
+  "count": 12,
+  "builtin": [
+   "builtin_4d2f0a38:1ceos5x",
+   "builtin_cde23786:14hq9gb",
+   "builtin_1f4c9e52:2aj692",
+   "builtin_60d0fc4d:zdze3l",
+   "builtin_3ba40b62:12s5pm1",
+   "builtin_4f133f2e:zgyodi",
+   "builtin_cc0d33c2:1y4igps",
+   "builtin_38e82c5c:1620yci",
+   "builtin_129831f5:15xg1zw",
+   "builtin_33c6a788:pn8cmw",
+   "builtin_2f6d3b67:qwr9ci",
+   "builtin_592879cc:bxmzr9"
+  ]
+ },
+ "dbHash": "15ijtb0",
+ "migrations": [
+  "v1.15.0",
+  "v1.3.2",
+  "v1.4.2.3"
+ ],
+ "ui": {
+  "cards": [
+   "Двойна стъпкаИзпеченоГлазура—",
+   "Старо готовоГотовоГлазура—",
+   "Старо суровоСуровоГлинаPRNF BlackГлазура—"
+  ]
+ }
+}

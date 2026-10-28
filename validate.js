@@ -3,12 +3,16 @@
 //   2. DOM refs      — every getElementById target exists in the HTML
 //   3. function refs — every function called is actually defined
 //   4. geometry      — every screen renders at phone width with 44px touch targets
+//   5. modules       — ES modules exist, parse, are bridged, and are in sw.js precache (v1.29.0)
 // (2) and (3) are the same underlying problem: valid JavaScript that fails only
 // when the line runs. (3) was added after v1.11.0 shipped calling a
 // firingMethodLabel() that was never written — four call sites, zero definitions.
 const fs = require('fs');
+const path = require('path');
 
-const s = fs.readFileSync(process.argv[2] || 'index.html', 'utf8');
+const FILE = process.argv[2] || 'index.html';
+const DIR = path.dirname(path.resolve(FILE));
+const s = fs.readFileSync(FILE, 'utf8');
 const html = s.replace(/<script>[\s\S]*?<\/script>/g, '');
 const js = (s.match(/<script>([\s\S]*?)<\/script>/g) || [])
   .map(b => b.replace(/<\/?script>/g, '')).join('\n;\n');
@@ -108,6 +112,22 @@ let re7 = /function\s*[A-Za-z_$\w]*\s*\(([^)]*)\)/g;
 while ((d = re7.exec(js)) !== null) {
   d[1].split(',').forEach(p => { p = p.trim().split('=')[0].trim(); if (/^[A-Za-z_$][\w$]*$/.test(p)) defined.add(p); });
 }
+
+// v1.29.0: функциите от ES модулите стигат до класическия код през моста в
+// app.js. Броят се за дефинирани; модулите се проверяват отделно (MODULES).
+const modFiles = [];
+(function collect(file) {
+  if (!file) return;
+  const f = path.join(DIR, file);
+  if (modFiles.includes(file)) return;
+  if (!fs.existsSync(f)) { fail('липсва модул: ' + file); return; }
+  modFiles.push(file);
+  const src = fs.readFileSync(f, 'utf8');
+  let im; const reI = /import\s+[^'"]*['"](\.\/[^'"]+)['"]/g;
+  while ((im = reI.exec(src)) !== null) collect(path.normalize(path.join(path.dirname(file), im[1])));
+  let ex; const reE = /export\s+(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/g;
+  while ((ex = reE.exec(src)) !== null) defined.add(ex[1]);
+})(fs.existsSync(path.join(DIR, 'app.js')) || /type=["']module["']/.test(s) ? 'app.js' : null);
 
 const BUILTINS = new Set([
   'if','for','while','switch','catch','return','typeof','function','new','do','else','delete','void','in','of',
@@ -239,6 +259,40 @@ if (!JSDOM) {
     fail(small.length + ' натискаеми елемента под ' + MIN_TOUCH + 'px (праг ' + KNOWN_SMALL + '):');
     small.slice(0, 12).forEach(p2 => console.log('      ' + p2));
   } else console.log('  ok - ' + small.length + ' малки цели, под прага от ' + KNOWN_SMALL);
+}
+
+// v1.29.0: MODULES — всеки модул съществува, синтаксисът му е валиден, и е в
+// офлайн кеша на sw.js. Файл, който липсва там, тихо спира да се обновява.
+console.log('\nMODULES:');
+const hasModules = fs.existsSync(path.join(DIR, 'app.js')) || /type=["']module["']/.test(s);
+if (!hasModules) console.log('  - няма модули в тази версия');
+else {
+const tags = [...s.matchAll(/<script\s+type=["']module["']\s+src=["']\.\/([^"']+)["']/g)].map(x => x[1]);
+if (!tags.includes('app.js')) fail('index.html не зарежда app.js като модул');
+const swFile = path.join(DIR, 'sw.js');
+const sw = fs.existsSync(swFile) ? fs.readFileSync(swFile, 'utf8') : '';
+const need = modFiles.slice();
+if (fs.existsSync(path.join(DIR, 'seed'))) fs.readdirSync(path.join(DIR, 'seed')).filter(f => f.endsWith('.json')).forEach(f => need.push('seed/' + f));
+need.forEach(f => {
+  if (!fs.existsSync(path.join(DIR, f))) { fail('липсва файл: ' + f); return; }
+  if (sw.indexOf("'./" + f + "'") < 0) fail('не е в PRECACHE_URLS на sw.js: ' + f);
+});
+// Синтаксис на модулите: node --check ги чете като ES модули през .mjs копие.
+const os = require('os'); const { execFileSync } = require('child_process');
+modFiles.forEach(f => {
+  const tmp = path.join(os.tmpdir(), 'glina-check-' + f.replace(/[\/]/g, '_') + '.mjs');
+  fs.writeFileSync(tmp, fs.readFileSync(path.join(DIR, f), 'utf8'));
+  try { execFileSync(process.execPath, ['--check', tmp], { stdio: 'pipe' }); }
+  catch (e) { fail('синтаксис ' + f + ': ' + String(e.stderr || e.message).split('\n').slice(0, 4).join(' ')); }
+  finally { fs.unlinkSync(tmp); }
+});
+// Функция, дефинирана и в модул, и в index.html — мостът би я надписал тихо.
+const classicDefs = new Set([...js.matchAll(/^\s*function\s+([A-Za-z_$][\w$]*)\s*\(/gm)].map(x => x[1]));
+modFiles.forEach(f => {
+  const src = fs.readFileSync(path.join(DIR, f), 'utf8');
+  [...src.matchAll(/export\s+(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/g)].forEach(x => { if (classicDefs.has(x[1])) fail('дефинирана два пъти (модул и index.html): ' + x[1]); });
+});
+if (!failed) console.log('  ok - ' + modFiles.length + ' модула, ' + need.length + ' файла в кеша');
 }
 
 console.log('\n' + (failed ? '=== FAIL ===' : '=== OK ==='));

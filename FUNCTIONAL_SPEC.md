@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.28.0 · `atelie-v82`
+**Version:** v1.29.0 · `atelie-v83`
 **Last revised:** July 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -786,6 +786,16 @@ validated with focus-on-error. Toast feedback throughout.
 
 **Backward compatibility.** Every version reads data written by every previous
 version. New fields are optional; legacy values are normalised on read.
+
+**Edits merge, never rebuild (v1.29.0).** Every save function builds the record
+from its form and then merges it into the stored one with `_mergeEdit`. `_EDIT_OWNS`
+lists, per form, the fields that form owns. Owned fields come from the form —
+including clearing: an owned field the form does not return is removed, exactly as
+before. Every other field of the stored record survives. The same rule applies one
+level down (`event.data`, `test.body`, `material.raw`, `material.chem`,
+`mass.blend`). A new form field must be added to its owned list, or it cannot be
+cleared. This is what lets new fields (kiln positions, piece codes) be added without
+every older form erasing them.
 
 **Deploy validation.** Two checks run before every deploy: JavaScript syntax, and
 that every `getElementById` target exists in the HTML. The second exists because

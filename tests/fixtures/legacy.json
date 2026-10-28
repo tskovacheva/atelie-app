@@ -1,0 +1,68 @@
+{
+ "pieces": [
+  {
+   "id": "l1",
+   "name": "Старо сурово",
+   "stage": "greenware",
+   "temp": 1200,
+   "clay": "PRNF Black"
+  },
+  {
+   "id": "l2",
+   "name": "Старо готово",
+   "stage": "glaze-fired",
+   "bisqueTemp": 950,
+   "glazeTemp": 1230
+  },
+  {
+   "id": "l3",
+   "name": "Двойна стъпка",
+   "events": [
+    {
+     "id": "l3a",
+     "type": "stage",
+     "date": "2026-05-01",
+     "data": {
+      "stageValue": "wet"
+     }
+    },
+    {
+     "id": "l3b",
+     "type": "stage",
+     "date": "2026-05-01",
+     "data": {
+      "stageValue": "wet"
+     }
+    },
+    {
+     "id": "l3c",
+     "type": "firing",
+     "date": "2026-05-10",
+     "data": {
+      "method": "pit",
+      "firingPurpose": "alternative"
+     }
+    }
+   ]
+  }
+ ],
+ "recipes": [],
+ "tests": [],
+ "materials": [
+  {
+   "id": "lc",
+   "name": "Стара глина",
+   "cat": "clays",
+   "fireTemp": "1200"
+  }
+ ],
+ "firingProfiles": [
+  {
+   "id": "lfp",
+   "name": "Стар",
+   "ramp1Rate": 100,
+   "ramp1To": 600,
+   "holdMin": 5
+  }
+ ]
+}
