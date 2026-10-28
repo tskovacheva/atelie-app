@@ -5,11 +5,19 @@
 // Bump CACHE_NAME on every deploy to trigger cache refresh.
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'atelie-v83';
+const CACHE_NAME = 'atelie-v84';
 
 const PRECACHE_URLS = [
   './',
   './index.html',
+  // v1.29.0: вградените наръчници — извън index.html, но част от офлайн пакета.
+  './seed/guides.json',
+  // v1.29.0: ES модулите. Всеки .js тук — иначе спира да се обновява офлайн
+  // (проверява се от tests/validate.js).
+  './app.js',
+  './core/merge.js',
+  './calc/shrink.js',
+  './domain/profile.js',
   './app.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
