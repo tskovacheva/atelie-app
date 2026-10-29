@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.32.0 · `atelie-v87`
+**Version:** v1.32.2 · `atelie-v89`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -200,6 +200,10 @@ older version neither reads nor deletes it; backups carry `kilns`. From v1.32.0 
 record writer deletes only keys of collections it knows. Runs do not use kilns yet
 (v1.33.0).
 
+Save and delete wait for the write to be confirmed (v1.32.2). The list in memory
+changes only after success; on failure (or broken storage) the form stays open with
+an error inside it and nothing is changed.
+
 ### Basic characteristics (v1.31.1)
 
 Optional, structured, next to the old free-text `dimensions` and `weight` (kept):
@@ -249,6 +253,16 @@ data; if it does not arrive within 8 seconds (a file missing after an upload), t
 app says so, enters the broken state and writes nothing. Every module and every
 `seed/*.json` must be listed in `sw.js` `PRECACHE_URLS`, or it would silently stop
 updating offline — `validate.js` checks this.
+
+**One version of the code (v1.32.1).** The service worker serves `.js`, `.json` and
+the manifest network-first, like the page; the cache is only the offline fallback.
+(Until v1.32.0 they were cache-first, so the first open after an update could pair
+the new `index.html` with the old `app.js` — in v1.31.1 that crashed the list of
+pieces and was reported as a storage problem, with the data intact.) `app.js` sets
+`window.__glinaModulesVersion`; if it differs from `APP_VERSION`, boot clears the
+caches (when online) and reloads once; if it still differs, the app says the update
+did not load fully, enters the broken state and writes nothing. A code error during
+boot is reported as such (reason `code`), not as a storage failure.
 
 ### Photos
 

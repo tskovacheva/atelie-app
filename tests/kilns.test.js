@@ -1,4 +1,4 @@
-// v1.32.0 — kiln registry: preset, edit, shelves, posts, gaps; storage apart from
+// v1.32.0 — kiln registry (v1.32.2: failed writes keep the form open): preset, edit, shelves, posts, gaps; storage apart from
 // the records; backup and import; rollback to v1.31.1 and back keeps the kilns.
 const fs = require('fs');
 const path = require('path');
@@ -34,7 +34,7 @@ const ok = (n, c, info) => { if (c) { passed++; console.log('  ok   ' + n); } el
     await E(() => { const inputs = document.querySelectorAll('#kl-shelves > div:last-child input'); inputs[0].value = 'Половинка'; inputs[0].dispatchEvent(new Event('input')); });
     await E(() => { const sel = document.querySelector('#kl-shelves > div:last-child select'); sel.value = 'half'; sel.dispatchEvent(new Event('change')); });
     await E(() => { const inputs = document.querySelectorAll('#kl-shelves > div:last-child input'); inputs[1].value = '47'; inputs[1].dispatchEvent(new Event('input')); inputs[2].value = '1,6'; inputs[2].dispatchEvent(new Event('input')); inputs[3].value = '2'; inputs[3].dispatchEvent(new Event('input'));
-      document.getElementById('kl-gap-glaze').value = '1,5'; document.getElementById('kl-ref').value = 'пантата'; saveKiln(); });
+      document.getElementById('kl-gap-glaze').value = '1,5'; document.getElementById('kl-ref').value = 'пантата'; return saveKiln(); });
     let K = await E(() => KILNS);
     ok('saved: one kiln, posts 5/8/10/15, two shelf types', K.length === 1 && JSON.stringify(K[0].posts.sizes) === '[5,8,10,15]' && K[0].shelves.length === 2, K);
     ok('half shelf saved with diameter, thickness, count', K[0].shelves[1].shape === 'half' && K[0].shelves[1].d === 47 && K[0].shelves[1].t === 1.6 && K[0].shelves[1].qty === 2, K[0].shelves[1]);
@@ -47,7 +47,7 @@ const ok = (n, c, info) => { if (c) { passed++; console.log('  ok   ' + n); } el
     await E(async () => { openKilnMo(KILNS[0].id); await new Promise(r => setTimeout(r, 50)); document.getElementById('kl-d').value = '45'; _kilnWarnUi(); });
     const warn = await E(() => document.getElementById('kl-warn').innerText);
     ok('warning: shelf larger than the chamber', /по-голяма от камерата/.test(warn), warn);
-    await E(() => { document.getElementById('kl-d').value = '51'; document.getElementById('kl-notes').value = 'бележка'; saveKiln(); });
+    await E(() => { document.getElementById('kl-d').value = '51'; document.getElementById('kl-notes').value = 'бележка'; return saveKiln(); });
     K = await E(() => KILNS);
     ok('edit merges: a field the form does not show survives', K[0].futureField === 'x' && K[0].notes === 'бележка' && K[0].d === 51, K[0]);
 
@@ -88,9 +88,36 @@ const ok = (n, c, info) => { if (c) { passed++; console.log('  ok   ' + n); } el
       await old.close(); h.setRoot(ROOT);
     } else console.log('  - no tests/previous/v1.31.1: rollback skipped');
 
+    // --- v1.32.2: a write that fails is not reported as saved ---
+    if (await E(() => typeof _kilnsWrite === 'function')) {
+      await E(() => { window.__realIdbSet = _idbSet; _idbSet = function () { return Promise.resolve(false); }; });
+      const before = await E(() => JSON.stringify(KILNS));
+      const sv = await E(async () => { show('fp'); switchFP('kilns'); openKilnMo(KILNS[0].id); await new Promise(r => setTimeout(r, 50));
+        document.getElementById('kl-notes').value = 'няма да се запише'; const r = await saveKiln();
+        return { r, open: document.getElementById('mo-kiln').classList.contains('on'), err: document.getElementById('kl-err').innerText, vis: document.getElementById('kl-err').style.display !== 'none' }; });
+      ok('failed save: form stays open with an error, returns false', sv.r === false && sv.open && sv.vis && /не мина/.test(sv.err), sv);
+      ok('failed save: the kilns in memory are unchanged', before === await E(() => JSON.stringify(KILNS)));
+      const nw = await E(async () => { closeMo('mo-kiln'); openKilnMo(null); await new Promise(r => setTimeout(r, 50)); const e0 = document.getElementById('kl-err').style.display;
+        document.getElementById('kl-name').value = 'Втора'; const r = await saveKiln(); return { r, e0, n: KILNS.length, open: document.getElementById('mo-kiln').classList.contains('on') }; });
+      ok('failed add: no new kiln, form open; the error box starts hidden', nw.r === false && nw.n === 1 && nw.open && nw.e0 === 'none', nw);
+      const dl = await E(async () => { closeMo('mo-kiln'); openKilnMo(KILNS[0].id); await new Promise(r => setTimeout(r, 50)); const r = await delKiln();
+        return { r, n: KILNS.length, open: document.getElementById('mo-kiln').classList.contains('on'), vis: document.getElementById('kl-err').style.display !== 'none' }; });
+      ok('failed delete: the kiln stays, form open, error shown', dl.r === false && dl.n === 1 && dl.open && dl.vis, dl);
+      await E(() => { _idbSet = window.__realIdbSet; closeMo('mo-kiln'); });
+      await app.reload();
+      ok('after reload: the stored kiln is the last successful save', (await E(() => { loadKilns(); return JSON.stringify(KILNS); })) === before);
+      // broken storage: refused the same way
+      const br = await E(async () => { show('fp'); switchFP('kilns'); openKilnMo(KILNS[0].id); await new Promise(r => setTimeout(r, 50)); _storageBroken = true;
+        const r = await saveKiln(); _storageBroken = false; return { r, open: document.getElementById('mo-kiln').classList.contains('on') }; });
+      ok('storage in broken state: save refused, form stays open', br.r === false && br.open, br);
+      await E(() => closeMo('mo-kiln'));
+    }
+
     // --- delete ---
-    await E(async () => { show('fp'); switchFP('kilns'); openKilnMo(KILNS[0].id); await new Promise(r => setTimeout(r, 50)); delKiln(); });
+    await E(async () => { show('fp'); switchFP('kilns'); openKilnMo(KILNS[0].id); await new Promise(r => setTimeout(r, 50)); return delKiln(); });
     ok('delete removes the kiln', (await E(() => KILNS.length)) === 0);
+    await app.reload();
+    ok('delete is stored', (await E(() => { loadKilns(); return KILNS.length; })) === 0);
     ok('no page errors', !app.log.errors.length, app.log.errors);
     await app.close();
   } finally { await h.stop(); }

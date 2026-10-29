@@ -613,6 +613,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
         <div class="f"><label>Бележки</label><textarea id="kl-notes"></textarea></div>
         <div id="kl-warn" style="font-size:12px;color:var(--warn);line-height:1.5;margin:4px 0 10px;"></div>
+        <div id="kl-err" role="alert" style="display:none;font-size:13px;color:var(--err);background:var(--errbg);border-radius:8px;padding:8px 10px;margin:0 0 10px;line-height:1.5;"></div>
         <div class="btn-row">
           <button class="btn bp" onclick="saveKiln()">Запази</button>
           <button class="btn bd" id="kl-del" onclick="delKiln()" style="display:none">Изтрий</button>
@@ -1942,7 +1943,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.32.0';
+const APP_VERSION = 'v1.32.2';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -9239,6 +9240,7 @@ function renderKilns(){
 function openKilnMo(id){
   var k=id?KILNS.find(function(x){return x.id===id;}):null;
   curKiln=k?k.id:null;
+  var ke=document.getElementById('kl-err');if(ke){ke.textContent='';ke.style.display='none';}
   document.getElementById('mo-kiln-t').textContent=k?'Редактирай пещ':'Нова пещ';
   var ps=document.getElementById('kl-preset');
   ps.innerHTML='<option value="">— попълвам сама —</option>'+KILN_PRESETS.map(function(p){return '<option value="'+p.key+'">'+_kEsc(p.label)+'</option>';}).join('');
@@ -9320,25 +9322,58 @@ function _kilnFromForm(){
   return k;
 }
 function _kilnWarnUi(){var el=document.getElementById('kl-warn');if(el)el.innerHTML=_kilnWarnings(_kilnFromForm()).map(_kEsc).join('<br>');}
+// v1.32.2: записът на пещите се потвърждава, преди формулярът да се затвори.
+// Записва се новият списък; KILNS се сменя чак след успех. При неуспех нищо не се
+// сменя, формулярът остава отворен и се казва ясно. Връща Promise<boolean>.
+function _kilnsWrite(next){
+  return new Promise(function(resolve){
+    if(_storageBroken){resolve(false);return;}
+    var s;try{s=JSON.stringify(next);}catch(e){resolve(false);return;}
+    if(_idbReady){
+      _idbSet('atelie_kilns',s).then(function(ok){if(ok)_storageCache['atelie_kilns']=s;resolve(!!ok);},function(){resolve(false);});
+    } else {
+      try{localStorage.setItem('atelie_kilns',s);_storageCache['atelie_kilns']=s;resolve(true);}catch(e){resolve(false);}
+    }
+  });
+}
+var _kilnBusy=false;
+function _kilnWriteFailed(what){
+  var m='⚠ '+what+' не мина — нищо не е променено. Провери мястото на телефона и опитай пак.';
+  var w=document.getElementById('kl-err');if(w){w.textContent=m;w.style.display='';}
+  toast(m);
+}
 function saveKiln(){
+  if(_kilnBusy)return Promise.resolve(false);
   var k=_kilnFromForm();
-  if(!k.name){toast('Въведи име');focusEl('kl-name');return;}
+  if(!k.name){toast('Въведи име');focusEl('kl-name');return Promise.resolve(false);}
   var now=new Date().toISOString(),old=curKiln?KILNS.find(function(x){return x.id===curKiln;}):null;
+  var next=KILNS.slice();
   if(old){
     // Сливане: полетата, които формулярът не показва (напр. от по-нова версия), остават.
-    var i=KILNS.indexOf(old);KILNS[i]=Object.assign({},old,k,{id:old.id,updatedAt:now});
+    next[KILNS.indexOf(old)]=Object.assign({},old,k,{id:old.id,updatedAt:now});
   } else {
     k.id=uid();k.createdAt=now;k.updatedAt=now;
     var pr=document.getElementById('kl-preset').value;if(pr)k.preset=pr;
-    KILNS.push(k);
+    next.push(k);
   }
-  saveKilns();closeMo('mo-kiln');renderKilns();toast(old?'Обновено':'Пещта е добавена');
+  _kilnBusy=true;
+  return _kilnsWrite(next).then(function(ok){
+    _kilnBusy=false;
+    if(!ok){_kilnWriteFailed('Записът на пещта');return false;}
+    KILNS=next;closeMo('mo-kiln');renderKilns();toast(old?'Обновено':'Пещта е добавена');return true;
+  });
 }
 function delKiln(){
-  var k=KILNS.find(function(x){return x.id===curKiln;});if(!k)return;
-  if(!confirm('Изтрий „'+(k.name||'')+'“?\n\nИзпичанията досега не я ползват, нищо друго не се променя.'))return;
-  KILNS=KILNS.filter(function(x){return x.id!==curKiln;});
-  saveKilns();closeMo('mo-kiln');renderKilns();toast(t('msg.iztrito'));
+  if(_kilnBusy)return Promise.resolve(false);
+  var k=KILNS.find(function(x){return x.id===curKiln;});if(!k)return Promise.resolve(false);
+  if(!confirm('Изтрий „'+(k.name||'')+'“?\n\nИзпичанията досега не я ползват, нищо друго не се променя.'))return Promise.resolve(false);
+  var next=KILNS.filter(function(x){return x.id!==curKiln;});
+  _kilnBusy=true;
+  return _kilnsWrite(next).then(function(ok){
+    _kilnBusy=false;
+    if(!ok){_kilnWriteFailed('Изтриването');return false;}
+    KILNS=next;closeMo('mo-kiln');renderKilns();toast(t('msg.iztrito'));return true;
+  });
 }
 
 function renderFiringRuns(){
@@ -9698,11 +9733,42 @@ function _showModulesMissing(){
     +'Данните не са пипнати и нищо не е записано.\n\n'
     +'Ако току-що си качила нова версия, провери дали всички файлове са качени, и отвори приложението пак.');
 }
+// v1.32.1: модулите трябва да са от същата версия като index.html. При обновяване
+// старият service worker може да даде нов index.html със стар app.js от кеша —
+// тогава новите функции липсват и приложението гърми при първото им ползване
+// (v1.31.1: празен списък с изделия и „Хранилището не се отваря“). Сега това се
+// хваща преди да се пипне каквото и да е: при връзка — изчистваме кеша и
+// презареждаме веднъж; ако пак не съвпада — казваме го ясно и не пишем нищо.
+function _modulesStale(){return window.__glinaModulesVersion!==APP_VERSION;}
+function _fixStaleModules(){
+  var key='glina_stale_reload_'+APP_VERSION,tried=false;
+  try{tried=sessionStorage.getItem(key)==='1';}catch(e){}
+  if(!tried&&navigator.onLine!==false){
+    try{sessionStorage.setItem(key,'1');}catch(e){}
+    var done=function(){location.reload();};
+    if(window.caches&&caches.keys){caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}).then(done,done);}
+    else done();
+    return true;
+  }
+  return false;
+}
+function _showModulesStale(){
+  alert('Новата версия ('+APP_VERSION+') не се зареди изцяло — част от файловете са от предишната (модули: '+(window.__glinaModulesVersion||'по-стари')+').\n\n'
+    +'Данните не са пипнати и нищо не е записано.\n\n'
+    +(navigator.onLine===false?'Отвори приложението, когато има интернет — тогава се зарежда наново.':'Затвори всички прозорци на приложението и го отвори пак. Ако съобщението остане, провери дали всички файлове са качени.'));
+}
 Promise.all([bootStorage(),_modulesReady]).then(function(r){
   if(!r[1])_modulesMissing=true;
   return _loadGuidesSeed();
 }).then(function(_guides){
   if(_modulesMissing){console.error('[modules] app.js did not load');_storageBroken=true;_storageBrokenReason='modules';_showModulesMissing();return;}
+  if(_modulesStale()){
+    console.error('[modules] version',window.__glinaModulesVersion,'!= app',APP_VERSION);
+    _storageBroken=true;_storageBrokenReason='modules';
+    if(!_fixStaleModules())_showModulesStale();
+    return;
+  }
+  try{sessionStorage.removeItem('glina_stale_reload_'+APP_VERSION);}catch(e){}
   // v1.9.0: If IDB won't open on a device that was already using it, the data is
   // intact but unreachable. Say so plainly instead of rendering an empty app —
   // an empty app looks like total loss and invites re-entry into a second copy.
@@ -9753,10 +9819,18 @@ Promise.all([bootStorage(),_modulesReady]).then(function(r){
   // данни върху истинските. Срив при отваряне вече значи: нищо не пипаме.
   console.error('[storage] Boot failed:',err);
   _storageBroken=true;
-  if(!_storageBrokenReason)_storageBrokenReason='open';
+  // v1.32.1: грешка в кода (не в хранилището) се казва като такава — досега и тя
+  // излизаше като „Хранилището не се отваря“.
+  if(!_storageBrokenReason)_storageBrokenReason=(err instanceof Error&&!(err&&err._glinaUnreadable))?'code':'open';
   _showStorageBroken();
 });
 function _showStorageBroken(){
+  if(_storageBrokenReason==='code'){
+    alert('Приложението спря при отваряне заради грешка в кода — не в данните.\n\n'
+      +'Данните не са пипнати и нищо не е записано.\n\n'
+      +'Затвори всички прозорци на приложението и го отвори пак. Ако съобщението остане, направи снимка на екрана и ми пиши.');
+    return;
+  }
   var why=_storageBrokenReason==='parse'
     ?'Записът с данните е на мястото си, но не може да се разчете. Не е изтрит и няма да бъде презаписан — пазя копие отделно.'
     :'Телефонът не позволи данните да се прочетат точно сега. Те не са изтрити.';
