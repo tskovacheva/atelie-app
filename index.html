@@ -562,6 +562,25 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 
 <!-- v1.32.0: ПЕЩ — регистър на пещите и оборудването. Подреждането идва после. -->
+<div class="mo" id="mo-plan-add" onclick="closeBg(event,'mo-plan-add')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t">Изделия в плана</div><button class="mo-x" onclick="closeMo('mo-plan-add')">×</button></div>
+      <div class="mo-b">
+        <div style="font-size:12px;color:var(--tx3);line-height:1.5;margin-bottom:8px;">Отгоре са тези, които са на етап за това изпичане или вече са закачени към него. Размерите се вземат от изделието и се пазят в плана; може да ги смениш там.</div>
+        <div class="f"><input type="text" id="pla-srch" placeholder="Търси по име или код" oninput="_renderPlanAdd()"></div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--tx2);margin:0 0 6px;"><input type="checkbox" id="pla-all" style="width:auto" onchange="_renderPlanAdd()"> покажи и останалите</label>
+        <div id="pla-list"></div>
+        <div class="btn-row">
+          <button class="btn bg" onclick="closeMo('mo-plan-add')">Отказ</button>
+          <button class="btn bp" id="pla-confirm" onclick="confirmPlanAdd()">Добави</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="mo" id="mo-kiln" onclick="closeBg(event,'mo-kiln')">
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
@@ -640,6 +659,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <span>Изделия в това изпичане <span id="drn-pieces-count" style="color:var(--tx3);font-weight:400;"></span></span>
       <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
     </div><div id="drn-pieces"></div></div>
+    <div class="ds" id="drn-plan-sec"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>План на пещта</span>
+      <button onclick="openPlan(curRun)" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" id="drn-plan-btn">Отвори</button>
+    </div><div id="drn-plan" style="font-size:12px;color:var(--tx2);line-height:1.55;"></div></div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
       <span data-t="ui.testove">Тестове</span>
       <button onclick="openRunTestAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
@@ -649,6 +672,21 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button class="btn bg" onclick="openRunMo(curRun)" data-t="ui.redaktiray">Редактирай</button>
       <button class="btn bd" onclick="deleteRun()" data-t="ui.iztriy">Изтрий</button>
     </div>
+  </div>
+</div>
+
+<!-- DETAIL: Kiln plan (v1.33.0) -->
+<div class="det" id="det-plan">
+  <div style="position:relative;background:var(--bg2);padding:62px 18px 18px;">
+    <button class="det-back" onclick="closePlan()" style="background:var(--surf);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="det-t">План на пещта</div>
+    <div class="det-m" id="pl-m"></div>
+  </div>
+  <div class="det-body">
+    <div id="pl-body"></div>
+    <input type="file" id="pl-photo-in" accept="image/*" style="display:none" onchange="planPhotoPicked(this)">
   </div>
 </div>
 
@@ -1943,7 +1981,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.32.2';
+const APP_VERSION = 'v1.33.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -8555,8 +8593,16 @@ function _backupPayload(){
   return {payload:payload,device:device,now:now};
 }
 function exportBackup(){
+  // v1.33.0: снимките на плановете се четат асинхронно; без тях — направо.
+  if(typeof _plPhotoIds==='function'&&_plPhotoIds().length){
+    return _plPhotosForBackup().then(function(ph){_exportBackupNow(ph);});
+  }
+  _exportBackupNow(null);
+}
+function _exportBackupNow(planPhotos){
   var _b=_backupPayload();
   var payload=_b.payload,device=_b.device,now=_b.now;
+  if(planPhotos)payload.planPhotos=planPhotos;
   var ts=now.toISOString().slice(0,16).replace('T','_').replace(':','');
   var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   var a = document.createElement('a');
@@ -8639,6 +8685,8 @@ function importBackup(e){
     }
     // v1.32.0: пещи — по-стар архив ги няма; тогава текущите остават.
     if(Array.isArray(parsed.kilns)){KILNS=parsed.kilns;saveKilns();}
+    // v1.33.0: снимките на плановете — Blob в отделна база; добавят се липсващите.
+    if(parsed.planPhotos)_plPhotosFromBackup(parsed.planPhotos);
     // v1.31.0: внесен архив от по-стара версия получава кодове и номера.
     _applyIdentity(_identityPlan(DB));
     // v1.27.1: импортът е съзнателно възстановяване — сривът е решен.
@@ -8906,6 +8954,9 @@ function openRunDet(id){
           +'</div>';
       }).join('')
     : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Няма закачени тестове.</div>';
+  // v1.33.0: план на пещта — кратко; самият план е на отделен екран.
+  var _pl=document.getElementById('drn-plan');if(_pl){loadKilns();_pl.textContent=_plSummary(r);}
+  var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори':'+ План';
   document.getElementById('drn-notes').textContent=r.notes||'—';
   _openDet('det-run');
 }
@@ -9373,6 +9424,575 @@ function delKiln(){
     _kilnBusy=false;
     if(!ok){_kilnWriteFailed('Изтриването');return false;}
     KILNS=next;closeMo('mo-kiln');renderKilns();toast(t('msg.iztrito'));return true;
+  });
+}
+
+// ══ ПЛАН НА ПЕЩТА (v1.33.0) ═════════════════════════════════
+// Степен „Нива“: пещ, нива с плоча и подпори, изделия по нива, „Предложи нива“,
+// изглед отстрани с мерките, снимки на нивата. Без координати.
+// Планът живее в изпичането: run.kilnId, run.config {floorH, gap, clear, levels[]},
+// run.plan.members[] — изделие или бройка от серия, ниво и размерите към момента.
+// Изделията не се пипат: етапът се мести само от стъпките им, както досега.
+// Геометрията е в domain/kilnplan.js (window.KilnPlan).
+var curPlanRun=null,plSug=null,plPostAsk=null,plPhotoLevel=null,plSel={};
+function _plRun(){return curPlanRun?DB.firingRuns.find(function(x){return x.id===curPlanRun;})||null:null;}
+function _plKiln(run){return run&&run.kilnId?KILNS.find(function(k){return k.id===run.kilnId;})||null:null;}
+function _plHas(run){return !!(run&&run.config&&Array.isArray(run.config.levels)&&(run.config.levels.length||(run.plan&&run.plan.members&&run.plan.members.length)));}
+function _plEnsure(run){
+  if(!run.config||typeof run.config!=='object')run.config={floorH:0,gap:0,clear:0.5,levels:[]};
+  if(!Array.isArray(run.config.levels))run.config.levels=[];
+  if(!run.plan||typeof run.plan!=='object')run.plan={members:[]};
+  if(!Array.isArray(run.plan.members))run.plan.members=[];
+}
+function _plTouch(run){run.updatedAt=new Date().toISOString();save();}
+function _plN(v){return KilnPlan.num(v);}
+function _plF(v){v=_plN(v);return v==null?'':String(KilnPlan.r1(v)).replace('.',',');}
+// Съобщенията от геометрията са с десетична точка — тук стават със запетая.
+function _plMsg(m){return String(m||'').replace(/(\d)\.(\d)/g,'$1,$2');}
+function _plMemberLabel(m){return (m.name||'Изделие')+(m.unitLabel||'');}
+function _plSetup(run){return KilnPlan._planSetup(_plKiln(run));}
+function _plGeo(run){return KilnPlan._planRun(run);}
+
+function openPlan(id){
+  var run=DB.firingRuns.find(function(x){return x.id===id;});if(!run)return;
+  loadKilns();
+  curPlanRun=id;plSug=null;plPostAsk=null;
+  document.getElementById('pl-m').textContent=_runLabel(run);
+  renderPlan();
+  _openDet('det-plan');
+}
+function closePlan(){
+  closeDet('det-plan');plSug=null;plPostAsk=null;
+  if(curPlanRun&&document.getElementById('det-run').classList.contains('on'))openRunDet(curPlanRun);
+}
+
+// ── Състояние на плана: проверки по изделие и по ниво ──
+function _plState(run){
+  var k=_plKiln(run),S=_plSetup(run),r=_plGeo(run);
+  var chk=k&&r.levels.length?KilnPlan.check(S,r):{stack:[],byP:{},byL:{}};
+  var room={};
+  if(k)r.levels.forEach(function(L){room[L.id]=KilnPlan._planRoom(S,r,L.id);});
+  var loose=r.pieces.filter(function(p){return !p.level||!r.levels.some(function(L){return L.id===p.level;});});
+  var errs=0,warns=0;
+  Object.keys(chk.byP).forEach(function(id){chk.byP[id].forEach(function(x){if(x.sev==='err')errs++;else warns++;});});
+  Object.keys(chk.byL).forEach(function(id){chk.byL[id].forEach(function(x){if(x.sev==='err')errs++;else warns++;});});
+  Object.keys(room).forEach(function(id){errs+=room[id].failed.filter(function(f){return f.kind==='room';}).length;});
+  return {k:k,S:S,r:r,chk:chk,room:room,loose:loose,errs:errs,warns:warns};
+}
+// Ред в детайла на изпичането.
+function _plSummary(run){
+  if(!_plHas(run))return 'Още няма план. Планът казва кое изделие на кое ниво отива и дали се събира по височина.';
+  var st=_plState(run),n=st.r.pieces.length;
+  var bits=[st.k?st.k.name:'без пещ',st.r.levels.length+(st.r.levels.length===1?' ниво':' нива'),n+(n===1?' изделие':' изделия')];
+  if(st.loose.length)bits.push(st.loose.length+' без ниво');
+  return bits.join(' · ')+(st.errs?' · ✗ '+st.errs+(st.errs===1?' проблем':' проблема'):st.warns?' · ⚠ '+st.warns+' за проверка':(st.loose.length?'':' · ✓'));
+}
+
+// ── Рендериране ──
+function renderPlan(){
+  var el=document.getElementById('pl-body');if(!el)return;
+  var run=_plRun();if(!run){el.innerHTML='';return;}
+  var k=_plKiln(run),kilns=KILNS.filter(function(x){return x&&!x.archivedAt;});
+  var h='';
+  // Пещ
+  h+='<div class="ds"><div class="ds-t">Пещ</div>';
+  if(!kilns.length){
+    h+='<div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:8px;">Още няма пещи. Добави пещта си (камера, плочи, подпори) в раздел „Пещи“ на изпичанията.</div>'
+      +'<button type="button" class="fchip" onclick="closeDet(\'det-plan\');closeDet(\'det-run\');show(\'fp\');switchFP(\'kilns\');openKilnMo(null);">+ Добави пещ</button></div>';
+    el.innerHTML=h;return;
+  }
+  h+='<div class="f"><select id="pl-kiln" onchange="setPlanKiln(this.value)"><option value="">— избери пещ —</option>'
+    +kilns.map(function(x){return '<option value="'+x.id+'"'+(run.kilnId===x.id?' selected':'')+'>'+_kEsc(x.name||'Пещ')+'</option>';}).join('')+'</select></div>';
+  if(run.kilnId&&!k)h+='<div style="font-size:12px;color:var(--warn);margin-bottom:6px;">Пещта на този план вече я няма в регистъра. Избери друга.</div>';
+  if(!k){h+='</div>';el.innerHTML=h;return;}
+  var c=run.config||{};
+  h+='<div style="font-size:12px;color:var(--tx3);margin-bottom:8px;">'+_kEsc([_kilnSummary(k),_shelvesSummary(k)].filter(Boolean).join(' · '))+'</div>'
+    +'<div style="display:flex;gap:9px;align-items:flex-end;">'
+    +'<div class="f" style="flex:1"><label>Отстояние, см</label><input type="text" inputmode="decimal" id="pl-gap" value="'+_plF(c.gap)+'" onchange="setPlanCfg(\'gap\',this.value)"></div>'
+    +'<div class="f" style="flex:1"><label>Просвет, см</label><input type="text" inputmode="decimal" id="pl-clear" value="'+_plF(c.clear)+'" onchange="setPlanCfg(\'clear\',this.value)"></div>'
+    +'<div class="f" style="flex:1"><label>На дъното, см</label><input type="text" inputmode="decimal" id="pl-floor" value="'+_plF(c.floorH)+'" onchange="setPlanCfg(\'floorH\',this.value)"></div>'
+    +'</div><div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-top:-4px;">Отстояние — между изделията на една плоча. Просвет — над най-високото изделие до плочата отгоре (или капака). На дъното — подпори под най-долната плоча; 0, ако лежи на дъното.</div></div>';
+  var st=_plState(run);
+  // Изделия и „Предложи нива“
+  h+='<div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;"><span>Изделия <span style="color:var(--tx3);font-weight:400;">'+(st.r.pieces.length||'')+'</span></span>'
+    +'<button onclick="openPlanAdd()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Добави</button></div>';
+  if(!st.r.pieces.length)h+='<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма изделия в плана.</div>';
+  else{
+    h+='<button type="button" class="fchip" id="pl-suggest" onclick="planSuggest()" style="margin:2px 0 8px;">Предложи нива</button>';
+    if(plSug)h+=_plSugHtml(run,st);
+    if(st.loose.length){
+      h+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin:8px 0 4px;">Без ниво</div>';
+      h+=st.loose.map(function(p){return _plMemberHtml(run,st,p,_plLooseReason(st,p));}).join('');
+    }
+  }
+  h+='</div>';
+  // Нива — отгоре надолу, както се гледа пещта отстрани
+  h+='<div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;"><span>Нива <span style="color:var(--tx3);font-weight:400;">'+(st.r.levels.length||'')+'</span></span>'
+    +'<button onclick="addPlanLevel()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Ниво</button></div>';
+  if(!st.r.levels.length)h+='<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма нива. Добави ги едно по едно или натисни „Предложи нива“.</div>';
+  var M=KilnPlan._planMeasures(st.S,st.r);
+  for(var i=st.r.levels.length-1;i>=0;i--)h+=_plLevelHtml(run,st,M,i);
+  h+='</div>';
+  // Изглед отстрани
+  if(st.r.levels.length)h+='<div class="ds"><div class="ds-t">Отстрани</div>'+_plSideSvg(st,M)+_plTotalsHtml(st,M)+'</div>';
+  // Подпори
+  h+=_plPostsHtml(run,k);
+  el.innerHTML=h;
+  _plFillPhotos();
+}
+function _plLooseReason(st,p){
+  if(!st.r.levels.length)return 'няма нива';
+  var why=st.r.levels.map(function(L){return KilnPlan.quickReason(st.S,st.r,L,p);});
+  if(why.some(function(x){return !x;}))return 'не е на ниво';
+  return why[0].msg;
+}
+function _plMemberHtml(run,st,p,note){
+  var issues=(st.chk.byP[p.id]||[]);
+  var lv=st.r.levels.map(function(L,i){return '<option value="'+L.id+'"'+(p.level===L.id?' selected':'')+'>Ниво '+(i+1)+(i===st.r.levels.length-1?' (горе)':'')+'</option>';}).join('');
+  var rect=p.shape==='rect';
+  var inp=function(f,lab,w){return '<label style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--tx3);">'+lab+'<input type="text" inputmode="decimal" data-f="'+f+'" value="'+_plF(p[f])+'" onchange="setPlanMember(\''+p.id+'\',\''+f+'\',this.value)" style="width:'+(w||44)+'px;padding:5px 6px;font-size:12px;"></label>';};
+  return '<div class="pl-m" data-id="'+p.id+'" style="padding:8px 0;border-bottom:1px solid var(--bdr);">'
+    +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--text);">'+_kEsc(_plMemberLabel(p))+'</div>'
+      +(p.code?'<div style="font-size:10px;color:var(--tx3);">'+_kEsc(p.code)+'</div>':'')+'</div>'
+      +'<select data-f="level" onchange="setPlanMember(\''+p.id+'\',\'level\',this.value)" style="width:auto;max-width:130px;padding:6px 8px;font-size:12px;"><option value="">— без ниво —</option>'+lv+'</select>'
+      +'<button type="button" onclick="removePlanMember(\''+p.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:17px;padding:4px 8px;min-height:36px;" aria-label="Извади от плана">×</button>'
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;">'
+      +inp('h','в')+(rect?inp('w','ш')+inp('depth','д'):inp('d','Ø'))+inp('s','подложка')
+    +'</div>'
+    +(note?'<div class="pl-note" style="font-size:11px;color:var(--tx3);margin-top:3px;">'+_kEsc(_plMsg(note))+'</div>':'')
+    +issues.map(function(x){return '<div class="pl-iss" style="font-size:11px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
+    +'</div>';
+}
+function _plLevelHtml(run,st,M,i){
+  var L=run.config.levels[i],k=st.k,last=i===run.config.levels.length-1,m=M.levels[i];
+  var ps=st.r.pieces.filter(function(p){return p.level===L.id;});
+  var shelfOpts=(k.shelves||[]).map(function(s){return '<option value="'+s.id+'"'+(L.shelves&&L.shelves[0]&&L.shelves[0].ref===s.id?' selected':'')+'>'+_kEsc(s.name||('Ø'+_kNum(s.d)))+'</option>';}).join('');
+  var Hk=_plN(k.h)||60;
+  var combos=KilnPlan.postCombos((k.posts&&k.posts.sizes)||[],Math.max(Hk,20));
+  var keys=Object.keys(combos).map(Number).sort(function(a,b){return a-b;}).filter(function(v){return v<=Hk;});
+  var cur=_plN(L.postH),postSel='';
+  if(!last){
+    var opts=keys.map(function(v){return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+_kNum(v)+' см'+(combos[v].length>1?' ('+combos[v].map(_kNum).join(' + ')+')':'')+'</option>';});
+    if(cur!=null&&keys.indexOf(cur)<0)opts.unshift('<option value="'+cur+'" selected>'+_kNum(cur)+' см (няма такива подпори)</option>');
+    postSel='<div class="f" style="flex:1"><label>Подпори над нивото</label><select data-f="postH" onchange="setPlanLevel(\''+L.id+'\',\'postH\',this.value)"><option value="">—</option>'+opts.join('')+'</select></div>';
+  }
+  var issues=(st.chk.byL[L.id]||[]);
+  var rm=st.room[L.id],roomLine='';
+  if(rm&&ps.length){
+    var noRoom=rm.failed.filter(function(f){return f.kind==='room';});
+    var unchecked=rm.failed.filter(function(f){return f.kind==='size';});
+    var nm=function(id){var p=ps.find(function(x){return x.id===id;});return p?_plMemberLabel(p):id;};
+    if(noRoom.length)roomLine='<div class="pl-room" style="font-size:12px;color:var(--err);margin-top:4px;">✗ Не се събират на плочата: '+_kEsc(noRoom.map(function(f){return nm(f.id);}).join(', '))+'</div>';
+    else if(rm.placed.length)roomLine='<div class="pl-room" style="font-size:12px;color:var(--ok,#4a7c59);margin-top:4px;">✓ Плоча: '+(rm.placed.length===ps.length?'всички '+ps.length+' имат място':rm.placed.length+' от '+ps.length+' имат място')+(_plN(run.config.gap)?' (с '+_plF(run.config.gap)+' см отстояние)':'')+'</div>';
+    if(unchecked.length)roomLine+='<div style="font-size:11px;color:var(--warn);margin-top:2px;">⚠ Без размер на основата, не са проверени: '+_kEsc(unchecked.map(function(f){return nm(f.id);}).join(', '))+'</div>';
+  }
+  var tall=ps.reduce(function(a,p){var e=KilnPlan.effH(p);return e!=null&&e>a?e:a;},0);
+  var meas='плочата е на '+_plF(m.bottom)+' + '+_plF(m.t)+' = '+_plF(m.top)+' см · '+(m.space==null?'място —':(last?'до капака ':'място ')+_plF(m.space)+' см')+(ps.length&&tall?' · най-високо '+_plF(tall)+(_plN(run.config.clear)?' + '+_plF(run.config.clear):'')+' см':'');
+  return '<div class="pl-lv" data-id="'+L.id+'" style="border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:10px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:14px;color:var(--text);font-weight:500;">Ниво '+(i+1)+(last?' · горе':i===0?' · долу':'')+'</div>'
+    +'<button type="button" onclick="delPlanLevel(\''+L.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:6px;min-height:36px;">Махни</button></div>'
+    +'<div class="pl-meas" style="font-size:11px;color:var(--tx3);margin:2px 0 6px;">'+_kEsc(meas)+'</div>'
+    +'<div style="display:flex;gap:9px;"><div class="f" style="flex:1"><label>Плоча</label><select data-f="shelf" onchange="setPlanLevel(\''+L.id+'\',\'shelf\',this.value)">'+(shelfOpts||'<option value="">няма плочи в пещта</option>')+'</select></div>'+postSel+'</div>'
+    +issues.map(function(x){return '<div class="pl-iss" style="font-size:12px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
+    +roomLine
+    +(ps.length?ps.map(function(p){return _plMemberHtml(run,st,p,'');}).join(''):'<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Празно ниво.</div>')
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;">'
+      +(L.photos||[]).map(function(pid){return '<div style="position:relative;"><img data-ph="'+pid+'" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--bg2);display:block;"><button type="button" onclick="planDelPhoto(\''+L.id+'\',\''+pid+'\')" aria-label="Махни снимката" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:12px;border:none;background:var(--surf);color:var(--accent);cursor:pointer;font-size:14px;line-height:1;">×</button></div>';}).join('')
+      +'<button type="button" class="fchip" onclick="planAddPhoto(\''+L.id+'\')">+ Снимка</button>'
+    +'</div>'
+    +'</div>';
+}
+// Изгледът отстрани: камерата, плочите на височината им, най-високото изделие на
+// всяко ниво и мерките вдясно. Мащаб по височината на камерата.
+function _plSideSvg(st,M){
+  var H=_plN(st.k.h)||Math.max(40,M.used+20),Wc=_plN(st.k.d)||_plN(st.k.w)||50;
+  var W=320,top=10,bot=10,scale=(220-top-bot)/H,cw=Math.min(170,Wc*scale*1.4),x0=14;
+  var y=function(z){return top+(H-z)*scale;};
+  var s='<svg viewBox="0 0 '+W+' 220" width="100%" style="max-width:420px;display:block;" role="img" aria-label="Пещта отстрани">';
+  s+='<rect x="'+x0+'" y="'+y(H)+'" width="'+cw+'" height="'+(H*scale)+'" fill="none" stroke="var(--tx3)" stroke-width="1.5"/>';
+  M.levels.forEach(function(m,i){
+    var t=Math.max(1.5,(m.top-m.bottom)*scale);
+    s+='<rect x="'+(x0+3)+'" y="'+y(m.top)+'" width="'+(cw-6)+'" height="'+t+'" fill="var(--tx3)" opacity=".55"/>';
+    if(!m.last&&m.space!=null){[0.18,0.82].forEach(function(f){s+='<rect x="'+(x0+cw*f-3)+'" y="'+y(m.top+m.space)+'" width="6" height="'+(m.space*scale)+'" fill="var(--tx3)" opacity=".3"/>';});}
+    var ps=st.r.pieces.filter(function(p){return p.level===m.id;});
+    var tall=ps.reduce(function(a,p){var e=KilnPlan.effH(p);return e!=null&&e>a?e:a;},0);
+    if(tall){
+      var need=tall+(_plN(st.r.clear)||0),bad=m.space!=null&&need>m.space+0.05;
+      s+='<rect x="'+(x0+cw*0.3)+'" y="'+y(m.top+tall)+'" width="'+(cw*0.4)+'" height="'+(tall*scale)+'" fill="'+(bad?'var(--err)':'var(--primary)')+'" opacity=".35"/>';
+    }
+    s+='<text x="'+(x0+cw+8)+'" y="'+(y(m.top)+4)+'" font-size="10" fill="var(--tx2)">'+(i+1)+': '+_plF(m.top)+' см'+(m.space!=null?' · място '+_plF(m.space):'')+'</text>';
+  });
+  s+='<text x="'+(x0+cw+8)+'" y="'+(y(H)+9)+'" font-size="10" fill="var(--tx3)">капак: '+_plF(H)+' см</text>';
+  return s+'</svg>';
+}
+function _plTotalsHtml(st,M){
+  var c=st.r,parts=[];
+  if(_plN(c.floorH))parts.push('подпори на дъното '+_plF(c.floorH));
+  M.levels.forEach(function(m){parts.push('плоча '+_plF(m.t)+(m.last||m.space==null?'':' + подпори '+_plF(m.space)));});
+  var used=M.used,H=M.H;
+  return '<div class="pl-total" style="font-size:12px;color:var(--tx2);line-height:1.6;margin-top:6px;">'+_kEsc(parts.join(' + '))+' = '+_plF(used)+' см'
+    +(H!=null?' · до капака остават '+_plF(H-used)+' см от '+_plF(H):' · височината на камерата не е зададена')+'</div>';
+}
+function _plPostsHtml(run,k){
+  var sizes=(k.posts&&k.posts.sizes)||[];
+  var h='<div class="ds"><div class="ds-t">Подпори</div><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">'+(sizes.length?'Налични в „'+_kEsc(k.name)+'“: '+sizes.map(_kNum).join(', ')+' см':'В „'+_kEsc(k.name)+'“ няма подпори.')+'</div>';
+  if(plPostAsk){
+    h+='<div id="pl-post-q" style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:6px;">Добави подпора '+_kNum(plPostAsk.size)+' см'+(plPostAsk.count?' ('+plPostAsk.count+' бр.)':'')+' към оборудването на „'+_kEsc(k.name)+'“? Ще я има и в следващите планове.</div>'
+      +'<div style="display:flex;gap:8px;"><button type="button" class="fchip" onclick="plPostAsk=null;renderPlan();">Отказ</button><button type="button" class="fchip" id="pl-post-confirm" style="background:var(--primary);color:white;border-color:var(--primary);" onclick="planPostConfirm()">Да, добави</button></div>';
+  } else {
+    h+='<div style="display:flex;gap:9px;align-items:flex-end;"><div class="f" style="flex:1"><label>Имам подпора, см</label><input type="text" inputmode="decimal" id="pl-post-new" placeholder="напр. 8"></div>'
+      +'<div class="f" style="flex:1"><label>Брой (по желание)</label><input type="text" inputmode="numeric" id="pl-post-count"></div>'
+      +'<button type="button" class="fchip" id="pl-post-ask" style="flex:0 0 auto;width:auto;margin-bottom:10px;" onclick="planPostAsk()">+ Добави</button></div>';
+  }
+  return h+'</div>';
+}
+
+// ── „Предложи нива“ ──
+function _plSugHtml(run,st){
+  var P=plSug.res,k=st.k,c=run.config;
+  var nm=function(id){var p=st.r.pieces.find(function(x){return x.id===id;});return p?_plMemberLabel(p):id;};
+  var shelf=P.type;
+  var h='<div id="pl-sug" style="border:1px solid var(--bdr2);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:var(--bg2);">';
+  h+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Допускания</div>'
+    +'<div id="pl-sug-ass" style="font-size:12px;color:var(--tx2);line-height:1.6;">'
+    +(shelf?'Плоча: '+_kEsc(shelf.name||('Ø'+_kNum(shelf.d)))+', дебелина '+_plF(shelf.t)+' см, по една на ниво. ':'')
+    +'Подпори на дъното: '+_plF(c.floorH||0)+' см. Отстояние между изделията: '+_plF(c.gap||0)+' см. Просвет над най-високото: '+_plF(c.clear||0)+' см. '
+    +'Налични подпори: '+(((k.posts&&k.posts.sizes)||[]).map(_kNum).join(', ')||'няма')+' см (и сборове от тях). Височина на камерата: '+_plF(k.h)+' см. '
+    +'Изделията се подреждат от най-високото; всяко отива на първото ниво, на чиято плоча има място. Горе отива нивото, на което подпорите биха загубили най-много височина.'
+    +'</div>';
+  h+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin:10px 0 4px;">Резултат</div><div id="pl-sug-res">';
+  if(!P.levels.length)h+='<div style="font-size:12px;color:var(--tx2);">Няма какво да се предложи.</div>';
+  for(var i=P.levels.length-1;i>=0;i--){
+    var l=P.levels[i],last=i===P.levels.length-1;
+    var ok=l.space==null||l.need<=l.space+0.05;
+    h+='<div style="font-size:12px;line-height:1.55;margin-bottom:6px;"><b>Ниво '+(i+1)+(last?' (горе)':'')+'</b> — '+l.ids.length+' бр., най-високо '+_plF(l.tall)+' + '+_plF(c.clear||0)+' = '+_plF(l.need)+' см; '
+      +(last?'до капака '+_plF(l.space)+' см ':'подпори '+_plF(l.postH)+' см'+(l.combo&&l.combo.length>1?' ('+l.combo.map(_kNum).join(' + ')+')':'')+' ')
+      +(ok?'<span style="color:var(--ok,#4a7c59)">✓</span>':'<span style="color:var(--err)">✗</span>')
+      +'<div style="color:var(--tx3);font-size:11px;">'+_kEsc(l.ids.map(nm).join(', '))+(l.noBase?' · '+l.noBase+' без размер на основата — проверени само по височина':'')+'</div></div>';
+  }
+  P.problems.forEach(function(x){h+='<div style="font-size:12px;color:var(--err);margin-top:3px;">✗ '+_kEsc(x)+'</div>';});
+  P.skipped.forEach(function(x){h+='<div style="font-size:12px;color:var(--err);margin-top:3px;">✗ '+_kEsc(nm(x.id))+': '+_kEsc(x.msg)+'</div>';});
+  if(plSug.way)h+='<div id="pl-sug-way" style="font-size:12px;color:var(--text);margin-top:6px;">→ '+_kEsc(plSug.way)+'</div>';
+  if(!P.problems.length&&!P.skipped.length&&P.levels.length)h+='<div style="font-size:12px;color:var(--ok,#4a7c59);margin-top:3px;">✓ Всичко се събира.</div>';
+  h+='</div><div style="display:flex;gap:8px;margin-top:8px;"><button type="button" class="fchip" onclick="plSug=null;renderPlan();">Затвори</button>'
+    +(P.levels.length?'<button type="button" class="fchip" id="pl-sug-apply" style="background:var(--primary);color:white;border-color:var(--primary);" onclick="applyPlanSuggest()">Приеми нивата</button>':'')+'</div>';
+  return h+'</div>';
+}
+function planSuggest(){
+  var run=_plRun(),k=_plKiln(run);if(!run||!k)return;
+  var S=_plSetup(run),r=_plGeo(run);
+  r.levels=[];r.pieces.forEach(function(p){p.level=null;p.x=null;p.y=null;});
+  var P=KilnPlan.planLevels(S,r),way='';
+  // Един изход при недостиг: по-малко отстояние, иначе изделието, което пречи.
+  if(!P.fits||P.problems.length||P.skipped.length){
+    var gap=_plN(r.gap)||0;
+    if(gap>0){
+      var P0=KilnPlan.planLevels(S,Object.assign({},r,{gap:0}));
+      if(P0.fits&&!P0.problems.length&&!P0.skipped.length)way='С отстояние 0 см вместо '+_plF(gap)+' см всичко се събира в '+P0.levels.length+(P0.levels.length===1?' ниво.':' нива.');
+    }
+    if(!way){
+      var tallest=r.pieces.slice().sort(KilnPlan.byHeight)[0];
+      if(tallest){
+        var P1=KilnPlan.planLevels(S,Object.assign({},r,{pieces:r.pieces.filter(function(p){return p.id!==tallest.id;})}));
+        if(P1.fits&&!P1.problems.length&&!P1.skipped.length)way='Без „'+_plMemberLabel(tallest)+'“ ('+_plF(KilnPlan.effH(tallest))+' см) останалите се събират в '+P1.levels.length+(P1.levels.length===1?' ниво.':' нива.');
+      }
+    }
+  }
+  plSug={res:P,way:way};
+  renderPlan();
+  var e=document.getElementById('pl-sug');if(e&&e.scrollIntoView)e.scrollIntoView({block:'nearest'});
+}
+function applyPlanSuggest(){
+  var run=_plRun();if(!run||!plSug)return;
+  var P=plSug.res,old=run.config.levels||[];
+  var photos=old.reduce(function(a,L){return a+((L.photos||[]).length);},0);
+  if(old.length&&!confirm('Сегашните '+old.length+(old.length===1?' ниво се заменя':' нива се заменят')+' с предложените.'+(photos?'\n\nСнимките им ('+photos+') остават на нивата със същия номер.':'')))return;
+  var levels=P.levels.map(function(l,i){
+    var L={id:uid(),shelves:[{ref:P.type.id,x:0,y:0,rot:0}],photos:(old[i]&&old[i].photos)||[]};
+    if(i<P.levels.length-1)L.postH=l.postH;
+    return L;
+  });
+  // Снимките на нива над новия брой не се губят: отиват на горното ниво.
+  old.slice(levels.length).forEach(function(L){if(levels.length)levels[levels.length-1].photos=levels[levels.length-1].photos.concat(L.photos||[]);});
+  run.config.levels=levels;
+  var at={};P.levels.forEach(function(l,i){l.ids.forEach(function(id){at[id]=levels[i].id;});});
+  run.plan.members.forEach(function(m){m.level=at[m.id]||null;});
+  plSug=null;_plTouch(run);renderPlan();toast('Нивата са приети');
+}
+
+// ── Промени ──
+function setPlanKiln(id){
+  var run=_plRun();if(!run)return;
+  var k=KILNS.find(function(x){return x.id===id;});
+  if(!id||!k)return;
+  _plEnsure(run);
+  var first=!run.kilnId;
+  run.kilnId=k.id;
+  if(first){
+    run.config.gap=KilnPlan._planGap(k,run.purpose);
+    run.config.clear=k.clear!=null?k.clear:0.5;
+    if(run.config.floorH==null)run.config.floorH=0;
+  }
+  // Нивата сочат плочи от новата пещ: непознатият вид става първия.
+  var sh=(k.shelves||[])[0];
+  run.config.levels.forEach(function(L){(L.shelves||[]).forEach(function(x){if(!(k.shelves||[]).some(function(s){return s.id===x.ref;})&&sh)x.ref=sh.id;});});
+  plSug=null;_plTouch(run);renderPlan();
+}
+function setPlanCfg(f,v){
+  var run=_plRun();if(!run)return;_plEnsure(run);
+  var n=_numOrNullPos(v);run.config[f]=n==null?0:n;
+  plSug=null;_plTouch(run);renderPlan();
+}
+function addPlanLevel(){
+  var run=_plRun(),k=_plKiln(run);if(!run||!k)return;_plEnsure(run);
+  var sh=(k.shelves||[])[0];
+  var L=run.config.levels;
+  // Досегашното горно ниво получава подпори: най-ниските, които стигат за изделията му.
+  if(L.length){
+    var top=L[L.length-1];
+    if(top.postH==null){
+      var need=run.plan.members.filter(function(m){return m.level===top.id;}).reduce(function(a,m){var e=KilnPlan.effH(m);return e!=null&&e>a?e:a;},0)+(_plN(run.config.clear)||0);
+      var combos=KilnPlan.postCombos((k.posts&&k.posts.sizes)||[],Math.max(_plN(k.h)||60,20));
+      var keys=Object.keys(combos).map(Number).sort(function(a,b){return a-b;});
+      var pick=keys.find(function(v){return v>=need-1e-9;});
+      if(pick!=null)top.postH=pick;else if(keys.length)top.postH=keys[keys.length-1];
+    }
+  }
+  L.push({id:uid(),shelves:sh?[{ref:sh.id,x:0,y:0,rot:0}]:[],photos:[]});
+  plSug=null;_plTouch(run);renderPlan();
+}
+function delPlanLevel(id){
+  var run=_plRun();if(!run)return;
+  var L=run.config.levels.find(function(x){return x.id===id;});if(!L)return;
+  var n=run.plan.members.filter(function(m){return m.level===id;}).length,ph=(L.photos||[]).length;
+  if((n||ph)&&!confirm('Махни нивото?'+(n?'\n\n'+n+(n===1?' изделие остава':' изделия остават')+' в плана без ниво.':'')+(ph?'\n\nСнимките на нивото ('+ph+') се изтриват.':'')))return;
+  run.config.levels=run.config.levels.filter(function(x){return x.id!==id;});
+  var top=run.config.levels[run.config.levels.length-1];if(top)delete top.postH;
+  run.plan.members.forEach(function(m){if(m.level===id)m.level=null;});
+  (L.photos||[]).forEach(function(pid){_phDel(pid);});
+  plSug=null;_plTouch(run);renderPlan();
+}
+function setPlanLevel(id,f,v){
+  var run=_plRun();if(!run)return;
+  var L=run.config.levels.find(function(x){return x.id===id;});if(!L)return;
+  if(f==='shelf'){L.shelves=v?[{ref:v,x:0,y:0,rot:0}]:[];}
+  else if(f==='postH'){var n=_numOrNullPos(v);if(n==null)delete L.postH;else L.postH=n;}
+  plSug=null;_plTouch(run);renderPlan();
+}
+function setPlanMember(id,f,v){
+  var run=_plRun();if(!run)return;
+  var m=run.plan.members.find(function(x){return x.id===id;});if(!m)return;
+  if(f==='level')m.level=v||null;
+  else{var n=_numOrNullPos(v);if(n==null)delete m[f];else m[f]=n;if(f!=='s')m.src='plan';}
+  plSug=null;_plTouch(run);renderPlan();
+}
+function removePlanMember(id){
+  var run=_plRun();if(!run)return;
+  run.plan.members=run.plan.members.filter(function(x){return x.id!==id;});
+  plSug=null;_plTouch(run);renderPlan();
+}
+
+// ── Подпора от плана — второ докосване потвърждава ──
+function planPostAsk(){
+  var v=_numOrNullPos((document.getElementById('pl-post-new')||{}).value);
+  if(!(v>0)){toast('Въведи височина на подпората');return;}
+  var c=parseInt((document.getElementById('pl-post-count')||{}).value,10);
+  plPostAsk={size:v,count:c>0?c:null};renderPlan();
+}
+function planPostConfirm(){
+  var run=_plRun(),k=_plKiln(run);if(!run||!k||!plPostAsk)return Promise.resolve(false);
+  var ask=plPostAsk;
+  var nk=JSON.parse(JSON.stringify(k));
+  nk.posts=nk.posts||{sizes:[],d:4};
+  nk.posts.sizes=_postSizesNorm((nk.posts.sizes||[]).concat([ask.size]));
+  if(ask.count){nk.posts.counts=nk.posts.counts||{};nk.posts.counts[String(ask.size)]=ask.count;}
+  nk.updatedAt=new Date().toISOString();
+  var next=KILNS.map(function(x){return x.id===k.id?nk:x;});
+  return _kilnsWrite(next).then(function(ok){
+    if(!ok){toast('⚠ Подпората не се записа — нищо не е променено.');return false;}
+    KILNS=next;plPostAsk=null;plSug=null;renderPlan();toast('Подпора '+_kNum(ask.size)+' см добавена към „'+(k.name||'')+'“');return true;
+  });
+}
+
+// ── Избор на изделия ──
+function _plRefKey(r){return r.kind+':'+r.id+':'+(r.unit||r.idx||'');}
+function _plCandidates(run){
+  var inPlan={};((run.plan&&run.plan.members)||[]).forEach(function(m){if(m.ref)inPlan[_plRefKey(m.ref)]=1;});
+  var attached={};_runPieces(run.id).forEach(function(x){attached[x.piece.id]=1;});
+  var want=run.purpose==='bisque'?['wet','leather-hard','bone-dry','greenware']:run.purpose==='glaze'?['bisque','glazed']:[];
+  var out=[];
+  var add=function(rec,kind,units,qty){
+    var refs=[];
+    if(units&&units.length)units.forEach(function(u){refs.push({kind:kind,id:rec.id,unit:u});});
+    else for(var i=1;i<=qty;i++)refs.push(qty>1?{kind:kind,id:rec.id,idx:i}:{kind:kind,id:rec.id});
+    refs=refs.filter(function(r){return !inPlan[_plRefKey(r)];});
+    if(!refs.length)return;
+    out.push({key:kind+':'+rec.id,rec:rec,kind:kind,refs:refs,qty:qty,code:kind==='series'?(rec.code||''):pieceCode(rec),
+      suggest:!!attached[rec.id]||want.indexOf(rec.stage)>=0,attached:!!attached[rec.id],size:_kilnSize(rec)});
+  };
+  DB.pieces.forEach(function(p){
+    if(!p||p.archivedAt)return;
+    var q=parseInt(p.qty,10);q=isNaN(q)||q<1?1:q;
+    add(p,'piece',Array.isArray(p.units)&&p.units.length?p.units:null,q);
+  });
+  (DB.series||[]).forEach(function(se){
+    if(!se||se.archivedAt)return;
+    var free=_seriesFreeUnits(se,_seriesMembers(se.id));
+    if(free.length)add(se,'series',free,free.length);
+  });
+  out.sort(function(a,b){return (b.suggest-a.suggest)||(b.attached-a.attached)||String(a.rec.name||'').localeCompare(String(b.rec.name||''));});
+  return out;
+}
+function openPlanAdd(){
+  var run=_plRun();if(!run)return;
+  plSel={};
+  var s=document.getElementById('pla-srch');if(s)s.value='';
+  var a=document.getElementById('pla-all');if(a)a.checked=false;
+  _renderPlanAdd();openMo('mo-plan-add');
+}
+function _renderPlanAdd(){
+  var run=_plRun(),l=document.getElementById('pla-list');if(!run||!l)return;
+  var q=((document.getElementById('pla-srch')||{}).value||'').toLowerCase().trim();
+  var all=(document.getElementById('pla-all')||{}).checked;
+  var cands=_plCandidates(run),items=cands;
+  var hidden=items.filter(function(x){return !x.suggest;}).length;
+  items=items.filter(function(x){
+    if(!q&&!all&&!x.suggest)return false;
+    if(q&&String(x.rec.name||'').toLowerCase().indexOf(q)<0&&String(x.code).toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  if(!items.length){
+    l.innerHTML='<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;line-height:1.5;">'+(q?'Няма съвпадения.':(hidden?'Няма изделия на етап за това изпичане. Отметни „покажи и останалите“.':'Всички изделия вече са в плана.'))+'</div>';
+  } else l.innerHTML=items.map(function(x){
+    var on=!!plSel[x.key],z=x.size;
+    var sub=[x.code,x.refs.length+' бр.',z?_sizeLabel(z.shape==='rect'?{h:z.h,w:z.w,depth:z.depth}:{h:z.h,w:z.d}):'без размер',x.attached?'закачено към изпичането':''].filter(Boolean).join(' · ');
+    return '<div class="pla-it" data-key="'+x.key+'" onclick="togglePlanAdd(\''+x.key+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);cursor:pointer;">'
+      +'<div style="width:20px;height:20px;border-radius:5px;border:2px solid '+(on?'var(--primary)':'var(--bdr2)')+';background:'+(on?'var(--primary)':'transparent')+';display:flex;align-items:center;justify-content:center;color:white;font-size:12px;flex-shrink:0;">'+(on?'✓':'')+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--text);">'+_kEsc(x.rec.name||'Изделие')+(x.kind==='series'?' <span style="font-size:10px;color:var(--tx3)">серия</span>':'')+'</div>'
+      +'<div style="font-size:10px;color:var(--tx3);">'+_kEsc(sub)+'</div></div></div>';
+  }).join('');
+  var n=cands.reduce(function(a,x){return a+(plSel[x.key]?x.refs.length:0);},0);
+  var b=document.getElementById('pla-confirm');if(b){b.textContent=n?'Добави '+n:'Добави';b.disabled=!n;b.style.opacity=n?'':'.5';}
+}
+function togglePlanAdd(key){if(plSel[key])delete plSel[key];else plSel[key]=1;_renderPlanAdd();}
+function confirmPlanAdd(){
+  var run=_plRun();if(!run)return;_plEnsure(run);
+  var items=_plCandidates(run).filter(function(x){return plSel[x.key];}),n=0;
+  items.forEach(function(x){
+    var z=x.size||{};
+    x.refs.forEach(function(ref){
+      var m={id:uid(),ref:ref,name:x.rec.name||'',code:x.code||'',
+        unitLabel:ref.unit?' /'+ref.unit:(ref.idx?' ('+ref.idx+' от '+x.qty+')':''),level:null,shape:z.shape||'round'};
+      if(x.kind==='series'&&x.rec.code)m.code=x.rec.code+'/'+ref.unit;
+      if(z.h!=null)m.h=z.h;
+      if(z.shape==='rect'){if(z.w!=null)m.w=z.w;if(z.depth!=null)m.depth=z.depth;}else if(z.d!=null)m.d=z.d;
+      if(z.source)m.src=z.source;
+      run.plan.members.push(m);n++;
+    });
+  });
+  plSel={};plSug=null;_plTouch(run);closeMo('mo-plan-add');renderPlan();
+  toast(n+(n===1?' изделие добавено':' изделия добавени'));
+}
+
+// ── Снимки на нивата: Blob в отделна база, не в записите ──
+// Отделна база (не atelie_idb), за да не се вдига версията ѝ: по-стара версия на
+// приложението, отворила atelie_idb с версия 1, не бива да среща нова.
+var PH_DB='atelie_photos',PH_STORE='blobs',_phDbP=null;
+function _phDb(){
+  if(_phDbP)return _phDbP;
+  _phDbP=new Promise(function(res){
+    try{var q=indexedDB.open(PH_DB,1);
+      q.onupgradeneeded=function(e){e.target.result.createObjectStore(PH_STORE);};
+      q.onsuccess=function(e){res(e.target.result);};
+      q.onerror=function(){res(null);};
+    }catch(e){res(null);}
+  });
+  return _phDbP;
+}
+function _phTx(mode,fn){
+  return _phDb().then(function(db){
+    if(!db)return null;
+    return new Promise(function(res){
+      try{var tx=db.transaction([PH_STORE],mode),st=tx.objectStore(PH_STORE),out=fn(st);
+        tx.oncomplete=function(){res(out&&out.result!==undefined?out.result:true);};
+        tx.onerror=tx.onabort=function(){res(null);};
+      }catch(e){res(null);}
+    });
+  });
+}
+function _phPut(id,blob){return _phTx('readwrite',function(st){st.put(blob,id);}).then(function(x){return !!x;});}
+function _phGet(id){return _phTx('readonly',function(st){return st.get(id);});}
+function _phDel(id){return _phTx('readwrite',function(st){st.delete(id);});}
+function _phKeys(){return _phTx('readonly',function(st){return st.getAllKeys();});}
+var _phUrls={};
+function _plFillPhotos(){
+  document.querySelectorAll('#pl-body img[data-ph]').forEach(function(img){
+    var id=img.getAttribute('data-ph');
+    if(_phUrls[id]){img.src=_phUrls[id];return;}
+    _phGet(id).then(function(b){if(b&&b instanceof Blob){_phUrls[id]=URL.createObjectURL(b);img.src=_phUrls[id];}});
+  });
+}
+function planAddPhoto(levelId){plPhotoLevel=levelId;var i=document.getElementById('pl-photo-in');if(i){i.value='';i.click();}}
+function _phShrink(file){
+  return new Promise(function(res){
+    var img=new Image(),u=URL.createObjectURL(file);
+    img.onload=function(){
+      try{var sc=Math.min(1,1200/Math.max(img.width,img.height)),c=document.createElement('canvas');
+        c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+        var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+        URL.revokeObjectURL(u);c.toBlob(function(b){res(b);},'image/jpeg',0.8);
+      }catch(e){URL.revokeObjectURL(u);res(null);}
+    };
+    img.onerror=function(){URL.revokeObjectURL(u);res(null);};
+    img.src=u;
+  });
+}
+function planPhotoPicked(inp){
+  var f=inp.files&&inp.files[0],lid=plPhotoLevel;if(!f||!lid)return Promise.resolve(false);
+  if(f.size>PH_MAX_BYTES){toast(t('msg.snimkata-e-tvarde-golyama-nad-10-m'));return Promise.resolve(false);}
+  return _phShrink(f).then(function(b){
+    if(!b){toast(t('msg.greshka-pri-obrabotka-na-snimkata-'));return false;}
+    var id='ph-'+uid();
+    return _phPut(id,b).then(function(ok){
+      if(!ok){toast('⚠ Снимката не се записа');return false;}
+      var run=_plRun();if(!run)return false;
+      var L=run.config.levels.find(function(x){return x.id===lid;});if(!L){_phDel(id);return false;}
+      L.photos=(L.photos||[]).concat([id]);_plTouch(run);renderPlan();return true;
+    });
+  });
+}
+function planDelPhoto(levelId,pid){
+  var run=_plRun();if(!run)return;
+  var L=run.config.levels.find(function(x){return x.id===levelId;});if(!L)return;
+  if(!confirm('Махни снимката?'))return;
+  L.photos=(L.photos||[]).filter(function(x){return x!==pid;});
+  _phDel(pid);_plTouch(run);renderPlan();
+}
+// Архивът: снимките на плановете като data URL в раздел planPhotos.
+function _plPhotoIds(db){
+  var ids=[];((db||DB).firingRuns||[]).forEach(function(r){((r.config&&r.config.levels)||[]).forEach(function(L){(L.photos||[]).forEach(function(id){ids.push(id);});});});
+  return ids;
+}
+function _plPhotosForBackup(){
+  var ids=_plPhotoIds();if(!ids.length)return Promise.resolve(null);
+  var out={};
+  return Promise.all(ids.map(function(id){
+    return _phGet(id).then(function(b){
+      if(!(b instanceof Blob))return;
+      return new Promise(function(res){var r=new FileReader();r.onload=function(){out[id]=r.result;res();};r.onerror=function(){res();};r.readAsDataURL(b);});
+    });
+  })).then(function(){return out;});
+}
+function _plPhotosFromBackup(map){
+  if(!map||typeof map!=='object')return Promise.resolve(0);
+  return _phKeys().then(function(have){
+    have=have||[];var n=0;
+    return Promise.all(Object.keys(map).map(function(id){
+      if(have.indexOf(id)>=0||typeof map[id]!=='string'||map[id].indexOf('data:')!==0)return;
+      return fetch(map[id]).then(function(r){return r.blob();}).then(function(b){return _phPut(id,b);}).then(function(ok){if(ok)n++;}).catch(function(){});
+    })).then(function(){return n;});
   });
 }
 
@@ -10065,8 +10685,14 @@ function _aaWrite(viaGesture){
       return handle.requestPermission(opts);
     }).then(function(perm){
       if(perm!=='granted')return _done({ok:false,reason:'permission'});
-      var b=_backupPayload();
-      var blob=new Blob([JSON.stringify(b.payload,null,2)],{type:'application/json'});
+      // v1.33.0: със снимките на плановете (четат се асинхронно).
+      return _plPhotosForBackup().then(function(ph){
+        var b=_backupPayload();
+        if(ph)b.payload.planPhotos=ph;
+        return new Blob([JSON.stringify(b.payload,null,2)],{type:'application/json'});
+      });
+    }).then(function(blob){
+      if(!(blob instanceof Blob))return blob;
       return handle.createWritable().then(function(w){
         return w.write(blob).then(function(){return w.close();});
       }).then(function(){

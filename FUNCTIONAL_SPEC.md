@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.32.2 · `atelie-v89`
+**Version:** v1.33.0 · `atelie-v90`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -204,6 +204,42 @@ Save and delete wait for the write to be confirmed (v1.32.2). The list in memory
 changes only after success; on failure (or broken storage) the form stays open with
 an error inside it and nothing is changed.
 
+### Kiln plan (v1.33.0)
+
+Depth „Нива“ of the kiln module: which piece goes on which level and whether it
+fits. A section in the run detail („План на пещта“: kiln · levels · pieces ·
+problems) opens a separate screen. No coordinates are stored; pieces are not
+touched — the plan lives in the run, so the stage moves only through firing steps,
+as before.
+
+- **Data (optional, on the run):** `kilnId`; `config {floorH, gap, clear,
+  levels:[{id, shelves:[{ref, x, y, rot}], postH, photos:[id]}]}` — levels bottom
+  to top, `postH` = posts standing on that level (none on the top one);
+  `plan.members:[{id, ref:{kind:'piece'|'series', id, unit?|idx?}, name, code,
+  unitLabel, level, h, shape, d | w × depth, s, src}]` — one member per physical
+  piece (a series unit, or each of a piece's qty), sizes copied at the time
+  (structured size from v1.31.1, else parsed from the text) and editable in the
+  plan; `s` is the substrate under the piece (stand, bisque ring), added to its
+  height. No schema change; older versions keep the fields on edit (merge).
+- **Defaults:** gap from the kiln's gaps by the run's purpose; clearance from the
+  kiln; floor posts 0.
+- **Height:** z₁ = p₀; zᵢ₊₁ = zᵢ + tᵢ + pᵢ; room above level i is pᵢ, above the top
+  level H − (zₙ + tₙ); a piece fits if h + s + c ≤ room. Shown per level and as a
+  sum to the lid, plus a side view.
+- **Room on the shelf:** each level tries to place its pieces (with the gap and the
+  posts) without saving positions — „✓ Плоча: всички N имат място“ or „✗ Не се
+  събират: …“; pieces without a base size are named as unchecked.
+- **„Предложи нива“:** assumptions first (shelf, thickness, floor posts, gap,
+  clearance, available posts and their sums, H), then levels with posts, every
+  problem and every unplaced piece with a reason, and on shortage one way out
+  (gap 0, or without the piece that is in the way). „Приеми нивата“ replaces the
+  levels; photos stay on the level with the same number.
+- **Posts from the plan:** a new height (and optional count, `posts.counts`) is added
+  to the kiln only on a second, confirming tap.
+- **Level photos:** Blobs in the IndexedDB database `atelie_photos` (store `blobs`),
+  apart from `atelie_idb`; the level keeps ids. Backups carry them as data URLs in
+  `planPhotos`; import adds the missing ones. Deleting a level deletes its photos.
+
 ### Basic characteristics (v1.31.1)
 
 Optional, structured, next to the old free-text `dimensions` and `weight` (kept):
@@ -244,6 +280,7 @@ modules themselves.
 | `core/merge.js` | `_mergeEdit`, `_EDIT_OWNS` — edits merge into the stored record (see §9) |
 | `calc/shrink.js` | `_shrinkPcts`, `_poroPct` — body-test shrinkage and absorption |
 | `domain/profile.js` | `_fpRamps`, `_fpPeak`, `_fpDuration`, `_fmtDuration`, `_numOrNull` — firing programme |
+| `domain/kilnplan.js` | kiln loading geometry from the prototype (`stack`, `check`, `planLevels`, `postCombos`, `autoArrange`…) with the substrate (`effH`), and adapters `_planSetup`, `_planRun`, `_planGap`, `_planMeasures`, `_planRoom`; bridged as one namespace `window.KilnPlan` (v1.33.0) |
 | `domain/kiln.js` | kiln registry: `KILN_PRESETS`, `_kilnNew`, `_kilnSummary`, `_shelvesSummary`, `_postSizesNorm`, `_kilnWarnings` (v1.32.0) |
 | `domain/traits.js` | size, categories, kiln size: `_readSize`, `_sizeLabel`, `_parseDims`, `_catsNorm`, `_kilnSize` (v1.31.1) |
 | `domain/units.js` | codes and unit numbers: `_nextCode`, `_assignCodes`, `_seriesFreeUnits`, `_allocUnits`, `_countChange`, `_unitsLabel`, `_migrateSeriesUnits` (v1.31.0) |
