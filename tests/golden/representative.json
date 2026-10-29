@@ -381,7 +381,7 @@
   }
  },
  "backup": {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "db": [
    "pieces:8",
    "recipes:2",

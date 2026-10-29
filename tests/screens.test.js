@@ -85,6 +85,9 @@ async function capture(h, root) {
       // the two old fields „Размери (см)“ and „Тегло (г)“ were
       { since: 'v1.31.1', f: t => t.replace(/\nКАТЕГОРИИ\n[\s\S]*?\n\+ ДОБАВИ\n/i, '\n')
         .replace(/\nРАЗМЕРИ, СМ\n[\s\S]*?\nТЕГЛО \(Г\)\nРАЗМЕРИ — ОПИСАНИЕ/i, '\nРАЗМЕРИ (СМ)\nТЕГЛО (Г)') }
+      ,
+      // v1.32.0: „Пещи“ tab first on the firings screen
+      { since: 'v1.32.0', f: t => t.replace(/(^|\n)ПЕЩИ(\n|$)/i, '$1') }
     ].filter(r => vnum(r.since) > PV).map(r => r.f);
     // v1.31.1: new form fields (size, wall, base, starting clay, category input)
     const NEW_FIELDS = vnum('v1.31.1') > PV ? /^(pi-h|pi-w|pi-depth|pi-size-at|pi-size-approx|pi-wall|pi-base|pi-start-mass|pi-cat-new)=/ : null;

@@ -551,13 +551,76 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <!-- v1.11.0: a profile is the programme (a template, reusable); a run is the
        firing that actually happened, once, with these pieces in it. -->
   <div class="tabs" style="display:flex;gap:6px;padding:0 18px 12px;overflow-x:auto;">
+    <button class="tb" id="fptab-kilns" onclick="switchFP('kilns')">Пещи</button>
     <button class="tb on" id="fptab-runs" onclick="switchFP('runs')" data-t="ui.izpichaniya">Изпичания</button>
     <button class="tb" id="fptab-profiles" onclick="switchFP('profiles')" data-t="ui.profili">Профили</button>
   </div>
+  <div id="kiln-list" style="display:none"></div>
   <div id="run-list"></div>
   <div id="fp-list" style="display:none"></div>
 </div>
 
+
+<!-- v1.32.0: ПЕЩ — регистър на пещите и оборудването. Подреждането идва после. -->
+<div class="mo" id="mo-kiln" onclick="closeBg(event,'mo-kiln')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t" id="mo-kiln-t">Нова пещ</div><button class="mo-x" onclick="closeMoAsk('mo-kiln')">×</button></div>
+      <div class="mo-b">
+        <div class="f" id="kl-preset-wrap"><label>Готов модел</label>
+          <select id="kl-preset" onchange="applyKilnPreset(this.value)"><option value="">— попълвам сама —</option></select></div>
+        <div class="f"><label>Име *</label><input type="text" id="kl-name" placeholder="напр. Kittec CB 80 Double"></div>
+        <div style="display:flex;gap:9px;">
+          <div class="f" style="flex:1"><label>Камера</label><select id="kl-shape" onchange="klShapeUi()"><option value="round">кръгла</option><option value="rect">правоъгълна</option></select></div>
+          <div class="f" style="flex:1" id="kl-d-wrap"><label>Диаметър отвътре, см</label><input type="text" inputmode="decimal" id="kl-d"></div>
+          <div class="f" style="flex:1;display:none" id="kl-w-wrap"><label>Ширина отвътре, см</label><input type="text" inputmode="decimal" id="kl-w"></div>
+          <div class="f" style="flex:1;display:none" id="kl-depth-wrap"><label>Дълбочина отвътре, см</label><input type="text" inputmode="decimal" id="kl-depth"></div>
+        </div>
+        <div style="display:flex;gap:9px;">
+          <div class="f" style="flex:1"><label>Височина отвътре, см</label><input type="text" inputmode="decimal" id="kl-h"></div>
+          <div class="f" style="flex:1"><label>Обем, л</label><input type="text" inputmode="decimal" id="kl-volume"></div>
+          <div class="f" style="flex:1"><label>Мощност, kW</label><input type="text" inputmode="decimal" id="kl-power"></div>
+        </div>
+        <div style="display:flex;gap:9px;align-items:flex-end;">
+          <div class="f" style="flex:1"><label>Макс. температура, °C</label><input type="text" inputmode="decimal" id="kl-maxtemp"></div>
+          <label class="f" style="flex:1;display:flex;gap:8px;align-items:center;font-size:12px;padding-bottom:10px;"><input type="checkbox" id="kl-checked" style="width:auto"> размерите са проверени</label>
+        </div>
+        <div class="f"><label>Ориентир „12 ч“ за схемата</label><input type="text" id="kl-ref" placeholder="напр. пантата на капака"></div>
+
+        <div style="border-top:1px solid var(--bdr);margin-top:6px;padding-top:10px;">
+          <div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Плочи</div>
+          <div id="kl-shelves"></div>
+          <button type="button" class="fchip" onclick="addKilnShelf()">+ Плоча</button>
+        </div>
+        <div style="border-top:1px solid var(--bdr);margin-top:12px;padding-top:10px;">
+          <div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Подпори</div>
+          <div id="kl-posts" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
+          <div style="display:flex;gap:9px;align-items:flex-end;">
+            <div class="f" style="flex:1"><label>Нова височина, см</label><input type="text" inputmode="decimal" id="kl-post-new" placeholder="напр. 8" onkeydown="if(event.key==='Enter'){event.preventDefault();addKilnPost();}"></div>
+            <button type="button" class="fchip" style="flex:0 0 auto;width:auto;margin-bottom:10px;" onclick="addKilnPost()">+ Добави</button>
+            <div class="f" style="flex:1"><label>Дебелина, см</label><input type="text" inputmode="decimal" id="kl-post-d"></div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--bdr);margin-top:6px;padding-top:10px;">
+          <div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Отстояния по подразбиране, см</div>
+          <div style="display:flex;gap:9px;">
+            <div class="f" style="flex:1"><label>Бисквит</label><input type="text" inputmode="decimal" id="kl-gap-bisque"></div>
+            <div class="f" style="flex:1"><label>Глазура</label><input type="text" inputmode="decimal" id="kl-gap-glaze"></div>
+            <div class="f" style="flex:1"><label>Друго</label><input type="text" inputmode="decimal" id="kl-gap-other"></div>
+            <div class="f" style="flex:1"><label>Под плочата</label><input type="text" inputmode="decimal" id="kl-clear"></div>
+          </div>
+        </div>
+        <div class="f"><label>Бележки</label><textarea id="kl-notes"></textarea></div>
+        <div id="kl-warn" style="font-size:12px;color:var(--warn);line-height:1.5;margin:4px 0 10px;"></div>
+        <div class="btn-row">
+          <button class="btn bp" onclick="saveKiln()">Запази</button>
+          <button class="btn bd" id="kl-del" onclick="delKiln()" style="display:none">Изтрий</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- DETAIL: Изпичане (firing run) — v1.11.0 -->
 <div class="det" id="det-run">
@@ -1879,7 +1942,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.31.1';
+const APP_VERSION = 'v1.32.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -2718,7 +2781,10 @@ function load(){
     if(dr){
       // Дискът = това, което е прочетено (без нечетимите — тях не пипаме).
       Object.keys(_storageCache).forEach(function(k){
-        if((_isRecKey(k)||k===REC_META)&&_unreadableRecs.indexOf(k)<0)_recDisk[k]=_storageCache[k];
+        // v1.32.0: само колекциите, които тази версия познава. Ключ от по-нова
+        // версия (нова колекция) не влиза тук, затова записът не го трие —
+        // връщането към тази версия не губи чужди данни.
+        if((k===REC_META||(_isRecKey(k)&&REC_COLLS.indexOf(k.split(':')[1])>=0))&&_unreadableRecs.indexOf(k)<0)_recDisk[k]=_storageCache[k];
       });
       _loadInto(dr);
       return;
@@ -4339,7 +4405,7 @@ function bootStorage(){
         for(var i=0;i<localStorage.length;i++){
           var k=localStorage.key(i);
           if(!k)continue;
-          if(k==='atelie_v6'||k==='atelie_userlib'){
+          if(k==='atelie_v6'||k==='atelie_userlib'||k==='atelie_kilns'){
             _storageCache[k]=localStorage.getItem(k);
           }
         }
@@ -4648,7 +4714,7 @@ function _recMigrate(){
 //   {id:'2026-11-kiln', schema:5, about:'...',
 //    select:function(db){return [{coll:'firingRuns',rec:r}, ...];}, // кои записи
 //    apply:function(rec,db){ ... }}                                   // промяната
-var SCHEMA_VERSION=5; // v1.31.0: кодове и номера на бройките
+var SCHEMA_VERSION=6; // v1.31.0: кодове и номера на бройките; v1.32.0: пещите в архива
 var SNAP_PREFIX='snap:';
 var SNAP_KEEP_DAYS=7;
 var _SCHEMA_MIGRATIONS=[
@@ -4837,7 +4903,7 @@ function addNew(){
   else if(cur==='recipes'){editId=null;openRecipeMo();}
   else if(cur==='materials'){if(matTab==='mass'){openMassMo(null);}else{editId=null;openMatMo();}}
   else if(cur==='tests'){editId=null;openTestMo();}
-  else if(cur==='fp'){editId=null;if(fpTab==='profiles')openFPMo(null);else openRunMo(null);}
+  else if(cur==='fp'){editId=null;if(fpTab==='profiles')openFPMo(null);else if(fpTab==='kilns')openKilnMo(null);else openRunMo(null);}
 }
 
 // ══ RENDER ══
@@ -4847,7 +4913,7 @@ function render(s){
   else if(s==='materials')renderMaterials();
   else if(s==='tests')renderTests();
   else if(s==='lib')renderLib();
-  else if(s==='fp'){renderFiringRuns();renderFiringProfiles();}
+  else if(s==='fp'){renderFiringRuns();renderFiringProfiles();renderKilns();}
   updateNotifBadge();
 }
 
@@ -8481,7 +8547,9 @@ function _backupPayload(){
       // от v1.11.0, когато изпичанията останаха извън архива за шест версии.
       series:         DB.series
     },
-    userLibrary: userLibrary
+    userLibrary: userLibrary,
+    // v1.32.0: пещите — отделен раздел (схема 6). По-стара версия го пропуска.
+    kilns: loadKilns()
   };
   return {payload:payload,device:device,now:now};
 }
@@ -8568,6 +8636,8 @@ function importBackup(e){
     if(Array.isArray(parsed.userLibrary)){
       saveUserLib(parsed.userLibrary);
     }
+    // v1.32.0: пещи — по-стар архив ги няма; тогава текущите остават.
+    if(Array.isArray(parsed.kilns)){KILNS=parsed.kilns;saveKilns();}
     // v1.31.0: внесен архив от по-стара версия получава кодове и номера.
     _applyIdentity(_identityPlan(DB));
     // v1.27.1: импортът е съзнателно възстановяване — сривът е решен.
@@ -8629,16 +8699,21 @@ var curRun=null;
 
 function switchFP(t){
   fpTab=t;
-  ['runs','profiles'].forEach(function(k){
+  ['kilns','runs','profiles'].forEach(function(k){
     var b=document.getElementById('fptab-'+k);if(b)b.classList.toggle('on',k===t);
   });
+  var kl=document.getElementById('kiln-list');if(kl)kl.style.display=t==='kilns'?'':'none';
+  if(t==='kilns')renderKilns();
   var rl=document.getElementById('run-list');if(rl)rl.style.display=t==='runs'?'':'none';
   var fl=document.getElementById('fp-list');if(fl)fl.style.display=t==='profiles'?'':'none';
   _updateFPCount();
 }
 function _updateFPCount(){
   var el=document.getElementById('cnt-fp');if(!el)return;
-  if(fpTab==='profiles'){
+  if(fpTab==='kilns'){
+    var nk=KILNS.length;
+    el.textContent=nk+' '+(nk===1?'пещ':'пещи');
+  } else if(fpTab==='profiles'){
     var n=DB.firingProfiles.length;
     el.textContent=n+' '+(n===1?'профил':'профила');
   } else {
@@ -9134,6 +9209,138 @@ function confirmRunTestAttach(){
   toast(ids.length+(ids.length===1?' тест добавен':' теста добавени'));
 }
 
+// ══ ПЕЩИ (v1.32.0) ═══════════════════════════════════════════
+// Регистър на пещите и оборудването им (плочи, подпори, отстояния). Пази се в
+// отделен ключ atelie_kilns, като библиотеката — не като колекция rec:… :
+// по-стара версия не го познава и затова не го трие при връщане назад.
+var KILNS=[],curKiln=null,klShelves=[],klPosts=[];
+function loadKilns(){KILNS=safeLoadJSON('atelie_kilns',[]);if(!Array.isArray(KILNS))KILNS=[];return KILNS;}
+function saveKilns(){return safeSaveJSON('atelie_kilns',KILNS);}
+function _kEsc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function _kNum(v){return v==null?'':String(v).replace('.',',');}
+function renderKilns(){
+  var l=document.getElementById('kiln-list');if(!l)return;
+  if(fpTab==='kilns')_updateFPCount();
+  var items=KILNS.filter(function(k){return k&&!k.archivedAt;});
+  if(!items.length){
+    l.innerHTML='<div style="padding:40px 18px;text-align:center;color:var(--tx3);"><div style="font-size:32px;opacity:.35;margin-bottom:10px;">🔥</div><div style="font-size:13px;line-height:1.6;">Още няма пещи.<br>Пещта е камерата и оборудването ѝ — плочи, подпори, отстояния.<br>Натисни + и избери готов модел или попълни сама.</div></div>';
+    return;
+  }
+  l.innerHTML=items.map(function(k){
+    var w=_kilnWarnings(k);
+    var sub=[_kilnSummary(k),_shelvesSummary(k),(k.posts&&k.posts.sizes&&k.posts.sizes.length?'подпори '+k.posts.sizes.map(_kNum).join(', ')+' см':'')].filter(Boolean).join(' · ');
+    return '<div class="li" onclick="openKilnMo(\''+k.id+'\')">'
+      +'<div class="li-ic"><div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;">⚡</div></div>'
+      +'<div class="li-body"><div class="li-t">'+_kEsc(k.name||'Пещ')+(k.checked?'':' <span style="font-size:11px;color:var(--warn)">· размерите не са проверени</span>')+'</div><div class="li-s">'+_kEsc(sub)+'</div>'
+      +(w.length?'<div class="li-s" style="color:var(--warn)">'+_kEsc(w[0])+(w.length>1?' (+'+(w.length-1)+')':'')+'</div>':'')+'</div>'
+      +'<div class="li-r">›</div></div>';
+  }).join('');
+}
+function openKilnMo(id){
+  var k=id?KILNS.find(function(x){return x.id===id;}):null;
+  curKiln=k?k.id:null;
+  document.getElementById('mo-kiln-t').textContent=k?'Редактирай пещ':'Нова пещ';
+  var ps=document.getElementById('kl-preset');
+  ps.innerHTML='<option value="">— попълвам сама —</option>'+KILN_PRESETS.map(function(p){return '<option value="'+p.key+'">'+_kEsc(p.label)+'</option>';}).join('');
+  ps.value='';
+  document.getElementById('kl-preset-wrap').style.display=k?'none':'';
+  _fillKilnForm(k||_kilnNew('',uid));
+  document.getElementById('kl-del').style.display=k?'':'none';
+  openMo('mo-kiln');
+}
+function _fillKilnForm(k){
+  var g=function(id){return document.getElementById(id);};
+  g('kl-name').value=k.name||'';g('kl-shape').value=k.shape==='rect'?'rect':'round';
+  g('kl-d').value=_kNum(k.d);g('kl-w').value=_kNum(k.w);g('kl-depth').value=_kNum(k.depth);g('kl-h').value=_kNum(k.h);
+  g('kl-volume').value=_kNum(k.volume);g('kl-power').value=_kNum(k.power);g('kl-maxtemp').value=_kNum(k.maxTemp);
+  g('kl-checked').checked=!!k.checked;g('kl-ref').value=k.ref||'';g('kl-notes').value=k.notes||'';
+  var gp=Object.assign({},KILN_DEFAULTS.gaps,k.gaps||{});
+  g('kl-gap-bisque').value=_kNum(gp.bisque);g('kl-gap-glaze').value=_kNum(gp.glaze);g('kl-gap-other').value=_kNum(gp.other);
+  g('kl-clear').value=_kNum(k.clear!=null?k.clear:KILN_DEFAULTS.clear);
+  g('kl-post-d').value=_kNum(k.posts&&k.posts.d!=null?k.posts.d:4);
+  klShelves=JSON.parse(JSON.stringify(k.shelves||[]));
+  klPosts=_postSizesNorm(k.posts&&k.posts.sizes);
+  klShapeUi();renderKilnShelves();renderKilnPosts();_kilnWarnUi();
+}
+function applyKilnPreset(key){
+  if(!key)return;
+  var name=document.getElementById('kl-name').value.trim();
+  var k=_kilnNew(key,uid);
+  _fillKilnForm(k);
+  if(name)document.getElementById('kl-name').value=name;
+}
+function klShapeUi(){
+  var r=document.getElementById('kl-shape').value==='rect';
+  document.getElementById('kl-d-wrap').style.display=r?'none':'';
+  document.getElementById('kl-w-wrap').style.display=r?'':'none';
+  document.getElementById('kl-depth-wrap').style.display=r?'':'none';
+}
+function renderKilnShelves(){
+  var el=document.getElementById('kl-shelves');if(!el)return;
+  if(!klShelves.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);margin-bottom:6px;">Няма плочи.</div>';return;}
+  el.innerHTML=klShelves.map(function(s,i){
+    var size=s.shape==='rect'
+      ?'<div class="f" style="flex:1"><label>Ширина</label><input type="text" inputmode="decimal" value="'+_kNum(s.w)+'" oninput="klShelfSet('+i+',\'w\',this.value)"></div><div class="f" style="flex:1"><label>Дълбочина</label><input type="text" inputmode="decimal" value="'+_kNum(s.depth)+'" oninput="klShelfSet('+i+',\'depth\',this.value)"></div>'
+      :'<div class="f" style="flex:1"><label>Диаметър</label><input type="text" inputmode="decimal" value="'+_kNum(s.d)+'" oninput="klShelfSet('+i+',\'d\',this.value)"></div>';
+    return '<div style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-bottom:8px;">'
+      +'<div style="display:flex;gap:9px;align-items:flex-end;"><div class="f" style="flex:2"><label>Име</label><input type="text" value="'+_kEsc(s.name)+'" oninput="klShelfSet('+i+',\'name\',this.value,true)"></div>'
+      +'<div class="f" style="flex:1"><label>Форма</label><select onchange="klShelfSet('+i+',\'shape\',this.value,true);renderKilnShelves();">'
+      +[['round','кръгла'],['half','половинка'],['rect','правоъгълна']].map(function(o){return '<option value="'+o[0]+'"'+(s.shape===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'
+      +'<button type="button" class="fchip" style="flex:0 0 auto;width:auto;margin-bottom:10px;" onclick="klShelves.splice('+i+',1);renderKilnShelves();_kilnWarnUi();" title="Махни">✕</button></div>'
+      +'<div style="display:flex;gap:9px;">'+size
+      +'<div class="f" style="flex:1"><label>Дебелина</label><input type="text" inputmode="decimal" value="'+_kNum(s.t)+'" oninput="klShelfSet('+i+',\'t\',this.value)"></div>'
+      +'<div class="f" style="flex:1"><label>Брой</label><input type="text" inputmode="numeric" value="'+_kNum(s.qty)+'" oninput="klShelfSet('+i+',\'qty\',this.value)"></div></div></div>';
+  }).join('');
+}
+function klShelfSet(i,k,v,text){
+  var s=klShelves[i];if(!s)return;
+  s[k]=text?v:_numOrNullPos(v);
+  _kilnWarnUi();
+}
+function addKilnShelf(){klShelves.push({id:uid(),name:'',shape:'round',d:null,t:null,qty:1});renderKilnShelves();_kilnWarnUi();}
+function renderKilnPosts(){
+  var el=document.getElementById('kl-posts');if(!el)return;
+  el.innerHTML=klPosts.length?klPosts.map(function(v){return '<span class="fchip on" style="cursor:default">'+_kNum(v)+' см <span onclick="klPosts=klPosts.filter(function(x){return x!=='+v+';});renderKilnPosts();" style="cursor:pointer;margin-left:4px;opacity:.6">✕</span></span>';}).join('')
+    :'<div style="font-size:12px;color:var(--tx3);">Няма записани подпори.</div>';
+}
+function addKilnPost(){
+  var el=document.getElementById('kl-post-new');var v=_numOrNullPos(el.value);
+  if(!(v>0)){toast('Въведи височина в см');return;}
+  klPosts=_postSizesNorm(klPosts.concat([v]));el.value='';renderKilnPosts();
+}
+function _kilnFromForm(){
+  var g=function(id){return document.getElementById(id).value;};
+  var k={name:g('kl-name').trim(),shape:g('kl-shape'),h:_numOrNullPos(g('kl-h')),volume:_numOrNullPos(g('kl-volume')),power:_numOrNullPos(g('kl-power')),
+    maxTemp:_numOrNullPos(g('kl-maxtemp')),checked:document.getElementById('kl-checked').checked,ref:g('kl-ref').trim(),notes:g('kl-notes'),
+    shelves:klShelves.map(function(s){var o={id:s.id||uid(),name:(s.name||'').trim(),shape:s.shape||'round',t:s.t,qty:s.qty};if(o.shape==='rect'){o.w=s.w;o.depth=s.depth;}else o.d=s.d;return o;}),
+    posts:{sizes:_postSizesNorm(klPosts),d:_numOrNullPos(g('kl-post-d'))},
+    gaps:{bisque:_numOrNullPos(g('kl-gap-bisque')),glaze:_numOrNullPos(g('kl-gap-glaze')),other:_numOrNullPos(g('kl-gap-other'))},
+    clear:_numOrNullPos(g('kl-clear'))};
+  if(k.shape==='rect'){k.w=_numOrNullPos(g('kl-w'));k.depth=_numOrNullPos(g('kl-depth'));}else k.d=_numOrNullPos(g('kl-d'));
+  return k;
+}
+function _kilnWarnUi(){var el=document.getElementById('kl-warn');if(el)el.innerHTML=_kilnWarnings(_kilnFromForm()).map(_kEsc).join('<br>');}
+function saveKiln(){
+  var k=_kilnFromForm();
+  if(!k.name){toast('Въведи име');focusEl('kl-name');return;}
+  var now=new Date().toISOString(),old=curKiln?KILNS.find(function(x){return x.id===curKiln;}):null;
+  if(old){
+    // Сливане: полетата, които формулярът не показва (напр. от по-нова версия), остават.
+    var i=KILNS.indexOf(old);KILNS[i]=Object.assign({},old,k,{id:old.id,updatedAt:now});
+  } else {
+    k.id=uid();k.createdAt=now;k.updatedAt=now;
+    var pr=document.getElementById('kl-preset').value;if(pr)k.preset=pr;
+    KILNS.push(k);
+  }
+  saveKilns();closeMo('mo-kiln');renderKilns();toast(old?'Обновено':'Пещта е добавена');
+}
+function delKiln(){
+  var k=KILNS.find(function(x){return x.id===curKiln;});if(!k)return;
+  if(!confirm('Изтрий „'+(k.name||'')+'“?\n\nИзпичанията досега не я ползват, нищо друго не се променя.'))return;
+  KILNS=KILNS.filter(function(x){return x.id!==curKiln;});
+  saveKilns();closeMo('mo-kiln');renderKilns();toast(t('msg.iztrito'));
+}
+
 function renderFiringRuns(){
   _updateFPCount();
   var l=document.getElementById('run-list');if(!l)return;
@@ -9503,6 +9710,7 @@ Promise.all([bootStorage(),_modulesReady]).then(function(r){
   seedGuides(_guides);
   load();
   if(_storageBroken){_showStorageBroken();return;} // v1.27.1: load() откри нечетим запис
+  loadKilns(); // v1.32.0
   // v1.29.0: новите миграции — след load(), със запазени копия. Днес списъкът е празен.
   _schemaNewerWarning();
   // Рендерът чака миграциите, за да не покаже данни отпреди тях.

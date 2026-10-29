@@ -105,7 +105,7 @@
   }
  },
  "backup": {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "db": [
    "pieces:3",
    "recipes:0",
