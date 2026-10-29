@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.33.2 · `atelie-v92`
+**Version:** v1.34.0 · `atelie-v93`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -205,6 +205,16 @@ changes only after success; on failure (or broken storage) the form stays open w
 an error inside it and nothing is changed.
 
 ### Kiln plan (v1.33.0)
+
+**Depths (v1.34.0).** `config.mode`: none = „Нива“ (levels only), `scheme` =
+„Схема“ (top view, tap and drag; suggested spots shown dashed until stored),
+`exact` = „Точно“ (x, y, rotation for pieces, shelf instances and posts; nudges).
+Coordinates are optional and relative to the chamber centre (x toward 3 o'clock,
+y toward 12). A positioned piece is checked against the shelves (outer edge: error;
+the joint of two halves: warning), the gap, other pieces and posts; a piece without
+a place by height only. Several shelves per level (two halves, or more); in
+„Схема“ the posts of the level below follow the shelves. Switching back to „Нива“
+keeps the places.
 
 From v1.33.2 the run detail is grouped Подготовка / Зареждане / Резултати, with the plan as a card in Зареждане; the piece editor is grouped Основни данни / Материали и техника / Размери и физически характеристики / Допълнителна информация, and „Тип“ is labelled „Вид изделие“ (field `type` unchanged).
 
