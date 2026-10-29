@@ -1981,7 +1981,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.33.0';
+const APP_VERSION = 'v1.33.1';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -10365,9 +10365,34 @@ function _fixStaleModules(){
   try{tried=sessionStorage.getItem(key)==='1';}catch(e){}
   if(!tried&&navigator.onLine!==false){
     try{sessionStorage.setItem(key,'1');}catch(e){}
-    var done=function(){location.reload();};
-    if(window.caches&&caches.keys){caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}).then(done,done);}
-    else done();
+    // Презареждането чака service worker-а да довърши обновяването си — иначе
+    // активирането му може да прекъсне навигацията и страницата да остане празна.
+    // Ако презареждането все пак не стане, второ след 4 секунди.
+    var done=function(){
+      var go=function(){setTimeout(function(){location.reload();},4000);location.reload();};
+      var sw=navigator.serviceWorker;
+      if(!sw||!sw.getRegistration){go();return;}
+      sw.getRegistration().then(function(reg){
+        var nw=reg&&(reg.installing||reg.waiting);
+        if(!nw){go();return;}
+        var fired=false;function fin(){if(!fired){fired=true;setTimeout(go,300);}}
+        nw.addEventListener('statechange',function(){if(nw.state==='activated'||nw.state==='redundant')fin();});
+        setTimeout(fin,3000);
+      },go);
+    };
+    // v1.33.1: браузърът също пази файловете (GitHub Pages — до 10 минути), не само
+    // кешът на приложението. Затова страницата, app.js и всеки модул се теглят
+    // наново с cache:'reload' — това подменя и запазеното от браузъра копие.
+    var fresh=function(u){return fetch(u,{cache:'reload'}).then(function(r){return r.ok?r.text():'';}).catch(function(){return '';});};
+    var refetch=function(){
+      return Promise.all([fresh('./index.html'),fresh('./app.js')]).then(function(t){
+        var mods=[],re=/import\s[^'"]*['"](\.\/[^'"]+)['"]/g,m;
+        while((m=re.exec(t[1]||''))){mods.push(m[1]);}
+        return Promise.all(mods.map(fresh));
+      });
+    };
+    var clear=(window.caches&&caches.keys)?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}):Promise.resolve();
+    clear.then(refetch,refetch).then(done,done);
     return true;
   }
   return false;

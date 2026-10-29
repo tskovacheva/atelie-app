@@ -2,11 +2,14 @@
 // Cache strategy:
 //   Navigation (HTML): network-first → cache fallback
 //   .js / .json / .webmanifest: network-first → cache fallback (v1.32.1)
+//   Both ask the server every time (cache: 'no-cache', v1.33.1): GitHub Pages lets
+//   the browser keep files for 10 minutes, and a new index.html with a kept
+//   app.js is the half-loaded update. The server answers 304 when nothing changed.
 //   Everything else:   cache-first  → network fallback
 // Bump CACHE_NAME on every deploy to trigger cache refresh.
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'atelie-v90';
+const CACHE_NAME = 'atelie-v91';
 
 const PRECACHE_URLS = [
   './',
@@ -113,7 +116,7 @@ self.addEventListener('fetch', function (event) {
   if (req.mode === 'navigate') {
     // Navigation → network-first, cache fallback
     event.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then(function (networkRes) {
           // Update cache with fresh response
           var clone = networkRes.clone();
@@ -133,7 +136,7 @@ self.addEventListener('fetch', function (event) {
     // както index.html. Иначе при обновяване нов index.html тръгва със стар
     // модул от кеша. Без връзка — от кеша.
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: req.cache === 'reload' ? 'reload' : 'no-cache' })
         .then(function (networkRes) {
           if (networkRes && networkRes.ok) {
             var clone = networkRes.clone();
