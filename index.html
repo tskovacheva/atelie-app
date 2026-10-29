@@ -555,6 +555,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <button class="tb on" id="fptab-runs" onclick="switchFP('runs')" data-t="ui.izpichaniya">Изпичания</button>
     <button class="tb" id="fptab-profiles" onclick="switchFP('profiles')" data-t="ui.profili">Профили</button>
   </div>
+  <div id="fp-hint" style="font-size:12px;color:var(--tx3);line-height:1.5;padding:0 18px 10px;">Изпичането — конкретно събитие: дата, пещ, профил, изделия, план на зареждането и резултати.</div>
   <div id="kiln-list" style="display:none"></div>
   <div id="run-list"></div>
   <div id="fp-list" style="display:none"></div>
@@ -652,17 +653,23 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="det-m" id="drn-m"></div>
   </div>
   <div class="det-body">
-    <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
+    <!-- v1.33.2: Подготовка / Зареждане / Резултати -->
+    <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;margin:0 0 10px;">Подготовка</div>
     <div class="ds"><div class="ds-t" data-t="ui.parametri">Параметри</div><div id="drn-rows"></div></div>
     <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t" data-t="ui.alternativno-izpichane">Алтернативно изпичане</div><div id="drn-alt"></div></div>
+    <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Зареждане</div>
+    <div class="ds" id="drn-plan-sec"><div class="ds-t">План на пещта</div>
+      <div style="border:1px solid var(--bdr2);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+        <div id="drn-plan" style="flex:1;min-width:0;font-size:12px;color:var(--tx2);line-height:1.55;"></div>
+        <button onclick="openPlan(curRun)" id="drn-plan-btn" style="flex:0 0 auto;background:var(--primary);color:white;border:none;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:inherit;min-height:40px;">Отвори</button>
+      </div>
+    </div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
       <span>Изделия в това изпичане <span id="drn-pieces-count" style="color:var(--tx3);font-weight:400;"></span></span>
       <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
     </div><div id="drn-pieces"></div></div>
-    <div class="ds" id="drn-plan-sec"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
-      <span>План на пещта</span>
-      <button onclick="openPlan(curRun)" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" id="drn-plan-btn">Отвори</button>
-    </div><div id="drn-plan" style="font-size:12px;color:var(--tx2);line-height:1.55;"></div></div>
+    <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Резултати</div>
+    <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
       <span data-t="ui.testove">Тестове</span>
       <button onclick="openRunTestAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
@@ -961,14 +968,22 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       </div>
       <input type="file" id="pi-ph" accept="image/*" multiple style="display:none" onchange="handlePh(event,'pi-prev',pPh,5)">
 
-      <!-- v1.5.3: ОСНОВНИ ПОЛЕТА (винаги видими) -->
+      <!-- v1.33.2: четири групи. Размерите са видими — ползват се в плана на пещта. -->
+      <div class="pi-sec" style="font-size:15px;color:var(--text);font-weight:500;margin:4px 0 8px;">Основни данни</div>
       <div class="f"><label data-t="ui.naimenovanie">Наименование *</label><input type="text" id="pi-name" data-tp="ph.napr-chasha" placeholder="напр. чаша"></div>
-      <div class="f"><label data-t="opt.glina">Глина</label>
-        <select id="pi-clay"><option value="">—</option></select>
-        <button type="button" onclick="openNewClayFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:2px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;" data-t="ui.dobavi-nova-glina">+ Добави нова глина</button>
-      </div>
-      <!-- v1.20.0 (А7): едно поле, не втори поток. Остане ли 1 — изделие; стане ли
-           повече — серия с общ процес. -->
+      <div class="f"><label>Вид изделие</label>
+            <input type="text" id="pi-type" placeholder="напр. чаша, окарина, ваза" list="pi-type-list" autocomplete="off">
+            <datalist id="pi-type-list"></datalist>
+            <div style="font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5;">Самото изделие — чаша, окарина. Категориите са по-общите групи — функционална керамика, музикални инструменти, скулптура.</div>
+          </div>
+      <!-- v1.31.1: категории — повече от една; „Тип“ остава свободен текст. -->
+          <div class="f"><label>Категории</label>
+            <div id="pi-cats" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="pi-cat-new" placeholder="друга категория" style="flex:1 1 auto;min-width:0;width:auto" onkeydown="if(event.key==='Enter'){event.preventDefault();addPiCat();}">
+              <button type="button" class="fchip" style="flex:0 0 auto;width:auto;" onclick="addPiCat()">+ Добави</button>
+            </div>
+          </div>
       <div class="f" id="pi-count-wrap"><label data-t="ui.broy">Брой</label>
         <input type="number" id="pi-count" min="1" step="1" value="1" placeholder="1">
         <div id="pi-count-hint" style="font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;" data-t="ui.poveche-ot-1-sazdava-seriya-partid">Повече от 1 създава серия — партида с общ процес.</div>
@@ -994,29 +1009,15 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       </div>
       <div class="f"><label data-t="ui.data">Дата</label><input type="date" id="pi-date"></div>
 
-      <!-- v1.5.3: ДОПЪЛНИТЕЛНИ ДЕТАЙЛИ (collapsible) -->
-      <div id="pi-more-wrap" style="margin-top:6px;">
-        <div id="pi-more-toggle" onclick="togglePiMore()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 0;user-select:none;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);">
-          <span style="font-size:12px;color:var(--tx2);font-weight:500;letter-spacing:.03em;" data-t="ui.dopalnitelni-detayli">Допълнителни детайли</span>
-          <span id="pi-more-chev" style="font-size:14px;color:var(--tx3);transition:transform .2s ease;">▾</span>
-        </div>
-        <div id="pi-more-body" style="display:none;padding-top:10px;">
-          <div class="f"><label data-t="ui.tip">Тип</label>
-            <input type="text" id="pi-type" data-tp="ph.napr-vaza-chasha-muzikalen-instrum" placeholder="напр. ваза, чаша, музикален инструмент" list="pi-type-list" autocomplete="off">
-            <datalist id="pi-type-list"></datalist>
-          </div>
-          <!-- v1.31.1: категории — повече от една; „Тип“ остава свободен текст. -->
-          <div class="f"><label>Категории</label>
-            <div id="pi-cats" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-            <div style="display:flex;gap:6px;margin-top:6px;">
-              <input type="text" id="pi-cat-new" placeholder="друга категория" style="flex:1 1 auto;min-width:0;width:auto" onkeydown="if(event.key==='Enter'){event.preventDefault();addPiCat();}">
-              <button type="button" class="fchip" style="flex:0 0 auto;width:auto;" onclick="addPiCat()">+ Добави</button>
-            </div>
-          </div>
-          <div class="f"><label data-t="ui.tehnika">Техника</label>
+      <div class="pi-sec" style="font-size:15px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:14px 0 8px;padding-top:12px;">Материали и техника</div>
+      <div class="f"><label data-t="opt.glina">Глина</label>
+        <select id="pi-clay"><option value="">—</option></select>
+        <button type="button" onclick="openNewClayFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;margin-top:2px;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;" data-t="ui.dobavi-nova-glina">+ Добави нова глина</button>
+      </div>
+      <div class="f"><label data-t="ui.tehnika">Техника</label>
             <select id="pi-tech"><option value="">—</option><option data-t="opt.tochene">Точене</option><option data-t="opt.fursh-namotki">Фурш / намотки</option><option data-t="opt.platki">Платки</option><option data-t="opt.rachno-formovane">Ръчно формоване</option><option data-t="opt.kalap">Калъп</option><option data-t="opt.kurinuki">Куринуки</option><option data-t="opt.drugo">Друго</option></select>
           </div>
-          <div class="f"><label data-t="ui.glazura-recepta">Глазура / Рецепта</label>
+      <div class="f"><label data-t="ui.glazura-recepta">Глазура / Рецепта</label>
             <input type="search" id="pi-rec-srch" data-tp="ph.tarsi-v-spisaka" placeholder="Търси в списъка…" style="width:100%;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;" oninput="filterGlzDropdown('pi-rec',this.value)">
             <select id="pi-rec"><option value="" data-t="opt.bez-glazura">— без глазура —</option></select>
             <div style="display:flex;gap:14px;margin-top:2px;flex-wrap:wrap;">
@@ -1024,15 +1025,17 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
               <button type="button" onclick="openNewGlazeMaterialFromPiece()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:4px 0;text-align:left;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;" data-t="ui.dobavi-nova-gotova-glazura">+ Добави нова готова глазура</button>
             </div>
           </div>
-          <div style="display:flex;gap:9px;">
+      <div style="display:flex;gap:9px;">
             <div class="f" style="flex:1"><label data-t="ui.biskvit-c">Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
             <div class="f" style="flex:1"><label data-t="ui.glazurno-c">Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
           </div>
-          <!-- v1.31.1: основни характеристики — структурирани, незадължителни. Ползват
+
+      <div class="pi-sec" style="font-size:15px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:14px 0 8px;padding-top:12px;">Размери и физически характеристики</div>
+      <!-- v1.31.1: основни характеристики — структурирани, незадължителни. Ползват
                се като предложение при подреждане на пещта. Пълната история на
                измерванията идва по-късно. -->
-          <div id="pi-traits" style="border-top:1px solid var(--bdr);margin-top:6px;padding-top:10px;">
-            <div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Размери, см</div>
+          <div id="pi-traits">
+            <div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:6px;">В сантиметри. Височината и ширината се ползват в плана на пещта.</div>
             <div style="display:flex;gap:9px;">
               <div class="f" style="flex:1"><label>Височина</label><input type="text" inputmode="decimal" id="pi-h" oninput="_piDimFillHint()" placeholder="напр. 12"></div>
               <div class="f" style="flex:1"><label>Ширина / Ø</label><input type="text" inputmode="decimal" id="pi-w" oninput="_piDimFillHint()" placeholder="напр. 8"></div>
@@ -1048,18 +1051,23 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
               <div class="f" style="flex:1"><label>Стена, мм</label><input type="text" inputmode="decimal" id="pi-wall" placeholder="напр. 6"></div>
               <div class="f" style="flex:1"><label>Дъно, мм</label><input type="text" inputmode="decimal" id="pi-base" placeholder="напр. 8"></div>
             </div>
-            <div style="display:flex;gap:9px;">
+            <div style="display:flex;gap:9px;align-items:flex-end;">
               <div class="f" style="flex:1"><label id="pi-start-mass-l">Начално количество глина, г</label><input type="text" inputmode="decimal" id="pi-start-mass" placeholder="напр. 450"></div>
               <div class="f" style="flex:1"><label data-t="ui.teglo-g">Тегло (г)</label><input type="number" id="pi-weight" data-tp="ph.napr-640" placeholder="напр. 640"></div>
             </div>
             <!-- v1.13.0: свободното описание остава, както е било. -->
             <div class="f"><label>Размери — описание</label><input type="text" id="pi-dimensions" data-tp="ph.napr-v18-12" placeholder="напр. в18 × ⌀12" oninput="_piDimFillHint()"></div>
           </div>
-        </div>
-      </div>
 
+      <!-- Допълнителна информация — сгъната; отваря се сама, ако има бележки. -->
+      <div id="pi-more-wrap" style="margin-top:14px;">
+        <div id="pi-more-toggle" onclick="togglePiMore()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 0;user-select:none;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);">
+          <span style="font-size:15px;color:var(--text);font-weight:500;">Допълнителна информация</span>
+          <span id="pi-more-chev" style="font-size:14px;color:var(--tx3);transition:transform .2s ease;">▾</span>
+        </div>
+        <div id="pi-more-body" style="display:none;padding-top:10px;">
       <!-- v1.4.5: Quick-add collapsible — за завършено изделие с известен метод и декорация -->
-      <div id="pi-quickfinal-wrap" style="margin-top:14px;">
+      <div id="pi-quickfinal-wrap" style="margin-bottom:12px;">
         <div id="pi-quickfinal-toggle" onclick="togglePiQuickFinal()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--primary-soft);border:1.5px dashed var(--primary);border-radius:10px;user-select:none;">
           <span style="font-size:12px;color:var(--primary);font-weight:600;letter-spacing:.04em;" data-t="ui.dobavi-metod-na-izpichane-dekoraci">+ Добави метод на изпичане / декорация</span>
           <span id="pi-quickfinal-chev" style="font-size:16px;color:var(--primary);transition:transform .2s ease;line-height:1;">▾</span>
@@ -1130,8 +1138,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           </div>
         </div>
       </div>
-
-      <div class="f" style="margin-top:14px;"><label data-t="ui.belezhki">Бележки</label><textarea id="pi-notes"></textarea></div>
+      <div class="f"><label data-t="ui.belezhki">Бележки</label><textarea id="pi-notes"></textarea></div>
+        </div>
+      </div>
 
       <button class="btn bp" onclick="savePiece()" data-t="ui.zapazi">Запази</button>
       <button class="btn bg" onclick="closeMoAsk('mo-piece')" data-t="ui.otkazhi">Откажи</button>
@@ -1981,7 +1990,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.33.1';
+const APP_VERSION = 'v1.33.2';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -5497,7 +5506,7 @@ function openPieceDet(id){
   var _tempRows=[];
   if(_bisque)_tempRows.push(dr('Бисквит',_bisque+'°C'));
   if(_glaze)_tempRows.push(dr('Глазурно',_glaze+'°C'));
-  var _typeRow=p.type?dr('Тип',p.type):'';
+  var _typeRow=p.type?dr('Вид изделие',p.type):'';
   // v1.13.0: descriptive size/weight rows
   var _dimRows=_traitRows(p); // v1.31.1
   document.getElementById('dpi-info').innerHTML=[_typeRow,dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',clayName(p.clay)),dr('Глазура',_glzLabel)].concat(_tempRows).concat(_dimRows).join('');
@@ -5628,7 +5637,7 @@ function openSeriesDet(id){
 
   var _glz=_glazeNameFor(se);
   var _rows=[];
-  if(se.type)_rows.push(dr('Тип',se.type));
+  if(se.type)_rows.push(dr('Вид изделие',se.type));
   _rows.push(dr('Етап',stageLabel(se.stage||'wet')||'—'));
   _rows.push(dr('Глина',clayName(se.clay)));
   if(_glz)_rows.push(dr('Глазура',_glz));
@@ -6443,7 +6452,7 @@ function openPieceMo(p){
   // v1.5.3: Auto-open "More details" if any additional field has a value on edit
   var hasMoreData=false;
   if(p){
-    if(p.type||p.technique||p.recipe||p.material||p.bisqueTemp||p.glazeTemp||p.dimensions||p.weight!=null)hasMoreData=true;
+    if(p.notes)hasMoreData=true; // v1.33.2: в сгънатото са само бележките (и бързото добавяне)
   }
   setPiMoreOpen(hasMoreData);
   renderPrev('pi-prev',pPh);
@@ -8755,6 +8764,11 @@ function switchFP(t){
   if(t==='kilns')renderKilns();
   var rl=document.getElementById('run-list');if(rl)rl.style.display=t==='runs'?'':'none';
   var fl=document.getElementById('fp-list');if(fl)fl.style.display=t==='profiles'?'':'none';
+  // v1.33.2: един ред какво е всяко и как се свързва с изпичането.
+  var hint=document.getElementById('fp-hint');
+  if(hint)hint.textContent=t==='kilns'?'Пещта — оборудването: камера, плочи, подпори. Избира се в плана на всяко изпичане.'
+    :t==='profiles'?'Профилът — температурна програма за многократна употреба. Избира се в изпичането.'
+    :'Изпичането — конкретно събитие: дата, пещ, профил, изделия, план на зареждането и резултати.';
   _updateFPCount();
 }
 function _updateFPCount(){
@@ -8902,6 +8916,7 @@ function openRunDet(id){
     dr('Тип',purL[r.purpose]||''),
     dr('Атмосфера',atmL[r.atmosphere]||''),
     dr('Профил (планирано)',fp?fp.name:(r.firingProfileId?'Изтрит профил':'')),
+    dr('Пещ',(function(){if(!r.kilnId)return '';loadKilns();var k=KILNS.find(function(x){return x.id===r.kilnId;});return k?k.name:'';})()),
     dr('Пикова температура',r.peakTemp!=null?r.peakTemp+'°C':''),
     dr('Задръжка',r.holdMin!=null?r.holdMin+' мин':''),
     dr('Конуси',r.cones)
@@ -8956,7 +8971,7 @@ function openRunDet(id){
     : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Няма закачени тестове.</div>';
   // v1.33.0: план на пещта — кратко; самият план е на отделен екран.
   var _pl=document.getElementById('drn-plan');if(_pl){loadKilns();_pl.textContent=_plSummary(r);}
-  var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори':'+ План';
+  var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори плана':'Направи план';
   document.getElementById('drn-notes').textContent=r.notes||'—';
   _openDet('det-run');
 }
