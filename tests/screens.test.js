@@ -88,6 +88,9 @@ async function capture(h, root) {
       ,
       // v1.32.0: „Пещи“ tab first on the firings screen
       { since: 'v1.32.0', f: t => t.replace(/(^|\n)ПЕЩИ(\n|$)/i, '$1') }
+      ,
+      // v1.33.0: the run detail has a „План на пещта“ section before the tests
+      { since: 'v1.33.0', f: t => t.replace(/\nПЛАН НА ПЕЩТА\n(\+ План|Отвори)\nОще няма план\.[^\n]*/i, '') }
     ].filter(r => vnum(r.since) > PV).map(r => r.f);
     // v1.31.1: new form fields (size, wall, base, starting clay, category input)
     const NEW_FIELDS = vnum('v1.31.1') > PV ? /^(pi-h|pi-w|pi-depth|pi-size-at|pi-size-approx|pi-wall|pi-base|pi-start-mass|pi-cat-new)=/ : null;

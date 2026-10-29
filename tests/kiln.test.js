@@ -5,12 +5,9 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = process.env.GLINA_ROOT || path.resolve(__dirname, '..');
-const file = path.join(ROOT, 'kiln-v0.html');
-if (!fs.existsSync(file)) { console.log('kiln: - no kiln-v0.html in this version'); process.exit(0); }
-const src = fs.readFileSync(file, 'utf8').match(/<script id="kiln-geo">([\s\S]*?)<\/script>/)[1];
-const m = { exports: {} };
-new Function('module', src)(m);
-const G = m.exports;
+// KILN_GEO=module: the same tests against domain/kilnplan.js (v1.33.0), the copy in Глина.
+const G = require('./lib/kilngeo')(ROOT, process.env.KILN_GEO);
+if (!G) { console.log('kiln: - no geometry in this version'); process.exit(0); }
 
 let failed = 0, passed = 0;
 const eq = (name, got, want) => {
@@ -19,7 +16,7 @@ const eq = (name, got, want) => {
 };
 const near = (a, b, e) => Math.abs(a - b) < (e || 1e-6);
 
-console.log('kiln:');
+console.log('kiln' + (process.env.KILN_GEO === 'module' ? ' (domain/kilnplan.js)' : '') + ':');
 const shelf = { id: 'sh', shape: 'round', d: 47, t: 1.6 };
 const S = { kiln: { shape: 'round', d: 50, h: 45 }, shelves: [shelf], postSizes: [5, 10, 15], postD: 4 };
 const piece = (o) => Object.assign({ id: 'p' + Math.random(), no: 1, name: '', shape: 'round', rot: 0, x: 0, y: 0 }, o);
