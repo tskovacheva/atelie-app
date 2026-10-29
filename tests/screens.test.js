@@ -69,19 +69,32 @@ async function capture(h, root) {
     const after = await capture(h, ROOT);
     // Intended, visible changes of this release against the previous one. Each is
     // removed from the new text before the comparison — anything else must match.
+    // `since` = the release that made the change; a rule applies only when the
+    // previous release is older than that.
+    const vnum = v => v.replace(/^v/, '').split('.').map(Number).reduce((a, x) => a * 1000 + x, 0);
+    const PV = vnum(PREVS[PREVS.length - 1].version);
     const INTENDED = [
       // v1.31.0: codes GL-2026-014 and GL-2026-014/3 on cards and in details
-      t => t.replace(/GL-\d{4}-\d{3,}(\/\d+(?:[–,] ?\d+)*)?( · в архива)?( · )?/g, ''),
+      { since: 'v1.31.0', f: t => t.replace(/GL-\d{4}-\d{3,}(\/\d+(?:[–,] ?\d+)*)?( · в архива)?( · )?/g, '') },
       // v1.31.0: the count field is shown when editing a standalone piece
-      t => t.replace(/\nБРОЙ\n/i, '\n').replace(/\nПовече от 1 превръща изделието в серия[^\n]*/, ''),
+      { since: 'v1.31.0', f: t => t.replace(/\nБРОЙ\n/i, '\n').replace(/\nПовече от 1 превръща изделието в серия[^\n]*/, '') },
       // v1.31.0: „Изтрий“ is „Архивирай“
-      t => t.replace(/\nАРХИВИРАЙ(\n|$)/i, '\nИЗТРИЙ$1').replace(/\nАрхив\n/, '\n')
-    ];
+      { since: 'v1.31.0', f: t => t.replace(/\nАРХИВИРАЙ(\n|$)/i, '\nИЗТРИЙ$1').replace(/\nАрхив\n/, '\n') }
+      ,
+      // v1.31.1: categories in the editor, and the structured size block where
+      // the two old fields „Размери (см)“ and „Тегло (г)“ were
+      { since: 'v1.31.1', f: t => t.replace(/\nКАТЕГОРИИ\n[\s\S]*?\n\+ ДОБАВИ\n/i, '\n')
+        .replace(/\nРАЗМЕРИ, СМ\n[\s\S]*?\nТЕГЛО \(Г\)\nРАЗМЕРИ — ОПИСАНИЕ/i, '\nРАЗМЕРИ (СМ)\nТЕГЛО (Г)') }
+    ].filter(r => vnum(r.since) > PV).map(r => r.f);
+    // v1.31.1: new form fields (size, wall, base, starting clay, category input)
+    const NEW_FIELDS = vnum('v1.31.1') > PV ? /^(pi-h|pi-w|pi-depth|pi-size-at|pi-size-approx|pi-wall|pi-base|pi-start-mass|pi-cat-new)=/ : null;
     const clean = t => INTENDED.reduce((x, f) => f(x), t).split('\n').map(l => l.trim()).filter(Boolean).join('\n');
     const flat = t => t.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
     for (const [name] of VIEWS) {
       const a = before[name], b = after[name];
       a.text = flat(a.text); b.text = clean(b.text);
+      // v1.31.1 also moved „Тегло“ before the description: same fields, order free
+      if (NEW_FIELDS) { b.vals = b.vals.filter(v => !NEW_FIELDS.test(v)).sort(); a.vals = a.vals.slice().sort(); }
       if (b.errors.length) { failed++; console.log('  FAIL ' + name + ' — page error: ' + b.errors.join(' | ')); continue; }
       if (a.text === b.text && JSON.stringify(a.vals) === JSON.stringify(b.vals)) { passed++; console.log('  ok   ' + name); continue; }
       failed++;
