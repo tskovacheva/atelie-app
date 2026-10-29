@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.33.1 · `atelie-v91`
+**Version:** v1.33.2 · `atelie-v92`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -205,6 +205,8 @@ changes only after success; on failure (or broken storage) the form stays open w
 an error inside it and nothing is changed.
 
 ### Kiln plan (v1.33.0)
+
+From v1.33.2 the run detail is grouped Подготовка / Зареждане / Резултати, with the plan as a card in Зареждане; the piece editor is grouped Основни данни / Материали и техника / Размери и физически характеристики / Допълнителна информация, and „Тип“ is labelled „Вид изделие“ (field `type` unchanged).
 
 Depth „Нива“ of the kiln module: which piece goes on which level and whether it
 fits. A section in the run detail („План на пещта“: kiln · levels · pieces ·
