@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.30.0 · `atelie-v84`
+**Version:** v1.31.0 · `atelie-v85`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -156,7 +156,7 @@ so nothing outside the storage layer notices.
 `SCHEMA_VERSION` is the version of the data format. It is written into `rec:meta`
 (`schema`) and into every backup (`schemaVersion`) — one number for both. It
 changes only when a migration changes the format, not with every app version;
-v1.30.0 is still 4.
+v1.30.0 was 4; v1.31.0 is 5 (identity: codes and unit numbers).
 
 The three historical migrations (v1.3.2, v1.4.2.3, v1.15.0) stay in
 `runMigrations()` as they were. New ones are registered in `_SCHEMA_MIGRATIONS` as
@@ -181,8 +181,28 @@ The three historical migrations (v1.3.2, v1.4.2.3, v1.15.0) stay in
 - Data stamped with a newer schema than the app knows still opens, with a console
   warning.
 
-The list is empty in v1.30.0: the foundation is in place before the first
-migration that needs it (the kiln, phase 2).
+The first migration is `2026-10-identity` (v1.31.0, schema 5): codes for pieces and
+series by creation date, unit numbers for split pieces by split order; counts and
+stages untouched. The same fill also runs on every open and after an import, for
+records made by an older version after a rollback.
+
+### Identity (v1.31.0)
+
+- **Code** `GL-<year>-<n>` (`GL-2026-014`) on every standalone piece and series,
+  given at creation in order, never reused. A split piece has no code of its own:
+  it shows the series code + its unit numbers (`GL-2026-014/3`, `…/1–4`), derived.
+- **Unit numbers.** A series keeps `nextUnitNo` and `retiredUnits`; a split piece
+  keeps `units`. A split takes the lowest free numbers; lowering the count retires
+  the highest unsplit ones; raising it adds new numbers after the last. A number is
+  never given twice.
+- **Piece → series.** A standalone piece's editor has „Брой“; more than 1 turns the
+  record into a series with the same id and code; its steps, photos and firings
+  become shared by all units.
+- **Take out of the series** copies the shared steps into the piece (`copiedFrom`),
+  keeps its code and numbers (`fromSeries`), and lowers the series count.
+- **Archive.** Delete archives (`archivedAt`): hidden from the list, kept in firings,
+  series and yield. The „Архив“ filter shows archived records with „Върни“ and
+  „Изтрий завинаги“.
 
 ### Modules (v1.30.0)
 
@@ -197,6 +217,7 @@ modules themselves.
 | `core/merge.js` | `_mergeEdit`, `_EDIT_OWNS` — edits merge into the stored record (see §9) |
 | `calc/shrink.js` | `_shrinkPcts`, `_poroPct` — body-test shrinkage and absorption |
 | `domain/profile.js` | `_fpRamps`, `_fpPeak`, `_fpDuration`, `_fmtDuration`, `_numOrNull` — firing programme |
+| `domain/units.js` | codes and unit numbers: `_nextCode`, `_assignCodes`, `_seriesFreeUnits`, `_allocUnits`, `_countChange`, `_unitsLabel`, `_migrateSeriesUnits` (v1.31.0) |
 
 Modules run after the page is parsed. Boot waits for the bridge before it loads any
 data; if it does not arrive within 8 seconds (a file missing after an upload), the

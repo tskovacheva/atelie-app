@@ -38,7 +38,7 @@
  "tests": {},
  "profiles": {},
  "backup": {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "db": [
    "pieces:0",
    "recipes:5",
@@ -69,6 +69,7 @@
  },
  "dbHash": "tssyml",
  "migrations": [
+  "2026-10-identity",
   "v1.3.2"
  ],
  "ui": {

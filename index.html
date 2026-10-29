@@ -409,6 +409,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button class="fchip" id="fc-pc-noglz" onclick="togglePcChip('noglz')" data-t="ui.bez-glazura">Без глазура</button>
       <button class="fchip" id="fc-pc-hasph" onclick="togglePcChip('hasph')" data-t="ui.sas-snimka">Със снимка</button>
       <button class="fchip" id="fc-pc-noph" onclick="togglePcChip('noph')" data-t="ui.bez-snimka">Без снимка</button>
+      <button class="fchip" id="fc-pc-arch" onclick="togglePcChip('arch')">Архив</button>
     </div>
     <div class="sort-row">
       <span class="sort-lbl" data-t="ui.sortiray">Сортирай:</span>
@@ -653,7 +654,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t" data-t="ui.belezhki">Бележки</div><div id="dpi-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
     <div class="btn-row">
       <button class="btn bg" onclick="editPiece()" data-t="ui.redaktiray">Редактирай</button>
-      <button class="btn bd" onclick="delPiece()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" id="dpi-restore" onclick="restorePiece()" style="display:none">Върни от архива</button>
+      <button class="btn bd" id="dpi-del" onclick="delPiece()">Архивирай</button>
     </div>
   </div>
 </div>
@@ -754,7 +756,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t" data-t="ui.belezhki">Бележки</div><div id="dse-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
     <div class="btn-row">
       <button class="btn bg" onclick="editSeries()" data-t="ui.redaktiray">Редактирай</button>
-      <button class="btn bd" onclick="delSeries()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" id="dse-restore" onclick="restoreSeries()" style="display:none">Върни от архива</button>
+      <button class="btn bd" id="dse-del" onclick="delSeries()">Архивирай</button>
     </div>
   </div>
 </div>
@@ -1847,7 +1850,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.30.0';
+const APP_VERSION = 'v1.31.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -3968,6 +3971,58 @@ function _seriesRemaining(se){
   if(isNaN(total)||total<1)total=1;
   return Math.max(0,total-_seriesSplitCount(se.id));
 }
+// v1.31.0: ИДЕНТИЧНОСТ. Код на изделие и серия (GL-2026-014) и номера на
+// бройките в серия (domain/units.js). Отделеното изделие няма собствен код — то
+// е кодът на серията + номерата му, изведени тук, не записани (принцип 2).
+function pieceCode(p){
+  if(!p)return '';
+  if(p.seriesId){var se=findSeries(p.seriesId);return se&&se.code?se.code+_unitsLabel(p.units):(p.code||'');}
+  return p.code||'';
+}
+function _allCodes(db){
+  db=db||DB;var out=[];
+  (db.pieces||[]).forEach(function(p){if(p&&p.code)out.push(p.code);});
+  (db.series||[]).forEach(function(x){if(x&&x.code)out.push(x.code);});
+  return out;
+}
+function _newCode(rec){return _nextCode(_allCodes(),_codeYear(rec,new Date().getFullYear()));}
+// Какво липсва: код, следващ номер, номера на отделените. Само добавя, нищо не
+// пренаписва. Ползва се от миграцията (със снимка) и след всяко отваряне и
+// внасяне — за записи, създадени от по-стара версия след връщане назад.
+function _identityPlan(db){
+  var out=[],keyed={},year=new Date().getFullYear();
+  function add(coll,rec,k,v){
+    var key=coll+':'+rec.id;
+    if(!keyed[key]){keyed[key]={coll:coll,rec:rec,patch:{}};out.push(keyed[key]);}
+    keyed[key].patch[k]=v;
+  }
+  var need=(db.series||[]).filter(function(x){return x&&!x.code;})
+    .concat((db.pieces||[]).filter(function(x){return x&&!x.code&&!x.seriesId;}));
+  var codes=_assignCodes(need,_allCodes(db),year);
+  (db.series||[]).forEach(function(se){
+    if(!se)return;
+    if(codes[se.id])add('series',se,'code',codes[se.id]);
+    var members=(db.pieces||[]).filter(function(x){return x&&x.seriesId===se.id;});
+    if(se.nextUnitNo==null){
+      var m=_migrateSeriesUnits(se,members);
+      add('series',se,'nextUnitNo',m.nextUnitNo);
+      members.forEach(function(x){if(!Array.isArray(x.units)||!x.units.length)add('pieces',x,'units',m.units[x.id]);});
+      return;
+    }
+    var withU=members.filter(function(x){return Array.isArray(x.units)&&x.units.length;});
+    var cur={count:se.count,nextUnitNo:se.nextUnitNo,retiredUnits:se.retiredUnits};
+    members.filter(function(x){return !(Array.isArray(x.units)&&x.units.length);}).forEach(function(x){
+      var q=parseInt(x.qty,10);if(isNaN(q)||q<1)q=1;
+      var u=_allocUnits(cur,withU,q);
+      if(!u){u=[];for(var i=0;i<q;i++)u.push(cur.nextUnitNo+i);cur.nextUnitNo+=q;add('series',se,'nextUnitNo',cur.nextUnitNo);}
+      add('pieces',x,'units',u);withU.push({units:u});
+    });
+  });
+  (db.pieces||[]).forEach(function(x){if(x&&codes[x.id])add('pieces',x,'code',codes[x.id]);});
+  return out;
+}
+function _applyIdentity(list){(list||[]).forEach(function(x){Object.assign(x.rec,x.patch);});return (list||[]).length;}
+
 // v1.21.0 (А7 фаза 3): процесът на отделено парче е сливане — събитията на
 // серията плюс собствените му. Общите се копират плитко и се маркират
 // `_fromSeries`, за да не може нищо надолу по веригата да ги запише обратно в
@@ -4564,10 +4619,16 @@ function _recMigrate(){
 //   {id:'2026-11-kiln', schema:5, about:'...',
 //    select:function(db){return [{coll:'firingRuns',rec:r}, ...];}, // кои записи
 //    apply:function(rec,db){ ... }}                                   // промяната
-var SCHEMA_VERSION=4;
+var SCHEMA_VERSION=5; // v1.31.0: кодове и номера на бройките
 var SNAP_PREFIX='snap:';
 var SNAP_KEEP_DAYS=7;
-var _SCHEMA_MIGRATIONS=[];
+var _SCHEMA_MIGRATIONS=[
+  // v1.31.0: кодове GL-<година>-<номер> по реда на създаване; номера на
+  // бройките в серии по реда на отделяне. Броят и етапите не се пипат.
+  {id:'2026-10-identity',schema:5,about:'кодове и номера на бройките',
+   select:function(db){this._plan=_identityPlan(db);return this._plan;},
+   apply:function(rec){var x=(this._plan||[]).find(function(y){return y.rec===rec;});if(x)Object.assign(rec,x.patch);}}
+];
 // Записаната версия: от rec:meta, или 0 при стара подредба / нова инсталация.
 function _storedSchema(){
   var m=safeParseJSON(_storageCache[REC_META],null);
@@ -4810,7 +4871,11 @@ function renderPieces(){
     if(se)_all.push(se);
   });
   var total=_all.length;
+  // v1.31.0: архивираните се показват само с филтъра „Архив“ — и тогава само те.
+  var _arch=!!f.arch;
+  total=_all.filter(function(p){return !p.archivedAt;}).length;
   var items=_all.filter(function(p){
+    if(!!p.archivedAt!==_arch)return false;
     // v1.5.2: Normalize both sides — legacy English values map to BG (greenware→wet, glaze-fired→finished)
     // v1.23.1: серия със смесен етап се четеше само по собствения си етап, тоест
     // по остатъка. Филтър „Счупено" не намираше партидата, в която две чинии са
@@ -4870,6 +4935,7 @@ function renderPieces(){
       +'<div class="pch-body">'
         +'<div class="pch-top">'
           +'<div style="min-width:0;"><div class="pch-name">'+(p.name||'')+'</div>'
+            +(pieceCode(p)?'<div class="pch-code" style="font-size:11px;color:var(--tx3);letter-spacing:.03em;">'+pieceCode(p)+(p.archivedAt?' · в архива':'')+'</div>':'')
             +(p.type?'<div class="pch-clay" style="font-style:italic;">'+p.type+'</div>':'')+'</div>'
           +(sl?'<span class="stage-badge sb-'+sn+'" style="flex-shrink:0;">'+sl+'</span>':'')
         +'</div>'
@@ -4927,7 +4993,7 @@ function togglePcChip(key){
   var nextVal=!activeFilters.pc[key];
   activeFilters.pc[key]=nextVal;
   if(nextVal&&pairs[key])activeFilters.pc[pairs[key]]=false;
-  Object.keys(pairs).forEach(function(k){
+  Object.keys(pairs).concat(['arch']).forEach(function(k){
     var el=document.getElementById('fc-pc-'+k);if(el)el.classList.toggle('on',!!activeFilters.pc[k]);
   });
   _updatePcFilterBadge();
@@ -5279,7 +5345,11 @@ function openPieceDet(id){
   var _heroPhoto=getLatestPhoto(p);
   document.getElementById('dpi-hero').innerHTML=_heroPhoto?'<img src="'+_heroPhoto+'" alt="">':K(70);
   document.getElementById('dpi-t').textContent=p.name;
-  document.getElementById('dpi-m').textContent=[p.type,p.date,p.technique].filter(Boolean).join(' · ');
+  document.getElementById('dpi-m').textContent=[pieceCode(p),p.type,p.date,p.technique].filter(Boolean).join(' · ');
+  // v1.31.0: архив — „Върни“ и „Изтрий завинаги“ вместо „Архивирай“.
+  var _arP=!!p.archivedAt;
+  document.getElementById('dpi-restore').style.display=_arP?'':'none';
+  document.getElementById('dpi-del').textContent=_arP?'Изтрий завинаги':'Архивирай';
   const rec=DB.recipes.find(r=>r.id===p.recipe);
   var _pMat=p.material?DB.materials.find(function(m){return m.id===p.material;}):null;
   var _glzLabel=null;
@@ -5408,7 +5478,10 @@ function openSeriesDet(id){
   var hero=getLatestPhoto(se);
   document.getElementById('dse-hero').innerHTML=hero?'<img src="'+hero+'" alt="">':K(70);
   document.getElementById('dse-t').textContent=se.name||'';
-  document.getElementById('dse-m').textContent=[se.type,se.date,se.technique].filter(Boolean).join(' · ');
+  document.getElementById('dse-m').textContent=[se.code,se.type,se.date,se.technique].filter(Boolean).join(' · ');
+  var _arS=!!se.archivedAt;
+  document.getElementById('dse-restore').style.display=_arS?'':'none';
+  document.getElementById('dse-del').textContent=_arS?'Изтрий завинаги':'Архивирай';
 
   // Партида: общо / неразграничени / отделени. Отделените са нула във фаза 2,
   // затова редът се показва само когато има какво да каже.
@@ -5524,8 +5597,10 @@ function saveSplit(){
   });
   // Самоличността се наследява от серията. Процесът НЕ се копира — той се сливa
   // при четене, за да остане един собственик на общите стъпки.
+  // v1.31.0: номерата на бройките — най-ниските неотделени.
+  var _units=_allocUnits(se,_seriesMembers(se.id),n)||[];
   var p={
-    id:uid(),name:name,photos:[],
+    id:uid(),name:name,photos:[],units:_units,
     type:se.type||'',clay:se.clay||'',technique:se.technique||'',
     recipe:se.recipe||'',material:se.material||'',
     bisqueTemp:se.bisqueTemp||'',glazeTemp:se.glazeTemp||'',
@@ -5542,13 +5617,38 @@ function saveSplit(){
   toast(n>1?(n+' парчета са отделени'):'Отделено');
 }
 // Връщане на парче в партидата не се прави — отделянето отразява решение, вече
-// взето върху глината. Грешка при въвеждане се маха с триене на изделието.
+// взето върху глината.
+// v1.31.0 (FS 2.0 П3): изваденото изделие не губи общата история — стъпките на
+// серията до момента се копират в него като собствени. То запазва кода и номерата
+// си (GL-2026-014/3), а серията намалява с толкова бройки; номерата се отписват.
+function _detachCopy(pc,se){
+  var shared=_effectiveEvents(pc).filter(function(e){return e&&e._fromSeries;}).map(function(e){
+    var c=JSON.parse(JSON.stringify(e));delete c._fromSeries;
+    c.copiedFrom={series:se?se.id:pc.seriesId,event:e.id};c.id=uid();return c;
+  });
+  pc.events=shared.concat(Array.isArray(pc.events)?pc.events:[]);
+  var at=new Date().toISOString();
+  pc.code=pieceCode(pc)||pc.code;
+  pc.fromSeries={id:se?se.id:pc.seriesId,units:Array.isArray(pc.units)?pc.units.slice():[],at:at};
+  if((!pc.photos||!pc.photos.length)&&se&&Array.isArray(se.photos)&&se.photos.length)pc.photos=se.photos.slice(0,1);
+  delete pc.seriesId;delete pc.seriesNo;delete pc.qty;delete pc.units;
+  pc.updatedAt=at;
+}
 function detachFromSeries(){
   var pc=DB.pieces.find(function(x){return x.id===curPiece;});
   if(!pc||!pc.seriesId)return;
-  if(!confirm('Извади изделието от серията? Общите стъпки спират да важат за него, собствените остават.'))return;
-  delete pc.seriesId;delete pc.seriesNo;delete pc.qty;
-  pc.updatedAt=new Date().toISOString();
+  var se=findSeries(pc.seriesId);
+  var q=parseInt(pc.qty,10);if(isNaN(q)||q<1)q=1;
+  if(se&&_seriesTotal(se)-q<1){toast('Това са всички бройки на серията — архивирай серията вместо това');return;}
+  if(!confirm('Извади изделието от серията?\n\nОбщите стъпки до момента се копират в него и то запазва кода си. Серията намалява с '+q+' бр.'))return;
+  var units=Array.isArray(pc.units)?pc.units.slice():[];
+  _detachCopy(pc,se);
+  if(se){
+    se.count=_seriesTotal(se)-q;
+    var at=new Date().toISOString();
+    se.retiredUnits=(Array.isArray(se.retiredUnits)?se.retiredUnits:[]).concat(units.map(function(n){return {no:n,at:at,reason:'detached',piece:pc.id};}));
+    se.updatedAt=at;
+  }
   recomputePieceStage(pc);
   save();renderPieces();openPieceDet(curPiece);
   toast(t('msg.izdelieto-e-samostoyatelno'));
@@ -5562,16 +5662,25 @@ function editSeries(){
 function delSeries(){
   var se=findSeries(curSeries);if(!se)return;
   var members=_seriesMembers(curSeries);
+  if(!se.archivedAt){
+    if(!confirm('Архивирай серията „'+(se.name||'')+'“?\n\nСкрива се от списъка, но остава в изпичанията. Отделените изделия остават видими. Връща се от филтъра „Архив“.'))return;
+    se.archivedAt=new Date().toISOString();se.updatedAt=se.archivedAt;
+    save();closeDet('det-series');renderPieces();toast('Архивирано');curSeries=null;return;
+  }
   var msg=members.length
-    ? 'Изтрий серията? '+members.length+' отделени изделия остават като самостоятелни записи.'
-    : 'Изтрий серията?';
+    ? 'Изтрий серията завинаги? '+members.length+' отделени изделия остават като самостоятелни и запазват общата история.'
+    : 'Изтрий серията завинаги? Това не може да се върне.';
   if(!confirm(msg))return;
-  // Не каскадира: отделените парчета губят връзката, но остават. Същата политика
-  // като при триене на изпичане.
-  members.forEach(function(p){delete p.seriesId;delete p.seriesNo;});
+  // v1.31.0: отделените не губят общите стъпки — копират се в тях преди триенето.
+  members.forEach(function(p){_detachCopy(p,se);});
   DB.series=DB.series.filter(function(x){return x.id!==curSeries;});
   save();closeDet('det-series');renderPieces();toast(t('msg.iztrito'));
   curSeries=null;
+}
+function restoreSeries(){
+  var se=findSeries(curSeries);if(!se)return;
+  delete se.archivedAt;se.updatedAt=new Date().toISOString();
+  save();renderPieces();openSeriesDet(se.id);toast('Върнато от архива');
 }
 
 function resolveStageIdx(v){
@@ -6122,10 +6231,12 @@ function openPieceMo(p){
   if(_cHint){
     // При редакция на изделие броят няма смисъл — едно изделие е едно парче.
     var _cWrap=document.getElementById('pi-count-wrap');
-    if(_cWrap)_cWrap.style.display=(p&&!_isSeries)?'none':'';
+    // v1.31.0: самостоятелно изделие също има брой — повече от 1 го превръща в
+    // серия. Отделено изделие (член на серия) не.
+    if(_cWrap)_cWrap.style.display=(p&&!_isSeries&&p.seriesId)?'none':'';
     _cHint.textContent=_isSeries
-      ? 'Колко парчета има партидата. Намаляване под вече отделените не се приема.'
-      : 'Повече от 1 създава серия — партида с общ процес.';
+      ? 'Колко парчета има партидата. Номерата не се преизползват: при намаление отпадат най-високите неотделени. Под вече отделените не се приема.'
+      : (p?'Повече от 1 превръща изделието в серия — историята и снимките стават общи за всички бройки.':'Повече от 1 създава серия — партида с общ процес.');
   }
   document.getElementById('pi-name').value=p?.name||'';
   var _pType=document.getElementById('pi-type');if(_pType)_pType.value=(p&&p.type)||'';
@@ -6249,6 +6360,28 @@ function savePiece(){
   var _cnt=_cntEl?parseInt(_cntEl.value,10):1;
   if(isNaN(_cnt)||_cnt<1)_cnt=1;
   var _isSeries=(editKind==='series')||(!editId&&_cnt>1);
+  // v1.31.0: изделие → серия. Записът остава същият (id, код, снимки, история),
+  // само минава при сериите с брой. Историята става обща за всички бройки — това е
+  // случаят „забравих да отбележа серия“ (решение от 29.10).
+  if(!_isSeries&&editId&&editKind==='piece'&&_cnt>1){
+    var _old=DB.pieces.find(function(x){return x.id===editId;});
+    if(_old&&!_old.seriesId){
+      if(!confirm('Превърни „'+(_old.name||'')+'“ в серия от '+_cnt+' бройки?\n\nСтъпките, снимките и изпичанията стават общи за всички '+_cnt+'. Ако някоя бройка се отличава, отдели я после.'))return;
+      if(_old.events)p.events=_old.events;
+      var _sNew=_mergeEdit(_old,p,_EDIT_OWNS.piece);
+      _sNew.count=_cnt;_sNew.nextUnitNo=_cnt+1;_sNew.fromPiece={at:new Date().toISOString()};
+      delete _sNew.qty;
+      ensurePieceEvents(_sNew);
+      recomputePieceStage(_sNew);
+      _sNew.updatedAt=new Date().toISOString();
+      DB.pieces=DB.pieces.filter(function(x){return x.id!==editId;});
+      DB.series.unshift(_sNew);
+      save();closeMo('mo-piece');renderPieces();
+      toast('Изделието е серия от '+_cnt);
+      var _sid=_sNew.id;editId=null;editKind='piece';openSeriesDet(_sid);
+      return;
+    }
+  }
   if(_isSeries){
     p.count=_cnt;
     var _prev=editId?findSeries(editId):null;
@@ -6262,11 +6395,20 @@ function savePiece(){
         toast('Броят не може да е под отделените ('+_splitNow+')');
         focusEl('pi-count');return;
       }
+      // v1.31.0: номерата не се преизползват — при намаление се отписват
+      // най-високите неотделени, при увеличение идват нови след последния.
+      var _ch=_countChange(_prev,_seriesMembers(editId),_cnt);
+      if(_ch.error){toast('Броят не може да е под отделените ('+_splitNow+')');focusEl('pi-count');return;}
+      p.nextUnitNo=_ch.nextUnitNo;
+      if(_ch.retire.length){
+        var _at=new Date().toISOString();
+        p.retiredUnits=(Array.isArray(_prev.retiredUnits)?_prev.retiredUnits:[]).concat(_ch.retire.map(function(n){return {no:n,at:_at,reason:'count'};}));
+      }
     }
     recomputePieceStage(p);
     p.updatedAt=new Date().toISOString();
     if(_prev){p.createdAt=_prev.createdAt;DB.series[DB.series.findIndex(function(x){return x.id===editId;})]=_mergeEdit(_prev,p,_EDIT_OWNS.series);} // v1.29.0: сливане
-    else {p.createdAt=new Date().toISOString();DB.series.unshift(p);}
+    else {p.createdAt=new Date().toISOString();p.code=_newCode(p);p.nextUnitNo=_cnt+1;DB.series.unshift(p);}
     save();closeMo('mo-piece');renderPieces();
     toast(_prev?'Обновено':'Серията е добавена');
     editId=null;editKind='piece';
@@ -6330,7 +6472,7 @@ function savePiece(){
     }
   }
   // v1.29.0: сливане — непознатите полета на записа оцеляват редакцията.
-  if(editId){var _pIdx=DB.pieces.findIndex(x=>x.id===editId);DB.pieces[_pIdx]=_mergeEdit(DB.pieces[_pIdx],p,_EDIT_OWNS.piece);}else DB.pieces.unshift(p);
+  if(editId){var _pIdx=DB.pieces.findIndex(x=>x.id===editId);DB.pieces[_pIdx]=_mergeEdit(DB.pieces[_pIdx],p,_EDIT_OWNS.piece);}else{p.createdAt=new Date().toISOString();p.code=_newCode(p);DB.pieces.unshift(p);} // v1.31.0: код при създаване
   save();closeMo('mo-piece');renderPieces();toast(editId?'Обновено':'Добавено!');editId=null;editKind='piece';
 }
 
@@ -6504,7 +6646,30 @@ function openNewMaterialFromDecoration(){
   }
 }
 function editPiece(){closeDet('det-piece',true);editId=curPiece;editKind='piece';openPieceMo(DB.pieces.find(p=>p.id===editId));}
-function delPiece(){if(!confirm('Изтрий?'))return;DB.pieces=DB.pieces.filter(p=>p.id!==curPiece);save();closeDet('det-piece');renderPieces();toast(t('msg.iztrito'));}
+// v1.31.0: „Изтрий“ архивира — изделието се скрива от списъка, но остава в
+// изпичанията, серията и добива (решение 4 от 28.10). Окончателно се трие само
+// от архива. Номерата му в серията се отписват, за да не се дадат на друго.
+function delPiece(){
+  var p=DB.pieces.find(function(x){return x.id===curPiece;});if(!p)return;
+  if(!p.archivedAt){
+    if(!confirm('Архивирай „'+(p.name||'')+'“?\n\nСкрива се от списъка, но остава в изпичанията и в серията. Връща се от филтъра „Архив“.'))return;
+    p.archivedAt=new Date().toISOString();p.updatedAt=p.archivedAt;
+    save();closeDet('det-piece');renderPieces();toast('Архивирано');return;
+  }
+  if(!confirm('Изтрий „'+(p.name||'')+'“ завинаги?\n\nТова не може да се върне.'))return;
+  var se=p.seriesId?findSeries(p.seriesId):null;
+  if(se&&Array.isArray(p.units)&&p.units.length){
+    var at=new Date().toISOString();
+    se.retiredUnits=(Array.isArray(se.retiredUnits)?se.retiredUnits:[]).concat(p.units.map(function(n){return {no:n,at:at,reason:'deleted'};}));
+  }
+  DB.pieces=DB.pieces.filter(function(x){return x.id!==curPiece;});
+  save();closeDet('det-piece');renderPieces();toast(t('msg.iztrito'));
+}
+function restorePiece(){
+  var p=DB.pieces.find(function(x){return x.id===curPiece;});if(!p)return;
+  delete p.archivedAt;p.updatedAt=new Date().toISOString();
+  save();renderPieces();openPieceDet(p.id);toast('Върнато от архива');
+}
 
 // ══ RECIPE MODAL ══
 function openRecipeMo(r){
@@ -8293,6 +8458,8 @@ function importBackup(e){
     if(Array.isArray(parsed.userLibrary)){
       saveUserLib(parsed.userLibrary);
     }
+    // v1.31.0: внесен архив от по-стара версия получава кодове и номера.
+    _applyIdentity(_identityPlan(DB));
     // v1.27.1: импортът е съзнателно възстановяване — сривът е решен.
     _dataCollapsed=false;
     // v1.28.0: импортът заменя всичко — и нечетимите остатъци, иначе при
@@ -9230,6 +9397,18 @@ Promise.all([bootStorage(),_modulesReady]).then(function(r){
   _schemaNewerWarning();
   // Рендерът чака миграциите, за да не покаже данни отпреди тях.
   return _runSchemaMigrations().catch(function(e){console.error('[migrate] stopped:',e);}).then(function(){
+  // v1.31.0: записи, създадени от по-стара версия след връщане назад, получават
+  // липсващия код и номера тук — същото правило като миграцията, само добавя.
+  try{
+    if(!_storageBroken&&!_dataCollapsed){
+      var _idn=_applyIdentity(_identityPlan(DB));
+      // Първо отваряне от стара подредба: миграциите още не тръгват (копието
+      // е atelie_v6), затова попълването се отбелязва като самата миграция.
+      if(!DB._migrations)DB._migrations={};
+      if(!DB._migrations['2026-10-identity'])DB._migrations['2026-10-identity']={at:new Date().toISOString(),changed:_idn,schema:5,snapshotUntil:null,via:'first-open'};
+      if(_idn)save();
+    }
+  }catch(e){console.error('[identity]',e);}
   _dropOldSnapshots();
   applyDict();
   render('pieces');

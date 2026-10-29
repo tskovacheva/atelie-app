@@ -34,7 +34,8 @@ const MIG_BAD = `({id:'test-bad',schema:5,
     if (hasSchema) {
     let keys = await app.idbKeys();
     const meta = JSON.parse(keys['rec:meta']);
-    check('rec:meta carries schema ' + meta.schema, meta.schema === 4, meta);
+    const SV = await app.eval(() => SCHEMA_VERSION);
+    check('rec:meta carries schema ' + meta.schema, meta.schema === SV, meta);
     check('backup carries the same schema', (await app.eval(() => _backupPayload().payload.schemaVersion)) === meta.schema);
 
     const r1 = await app.eval(async m => { const mig = (0, eval)(m); const done = await _runSchemaMigrations([mig]); return { done, a: DB.pieces.find(p => p.id === 'p-ocarina').kilnNote, b: DB.pieces.find(p => p.id === 'p-old').kilnNote, log: DB._migrations['test-add'] }; }, MIG);
@@ -74,15 +75,19 @@ const MIG_BAD = `({id:'test-bad',schema:5,
       h.setRoot(PREV);
       await rb.reload();
       const prev = await rb.snapshot();
-      const strip = s => Object.assign({}, s, { dbHash: null });
+      // What an older version legitimately does not show: the schema number it
+      // writes, codes on the cards (v1.31.0), and the data hash (new fields kept).
+      const strip = s => Object.assign({}, s, { dbHash: null, migrations: null, backup: Object.assign({}, s.backup, { schemaVersion: null }),
+        ui: { cards: (s.ui.cards || []).map(c => c.replace(/GL-\d{4}-\d{3,}(\/\d+(?:[–,] ?\d+)*)?( · в архива)?/g, '').slice(0, 45)) } });
       check('rollback: previous version opens the data without errors' + V, !prev.broken && !rb.log.errors.length, rb.log);
-      check('rollback: previous version derives the same results' + V, same(strip(prev), strip(mine)));
+      const fd = (a, b, p) => { p = p || ''; if (JSON.stringify(a) === JSON.stringify(b)) return null; if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set(Object.keys(a).concat(Object.keys(b)))) { const d = fd(a[k], b[k], p + '.' + k); if (d) return d; } } return p + ': ' + JSON.stringify(a).slice(0, 120) + ' vs ' + JSON.stringify(b).slice(0, 120); };
+      check('rollback: previous version derives the same results' + V, same(strip(prev), strip(mine)), fd(strip(prev), strip(mine)));
       h.setRoot(ROOT);
       await rb.reload();
       const again = await rb.snapshot();
       check('roll forward again: same results' + V, same(again, mine));
       const metaAgain = JSON.parse((await rb.idbKeys())['rec:meta']);
-      if (hasSchema) check('roll forward again: schema written back' + V, metaAgain.schema === 4, metaAgain);
+      if (hasSchema) check('roll forward again: schema written back' + V, metaAgain.schema === (await rb.eval(() => SCHEMA_VERSION)), metaAgain);
       await rb.close();
     }
 
