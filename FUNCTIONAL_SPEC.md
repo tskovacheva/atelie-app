@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.31.0 · `atelie-v85`
+**Version:** v1.31.1 · `atelie-v86`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -186,6 +186,15 @@ series by creation date, unit numbers for split pieces by split order; counts an
 stages untouched. The same fill also runs on every open and after an import, for
 records made by an older version after a rollback.
 
+### Basic characteristics (v1.31.1)
+
+Optional, structured, next to the old free-text `dimensions` and `weight` (kept):
+`size {h, w, depth, at, approx}` in cm (no depth = round, `w` is the diameter; `at`
+the stage when measured), `startMass` g (for a series: per piece; copied to a split
+part), `wall` and `base` mm, `categories[]` (several; `type` stays free text).
+Nothing is derived from the free text unless „Попълни от текста“ is pressed. The
+kiln planner uses `size` first, then the text. No migration.
+
 ### Identity (v1.31.0)
 
 - **Code** `GL-<year>-<n>` (`GL-2026-014`) on every standalone piece and series,
@@ -217,6 +226,7 @@ modules themselves.
 | `core/merge.js` | `_mergeEdit`, `_EDIT_OWNS` — edits merge into the stored record (see §9) |
 | `calc/shrink.js` | `_shrinkPcts`, `_poroPct` — body-test shrinkage and absorption |
 | `domain/profile.js` | `_fpRamps`, `_fpPeak`, `_fpDuration`, `_fmtDuration`, `_numOrNull` — firing programme |
+| `domain/traits.js` | size, categories, kiln size: `_readSize`, `_sizeLabel`, `_parseDims`, `_catsNorm`, `_kilnSize` (v1.31.1) |
 | `domain/units.js` | codes and unit numbers: `_nextCode`, `_assignCodes`, `_seriesFreeUnits`, `_allocUnits`, `_countChange`, `_unitsLabel`, `_migrateSeriesUnits` (v1.31.0) |
 
 Modules run after the page is parsed. Boot waits for the bridge before it loads any

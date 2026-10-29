@@ -903,6 +903,14 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <input type="text" id="pi-type" data-tp="ph.napr-vaza-chasha-muzikalen-instrum" placeholder="напр. ваза, чаша, музикален инструмент" list="pi-type-list" autocomplete="off">
             <datalist id="pi-type-list"></datalist>
           </div>
+          <!-- v1.31.1: категории — повече от една; „Тип“ остава свободен текст. -->
+          <div class="f"><label>Категории</label>
+            <div id="pi-cats" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input type="text" id="pi-cat-new" placeholder="друга категория" style="flex:1 1 auto;min-width:0;width:auto" onkeydown="if(event.key==='Enter'){event.preventDefault();addPiCat();}">
+              <button type="button" class="fchip" style="flex:0 0 auto;width:auto;" onclick="addPiCat()">+ Добави</button>
+            </div>
+          </div>
           <div class="f"><label data-t="ui.tehnika">Техника</label>
             <select id="pi-tech"><option value="">—</option><option data-t="opt.tochene">Точене</option><option data-t="opt.fursh-namotki">Фурш / намотки</option><option data-t="opt.platki">Платки</option><option data-t="opt.rachno-formovane">Ръчно формоване</option><option data-t="opt.kalap">Калъп</option><option data-t="opt.kurinuki">Куринуки</option><option data-t="opt.drugo">Друго</option></select>
           </div>
@@ -918,11 +926,32 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <div class="f" style="flex:1"><label data-t="ui.biskvit-c">Бисквит (°C)</label><input type="number" id="pi-bisque-temp" placeholder="950"></div>
             <div class="f" style="flex:1"><label data-t="ui.glazurno-c">Глазурно (°C)</label><input type="number" id="pi-glaze-temp" placeholder="1240"></div>
           </div>
-          <!-- v1.13.0: descriptive size/weight — for catalogue and exhibition, no
-               calculation. Shrinkage lives in body tests, not here. -->
-          <div style="display:flex;gap:9px;">
-            <div class="f" style="flex:2"><label data-t="ui.razmeri-sm">Размери (см)</label><input type="text" id="pi-dimensions" data-tp="ph.napr-v18-12" placeholder="напр. в18 × ⌀12"></div>
-            <div class="f" style="flex:1"><label data-t="ui.teglo-g">Тегло (г)</label><input type="number" id="pi-weight" data-tp="ph.napr-640" placeholder="напр. 640"></div>
+          <!-- v1.31.1: основни характеристики — структурирани, незадължителни. Ползват
+               се като предложение при подреждане на пещта. Пълната история на
+               измерванията идва по-късно. -->
+          <div id="pi-traits" style="border-top:1px solid var(--bdr);margin-top:6px;padding-top:10px;">
+            <div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Размери, см</div>
+            <div style="display:flex;gap:9px;">
+              <div class="f" style="flex:1"><label>Височина</label><input type="text" inputmode="decimal" id="pi-h" oninput="_piDimFillHint()" placeholder="напр. 12"></div>
+              <div class="f" style="flex:1"><label>Ширина / Ø</label><input type="text" inputmode="decimal" id="pi-w" oninput="_piDimFillHint()" placeholder="напр. 8"></div>
+              <div class="f" style="flex:1"><label>Дълбочина</label><input type="text" inputmode="decimal" id="pi-depth" oninput="_piDimFillHint()" placeholder="ако не е кръгло"></div>
+            </div>
+            <div style="display:flex;gap:9px;align-items:flex-end;">
+              <div class="f" style="flex:1"><label>Измерено при</label>
+                <select id="pi-size-at"><option value="">—</option><option value="wet">Сурово</option><option value="leather-hard">Кожна влажност</option><option value="bone-dry">Сухо</option><option value="bisque">Бисквит</option><option value="fired">Изпечено</option></select></div>
+              <label class="f" style="flex:1;display:flex;gap:8px;align-items:center;font-size:12px;padding-bottom:10px;"><input type="checkbox" id="pi-size-approx" style="width:auto"> приблизително</label>
+            </div>
+            <div id="pi-dim-fill" style="display:none;margin:-4px 0 8px;"><button type="button" onclick="fillPiSizeFromText()" style="background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">Попълни от „<span id="pi-dim-fill-t"></span>“</button></div>
+            <div style="display:flex;gap:9px;">
+              <div class="f" style="flex:1"><label>Стена, мм</label><input type="text" inputmode="decimal" id="pi-wall" placeholder="напр. 6"></div>
+              <div class="f" style="flex:1"><label>Дъно, мм</label><input type="text" inputmode="decimal" id="pi-base" placeholder="напр. 8"></div>
+            </div>
+            <div style="display:flex;gap:9px;">
+              <div class="f" style="flex:1"><label id="pi-start-mass-l">Начално количество глина, г</label><input type="text" inputmode="decimal" id="pi-start-mass" placeholder="напр. 450"></div>
+              <div class="f" style="flex:1"><label data-t="ui.teglo-g">Тегло (г)</label><input type="number" id="pi-weight" data-tp="ph.napr-640" placeholder="напр. 640"></div>
+            </div>
+            <!-- v1.13.0: свободното описание остава, както е било. -->
+            <div class="f"><label>Размери — описание</label><input type="text" id="pi-dimensions" data-tp="ph.napr-v18-12" placeholder="напр. в18 × ⌀12" oninput="_piDimFillHint()"></div>
           </div>
         </div>
       </div>
@@ -1850,7 +1879,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.31.0';
+const APP_VERSION = 'v1.31.1';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -4888,7 +4917,7 @@ function renderPieces(){
     if(f.hasph&&!hasPh)return false;
     if(f.noph&&hasPh)return false;
     if(q){
-      var hay=((p.name||'')+' '+(p.type||'')+' '+clayName(p.clay)+' '+(p.technique||'')+' '+(p.notes||'')).toLowerCase();
+      var hay=((p.name||'')+' '+(p.type||'')+' '+clayName(p.clay)+' '+(p.technique||'')+' '+(p.notes||'')+' '+(Array.isArray(p.categories)?p.categories.join(' '):'')+' '+pieceCode(p)).toLowerCase();
       if(hay.indexOf(q)<0)return false;
     }
     return true;
@@ -4915,7 +4944,8 @@ function renderPieces(){
     var _dropIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/></svg>';
     var _stackIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg>';
     var rows='';
-    if(p.dimensions)rows+='<div class="pchr">'+_ruler+'<span class="pchr-l">Размер</span><span class="pchr-v">'+p.dimensions+' см</span></div>';
+    var _szl=_sizeLabel(p.size)||(p.dimensions?p.dimensions+' см':''); // v1.31.1
+    if(_szl)rows+='<div class="pchr">'+_ruler+'<span class="pchr-l">Размер</span><span class="pchr-v">'+_szl+'</span></div>';
     var cn=clayName(p.clay);
     if(cn)rows+='<div class="pchr">'+_clayIc+'<span class="pchr-l">Глина</span><span class="pchr-v">'+cn+'</span></div>';
     rows+='<div class="pchr">'+_dropIc+'<span class="pchr-l">Глазура</span><span class="pchr-v">'+(glz||'—')+'</span></div>';
@@ -5364,9 +5394,7 @@ function openPieceDet(id){
   if(_glaze)_tempRows.push(dr('Глазурно',_glaze+'°C'));
   var _typeRow=p.type?dr('Тип',p.type):'';
   // v1.13.0: descriptive size/weight rows
-  var _dimRows=[];
-  if(p.dimensions)_dimRows.push(dr('Размери',p.dimensions+' см'));
-  if(p.weight!=null)_dimRows.push(dr('Тегло',p.weight+' г'));
+  var _dimRows=_traitRows(p); // v1.31.1
   document.getElementById('dpi-info').innerHTML=[_typeRow,dr('Етап',stageLabel(p.stage||'greenware')||'—'),dr('Глина',clayName(p.clay)),dr('Глазура',_glzLabel)].concat(_tempRows).concat(_dimRows).join('');
   var _sa=document.getElementById('dpi-stage-actions');
   if(_sa){_sa.innerHTML=_stageIndicatorHtml(p);_sa.style.display='block';}
@@ -5501,8 +5529,7 @@ function openSeriesDet(id){
   if(_glz)_rows.push(dr('Глазура',_glz));
   if(se.bisqueTemp)_rows.push(dr('Бисквит',se.bisqueTemp+'°C'));
   if(se.glazeTemp)_rows.push(dr('Глазурно',se.glazeTemp+'°C'));
-  if(se.dimensions)_rows.push(dr('Размери',se.dimensions+' см'));
-  if(se.weight!=null&&se.weight!=='')_rows.push(dr('Тегло',se.weight+' г'));
+  _rows=_rows.concat(_traitRows(se)); // v1.31.1
   document.getElementById('dse-info').innerHTML=_rows.join('');
 
   var _sa=document.getElementById('dse-stage-actions');
@@ -5611,6 +5638,8 @@ function saveSplit(){
   };
   if(se.dimensions)p.dimensions=se.dimensions;
   if(se.weight!=null&&se.weight!=='')p.weight=se.weight;
+  // v1.31.1: характеристиките на партидата важат и за отделената част.
+  ['size','startMass','wall','base','categories'].forEach(function(k){if(se[k]!=null)p[k]=JSON.parse(JSON.stringify(se[k]));});
   DB.pieces.unshift(p);
   recomputePieceStage(p);
   save();closeMo('mo-split');renderPieces();openSeriesDet(curSeries);
@@ -6246,6 +6275,20 @@ function openPieceMo(p){
   // v1.13.0: size/weight
   document.getElementById('pi-dimensions').value=(p&&p.dimensions)||'';
   document.getElementById('pi-weight').value=(p&&p.weight!=null)?p.weight:'';
+  // v1.31.1: основни характеристики
+  var _sz=(p&&p.size&&typeof p.size==='object')?p.size:{};
+  document.getElementById('pi-h').value=_sz.h!=null?String(_sz.h).replace('.',','):'';
+  document.getElementById('pi-w').value=_sz.w!=null?String(_sz.w).replace('.',','):'';
+  document.getElementById('pi-depth').value=_sz.depth!=null?String(_sz.depth).replace('.',','):'';
+  document.getElementById('pi-size-at').value=_sz.at||'';
+  document.getElementById('pi-size-approx').checked=!!_sz.approx;
+  document.getElementById('pi-wall').value=(p&&p.wall!=null)?String(p.wall).replace('.',','):'';
+  document.getElementById('pi-base').value=(p&&p.base!=null)?String(p.base).replace('.',','):'';
+  document.getElementById('pi-start-mass').value=(p&&p.startMass!=null)?String(p.startMass).replace('.',','):'';
+  document.getElementById('pi-start-mass-l').textContent=_isSeries?'Начално количество глина, г — на бройка':'Начално количество глина, г';
+  piCats=_catsNorm(p&&Array.isArray(p.categories)?p.categories:[]);
+  renderPiCats();
+  _piDimFillHint();
   document.getElementById('pi-date').value=p?.date||new Date().toISOString().split('T')[0];
   document.getElementById('pi-tech').value=p?.technique||'';
   document.getElementById('pi-notes').value=p?.notes||'';
@@ -6354,6 +6397,16 @@ function savePiece(){
   if(_dim)p.dimensions=_dim;
   var _wt=(document.getElementById('pi-weight')||{value:''}).value;
   if(_wt!==''&&!isNaN(parseFloat(_wt)))p.weight=parseFloat(_wt);
+  // v1.31.1: основни характеристики — само попълненото влиза в записа.
+  var _gv=function(id){return (document.getElementById(id)||{value:''}).value;};
+  var _size=_readSize(_gv('pi-h'),_gv('pi-w'),_gv('pi-depth'),_gv('pi-size-at'),(document.getElementById('pi-size-approx')||{}).checked);
+  if(_size)p.size=_size;
+  var _wl=_numPos(_gv('pi-wall')),_bs=_numPos(_gv('pi-base')),_sm=_numPos(_gv('pi-start-mass'));
+  if(_wl!=null)p.wall=_wl;
+  if(_bs!=null)p.base=_bs;
+  if(_sm!=null)p.startMass=_sm;
+  var _cats=_catsNorm(piCats);
+  if(_cats.length)p.categories=_cats;
   // v1.20.0 (А7 фаза 2): броят решава дали това е изделие или серия. Едно поле,
   // един поток — няма втори бутон „добави серия".
   var _cntEl=document.getElementById('pi-count');
@@ -6495,6 +6548,63 @@ function resetPiQuickFinal(){
   ['pi-qf-firing-method','pi-qf-firing-atmosphere','pi-qf-firing-purpose','pi-qf-dec-technique'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
+}
+
+// v1.31.1: категории във формуляра — предложения (стандартни + вече ползвани) и свои.
+var piCats=[];
+function _knownCats(){
+  var all=CATEGORIES.slice();
+  (DB.pieces||[]).concat(DB.series||[]).forEach(function(x){if(x&&Array.isArray(x.categories))all=all.concat(x.categories);});
+  return _catsNorm(all.concat(piCats));
+}
+function renderPiCats(){
+  var el=document.getElementById('pi-cats');if(!el)return;
+  var on={};piCats.forEach(function(c){on[c.toLowerCase()]=1;});
+  el.innerHTML=_knownCats().map(function(c,i){
+    var sel=!!on[c.toLowerCase()];
+    return '<button type="button" class="fchip'+(sel?' on':'')+'" data-cat="'+i+'" onclick="togglePiCat(this.textContent)">'+c.replace(/[&<>"]/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];})+'</button>';
+  }).join('');
+}
+function togglePiCat(c){
+  var k=String(c).toLowerCase(),i=piCats.findIndex(function(x){return x.toLowerCase()===k;});
+  if(i>=0)piCats.splice(i,1);else piCats.push(c);
+  renderPiCats();
+}
+function addPiCat(){
+  var el=document.getElementById('pi-cat-new');if(!el)return;
+  var c=el.value.replace(/\s+/g,' ').trim();if(!c)return;
+  if(!piCats.some(function(x){return x.toLowerCase()===c.toLowerCase();}))piCats.push(c);
+  el.value='';renderPiCats();
+}
+// „Попълни от текста“ — само по изричен бутон; празните структурирани полета
+// се попълват от свободното описание, нищо не се презаписва.
+function _piDimFillHint(){
+  var t=(document.getElementById('pi-dimensions')||{value:''}).value.trim();
+  var d=t?_parseDims(t):{};
+  var empty=['pi-h','pi-w','pi-depth'].every(function(id){return !document.getElementById(id).value;});
+  var show=empty&&(d.h!=null||d.w!=null);
+  document.getElementById('pi-dim-fill').style.display=show?'':'none';
+  document.getElementById('pi-dim-fill-t').textContent=t;
+}
+function fillPiSizeFromText(){
+  var d=_parseDims((document.getElementById('pi-dimensions')||{value:''}).value);
+  [['pi-h','h'],['pi-w','w'],['pi-depth','depth']].forEach(function(x){var el=document.getElementById(x[0]);if(!el.value&&d[x[1]]!=null)el.value=String(d[x[1]]).replace('.',',');});
+  _piDimFillHint();
+}
+// Редове за детайла: размери, количество, стени, категории.
+function _traitRows(p){
+  var rows=[];
+  var lbl=_sizeLabel(p.size);
+  if(lbl){
+    var note=[p.size.at?stageLabel(p.size.at):'',p.size.approx?'приблизително':''].filter(Boolean).join(', ');
+    rows.push(dr('Размери',lbl+(note?' ('+note+')':'')));
+  }
+  if(p.dimensions)rows.push(dr(lbl?'Размери — описание':'Размери',p.dimensions+' см'));
+  if(p.startMass!=null)rows.push(dr(p.count!=null?'Начална глина (бройка)':'Начална глина',p.startMass+' г'));
+  if(p.weight!=null&&p.weight!=='')rows.push(dr('Тегло',p.weight+' г'));
+  if(p.wall!=null||p.base!=null)rows.push(dr('Стена / дъно',(p.wall!=null?p.wall:'—')+' / '+(p.base!=null?p.base:'—')+' мм'));
+  if(Array.isArray(p.categories)&&p.categories.length)rows.push(dr('Категории',p.categories.join(', ')));
+  return rows;
 }
 
 // v1.5.3: Toggle "Допълнителни детайли" collapsible

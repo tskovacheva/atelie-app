@@ -12,8 +12,9 @@ import * as merge from './core/merge.js';
 import * as shrink from './calc/shrink.js';
 import * as profile from './domain/profile.js';
 import * as units from './domain/units.js'; // v1.31.0
+import * as traits from './domain/traits.js'; // v1.31.1
 
-const bridge = Object.assign({}, merge, shrink, profile, units);
+const bridge = Object.assign({}, merge, shrink, profile, units, traits);
 Object.keys(bridge).forEach(k => { window[k] = bridge[k]; });
 
 window.__glinaModulesBridged = true;

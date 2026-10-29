@@ -1402,8 +1402,9 @@ var ACT = {
     UI.imp.items.filter(function (it) { return it.on; }).forEach(function (it) {
       var q = Math.max(1, Math.min(200, parseInt(it.qty, 10) || 1));
       for (var i = 1; i <= q; i++) {
-        r.pieces.push({ id: uid('pc-'), no: r.nextNo++, name: it.name + (q > 1 || it.series ? ' /' + (it.unitFrom + i - 1) : ''), clay: it.clay, shape: 'round', d: num(it.d), w: null, depth: null, h: num(it.h), rot: 0, level: null, x: null, y: null, result: '', note: '',
-          ref: { kind: it.series ? 'series' : 'piece', id: it.id, unit: q > 1 || it.series ? it.unitFrom + i - 1 : null } });
+        var un = it.units && it.units[i - 1] != null ? it.units[i - 1] : it.unitFrom + i - 1;
+        r.pieces.push({ id: uid('pc-'), no: r.nextNo++, name: it.name + (q > 1 || it.series ? ' /' + un : ''), code: it.code ? it.code + (q > 1 || it.series ? '/' + un : '') : '', clay: it.clay, shape: it.shape === 'rect' ? 'rect' : 'round', d: num(it.d), w: num(it.w), depth: num(it.depth), h: num(it.h), rot: 0, level: null, x: null, y: null, result: '', note: '',
+          ref: { kind: it.series ? 'series' : 'piece', id: it.id, unit: q > 1 || it.series ? un : null } });
         n++;
       }
     });
@@ -1427,18 +1428,31 @@ function readGlina(text) {
   var mats = {}; (db.materials || []).forEach(function (m) { mats[m.id] = m.name; });
   var clay = function (c) { return c ? (mats[c] || c) : ''; };
   var want = run().type === 'glaze' ? ['bisque', 'glazed'] : ['wet', 'leather-hard', 'bone-dry', 'greenware'];
-  var items = [], used = {};
+  var items = [], used = {}, taken = {};
+  // От Глина v1.31.1: структурираният размер (size) пред свободния текст.
+  function sizeOf(r) {
+    var z = r.size;
+    if (z && (z.h != null || z.w != null)) return z.depth != null && z.w != null ? { shape: 'rect', w: z.w, depth: z.depth, h: z.h, src: 'size' } : { shape: 'round', d: z.w, h: z.h, src: 'size' };
+    var dd = G.parseDims(r.dimensions);
+    return dd.depth != null ? { shape: 'rect', w: dd.w, depth: dd.depth, h: dd.h, src: 'text' } : { shape: 'round', d: dd.d, h: dd.h, src: 'text' };
+  }
+  function blank(v) { return v == null ? '' : v; }
   db.pieces.forEach(function (p) {
-    if (p.seriesId) used[p.seriesId] = (used[p.seriesId] || 0) + (parseInt(p.qty, 10) || 1);
-    var dd = G.parseDims(p.dimensions), q = parseInt(p.qty, 10) || 1;
-    items.push({ id: p.id, name: p.name || 'Изделие', clay: clay(p.clay), stage: p.stage, dimText: p.dimensions || '', d: dd.d != null ? dd.d : (dd.w != null ? Math.max(dd.w, dd.depth) : ''), h: dd.h != null ? dd.h : '', qty: q,
-      series: false, unitFrom: p.seriesNo || 1, suggest: want.indexOf(p.stage) >= 0 });
+    if (p.seriesId) { used[p.seriesId] = (used[p.seriesId] || 0) + (parseInt(p.qty, 10) || 1); (p.units || []).forEach(function (u) { (taken[p.seriesId] = taken[p.seriesId] || {})[u] = 1; }); }
+    if (p.archivedAt) return;
+    var z = sizeOf(p), q = parseInt(p.qty, 10) || 1;
+    items.push({ id: p.id, code: p.code || '', name: p.name || 'Изделие', clay: clay(p.clay), stage: p.stage, dimText: z.src === 'size' ? '' : (p.dimensions || ''), shape: z.shape, d: blank(z.d), w: blank(z.w), depth: blank(z.depth), h: blank(z.h), qty: q,
+      series: false, units: Array.isArray(p.units) ? p.units : null, unitFrom: p.seriesNo || 1, suggest: want.indexOf(p.stage) >= 0 });
   });
   (db.series || []).forEach(function (s) {
-    var dd = G.parseDims(s.dimensions), left = Math.max(0, (parseInt(s.count, 10) || 0) - (used[s.id] || 0));
+    if (s.archivedAt) return;
+    var z = sizeOf(s), left = Math.max(0, (parseInt(s.count, 10) || 0) - (used[s.id] || 0));
     if (!left) return;
-    items.push({ id: s.id, name: s.name || 'Серия', clay: clay(s.clay), stage: s.stage, dimText: s.dimensions || '', d: dd.d != null ? dd.d : '', h: dd.h != null ? dd.h : '', qty: left,
-      series: true, unitFrom: 1, suggest: want.indexOf(s.stage) >= 0 });
+    // Номерата на неотделените бройки (Глина v1.31.0): всички до nextUnitNo без отделените и отписаните.
+    var units = null;
+    if (s.nextUnitNo) { var ret = {}; (s.retiredUnits || []).forEach(function (x) { ret[x && x.no != null ? x.no : x] = 1; }); units = []; for (var u = 1; u < s.nextUnitNo; u++) if (!(taken[s.id] || {})[u] && !ret[u]) units.push(u); }
+    items.push({ id: s.id, code: s.code || '', name: s.name || 'Серия', clay: clay(s.clay), stage: s.stage, dimText: z.src === 'size' ? '' : (s.dimensions || ''), shape: z.shape, d: blank(z.d), w: blank(z.w), depth: blank(z.depth), h: blank(z.h), qty: left,
+      series: true, units: units, unitFrom: 1, suggest: want.indexOf(s.stage) >= 0 });
   });
   items.forEach(function (it) { it.on = it.suggest; });
   items.sort(function (a, b) { return (b.suggest - a.suggest) || String(a.clay).localeCompare(String(b.clay)); });

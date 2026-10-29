@@ -325,6 +325,30 @@ function png() {
     await b.ctx.close();
   }
 
+  // ---- a Глина v1.31.1 archive: structured size, codes, stable unit numbers ----
+  {
+    const g = { schemaVersion: 5, exportedAt: '2026-10-30T08:00:00Z', db: { materials: [], pieces: [
+      { id: 'a', code: 'GL-2026-001', name: 'Съд', stage: 'bone-dry', size: { h: 22, w: 18, at: 'bone-dry' }, dimensions: 'в1 × ⌀1' },
+      { id: 'b', code: 'GL-2026-002', name: 'Плочка', stage: 'bone-dry', size: { h: 1, w: 15, depth: 10 } },
+      { id: 'c', name: 'Скрита', stage: 'bone-dry', archivedAt: '2026-10-29T10:00:00Z' },
+      { id: 'm', name: 'Отделена', stage: 'bone-dry', seriesId: 's', qty: 1, units: [2] } ],
+      series: [{ id: 's', code: 'GL-2026-003', name: 'Чинии', stage: 'bone-dry', count: 4, nextUnitNo: 6, retiredUnits: [{ no: 5 }], size: { h: 2, w: 22 } }] } };
+    const gf = path.join(os.tmpdir(), 'glina-131.json'); fs.writeFileSync(gf, JSON.stringify(g));
+    await page.click('nav button[data-id=file]');
+    await page.click('[data-act=newRun][data-id=bisque]');
+    await page.click('nav button[data-id=pieces]');
+    await page.setInputFiles('input[data-ch=glinaFile]', gf);
+    await page.waitForSelector('[data-act=impAdd]');
+    await page.click('[data-act=impAdd]');
+    S = await st();
+    const ps = r().pieces, by = n => ps.filter(x => x.name.startsWith(n));
+    ok('v1.31.1 archive: structured size wins over the text', by('Съд')[0].d === 18 && by('Съд')[0].h === 22, by('Съд')[0]);
+    ok('v1.31.1 archive: width × depth becomes a rectangular base', by('Плочка')[0].shape === 'rect' && by('Плочка')[0].w === 15 && by('Плочка')[0].depth === 10, by('Плочка')[0]);
+    ok('v1.31.1 archive: archived pieces are not offered', !by('Скрита').length);
+    ok('v1.31.1 archive: series units keep their numbers (1, 3, 4 — 2 is split, 5 retired)', JSON.stringify(by('Чинии').map(x => x.ref.unit)) === '[1,3,4]' && by('Чинии')[0].code === 'GL-2026-003/1', by('Чинии').map(x => [x.name, x.code]));
+    ok('v1.31.1 archive: split part keeps its number', by('Отделена')[0].ref.unit === null || by('Отделена')[0].name === 'Отделена', by('Отделена')[0]);
+  }
+
   // ---- two-tap delete ----
   await page.click('nav button[data-id=file]');
   const n0 = (await st()).runs.length;

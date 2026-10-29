@@ -84,6 +84,25 @@ const near = (a, b) => Math.abs(a - b) < 1e-9;
   eq('labels', [u._unitsLabel([3]), u._unitsLabel([3, 4, 5, 6]), u._unitsLabel([1, 4, 7]), u._unitsLabel([2, 3]), u._unitsLabel([])], ['/3', '/3–6', '/1, 4, 7', '/2, 3', '']);
   }
 
+  if (fs.existsSync(path.join(ROOT, 'domain/traits.js'))) {
+  const t = await load('domain/traits.js');
+  eq('size from the form, comma decimals', t._readSize('12,5', '8', '', 'bone-dry', true), { h: 12.5, w: 8, at: 'bone-dry', approx: true });
+  eq('size: nothing filled → null', t._readSize('', '', '', 'bone-dry', true), null);
+  eq('size: zero and negative are not sizes', t._readSize('0', '-3', 'x', '', false), null);
+  eq('label round', t._sizeLabel({ h: 12, w: 8 }), 'в12 × Ø8 см');
+  eq('label rect', t._sizeLabel({ h: 2, w: 20, depth: 15 }), 'в2 × 20 × 15 см');
+  eq('label only width', t._sizeLabel({ w: 22.5 }), 'Ø22,5 см');
+  eq('label empty', t._sizeLabel(null), '');
+  eq('parse "в8 × ⌀6"', t._parseDims('в8 × ⌀6'), { w: 6, h: 8 });
+  eq('parse "20×15×8"', t._parseDims('20×15×8'), { w: 20, depth: 15, h: 8 });
+  eq('categories: trimmed, no repeats (case), order kept', t._catsNorm([' Чаши ', 'чаши', '', 'Окарини', null]), ['Чаши', 'Окарини']);
+  eq('kiln size from structured', t._kilnSize({ size: { h: 22, w: 18 }, dimensions: 'в1 × ⌀1' }), { h: 22, source: 'size', shape: 'round', d: 18 });
+  eq('kiln size rect', t._kilnSize({ size: { h: 2, w: 20, depth: 15 } }), { h: 2, source: 'size', shape: 'rect', w: 20, depth: 15 });
+  eq('kiln size from text when no structured', t._kilnSize({ dimensions: 'в8 × ⌀6' }), { h: 8, source: 'text', shape: 'round', d: 6 });
+  eq('kiln size: nothing → null', t._kilnSize({ dimensions: 'голяма' }), null);
+  eq('number: "450" → 450, "" → null', [t._numPos('450'), t._numPos('')], [450, null]);
+  }
+
   console.log((failed ? 'FAILED ' : 'OK ') + passed + ' passed, ' + failed + ' failed');
   process.exit(failed ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });
