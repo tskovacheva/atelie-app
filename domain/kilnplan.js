@@ -555,4 +555,19 @@ function _planRoom(S, r, levelId) {
   return { ids: ids, placed: res.placed.map(function (x) { return x.id; }), failed: res.failed };
 }
 
-export { effH, num, r1, shelfType, shelfShape, levelShelves, chamberShape, shapeOf, toPoly, samples, bound, xExtent, pointOut, hull, overhangOn, overhang, chamberOut, axes, proj, convexIntersect, segDist, polyDist, gapBetween, stack, positioned, zone, label, postShapes, check, defaultPosts, clock, findSpot, quickReason, autoArrange, fc, byHeight, planLevels, postCombos, parseDims, _planSetup, _planGap, _planRun, _planMeasures, _planRoom };
+// v1.34.0: предложени места (пунктир) за изделията на ниво без записано място —
+// около записаните, с отстоянието и подпорите. Височината не пречи (проверява се
+// отделно). Не променя r. {placed, failed, map: {id: {x, y}}}
+function _planSuggest(S, r, levelId) {
+  var ids = r.pieces.filter(function (p) { return p.level === levelId && !positioned(p); }).map(function (p) { return p.id; });
+  var out = { placed: [], failed: [], map: {} };
+  if (!ids.length) return out;
+  var flat = JSON.parse(JSON.stringify(r));
+  flat.clear = 0;
+  flat.pieces.forEach(function (p) { p._h = effH(p); if (num(p.h) != null) { p.h = 0; p.s = 0; } });
+  var res = autoArrange(S, flat, ids, [levelId], 'height');
+  res.map = {}; res.placed.forEach(function (x) { res.map[x.id] = x; });
+  return res;
+}
+
+export { effH, num, r1, shelfType, shelfShape, levelShelves, chamberShape, shapeOf, toPoly, samples, bound, xExtent, pointOut, hull, overhangOn, overhang, chamberOut, axes, proj, convexIntersect, segDist, polyDist, gapBetween, stack, positioned, zone, label, postShapes, check, defaultPosts, clock, findSpot, quickReason, autoArrange, fc, byHeight, planLevels, postCombos, parseDims, _planSetup, _planGap, _planRun, _planMeasures, _planRoom, _planSuggest };
