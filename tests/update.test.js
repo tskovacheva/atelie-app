@@ -18,14 +18,19 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 (async () => {
   console.log('update:');
   if (!/__glinaModulesVersion/.test(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'))) { console.log('  - no module version check in this version'); return; }
-  const prev = H.previous().find(x => x.version === 'v1.31.1') || H.previous().pop();
+  const PREV = process.env.UPDATE_FROM;
+  const prev = (PREV && H.previous().find(x => x.version === PREV)) || H.previous().pop();
   let root = prev.root;
   // Files missing from a previous-release folder (icons, manifest) come from this tree.
   const srv = http.createServer((q, r) => {
     let u = decodeURIComponent(q.url.split('?')[0]); if (u === '/') u = '/index.html';
     let f = path.join(root, u); if (!fs.existsSync(f)) f = path.join(ROOT, u);
     if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; }
-    r.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(r);
+    // Like GitHub Pages: every file may be kept by the browser for 10 minutes.
+    const st = fs.statSync(f);
+    const etag = '"' + st.size + '-' + st.mtimeMs + '-' + (root === ROOT ? 'n' : 'o') + '"';
+    if (q.headers['if-none-match'] === etag) { r.writeHead(304, { etag, 'cache-control': 'max-age=600' }); r.end(); return; }
+    r.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream', 'cache-control': 'max-age=600', etag }); fs.createReadStream(f).pipe(r);
   }).listen(0, '127.0.0.1');
   await new Promise(r => srv.once('listening', r));
   const url = 'http://127.0.0.1:' + srv.address().port + '/';
@@ -37,6 +42,7 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
     const dialogs = [], errors = [];
     page.on('dialog', d => { dialogs.push(d.message().split('\n')[0]); d.dismiss().catch(() => {}); });
     page.on('pageerror', e => errors.push(e.message));
+    if (process.env.DEBUG) { page.on('framenavigated', f => { if (f === page.mainFrame()) console.log('    nav', f.url()); }); page.on('console', m => console.log('    console', m.text().slice(0, 150))); page.on('request', q => console.log('    req', q.url().replace(/^http:\/\/[^/]+/, ''), q.isNavigationRequest() ? 'NAV' : '')); page.on('requestfinished', q => console.log('    done', q.url().replace(/^http:\/\/[^/]+/, ''))); page.on('requestfailed', q => console.log('    failed', q.url().replace(/^http:\/\/[^/]+/, ''), q.failure() && q.failure().errorText)); }
     await page.goto(url); await page.waitForTimeout(2500); await page.reload(); await page.waitForTimeout(1500);
     const pv = await page.evaluate(async () => {
       editId = null; editKind = 'piece'; openPieceMo(null); await new Promise(r => setTimeout(r, 100));
@@ -45,8 +51,18 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
     });
     ok('previous release runs under its service worker, with a piece (' + pv.v + ')', pv.sw && pv.n === 1, pv);
     root = ROOT;
-    await page.reload(); await page.waitForTimeout(5000);
-    const after = await page.evaluate(() => ({ v: APP_VERSION, mods: window.__glinaModulesVersion, broken: _storageBroken, cards: document.querySelectorAll('#pieces-grid .pc').length, names: DB.pieces.map(p => p.name) }));
+    await page.reload();
+    // The update may reload the page once or twice by itself (stale files, the new
+    // worker taking over): read the state once it has settled, up to 25 s.
+    let after = null;
+    for (let t = 0; t < 25 && !(after && after.v === after.mods && after.cards); t++) {
+      await page.waitForTimeout(1000);
+      after = await Promise.race([
+        page.evaluate(() => ({ v: APP_VERSION, mods: window.__glinaModulesVersion, broken: _storageBroken, cards: document.querySelectorAll('#pieces-grid .pc').length, names: DB.pieces.map(p => p.name) })),
+        new Promise(r => setTimeout(() => r(null), 3000))
+      ]).catch(() => null);
+    }
+    after = after || {};
     ok('after the update: new version, its own modules', after.v === after.mods && after.v !== pv.v, after);
     ok('after the update: the piece is listed, nothing reported broken', !after.broken && after.cards === 1 && after.names[0] === 'Преди обновяването', after);
     ok('no alert on the way', dialogs.length === 0, dialogs);

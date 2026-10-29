@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.33.0 · `atelie-v90`
+**Version:** v1.33.1 · `atelie-v91`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -299,7 +299,10 @@ pieces and was reported as a storage problem, with the data intact.) `app.js` se
 `window.__glinaModulesVersion`; if it differs from `APP_VERSION`, boot clears the
 caches (when online) and reloads once; if it still differs, the app says the update
 did not load fully, enters the broken state and writes nothing. A code error during
-boot is reported as such (reason `code`), not as a storage failure.
+boot is reported as such (reason `code`), not as a storage failure. From v1.33.1 the
+worker fetches the page and code with `cache: 'no-cache'` (GitHub Pages lets the
+browser keep files 10 minutes), and the stale-module reload first refetches the page,
+`app.js` and its imports with `cache: 'reload'` and waits for a new worker to activate.
 
 ### Photos
 
