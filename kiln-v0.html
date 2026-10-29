@@ -82,6 +82,8 @@ pre{white-space:pre-wrap;font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;
 .linkbtn{border:0;background:none;color:var(--err);font:inherit;padding:0;cursor:pointer;text-decoration:underline}
 .flash{position:fixed;left:16px;right:16px;bottom:16px;max-width:728px;margin:0 auto;z-index:20;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 .it .b[data-act]{cursor:pointer}
+.cap{background:var(--bg);border-radius:9px;padding:8px 10px;font-size:13.5px;margin-top:6px}
+.cap .ok{color:var(--ok)}.cap .err{color:var(--err)}.cap .warn{color:var(--warn)}.cap>div+div{margin-top:3px}
 #print{display:none}
 @media print{
   header,nav,main{display:none!important}
@@ -465,13 +467,15 @@ var KilnGeo = (function () {
   // Автоматично подреждане на дадени изделия по дадени нива. Не променя r —
   // връща къде да отиде всяко и защо останалите не са сложени. Най-големите
   // основи първи; всяко отива на най-ниското място, което му стига по височина.
-  function autoArrange(S, r, ids, levelIds) {
+  // order 'height': като planLevels (от най-високото), за да дава същите места,
+  // които предложението за нива е проверило.
+  function autoArrange(S, r, ids, levelIds, order) {
     var w = JSON.parse(JSON.stringify(r)), clear = Math.max(0, num(r.clear) || 0);
     var st = stack(S, w).filter(function (s) { return levelIds.indexOf(s.id) >= 0; });
     var res = { placed: [], failed: [] };
     var list = ids.map(function (id) { return w.pieces.find(function (p) { return p.id === id; }); }).filter(Boolean);
     function area(p) { var sh = shapeOf(p); return !sh ? 0 : sh.kind === 'circle' ? Math.PI * sh.r * sh.r : (num(p.w) || 0) * (num(p.depth) || 0); }
-    list.sort(function (a, b) { return area(b) - area(a) || (num(b.h) || 0) - (num(a.h) || 0); });
+    if (order === 'height') list.sort(byHeight); else list.sort(function (a, b) { return area(b) - area(a) || (num(b.h) || 0) - (num(a.h) || 0); });
     list.forEach(function (p) {
       if (!shapeOf(p)) { res.failed.push({ id: p.id, kind: 'size', msg: 'няма размер на основата — постави на ръка' }); return; }
       var h = num(p.h);
@@ -494,6 +498,82 @@ var KilnGeo = (function () {
       res.failed.push({ id: p.id, kind: 'room', msg: 'няма свободно място на ' + (cands.length > 1 ? 'нива ' : 'ниво ') + cands.map(function (c) { return c.i + 1; }).join(', ') });
     });
     return res;
+  }
+
+  // Предложение за нива: колко нива, на каква височина подпорите и кое изделие
+  // къде. Изделията се вземат от най-високото към най-ниското; всяко отива на
+  // първото ниво, на чиято плоча се събира (по основата), иначе отваря ново.
+  // Най-високата група отива горе (там мястото е до тавана, без подпори);
+  // за останалите подпорите са най-ниската сглобяема височина, която стига.
+  // Не променя r — връща чернова.
+  function fc(v) { return String(r1(v)).replace('.', ','); }
+  function byHeight(a, b) {
+    var ha = num(a._h !== undefined ? a._h : a.h), hb = num(b._h !== undefined ? b._h : b.h);
+    if ((ha == null) !== (hb == null)) return ha == null ? 1 : -1;
+    return (hb || 0) - (ha || 0) || (num(b.d) || num(b.w) || 0) - (num(a.d) || num(a.w) || 0) || String(a.id).localeCompare(String(b.id));
+  }
+  function planLevels(S, r) {
+    var clear = Math.max(0, num(r.clear) || 0), H = num(S.kiln && S.kiln.h), floorH = num(r.floorH) || 0;
+    var types = (S.shelves || []).filter(function (t) { return t.shape !== 'half' && shelfShape(t, {}); });
+    var type = types.slice().sort(function (a, b) { return (num(b.qty) || 0) - (num(a.qty) || 0) || (num(b.d) || 0) - (num(a.d) || 0); })[0];
+    var out = { levels: [], problems: [], skipped: [], type: type || null };
+    if (!type) { out.problems.push('Няма вид плоча с размер — задай го в „Пещ“.'); return out; }
+    var shelves = types.reduce(function (a, t) { return a + (num(t.qty) || 0); }, 0);
+    // Празно ниво най-отгоре, за да се броят подпорите на всяко предложено ниво.
+    var sim = { floorH: floorH, gap: r.gap, clear: 0, levels: [{ id: 'plan-top', shelves: [], posts: [] }], pieces: [] };
+    var groups = [];
+    function newGroup() {
+      var L = { id: 'plan' + groups.length, shelves: [{ ref: type.id, x: 0, y: 0, rot: 0 }], postH: 99 };
+      L.posts = defaultPosts(levelShelves(S, L), 3, S.postD);
+      sim.levels.splice(sim.levels.length - 1, 0, L);
+      var g = { L: L, ids: [], tall: 0, noBase: 0 };
+      groups.push(g); return g;
+    }
+    var list = r.pieces.slice().sort(byHeight);
+    list.forEach(function (p) {
+      var h = num(p.h) || 0, base = shapeOf(p, 0, 0), q = JSON.parse(JSON.stringify(p));
+      q.h = 0; q.x = null; q.y = null;
+      if (!base) {
+        var g0 = groups.find(function (g) { return g.tall >= h; }) || groups[0] || newGroup();
+        g0.ids.push(p.id); g0.noBase++; g0.tall = Math.max(g0.tall, h); return;
+      }
+      for (var i = 0; i < groups.length; i++) {
+        q.level = groups[i].L.id;
+        var sp = findSpot(S, sim, groups[i].L, q);
+        if (sp) { q.x = sp.x; q.y = sp.y; sim.pieces.push(q); groups[i].ids.push(p.id); groups[i].tall = Math.max(groups[i].tall, h); return; }
+      }
+      var g = newGroup(); q.level = g.L.id;
+      var s2 = findSpot(S, sim, g.L, q);
+      if (!s2) { groups.pop(); sim.levels.splice(sim.levels.length - 2, 1); out.skipped.push({ id: p.id, msg: 'основата е по-голяма от плочата' }); return; }
+      q.x = s2.x; q.y = s2.y; sim.pieces.push(q); g.ids.push(p.id); g.tall = h;
+    });
+    if (!groups.length) return out;
+    // Коя група горе: там височината не се закръгля до подпори, затова горе
+    // отива групата, при която закръгляването би загубило най-много. При равенство —
+    // най-високата. Останалите — отдолу нагоре по реда, в който са отворени.
+    var combos = postCombos(S.postSizes, Math.max(H || 60, 20));
+    var keys = Object.keys(combos).map(Number).sort(function (a, b) { return a - b; });
+    function rounded(need) { var k = keys.find(function (v) { return v >= need - 1e-9; }); return k != null ? k : need; }
+    var best = 0, bestLoss = -1;
+    groups.forEach(function (g, i) { var need = g.tall + clear, loss = rounded(need) - need; if (loss > bestLoss + 1e-9) { best = i; bestLoss = loss; } });
+    var ordered = groups.filter(function (g, i) { return i !== best; }).concat([groups[best]]);
+    var t = num(type.t) || 0, z = floorH;
+    ordered.forEach(function (g, i) {
+      var last = i === ordered.length - 1, need = g.tall + clear, lv = { ids: g.ids, tall: g.tall, need: need, noBase: g.noBase, bottom: z, top: z + t };
+      if (!last) {
+        var k = keys.find(function (v) { return v >= need - 1e-9; });
+        lv.postH = k != null ? k : r1(need); lv.combo = k != null ? combos[k] : null;
+        if (k == null) out.problems.push('Ниво ' + (i + 1) + ' иска подпори ' + fc(need) + ' см — няма такава комбинация от наличните.');
+        z = lv.top + lv.postH;
+        lv.space = lv.postH;
+      } else lv.space = H != null ? H - lv.top : null;
+      out.levels.push(lv);
+    });
+    var top = out.levels[out.levels.length - 1];
+    out.fits = top.space == null || top.space >= top.need - 0.05;
+    if (!out.fits) out.problems.push('Не стига височина: горното ниво иска ' + fc(top.need) + ' см, до тавана остават ' + fc(top.space) + ' см (липсват ' + fc(top.need - top.space) + ' см).');
+    if (shelves && out.levels.length > shelves) out.problems.push('Нужни са ' + out.levels.length + ' плочи, а в „Пещ“ има ' + shelves + '.');
+    return out;
   }
 
   // Височини, сглобими от наличните подпори, през 0,1 см:
@@ -531,7 +611,7 @@ var KilnGeo = (function () {
   return { num: num, r1: r1, shelfType: shelfType, shelfShape: shelfShape, levelShelves: levelShelves, chamberShape: chamberShape,
     shapeOf: shapeOf, xExtent: xExtent, pointOut: pointOut, overhang: overhang, overhangOn: overhangOn, chamberOut: chamberOut,
     gapBetween: gapBetween, stack: stack, check: check, defaultPosts: defaultPosts, clock: clock, findSpot: findSpot,
-    positioned: positioned, zone: zone, quickReason: quickReason, autoArrange: autoArrange, postCombos: postCombos, parseDims: parseDims, label: label };
+    positioned: positioned, zone: zone, quickReason: quickReason, autoArrange: autoArrange, planLevels: planLevels, postCombos: postCombos, parseDims: parseDims, label: label };
 })();
 if (typeof module !== 'undefined') module.exports = KilnGeo;
 </script>
@@ -543,7 +623,6 @@ var G = KilnGeo, num = G.num, r1 = G.r1;
 var KEY = 'glina.kiln.v0';
 var TYPES = { bisque: 'Бисквит', glaze: 'Глазура', other: 'Друго' };
 var STATES = { planned: 'План', loaded: 'Заредено', completed: 'Приключено', interrupted: 'Прекъснато' };
-var MODES = { quick: ['Бързо', 'Изделия по нива и снимка. Без схема.'], visual: ['Визуално', 'Приблизително място на схемата: избери изделие и докосни схемата.'], precise: ['Подробно', 'Точни позиции, завъртане и подпори — за опити и тестове.'] };
 var RESULTS = ['', 'Добре', 'Пукнато', 'Деформирано', 'Залепнало', 'Счупено', 'Друго'];
 var CONE_RES = ['', 'Недоогрят', 'Точно', 'Преогрят'];
 var STAGES = { wet: 'Сурово', 'leather-hard': 'Кожна влажност', 'bone-dry': 'Сухо', bisque: 'Бисквит', glazed: 'Глазирано', fired: 'Изпечено', finished: 'Готово', broken: 'Счупено', gifted: 'Подарено' };
@@ -576,11 +655,11 @@ function normalize(S) {
   if (!S.gaps) S.gaps = { bisque: 0, glaze: 1, other: 0.5 };
   if (S.clear == null) S.clear = 0.5;
   var K = S.kiln || {};
-  if (K.name === KITTEC.name && !K.checked && num(K.d) === 50 && num(K.h) === 45) S.kiln = Object.assign({}, K, { d: 51, h: 38, volume: 79, power: 3.6, checked: true });
+  if (K.name === KITTEC.name && !K.checked && ((num(K.d) === 50 && num(K.h) === 45) || (num(K.d) === 51 && num(K.h) === 38))) S.kiln = Object.assign({}, K, { d: 51, h: 38, volume: K.volume || 79, power: K.power || 3.6, checked: true });
   var oldHalf = {};
   if (!(S.rev >= 2)) (S.shelves || []).forEach(function (t) { if (t.shape === 'half') oldHalf[t.id] = 1; });
   (S.runs || []).forEach(function (r) {
-    if (!r.mode) r.mode = 'visual';
+    if (!r.mode || r.mode === 'quick') r.mode = 'visual';
     r.levels.forEach(function (L) {
       if (!Array.isArray(L.shelves)) {
         L.shelves = !L.shelf ? [] : oldHalf[L.shelf] ? [{ ref: L.shelf, x: 0, y: 0.5, rot: 0 }, { ref: L.shelf, x: 0, y: -0.5, rot: 180 }] : [{ ref: L.shelf, x: 0, y: 0, rot: 0 }];
@@ -594,7 +673,7 @@ function normalize(S) {
   return S;
 }
 function newRun(type) {
-  var r = { id: uid('run-'), name: '', date: today(), type: type || 'bisque', mode: 'quick', gap: num(S.gaps[type || 'bisque']) || 0, clear: num(S.clear) || 0, floorH: 5,
+  var r = { id: uid('run-'), name: '', date: today(), type: type || 'bisque', mode: 'visual', gap: num(S.gaps[type || 'bisque']) || 0, clear: num(S.clear) || 0, floorH: 5,
     state: 'planned', confirmedAt: null, endedAt: null, levels: [], pieces: [], nextNo: 1, peak: '', program: '', notes: '', corrections: [], refireOf: null };
   addLevelTo(r);
   return r;
@@ -614,6 +693,7 @@ if (!S || S.v !== 0 || !S.kiln) S = defaults();
 normalize(S);
 if (!S.runs.length) { var r0 = newRun('bisque'); S.runs.push(r0); S.cur = r0.id; }
 if (!S.runs.some(function (r) { return r.id === S.cur; })) S.cur = S.runs[0].id;
+var START_VIEW = S.runs.find(function (r) { return r.id === S.cur; }).pieces.length ? 'plan' : 'pieces';
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch (e) { saveOk = false; }
   var el = document.getElementById('status');
@@ -664,7 +744,8 @@ function fillPhotos() {
 }
 
 // ---- състояние на екрана ----
-var UI = { view: 'plan', level: null, sel: null, post: null, edit: null, imp: null, confirm: null, step: 1, auto: null };
+var UI = { view: null, level: null, sel: null, post: null, edit: null, imp: null, confirm: null, step: 1, auto: null };
+UI.view = START_VIEW;
 function run() { return S.runs.find(function (r) { return r.id === S.cur; }); }
 function curLevel() {
   var r = run();
@@ -715,7 +796,7 @@ function shelvesSig(L) { return (L.shelves || []).map(function (x) { var t = G.s
 function render() {
   var ae = document.activeElement, fk = ae && (ae.dataset && ae.dataset.b ? '[data-b="' + ae.dataset.b + '"]' : ae.id ? '#' + ae.id : null);
   var r = run();
-  document.getElementById('nav').innerHTML = [['plan', 'План'], ['pieces', 'Изделия (' + r.pieces.length + ')'], ['kiln', 'Пещ'], ['after', 'След'], ['file', 'Файл']].map(function (t) {
+  document.getElementById('nav').innerHTML = [['kiln', 'Пещ'], ['pieces', 'Изделия (' + r.pieces.length + ')'], ['plan', 'План'], ['after', 'След'], ['file', 'Файл']].map(function (t) {
     return '<button data-act="view" data-id="' + t[0] + '" class="' + (UI.view === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
   }).join('');
   var V = { plan: vPlan, pieces: vPieces, kiln: vKiln, after: vAfter, file: vFile }[UI.view] || vPlan;
@@ -744,75 +825,136 @@ function runHead(r) {
     '</div>';
 }
 
-function modeBar(r) {
-  return '<div class="seg">' + Object.keys(MODES).map(function (k) { return '<button data-act="mode" data-id="' + k + '" class="' + (r.mode === k ? 'on' : '') + '">' + MODES[k][0] + '</button>'; }).join('') + '</div>' +
-    '<div class="small muted" style="margin:4px 2px 0">' + MODES[r.mode][1] + '</div>';
+// Предложени места: за изделията на нивото без записано място страницата
+// търси къде биха се събрали. Нищо не се записва, докато човек не го приеме
+// или не премести изделието. Така и „Бързо“ (само нива) показва дали стига място.
+var sugCache = {};
+function suggest(r, L) {
+  var ps = r.pieces.filter(function (p) { return p.level === L.id; });
+  var ids = ps.filter(function (p) { return !G.positioned(p); }).map(function (p) { return p.id; });
+  if (!ids.length) return { placed: [], failed: [], map: {} };
+  var key = JSON.stringify([S.kiln, S.shelves, S.postD, r.gap, r.clear, r.floorH, r.levels.map(function (x) { return [x.id, x.shelves, x.postH, x.posts]; }), ps.map(function (p) { return [p.id, p.shape, p.d, p.w, p.depth, p.h, p.rot, p.x, p.y]; })]);
+  if (sugCache[L.id] && sugCache[L.id].key === key) return sugCache[L.id].res;
+  // Само основата: височината се проверява отделно и не бива да крие мястото.
+  var flat = JSON.parse(JSON.stringify(r)); flat.pieces.forEach(function (p) { p._h = p.h; p.h = 0; });
+  var res = G.autoArrange(S, flat, ids, [L.id], 'height');
+  res.map = {}; res.placed.forEach(function (x) { res.map[x.id] = x; });
+  sugCache[L.id] = { key: key, res: res };
+  return res;
+}
+function shapeArea(sh) {
+  if (!sh) return 0;
+  if (sh.kind === 'circle') return Math.PI * sh.r * sh.r;
+  var a = 0, P = sh.pts; for (var i = 0; i < P.length; i++) { var q = P[i], w = P[(i + 1) % P.length]; a += q[0] * w[1] - w[0] * q[1]; } return Math.abs(a) / 2;
+}
+// Стига ли нивото: височина (най-високото изделие срещу мястото) и плоча
+// (събират ли се основите). Отговорът е на един ред с ✓ / ✗ / ?.
+function capacity(r, L, s, chk, sug) {
+  var ps = r.pieces.filter(function (p) { return p.level === L.id; }), clear = num(r.clear) || 0, out = [];
+  if (!ps.length) return '<div class="cap muted">Няма изделия на това ниво.</div>';
+  var tall = null, noH = 0;
+  ps.forEach(function (p) { var h = num(p.h); if (h == null) noH++; else if (!tall || h > num(tall.h)) tall = p; });
+  if (tall) {
+    var need = num(tall.h) + clear, ok = s.space == null || need <= s.space + 0.05;
+    out.push('<div class="' + (ok ? 'ok' : 'err') + '">' + (ok ? '✓' : '✗') + ' <b>Височина:</b> място ' + (s.space == null ? '?' : fmtN(s.space)) + ' см' + (s.last ? ' до тавана' : '') + ', най-високото е ' + esc(G.label(tall)) + ' — ' + fmtN(tall.h) + ' см' + (clear ? ' + ' + fmtN(clear) + ' отстояние' : '') +
+      (ok ? '' : ' → не хваща с ' + fmtN(need - s.space) + ' см') + '</div>');
+  }
+  if (noH) out.push('<div class="warn">? ' + noH + ' без височина — не се проверяват</div>');
+  var shelfA = s.shelves.reduce(function (a, x) { return a + shapeArea(x.shape); }, 0);
+  var withBase = ps.filter(function (p) { return G.shapeOf(p, 0, 0); }), noBase = ps.length - withBase.length;
+  var used = withBase.reduce(function (a, p) { return a + shapeArea(G.shapeOf(p, 0, 0)); }, 0);
+  var room = sug.failed.filter(function (f) { return f.kind === 'room'; });
+  var bad = ps.filter(function (p) { return G.positioned(p) && (chk.byP[p.id] || []).some(function (x) { return x.sev === 'err' && (x.kind === 'out' || x.kind === 'hit' || x.kind === 'post'); }); });
+  if (withBase.length && shelfA) {
+    var okA = !room.length && !bad.length;
+    out.push('<div class="' + (okA ? 'ok' : 'err') + '">' + (okA ? '✓' : '✗') + ' <b>Плоча:</b> основите заемат ' + Math.round(used / shelfA * 100) + ' % от плочата' +
+      (room.length ? ' → не се събират: ' + room.map(function (f) { var p = pieceById(f.id); return p ? esc(G.label(p)) : ''; }).join(', ') + (num(r.gap) ? ' (при отстояние ' + fmtN(r.gap) + ' см между изделията — сменя се горе)' : '') : '') +
+      (bad.length ? ' → проблем с място: ' + bad.map(function (p) { return esc(G.label(p)); }).join(', ') : '') +
+      (okA && sug.placed.length ? ' · всички се събират (виж пунктира на схемата)' : '') + '</div>');
+  }
+  if (noBase) out.push('<div class="warn">? ' + noBase + ' без размер на основата — не се проверяват на плочата</div>');
+  return '<div class="cap">' + out.join('') + '</div>';
 }
 
+// Черновата на „Предложи нива“: показва се, не се записва, докато не се приложи.
+function planPanel(r) {
+  if (!r.pieces.length) return '';
+  if (!UI.plan || UI.plan.run !== r.id) return '<div class="btns"><button class="btn sm pri" data-act="planLevels">Предложи нива</button><span class="small muted" style="align-self:center">брой нива, подпори и кое изделие къде</span></div>';
+  var P = UI.plan.res, cols = clayColors(r), n = P.levels.length;
+  var h = '<div class="cap" style="margin-top:8px"><b>Предложение: ' + n + (n === 1 ? ' ниво' : ' нива') + '</b> · плоча ' + esc(P.type ? P.type.name : '?') + ' · отстояние ' + fmtN(r.gap) + ' см между изделия, ' + fmtN(r.clear) + ' см под горната плоча';
+  h += P.problems.length ? P.problems.map(function (x) { return '<div class="err">✗ ' + esc(x) + '</div>'; }).join('') : '<div class="ok">✓ Всичко се събира по височина и по плочи.</div>';
+  P.levels.slice().reverse().forEach(function (lv, k) {
+    var i = n - k, last = i === n;
+    h += '<div style="margin-top:8px"><b>Ниво ' + i + (last && n > 1 ? ' (горе)' : '') + '</b> — ' + lv.ids.length + ' изд., най-високо ' + fmtN(lv.tall) + ' см · ' +
+      (last ? 'до тавана ' + (lv.space == null ? '?' : fmtN(lv.space)) + ' см' : 'подпори над него ' + fmtN(lv.postH) + ' см' + (lv.combo && lv.combo.length > 1 ? ' (' + lv.combo.map(fmtN).join(' + ') + ')' : '')) +
+      '<div class="small muted">' + lv.ids.map(function (id) { var p = pieceById(id); return p ? '<span style="white-space:nowrap"><span class="dot" style="display:inline-block;width:9px;height:9px;margin:0 3px -1px 0;background:' + cols[p.clay || '—'] + '"></span>' + esc(G.label(p)) + '</span>' : ''; }).join(', ') + '</div></div>';
+  });
+  if (P.skipped.length) h += '<div class="err" style="margin-top:6px">✗ Не влизат никъде: ' + P.skipped.map(function (f) { var p = pieceById(f.id); return (p ? esc(G.label(p)) : '') + ' — ' + esc(f.msg); }).join('; ') + '</div>';
+  h += '<div class="small muted" style="margin-top:6px">Приложи заменя нивата, подпорите и разпределението. Местата на схемата стават предложени (пунктир). Снимките на нивата остават.</div>';
+  h += '<div class="btns"><button class="btn sm pri" data-act="applyPlan"' + (r.state && r.state !== 'planned' ? ' disabled title="Изпичането е потвърдено"' : '') + '>Приложи</button><button class="btn sm ghost" data-act="planCancel">Откажи</button></div></div>';
+  return h;
+}
 function vPlan() {
-  var r = run(), L = curLevel(), chk = G.check(S, r), cols = clayColors(r), mode = r.mode || 'visual';
+  var r = run(), L = curLevel(), chk = G.check(S, r), cols = clayColors(r), precise = r.mode === 'precise';
   var s = chk.stack.find(function (x) { return x.id === L.id; });
-  var h = runHead(r) + modeBar(r);
+  var sugs = {}; r.levels.forEach(function (x) { sugs[x.id] = suggest(r, x); });
+  var sug = sugs[L.id];
+  var h = runHead(r);
   if (!S.kiln.checked) h += '<div class="note">Размерите на камерата не са проверени — виж „Пещ“.</div>';
   // нива отстрани
-  h += '<div class="card"><h2>Нива</h2>' + sideSvg(r, chk, cols) +
+  h += '<div class="card"><h2>Нива</h2>' + sideSvg(r, chk, cols, sugs) + planPanel(r) +
     '<div class="row" style="margin-top:6px"><div><label class="f">Подпори на дъното, см</label>' + heightInput('run|floorH', r.floorH) + '</div>' +
     '<div class="nogrow"><button class="btn" data-act="addLevel">+ Ниво отгоре</button></div></div></div>';
   h += '<div class="tabs2">' + r.levels.map(function (x, i) { return [x, i]; }).reverse().map(function (xi) {
     var x = xi[0], i = xi[1], ps = r.pieces.filter(function (p) { return p.level === x.id; });
     var bad = worst((chk.byL[x.id] || []).concat.apply([], ps.map(function (p) { return chk.byP[p.id] || []; })));
-    return '<button class="btn sm ' + (x.id === L.id ? 'on' : '') + '" data-act="lvl" data-id="' + x.id + '">Ниво ' + (i + 1) + (i === r.levels.length - 1 && r.levels.length > 1 ? ' · горе' : i === 0 && r.levels.length > 1 ? ' · долу' : '') + ' (' + ps.length + ')' + (bad ? ' <span class="chip ' + bad + '">' + (bad === 'err' ? '✗' : '?') + '</span>' : '') + '</button>';
+    if (sugs[x.id].failed.some(function (f) { return f.kind === 'room'; })) bad = 'err';
+    return '<button class="btn sm ' + (x.id === L.id ? 'on' : '') + '" data-act="lvl" data-id="' + x.id + '">Ниво ' + (i + 1) + (i === r.levels.length - 1 && r.levels.length > 1 ? ' · горе' : i === 0 && r.levels.length > 1 ? ' · долу' : '') + ' (' + ps.length + ')' + (bad ? ' <span class="chip ' + bad + '">' + (bad === 'err' ? '✗' : '?') + '</span>' : (ps.length ? ' <span class="chip ok">✓</span>' : '')) + '</button>';
   }).join('') + '</div>';
 
   // нивото
-  h += '<div class="card"><div class="small muted">' + esc(shelvesText(L)) + ' · на ' + fmtN(s.top) + ' см от дъното · място над нея: <b>' + (s.space == null ? '?' : fmtN(s.space)) + ' см</b>' + (s.last ? ' (до тавана)' : '') + '</div>' +
+  h += '<div class="card"><h2>Ниво ' + levelNo(r, L.id) + '</h2>' + capacity(r, L, s, chk, sug) +
+    '<div class="small muted" style="margin-top:6px">' + esc(shelvesText(L)) + ' · плочата е на ' + fmtN(s.top) + ' см от дъното</div>' +
     (s.last ? '' : '<div class="row"><div><label class="f">Подпори над нивото, см</label>' + heightInput('level:' + L.id + '|postH', L.postH) + '</div></div>') +
-    issuesHtml(chk.byL[L.id]);
-  if (mode !== 'quick') h += shelvesEditor(L, mode);
-  if (mode === 'quick') h += photosHtml(L);
-  else {
-    var sel = UI.sel && pieceById(UI.sel);
-    h += '<div class="svgwrap" style="margin-top:8px">' + topSvg(r, L, s, chk, cols) + '</div>';
-    h += '<div class="small muted">' + (sel ? 'Докосни схемата, за да сложиш <b>' + esc(G.label(sel)) + '</b> там. ' : 'Избери изделие отдолу или на схемата. ') + 'Изделията се влачат. 12 ч = ' + (S.kiln.ref ? esc(S.kiln.ref) : 'ориентир, задай го в „Пещ“') + '.</div>';
-    if (sel) h += selPanel(r, sel, chk, cols, mode);
-    else if (UI.post != null && !s.last && L.posts[UI.post]) h += postPanel(L, UI.post, mode);
-    if (!s.last) h += '<div class="btns"><button class="btn sm" data-act="posts" data-id="3">Подпори по подразбиране</button>' + (mode === 'precise' ? '<button class="btn sm" data-act="posts" data-id="4">4 на кръгла</button><button class="btn sm" data-act="addPost">+ подпора</button>' : '') + '</div>';
-    h += photosHtml(L);
-  }
+    issuesHtml(chk.byL[L.id]) + shelvesEditor(L, precise ? 'precise' : 'visual');
+  var sel = UI.sel && pieceById(UI.sel);
+  h += '<div class="svgwrap" style="margin-top:8px">' + topSvg(r, L, s, chk, cols, sug) + '</div>';
+  h += '<div class="small muted">' + (sel ? 'Докосни схемата, за да запишеш къде е <b>' + esc(G.label(sel)) + '</b>. ' : '') +
+    'Плътно = записано място. Пунктир = предложено от страницата, не е записано. 12 ч = ' + (S.kiln.ref ? esc(S.kiln.ref) : 'ориентир, задай го в „Пещ“') + '.</div>';
+  if (sug.placed.length) h += '<div class="btns"><button class="btn sm" data-act="acceptSug">Запиши предложените места</button></div>';
+  if (sel) h += selPanel(r, sel, chk, cols, precise ? 'precise' : 'visual');
+  else if (UI.post != null && !s.last && L.posts[UI.post]) h += postPanel(L, UI.post, precise ? 'precise' : 'visual');
+  if (!s.last && precise) h += '<div class="btns"><button class="btn sm" data-act="posts" data-id="3">Подпори по подразбиране</button><button class="btn sm" data-act="posts" data-id="4">4 на кръгла</button><button class="btn sm" data-act="addPost">+ подпора</button></div>';
+  h += '<label class="small" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" data-ch="precise"' + (precise ? ' checked' : '') + '> Точни мерки: координати, завъртане, подпори, плочи (за опити)</label>';
+  h += photosHtml(L);
   if (r.levels.length > 1) h += '<div class="btns"><button class="btn sm ghost danger" data-act="delLevel" data-id="' + L.id + '" data-confirm>Махни това ниво</button></div>';
   h += '</div>';
 
   // изделията на нивото
   var on = r.pieces.filter(function (p) { return p.level === L.id; });
   h += '<div class="card"><h2>На ниво ' + levelNo(r, L.id) + ' (' + on.length + ')</h2>';
-  if (!on.length) h += '<div class="small muted">Още няма. Докосни изделие отдолу, за да го сложиш тук.</div>';
+  if (!on.length) h += '<div class="small muted">Още няма. Сложи изделия от списъка отдолу с „→ ' + levelNo(r, L.id) + '“.</div>';
   h += on.map(function (p) {
-    var pos = G.positioned(p);
-    return '<div class="it ' + (UI.sel === p.id ? 'sel' : '') + '"><span class="dot" style="background:' + cols[p.clay || '—'] + '"></span><div class="b" data-act="sel" data-id="' + p.id + '"><div class="nm">' + esc(G.label(p)) + '</div><div class="small muted">' + esc(p.clay || 'без глина') + ' · ' + dims(p) + (mode !== 'quick' ? ' · ' + (pos ? G.zone(p.x, p.y, chamberR()) : 'без място на схемата') : '') + '</div>' + issuesHtml(chk.byP[p.id]) + '</div>' +
+    var z = G.positioned(p) ? G.zone(p.x, p.y, chamberR()) : sug.map[p.id] ? 'предложено: ' + G.zone(sug.map[p.id].x, sug.map[p.id].y, chamberR()) : '';
+    return '<div class="it ' + (UI.sel === p.id ? 'sel' : '') + '"><span class="dot" style="background:' + cols[p.clay || '—'] + '"></span><div class="b" data-act="sel" data-id="' + p.id + '"><div class="nm">' + esc(G.label(p)) + '</div><div class="small muted">' + esc(p.clay || 'без глина') + ' · ' + dims(p) + (z ? ' · ' + esc(z) : '') + '</div>' + issuesHtml(chk.byP[p.id]) +
+      (sug.failed.some(function (f) { return f.id === p.id && f.kind === 'room'; }) ? '<div class="iss err">✗ не се събира на плочата заедно с останалите</div>' : '') + '</div>' +
       '<button class="btn sm ghost nogrow" data-act="unplace" data-id="' + p.id + '" title="Махни от нивото">✕</button></div>';
   }).join('') + '</div>';
 
   // неразположени
   var un = r.pieces.filter(function (p) { return !p.level; });
   h += '<div class="card"><h2>Неразположени (' + un.length + ')</h2>';
-  if (UI.auto) {
-    h += '<div class="note info"><b>Първо свободно място: сложени ' + UI.auto.placed + '.</b>' + (UI.auto.failed.length ? ' Не са сложени ' + UI.auto.failed.length + ':' : '') +
-      UI.auto.failed.map(function (f) { var p = pieceById(f.id); return p ? '<div class="small">• ' + esc(G.label(p)) + ' — ' + esc(f.msg) + '</div>' : ''; }).join('') + '</div>';
-  }
   if (!r.pieces.length) h += '<div class="muted small">Добави изделия в „Изделия“ — на ръка или от архив на Глина.</div>';
   else if (!un.length) h += '<div class="muted small">Всички изделия са на нива.</div>';
   else {
-    h += '<div class="small muted" style="margin-bottom:4px">' + (mode === 'quick' ? 'Докосни, за да сложиш на ниво ' + levelNo(r, L.id) + '.' : 'Докосни, за да избереш, после докосни мястото на схемата. „→ ' + levelNo(r, L.id) + '“ слага на нивото без място.') + '</div>';
+    h += '<div class="small muted" style="margin-bottom:4px">„→ ' + levelNo(r, L.id) + '“ слага изделието на ниво ' + levelNo(r, L.id) + '. Докосване на името го избира, за да го сложиш направо на място от схемата.</div>';
     h += un.map(function (p) {
-      var why = G.quickReason(S, r, L, p);
-      var cant = why && (why.kind === 'tall' || why.kind === 'shelf');
-      var room = UI.why && UI.why[p.id];
-      return '<div class="it ' + (UI.sel === p.id ? 'sel' : '') + '"><span class="dot" style="background:' + cols[p.clay || '—'] + '"></span><div class="b"' + (mode === 'quick' ? ' data-act="assign" data-id="' + p.id + '"' : ' data-act="sel" data-id="' + p.id + '"') + '><div class="nm">' + esc(G.label(p)) + '</div><div class="small muted">' + esc(p.clay || 'без глина') + ' · ' + dims(p) + '</div>' +
-        (why ? '<div class="iss ' + (cant ? 'err' : 'warn') + '">' + (cant ? '✗ ' : '? ') + esc(why.msg) + '</div>' : room ? '<div class="iss err">✗ ' + esc(room) + '</div>' : '') + '</div>' +
-        (mode === 'quick' ? '<button class="btn sm nogrow" data-act="assign" data-id="' + p.id + '">→ ' + levelNo(r, L.id) + '</button>' : '<button class="btn sm nogrow" data-act="assign" data-id="' + p.id + '" title="На нивото, без място на схемата">→ ' + levelNo(r, L.id) + '</button>') + '</div>';
+      var why = G.quickReason(S, r, L, p), cant = why && (why.kind === 'tall' || why.kind === 'shelf');
+      return '<div class="it ' + (UI.sel === p.id ? 'sel' : '') + '"><span class="dot" style="background:' + cols[p.clay || '—'] + '"></span><div class="b" data-act="sel" data-id="' + p.id + '"><div class="nm">' + esc(G.label(p)) + '</div><div class="small muted">' + esc(p.clay || 'без глина') + ' · ' + dims(p) + '</div>' +
+        (why ? '<div class="iss ' + (cant ? 'err' : 'warn') + '">' + (cant ? '✗ ' : '? ') + esc(why.msg) + '</div>' : '') + '</div>' +
+        '<button class="btn sm nogrow" data-act="assign" data-id="' + p.id + '">→ ' + levelNo(r, L.id) + '</button></div>';
     }).join('');
   }
-  if (mode !== 'quick' && r.pieces.some(function (p) { return !p.level || (p.level === L.id && !G.positioned(p)); })) h += '<div class="btns"><button class="btn sm" data-act="autoLevel">Първо свободно място за тези без място</button></div>';
   h += '</div>';
   var ck = Object.keys(cols);
   if (ck.length) h += '<div class="card small">' + ck.map(function (c) { return '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px"><span class="dot" style="margin:0;background:' + cols[c] + '"></span>' + esc(c) + ' (' + r.pieces.filter(function (p) { return (p.clay || '—') === c; }).length + ')</span>'; }).join('') + '</div>';
@@ -868,86 +1010,96 @@ function photosHtml(L) {
     '<div class="btns"><button class="btn sm" data-act="photo" data-id="' + L.id + '">📷 Снимка</button></div></div>';
 }
 
-// Височина на подпори: всяко число; подсказки са сглобимите от наличните.
+// Височина на подпори: всяко число. Подсказките са сглобимите от наличните; ако
+// числото не се сглобява, може да се запише като нова налична подпора.
 function heightInput(bind, val) {
   var max = Math.max(num(S.kiln.h) || 60, 20), combos = G.postCombos(S.postSizes, max), v = num(val);
   var keys = Object.keys(combos).map(Number).sort(function (a, b) { return a - b; }).filter(function (k) { return combos[k].length <= 3; });
   var id = 'dl-' + bind.replace(/[^a-z0-9]/gi, '');
-  var hint = v == null ? '' : v === 0 ? 'без подпори' : combos[v] ? (combos[v].length > 1 ? '= ' + combos[v].map(fmtN).join(' + ') : 'една подпора') : 'не се сглобява от наличните (' + S.postSizes.map(fmtN).join(', ') + ')';
+  var ok = v == null || v === 0 || combos[v];
+  var hint = v == null ? '' : v === 0 ? 'без подпори' : combos[v] ? (combos[v].length > 1 ? '= ' + combos[v].map(fmtN).join(' + ') : 'една подпора') : 'не се сглобява от наличните (' + S.postSizes.map(fmtN).join(', ') + ' см)';
   return '<input inputmode="decimal" list="' + id + '" data-b="' + bind + '|n" value="' + esc(val) + '"><datalist id="' + id + '">' + keys.map(function (k) { return '<option value="' + k + '">' + (combos[k].length > 1 ? combos[k].join('+') : '') + '</option>'; }).join('') + '</datalist>' +
-    (hint ? '<div class="small ' + (v && !combos[v] ? 'iss warn' : 'muted') + '">' + esc(hint) + '</div>' : '');
+    (hint ? '<div class="small ' + (ok ? 'muted' : 'iss warn') + '">' + esc(hint) + (ok ? '' : ' <button class="btn sm" data-act="addPostSize" data-id="' + v + '">+ Имам подпора ' + fmtN(v) + ' см</button>') + '</div>' : '');
 }
 
 function shapeSvg(sh, attrs) {
   if (sh.kind === 'circle') return '<circle cx="' + r1(sh.x) + '" cy="' + r1(-sh.y) + '" r="' + r1(sh.r) + '" ' + attrs + '/>';
   return '<polygon points="' + sh.pts.map(function (q) { return r1(q[0]) + ',' + r1(-q[1]); }).join(' ') + '" ' + attrs + '/>';
 }
-// Изглед отгоре: камерата, плочите, подпорите и изделията с място на едно ниво.
-function topSvg(r, L, s, chk, cols) {
+// Изглед отгоре: камерата, плочите, подпорите и изделията на едно ниво —
+// плътно със записано място, на пунктир с предложено.
+function topSvg(r, L, s, chk, cols, sug) {
   var C = G.chamberShape(S.kiln), R = chamberR(), m = R + 4, out = [];
+  sug = sug || { placed: [], map: {} };
   out.push('<svg id="top" viewBox="' + (-m) + ' ' + (-m) + ' ' + (2 * m) + ' ' + (2 * m) + '" data-lv="' + L.id + '">');
-  out.push('<rect x="' + (-m) + '" y="' + (-m) + '" width="' + 2 * m + '" height="' + 2 * m + '" fill="transparent" data-bg="1"/>');
+  out.push('<rect x="' + (-m) + '" y="' + (-m) + '" width="' + 2 * m + '" height="' + 2 * m + '" fill="transparent"/>');
   if (C) out.push(shapeSvg(C, 'fill="var(--chamber)" stroke="var(--line2)" stroke-width=".3" stroke-dasharray="1 1"'));
   [['12', 0, -R - 1.6], ['3', R + 1.8, 0.7], ['6', 0, R + 3], ['9', -R - 1.8, 0.7]].forEach(function (t) {
     out.push('<text x="' + t[1] + '" y="' + t[2] + '" font-size="2.6" text-anchor="middle" fill="var(--muted)" pointer-events="none">' + t[0] + '</text>');
   });
-  // зоните като едва видими кръгове
-  out.push('<circle r="' + r1(R / 3) + '" fill="none" stroke="rgba(0,0,0,.07)" stroke-width=".25" pointer-events="none"/><circle r="' + r1(2 * R / 3) + '" fill="none" stroke="rgba(0,0,0,.07)" stroke-width=".25" pointer-events="none"/>');
   s.shelves.forEach(function (x, j) {
     if (!x.shape) return;
-    out.push(shapeSvg(x.shape, 'fill="var(--shelf)" fill-opacity=".9" stroke="#BCA98F" stroke-width=".3" pointer-events="none"'));
+    out.push(shapeSvg(x.shape, 'fill="var(--shelf)" stroke="#BCA98F" stroke-width=".3" pointer-events="none"'));
     if (s.shelves.length > 1) { var b = x.shape.kind === 'circle' ? [x.shape.x, x.shape.y] : centroid(x.shape.pts); out.push('<text x="' + r1(b[0]) + '" y="' + r1(-b[1] + 4) + '" font-size="2.2" text-anchor="middle" fill="#9C8B73" pointer-events="none">плоча ' + (j + 1) + '</text>'); }
   });
+  out.push('<circle r="' + r1(R / 3) + '" fill="none" stroke="rgba(0,0,0,.08)" stroke-width=".25" pointer-events="none"/><circle r="' + r1(2 * R / 3) + '" fill="none" stroke="rgba(0,0,0,.08)" stroke-width=".25" pointer-events="none"/>');
   out.push('<line x1="0" y1="' + (-R) + '" x2="0" y2="' + (-R + 2.5) + '" stroke="var(--muted)" stroke-width=".4" pointer-events="none"/>');
   if (!s.last) (L.posts || []).forEach(function (q, j) {
     var pr = (num(S.postD) || 4) / 2, on = UI.post === j;
-    out.push('<g data-drag="post" data-id="' + j + '" class="pc"><circle cx="' + q.x + '" cy="' + (-q.y) + '" r="' + pr + '" fill="var(--post)" stroke="' + (on ? 'var(--text)' : '#fff') + '" stroke-width="' + (on ? 0.7 : 0.3) + '"/><text x="' + q.x + '" y="' + (-q.y + 0.9) + '" font-size="2.4" text-anchor="middle" fill="#fff" pointer-events="none">' + (j + 1) + '</text></g>');
+    out.push('<g data-drag="post" data-id="' + j + '" class="pc"><circle cx="' + q.x + '" cy="' + (-q.y) + '" r="' + pr + '" fill="var(--post)" stroke="' + (on ? 'var(--text)' : '#fff') + '" stroke-width="' + (on ? 0.7 : 0.3) + '"/><text x="' + q.x + '" y="' + (-q.y + 0.9) + '" font-size="2.4" text-anchor="middle" fill="#fff" pointer-events="none">п' + (j + 1) + '</text></g>');
   });
-  r.pieces.filter(function (p) { return p.level === L.id && G.positioned(p); }).forEach(function (p) {
-    var shp = G.shapeOf(p), bad = worst(chk.byP[p.id]), col = cols[p.clay || '—'];
-    var stroke = bad === 'err' ? 'var(--err)' : UI.sel === p.id ? 'var(--text)' : '#fff', sw = bad === 'err' || UI.sel === p.id ? 0.7 : 0.3;
-    var x = num(p.x), y = num(p.y);
-    out.push('<g data-drag="piece" data-id="' + p.id + '" class="pc">');
-    if (!shp) out.push('<circle cx="' + x + '" cy="' + (-y) + '" r="3" fill="' + col + '" fill-opacity=".55" stroke="' + (UI.sel === p.id ? 'var(--text)' : 'var(--warn)') + '" stroke-width=".5" stroke-dasharray="1 .6"/>');
-    else out.push(shapeSvg(shp, 'fill="' + col + '" fill-opacity=".8" stroke="' + stroke + '" stroke-width="' + sw + '"'));
-    out.push('<text x="' + x + '" y="' + (-y + 1) + '" font-size="2.8" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width=".25" paint-order="stroke" pointer-events="none">' + p.no + '</text></g>');
+  r.pieces.filter(function (p) { return p.level === L.id; }).forEach(function (p) {
+    var pos = G.positioned(p), g = sug.map[p.id];
+    if (!pos && !g) return;
+    var x = pos ? num(p.x) : g.x, y = pos ? num(p.y) : g.y;
+    var shp = G.shapeOf(p, x, y), bad = pos ? worst(chk.byP[p.id]) : '', col = cols[p.clay || '—'], sel = UI.sel === p.id;
+    var stroke = bad === 'err' ? 'var(--err)' : sel ? 'var(--text)' : pos ? '#fff' : col, sw = bad === 'err' || sel ? 0.7 : pos ? 0.3 : 0.5;
+    out.push('<g data-drag="piece" data-id="' + p.id + '" class="pc"' + (pos ? '' : ' data-gx="' + x + '" data-gy="' + y + '"') + '>');
+    if (!shp) out.push('<circle cx="' + x + '" cy="' + (-y) + '" r="3" fill="' + col + '" fill-opacity=".55" stroke="' + (sel ? 'var(--text)' : 'var(--warn)') + '" stroke-width=".5" stroke-dasharray="1 .6"/>');
+    else out.push(shapeSvg(shp, 'fill="' + col + '" fill-opacity="' + (pos ? '.82' : '.3') + '" stroke="' + stroke + '" stroke-width="' + sw + '"' + (pos ? '' : ' stroke-dasharray="1.2 .7"')));
+    out.push('<text x="' + x + '" y="' + (-y + 1) + '" font-size="' + (shp && shp.kind === 'circle' && shp.r < 3 ? 2.2 : 2.8) + '" text-anchor="middle" fill="' + (pos ? '#fff' : 'var(--text)') + '"' + (pos ? ' stroke="rgba(0,0,0,.35)" stroke-width=".25" paint-order="stroke"' : '') + ' pointer-events="none">' + p.no + '</text></g>');
   });
   out.push('</svg>');
   return out.join('');
 }
 function centroid(P) { var x = 0, y = 0; P.forEach(function (q) { x += q[0]; y += q[1]; }); return [x / P.length, y / P.length]; }
 
-// Изглед отстрани (отпред): нива, подпори и изделия по височина. Изделията
-// без място на схемата се редят отляво надясно — височината е важната.
-function sideSvg(r, chk, cols) {
-  var K = S.kiln, W = K.shape === 'rect' ? (num(K.w) || 50) : (num(K.d) || 50), H = num(K.h);
+// Изглед отстрани (отпред). Всяко изделие се рисува само в своето място по
+// височина: каквото не хваща, се отрязва и маркира в червено с колко.
+function sideSvg(r, chk, cols, sugs) {
+  var K = S.kiln, W = K.shape === 'rect' ? (num(K.w) || 50) : (num(K.d) || 50), H = num(K.h), clear = num(r.clear) || 0;
   var st = chk.stack, topMost = st.length ? st[st.length - 1].top : 0;
   var Hd = Math.max(H || 0, topMost + 5, 20);
-  r.pieces.forEach(function (p) { var s = st.find(function (x) { return x.id === p.level; }); if (s && num(p.h)) Hd = Math.max(Hd, s.top + num(p.h) + 2); });
-  var mx = W / 2 + 12, out = [], postW = num(S.postD) || 4;
-  out.push('<svg viewBox="' + (-mx) + ' ' + (-Hd - 3) + ' ' + (2 * mx) + ' ' + (Hd + 7) + '" style="max-height:300px">');
+  var mx = W / 2 + 14, out = [], postW = num(S.postD) || 4;
+  out.push('<svg viewBox="' + (-mx) + ' ' + (-Hd - 3) + ' ' + (2 * mx) + ' ' + (Hd + 7) + '" style="max-height:320px">');
+  out.push('<defs><clipPath id="chamberClip"><rect x="' + (-W / 2) + '" y="' + (-(H || Hd)) + '" width="' + W + '" height="' + (H || Hd) + '"/></clipPath></defs>');
   out.push('<rect x="' + (-W / 2) + '" y="' + (-(H || Hd)) + '" width="' + W + '" height="' + (H || Hd) + '" fill="var(--chamber)" stroke="var(--line2)" stroke-width=".3"' + (H ? '' : ' stroke-dasharray="1 1"') + '/>');
   st.forEach(function (s, i) {
-    var L = r.levels[i], below = i === 0 ? { top: 0 } : st[i - 1];
+    var L = r.levels[i], below = i === 0 ? { top: 0 } : st[i - 1], sug = (sugs && sugs[L.id]) || { map: {} };
     var postsBelow = i === 0 ? [{ x: -W / 2 + 6 }, { x: W / 2 - 6 }] : (r.levels[i - 1].posts || []);
-    postsBelow.forEach(function (q) { out.push('<rect x="' + (q.x - postW / 4) + '" y="' + (-s.bottom) + '" width="' + postW / 2 + '" height="' + Math.max(0, s.bottom - below.top) + '" fill="var(--post)" opacity=".6" pointer-events="none"/>'); });
-    var on = L.id === UI.level, th = Math.max(0.8, s.top - s.bottom);
-    out.push('<g data-act="lvl" data-id="' + L.id + '" style="cursor:pointer"><rect x="' + (-mx) + '" y="' + (-(s.top + Math.max(s.space || 3, 3))) + '" width="' + (2 * mx) + '" height="' + (Math.max(s.space || 3, 3) + th) + '" fill="' + (on ? 'rgba(123,141,134,.14)' : 'transparent') + '"/>');
+    if (s.bottom - below.top > 0) postsBelow.forEach(function (q) { out.push('<rect x="' + (q.x - postW / 4) + '" y="' + (-s.bottom) + '" width="' + postW / 2 + '" height="' + (s.bottom - below.top) + '" fill="var(--post)" opacity=".6" pointer-events="none"/>'); });
+    var on = L.id === UI.level, th = Math.max(0.8, s.top - s.bottom), room = s.space == null ? 3 : Math.max(s.space, 1);
+    var ps = r.pieces.filter(function (p) { return p.level === L.id; });
+    var tall = 0; ps.forEach(function (p) { tall = Math.max(tall, num(p.h) || 0); });
+    var ok = !ps.length || s.space == null || tall + clear <= s.space + 0.05;
+    out.push('<g data-act="lvl" data-id="' + L.id + '" style="cursor:pointer"><rect x="' + (-mx) + '" y="' + (-(s.top + room)) + '" width="' + (2 * mx) + '" height="' + (room + th) + '" fill="' + (on ? 'rgba(123,141,134,.16)' : 'transparent') + '"/>');
     if (!s.shelves.length) out.push('<rect x="' + (-W * 0.45) + '" y="' + (-s.top) + '" width="' + W * 0.9 + '" height="' + th + '" fill="var(--err)"/>');
     s.shelves.forEach(function (x) { if (!x.shape) return; var ex = G.xExtent(x.shape); out.push('<rect x="' + r1(ex[0]) + '" y="' + (-s.top) + '" width="' + r1(ex[1] - ex[0]) + '" height="' + th + '" fill="#BCA98F" stroke="#fff" stroke-width=".15"/>'); });
-    out.push('<text x="' + (W / 2 + 1.5) + '" y="' + (-s.top + 0.5) + '" font-size="2.6" fill="var(--text)">' + (i + 1) + '</text>' +
-      '<text x="' + (W / 2 + 1.5) + '" y="' + (-s.top - 2.6) + '" font-size="2.1" fill="var(--muted)">' + (s.space == null ? '?' : fmtN(s.space)) + '</text></g>');
-    var free = -W / 2 + 1;
-    r.pieces.filter(function (p) { return p.level === L.id; }).forEach(function (p) {
+    out.push('<text x="' + (W / 2 + 1.5) + '" y="' + r1(-s.top - room / 2 + 1) + '" font-size="2.4" fill="' + (ok ? 'var(--ok)' : 'var(--err)') + '">' + (i + 1) + (ps.length ? (ok ? ' ✓' : ' ✗') : '') + '</text>' +
+      '<text x="' + (W / 2 + 1.5) + '" y="' + r1(-s.top - room / 2 + 3.6) + '" font-size="1.9" fill="var(--muted)">' + (s.space == null ? '?' : fmtN(s.space)) + ' см</text></g>');
+    // изделията: по записаното или предложеното място; без място — тясна лента вляво
+    var lane = -W / 2 + 1;
+    ps.slice().sort(function (a, b) { return (num(b.h) || 0) - (num(a.h) || 0); }).forEach(function (p) {
       var ph = num(p.h); if (!ph) return;
-      var shp = G.positioned(p) ? G.shapeOf(p) : null, ex;
-      if (shp) ex = G.xExtent(shp);
-      else { var wd = Math.min(num(p.d) || num(p.w) || 6, W / 3); ex = [free, free + wd]; free += wd + 0.6; if (free > W / 2) free = -W / 2 + 1; }
-      var tall = (chk.byP[p.id] || []).some(function (x) { return x.kind === 'tall'; });
-      out.push('<rect x="' + r1(ex[0]) + '" y="' + r1(-(s.top + ph)) + '" width="' + r1(ex[1] - ex[0]) + '" height="' + ph + '" fill="' + cols[p.clay || '—'] + '" fill-opacity=".55" stroke="' + (tall ? 'var(--err)' : '#fff') + '" stroke-width="' + (tall ? 0.7 : 0.2) + '"' + (shp ? '' : ' stroke-dasharray="1 .6"') + ' pointer-events="none"/>');
+      var pos = G.positioned(p), g = sug.map[p.id], shp = pos ? G.shapeOf(p) : g ? G.shapeOf(p, g.x, g.y) : null, ex;
+      if (shp) ex = G.xExtent(shp); else { ex = [lane, lane + 2.5]; lane += 3; }
+      var lim = s.space == null ? ph : Math.max(0, Math.min(ph, s.space - 0.2)), over = s.space != null && ph + clear > s.space + 0.05;
+      out.push('<rect x="' + r1(ex[0]) + '" y="' + r1(-(s.top + lim)) + '" width="' + r1(ex[1] - ex[0]) + '" height="' + r1(lim) + '" fill="' + cols[p.clay || '—'] + '" fill-opacity="' + (pos ? '.6' : '.3') + '" stroke="' + (over ? 'var(--err)' : '#fff') + '" stroke-width="' + (over ? 0.6 : 0.2) + '"' + (pos ? '' : ' stroke-dasharray="1 .6"') + ' clip-path="url(#chamberClip)" pointer-events="none"/>');
+      if (over) out.push('<line x1="' + r1(ex[0]) + '" y1="' + r1(-(s.top + lim)) + '" x2="' + r1(ex[1]) + '" y2="' + r1(-(s.top + lim)) + '" stroke="var(--err)" stroke-width="1" pointer-events="none"/>' +
+        '<text x="' + r1((ex[0] + ex[1]) / 2) + '" y="' + r1(-(s.top + lim) + 3) + '" font-size="2" text-anchor="middle" fill="var(--err)" pointer-events="none">+' + fmtN(ph + clear - s.space) + '</text>');
     });
   });
-  out.push('<text x="' + (-mx + 1) + '" y="' + (-(H || Hd) + 2.5) + '" font-size="2.2" fill="var(--muted)">' + (H ? 'таван ' + fmtN(H) + ' см' : 'височината не е зададена') + '</text>');
+  out.push('<text x="' + (-mx + 1) + '" y="' + (-(H || Hd) + 2.5) + '" font-size="2.2" fill="var(--muted)">' + (H ? 'таван ' + fmtN(H) : '?') + '</text>');
   out.push('<line x1="' + (-mx) + '" y1="0" x2="' + mx + '" y2="0" stroke="var(--text)" stroke-width=".4"/>');
   out.push('</svg>');
   return out.join('');
@@ -1029,8 +1181,9 @@ function vKiln() {
       '<div><label class="f">Дебелина, см</label><input inputmode="decimal" data-b="shelf:' + x.id + '|t|n" value="' + esc(x.t) + '"></div><div><label class="f">Брой</label><input inputmode="numeric" data-b="shelf:' + x.id + '|qty|n" value="' + esc(x.qty) + '"></div></div>' +
       (S.shelves.length > 1 ? '<div class="btns"><button class="btn sm ghost danger" data-act="delShelf" data-id="' + x.id + '" data-confirm>Махни вида</button></div>' : '') + '</div></div>';
   }).join('') + '<div class="btns"><button class="btn sm" data-act="addShelf">+ Вид плоча</button></div></div>';
-  h += '<div class="card"><h2>Подпори</h2><div class="row"><div style="flex:2"><label class="f">Налични височини, см (със запетая)</label><input data-ch="postSizes" value="' + esc(S.postSizes.map(fmtN).join('; ')) + '"></div><div><label class="f">Дебелина, см</label><input inputmode="decimal" data-b="S|postD|n" value="' + esc(S.postD) + '"></div></div>' +
-    '<div class="small muted" style="margin-top:6px">Височината над ниво може да е всяко число. Подсказките са сглобимите от тези, напр. 20 = 15 + 5.</div></div>';
+  h += '<div class="card"><h2>Подпори</h2><div class="small muted">Наличните височини. Нивата може да са на всяка височина; от тези се подсказва как да се сглоби, напр. 20 = 15 + 5.</div>' +
+    '<div class="btns">' + S.postSizes.map(function (v) { return '<span class="chip" style="font-size:14px;padding:5px 6px 5px 12px">' + fmtN(v) + ' см <button class="linkbtn" style="color:var(--muted);text-decoration:none;padding:0 4px" data-act="delPostSize" data-id="' + v + '" title="Махни">✕</button></span>'; }).join('') + '</div>' +
+    '<div class="row"><div><label class="f">Нова подпора, см</label><input id="np-post" inputmode="decimal" placeholder="напр. 8"></div><div class="nogrow"><button class="btn" data-act="addPostSize">+ Добави</button></div><div><label class="f">Дебелина, см</label><input inputmode="decimal" data-b="S|postD|n" value="' + esc(S.postD) + '"></div></div></div>';
   var used = {}; run().levels.forEach(function (L) { (L.shelves || []).forEach(function (x) { used[x.ref] = (used[x.ref] || 0) + 1; }); });
   var over = S.shelves.filter(function (x) { return used[x.id] > (num(x.qty) || 0); });
   if (over.length) h += '<div class="note">Изпичането ползва повече плочи, отколкото са записани: ' + over.map(function (x) { return esc(x.name) + ' ' + used[x.id] + ' от ' + (num(x.qty) || 0); }).join(', ') + '.</div>';
@@ -1112,7 +1265,37 @@ function assign(p, L, x, y) {
 var flash = null;
 var ACT = {
   view: function (id) { UI.view = id; UI.edit = null; window.scrollTo(0, 0); },
-  mode: function (id) { run().mode = id; UI.post = null; },
+  planLevels: function () { var r = run(); UI.plan = { run: r.id, res: G.planLevels(S, r) }; },
+  planCancel: function () { UI.plan = null; },
+  applyPlan: function () {
+    var r = run(), P = UI.plan && UI.plan.res;
+    if (!P || !P.levels.length || (r.state && r.state !== 'planned')) return;
+    var old = r.levels, keep = old.filter(function (L) { return (L.photos || []).length; });
+    var lv = P.levels.map(function (x, i) {
+      var L = old[i] ? old[i] : { id: uid('lv-'), cone: '', coneResult: '', note: '', photos: [] };
+      L.shelves = [{ ref: P.type.id, x: 0, y: 0, rot: 0 }];
+      L.postH = x.postH != null ? x.postH : (L.postH || 10);
+      L.posts = G.defaultPosts(G.levelShelves(S, L), 3, S.postD);
+      return L;
+    });
+    keep.forEach(function (L) { if (lv.indexOf(L) < 0) { lv.push(L); } });
+    r.levels = lv;
+    r.pieces.forEach(function (p) { p.level = null; p.x = null; p.y = null; });
+    P.levels.forEach(function (x, i) { x.ids.forEach(function (id) { var p = pieceById(id); if (p) p.level = lv[i].id; }); });
+    UI.plan = null; UI.level = lv[0].id; UI.sel = null; sugCache = {};
+    flash = 'Приложено: ' + P.levels.length + ' нива.' + (lv.length > P.levels.length ? ' Нивата със снимки са запазени отгоре — махни ги, ако не трябват.' : '');
+  },
+  acceptSug: function () {
+    var r = run(), L = curLevel(), sug = suggest(r, L);
+    sug.placed.forEach(function (x) { var p = pieceById(x.id); if (p && !G.positioned(p)) assign(p, L, x.x, x.y); });
+  },
+  addPostSize: function (v) {
+    v = num(v != null && v !== '' ? v : (document.getElementById('np-post') || {}).value);
+    if (!(v > 0)) { flash = 'Въведи височина в см.'; return; }
+    if (S.postSizes.indexOf(v) < 0) S.postSizes = S.postSizes.concat([v]).sort(function (a, b) { return a - b; });
+    flash = 'Подпора ' + fmtN(v) + ' см е добавена към наличните.';
+  },
+  delPostSize: function (v) { S.postSizes = S.postSizes.filter(function (x) { return x !== num(v); }); },
   lvl: function (id) { UI.level = id; UI.post = null; if (UI.sel) { var p = pieceById(UI.sel); if (p && p.level && p.level !== id) UI.sel = null; } },
   sel: function (id) { UI.sel = id || null; UI.post = null; },
   selPost: function (id) { UI.post = id === '' || id == null ? null : +id; UI.sel = null; },
@@ -1206,9 +1389,9 @@ var ACT = {
   },
   print: function () {
     var r = run(), chk = G.check(S, r), cols = clayColors(r), keep = UI.sel; UI.sel = null;
-    document.getElementById('print').innerHTML = '<pre style="background:none;max-height:none;font-size:10pt">' + esc(summary(r)) + '</pre>' + (r.mode === 'quick' ? '' : chk.stack.slice().reverse().map(function (s) {
-      return '<div class="lv"><b>Ниво ' + (s.i + 1) + '</b>' + topSvg(r, r.levels[s.i], s, chk, cols) + '</div>';
-    }).join(''));
+    document.getElementById('print').innerHTML = '<pre style="background:none;max-height:none;font-size:10pt">' + esc(summary(r)) + '</pre>' + chk.stack.slice().reverse().map(function (s) {
+      return '<div class="lv"><b>Ниво ' + (s.i + 1) + '</b>' + topSvg(r, r.levels[s.i], s, chk, cols, suggest(r, r.levels[s.i])) + '</div>';
+    }).join('');
     UI.sel = keep;
     window.print();
   },
@@ -1276,6 +1459,7 @@ var CH = {
   shType: function (el) { var L = curLevel(), old = shelvesSig(L); L.shelves[+el.dataset.i].ref = el.value; logChange('level', L, 'shelves', old, shelvesSig(L)); },
   shF: function (el) { var L = curLevel(), old = shelvesSig(L); L.shelves[+el.dataset.i][el.dataset.f] = num(el.value) || 0; logChange('level', L, 'shelves', old, shelvesSig(L)); },
   step: function (el) { UI.step = +el.value; return 'nosave'; },
+  precise: function (el) { run().mode = el.checked ? 'precise' : 'visual'; UI.post = null; },
   corrReason: function (el) { run().corrections[+el.dataset.id].reason = el.value; },
   glinaFile: function (el) {
     var f = el.files && el.files[0]; if (!f) return;
@@ -1365,7 +1549,9 @@ app.addEventListener('pointerdown', function (e) {
   var g = e.target.closest('[data-drag]'), L = curLevel(), p0 = svgPoint(svg, e);
   if (!g) { drag = { tap: true, svg: svg, p0: p0, L: L }; e.preventDefault(); return; }
   var obj = g.dataset.drag === 'piece' ? pieceById(g.dataset.id) : L.posts[+g.dataset.id];
-  drag = { g: g, svg: svg, kind: g.dataset.drag, id: g.dataset.id, obj: obj, ox: num(obj.x) || 0, oy: num(obj.y) || 0, sx: p0.x, sy: p0.y, moved: false, L: L };
+  // Предложено място (пунктир): влаченето го записва, докосването само избира.
+  var ghost = g.dataset.gx != null;
+  drag = { g: g, svg: svg, kind: g.dataset.drag, id: g.dataset.id, obj: obj, ghost: ghost, ox: ghost ? +g.dataset.gx : num(obj.x) || 0, oy: ghost ? +g.dataset.gy : num(obj.y) || 0, sx: p0.x, sy: p0.y, moved: false, L: L };
   try { svg.setPointerCapture(e.pointerId); } catch (x) {}
   e.preventDefault();
 });
@@ -1386,7 +1572,7 @@ function endDrag() {
     else if (UI.post != null && d.L.posts[UI.post]) { d.L.posts[UI.post].x = x; d.L.posts[UI.post].y = y; }
     else { save(); render(); return; }
   } else if (d.kind === 'piece') {
-    if (d.moved) { logChange('piece', d.obj, 'x', d.ox, d.obj.x); logChange('piece', d.obj, 'y', d.oy, d.obj.y); }
+    if (d.moved) { logChange('piece', d.obj, 'x', d.ghost ? null : d.ox, d.obj.x); logChange('piece', d.obj, 'y', d.ghost ? null : d.oy, d.obj.y); }
     UI.sel = d.obj.id; UI.post = null;
   } else { if (!d.moved) { UI.post = UI.post === +d.id ? null : +d.id; UI.sel = null; } }
   save(); render();

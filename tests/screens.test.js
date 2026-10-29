@@ -50,6 +50,7 @@ async function capture(h, root) {
       // Form fields carry their values, not text — read those too.
       const vals = Array.from(el.querySelectorAll('input,select,textarea')).filter(x => x.type !== 'file').map(x => x.id + '=' + (x.type === 'checkbox' ? x.checked : x.value));
       // The version label is expected to differ between releases.
+      // Intentional differences are listed in INTENDED below, not hidden here.
       return { text: (el.innerText || '').replace(/[ \t]+/g, ' ').replace(/v\d+\.\d+\.\d+(\.\d+)?/g, 'vX').trim(), vals, errors: [] };
     }, { js, sel });
     out[name].errors = app.log.errors.slice();
@@ -66,8 +67,21 @@ async function capture(h, root) {
     console.log('screens (' + PREVS[PREVS.length - 1].version + ' vs this tree):');
     const before = await capture(h, PREV);
     const after = await capture(h, ROOT);
+    // Intended, visible changes of this release against the previous one. Each is
+    // removed from the new text before the comparison — anything else must match.
+    const INTENDED = [
+      // v1.31.0: codes GL-2026-014 and GL-2026-014/3 on cards and in details
+      t => t.replace(/GL-\d{4}-\d{3,}(\/\d+(?:[–,] ?\d+)*)?( · в архива)?( · )?/g, ''),
+      // v1.31.0: the count field is shown when editing a standalone piece
+      t => t.replace(/\nБРОЙ\n/i, '\n').replace(/\nПовече от 1 превръща изделието в серия[^\n]*/, ''),
+      // v1.31.0: „Изтрий“ is „Архивирай“
+      t => t.replace(/\nАРХИВИРАЙ(\n|$)/i, '\nИЗТРИЙ$1').replace(/\nАрхив\n/, '\n')
+    ];
+    const clean = t => INTENDED.reduce((x, f) => f(x), t).split('\n').map(l => l.trim()).filter(Boolean).join('\n');
+    const flat = t => t.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
     for (const [name] of VIEWS) {
       const a = before[name], b = after[name];
+      a.text = flat(a.text); b.text = clean(b.text);
       if (b.errors.length) { failed++; console.log('  FAIL ' + name + ' — page error: ' + b.errors.join(' | ')); continue; }
       if (a.text === b.text && JSON.stringify(a.vals) === JSON.stringify(b.vals)) { passed++; console.log('  ok   ' + name); continue; }
       failed++;

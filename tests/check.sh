@@ -10,6 +10,7 @@ echo "== 3. unit — чистите функции в модулите"; node te
 echo "== 3б. kiln — геометрията на подреждането (прототип v0)"; node tests/kiln.test.js
 echo "== 3в. kiln-ui — прототипът в браузър"; node tests/kiln-ui.test.js
 echo "== 4. golden — еталонни архиви, повторно отваряне, архив, липсващи файлове"; node tests/golden.test.js
+echo "== 4б. identity — кодове, бройки, серии, архив (v1.31.0)"; node tests/identity.test.js
 echo "== 5. edits — всяка редакция пази записа"; node tests/edits.test.js
 echo "== 6. migrate — схема, миграции, връщане към предишната версия"; node tests/migrate.test.js
 echo "== 6б. edits-real — празна редакция на всеки запис от частните архиви"; node tests/edits-real.test.js

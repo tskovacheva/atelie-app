@@ -160,5 +160,22 @@ eq('auto (all levels): the 9.7 cm piece goes to the level with room', res2.place
 eq('quick reason: tall on this level', G.quickReason(S2, rA, rA.levels[0], rA.pieces[3]).kind, 'tall');
 eq('quick reason: none when it may fit', G.quickReason(S2, rA, rA.levels[1], rA.pieces[3]), null);
 
+// Suggested levels.
+const SP = { kiln: { shape: 'round', d: 51, h: 38 }, shelves: [Object.assign({}, shelf, { qty: 3 })], postSizes: [5, 10, 15], postD: 4 };
+const mk = (id, d, h) => piece({ id, no: id, d, h, level: null, x: null, y: null });
+const rP1 = { floorH: 0, gap: 0, clear: 1, levels: [], pieces: [mk('v', 18, 22), mk('a', 8, 12), mk('b', 8, 10), mk('c', 10, 1), mk('e', 4, 1)] };
+const P1 = G.planLevels(SP, rP1);
+eq('plan: few pieces → one level, no problems', [P1.levels.length, P1.problems.length, P1.fits], [1, 0, true]);
+const many = []; for (let i = 0; i < 12; i++) many.push(mk('t' + i, 14, 20)); for (let i = 0; i < 12; i++) many.push(mk('s' + i, 14, 4));
+const P2 = G.planLevels(SP, { floorH: 0, gap: 0, clear: 1, levels: [], pieces: many });
+eq('plan: posts are buildable and cover the need', P2.levels.slice(0, -1).every(l => l.postH >= l.need && l.combo), true);
+eq('plan: every piece placed exactly once', P2.levels.reduce((a, l) => a + l.ids.length, 0), 24);
+eq('plan: each level is as high as its tallest piece needs', P2.levels.every(l => l.ids.every(id => (many.find(p => p.id === id).h + 1) <= l.need + 1e-9)), true);
+const P3 = G.planLevels(Object.assign({}, SP, { kiln: { shape: 'round', d: 51, h: 20 } }), { floorH: 0, gap: 0, clear: 1, levels: [], pieces: many });
+eq('plan: not enough height → says by how much', P3.fits === false && /липсват \d/.test(P3.problems.join(' ')), true);
+eq('plan: piece wider than the shelf is reported, not lost', G.planLevels(SP, { floorH: 0, gap: 0, clear: 1, levels: [], pieces: [mk('w', 50, 5)] }).skipped.map(x => x.id), ['w']);
+eq('plan: more levels than shelves → says so', /плочи/.test(G.planLevels(Object.assign({}, SP, { shelves: [Object.assign({}, shelf, { qty: 1 })] }), { floorH: 0, gap: 0, clear: 1, levels: [], pieces: many }).problems.join(' ')), true);
+eq('plan: does not change the run', rP1.pieces.every(p => p.level === null && p.x === null), true);
+
 console.log((failed ? 'FAILED ' : 'OK ') + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);

@@ -1,6 +1,6 @@
 // Kiln-loading prototype (kiln-v0.html) in real Chromium at phone size.
-// Three ways of recording in one model: quick (levels + photo), visual (rough
-// place on the map by tapping), precise (coordinates, nudges, posts).
+// One model, three depths: levels + photo; a rough place on the map (tap, drag,
+// or accept the page's suggestion); exact coordinates as an opt-in.
 // Also: first-v0 data, settings, corrections, refire, file round trip with
 // photos, Глина archive import. Optional screenshots: KILN_SHOTS=<dir>.
 const fs = require('fs');
@@ -74,7 +74,7 @@ function png() {
   const r = () => S.runs.find(x => x.id === S.cur);
   await page.goto(url);
   S = await st();
-  ok('fresh: Kittec 51×38, 79 l, 3.6 kW, checked; quick mode', S.kiln.d === 51 && S.kiln.h === 38 && S.kiln.volume === 79 && S.kiln.power === 3.6 && S.kiln.checked && r().mode === 'quick');
+  ok('fresh: Kittec 51×38, 79 l, 3.6 kW, checked; opens on Изделия when empty', S.kiln.d === 51 && S.kiln.h === 38 && S.kiln.volume === 79 && S.kiln.power === 3.6 && S.kiln.checked && /^изделия/i.test(await page.locator('nav button.on').innerText()));
   ok('fresh: no "unchecked kiln" warning', await page.locator('text=не са проверени').count() === 0);
 
   // Pieces.
@@ -94,8 +94,9 @@ function png() {
   S = await st();
   ok('7 pieces; new ones have no place', r().pieces.length === 7 && r().pieces.every(p => p.x === null && p.y === null));
 
-  // ---- quick ----
+  // ---- plan: levels first (quick), map always there ----
   await page.click('nav button[data-id=plan]');
+  ok('tabs in working order: Пещ, Изделия, План, След, Файл', (await page.locator('nav button').allInnerTexts()).map(x => x.split(/\s|\(/)[0].toLowerCase()).join(',') === 'пещ,изделия,план,след,файл');
   await page.click('[data-act=addLevel]');
   S = await st();
   const L1 = r().levels[0].id, L2 = r().levels[1].id;
@@ -103,60 +104,64 @@ function png() {
   const ph = 'input[data-b="level:' + L1 + '|postH|n"]';
   await page.fill(ph, '12.3'); await page.press(ph, 'Tab'); await page.waitForTimeout(80);
   ok('any height accepted; hint says it cannot be built from the posts', (await st()).runs[0].levels[0].postH === 12.3 && await page.locator('text=не се сглобява от наличните').count() === 1);
+  await page.click('[data-act=addPostSize][data-id="12.3"]');
+  S = await st();
+  ok('"+ Имам подпора 12,3 см" adds it to the posts; hint becomes "една подпора"', S.postSizes.includes(12.3) && await page.locator('text=една подпора').count() >= 1);
   await page.fill(ph, '20'); await page.press(ph, 'Tab'); await page.waitForTimeout(80);
   ok('20 cm → "= 15 + 5"', await page.locator('text== 15 + 5').count() === 1);
   await page.fill(ph, '10'); await page.press(ph, 'Tab'); await page.waitForTimeout(80);
   const vase = () => r().pieces.find(p => p.name === 'Ваза');
   const vaseRow = page.locator('.it', { hasText: 'Ваза' });
-  ok('quick: the tall vase shows why it does not fit level 1', /по-високо от мястото на ниво 1: 18 \+ 0\.5 см > 10 см/.test(await vaseRow.innerText()));
+  ok('the tall vase shows why it does not fit level 1', /по-високо от мястото на ниво 1: 18 \+ 0\.5 см > 10 см/.test(await vaseRow.innerText()));
   await page.click('.it:has-text("Ваза") button[data-act=assign]');
   S = await st();
-  ok('quick: tapping it does not put it there', vase().level === null);
+  ok('tapping "→ 1" does not put it there', vase().level === null);
   for (const n of ['Купа /1', 'Купа /2', 'Без мерки']) await page.click('.it:has-text("' + n + '") button[data-act=assign]');
   S = await st();
-  ok('quick: one tap → on level 1, no place', r().pieces.filter(p => p.level === L1).length === 3 && r().pieces.filter(p => p.level === L1).every(p => p.x === null));
-  ok('quick: no map in quick mode', await page.locator('svg#top').count() === 0);
+  ok('one tap → on level 1, no place recorded', r().pieces.filter(p => p.level === L1).length === 3 && r().pieces.filter(p => p.level === L1).every(p => p.x === null));
+  ok('map shows suggested places (dashed) for the pieces with a base', await page.locator('svg#top g[data-gx]').count() === 2);
+  const cap = await page.locator('.cap').first().innerText();
+  ok('level answer: height ✓, shelf ✓, one without sizes', /✓ Височина: място 10 см/.test(cap) && /✓ Плоча: основите заемат \d+ %/.test(cap) && /1 без височина/.test(cap), cap);
+  await page.fill(ph, '7'); await page.press(ph, 'Tab'); await page.waitForTimeout(80);
+  const cap2 = await page.locator('.cap').first().innerText();
+  ok('too low: "не хваща с 1,5 см", side view marks +1,5', /✗ Височина[\s\S]*не хваща с 1,5 см/.test(cap2) && await page.locator('svg text', { hasText: '+1,5' }).count() >= 1, cap2);
+  await page.fill(ph, '10'); await page.press(ph, 'Tab'); await page.waitForTimeout(80);
   { const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.click('[data-act=photo]')]); await fc.setFiles(tmpPng); }
   await page.waitForFunction(() => document.querySelector('img[data-photo]') && document.querySelector('img[data-photo]').src.startsWith('blob:'));
   S = await st();
-  ok('quick: photo of the level saved apart from the record', r().levels[0].photos.length === 1 && r().levels[0].photos[0].stage === 'loading' && !JSON.stringify(S).includes('data:image'));
-  await shot('1-quick');
+  ok('photo of the level saved apart from the record', r().levels[0].photos.length === 1 && r().levels[0].photos[0].stage === 'loading' && !JSON.stringify(S).includes('data:image'));
+  ok('no coordinate fields unless "Точни мерки" is on', await page.locator('input[data-b$="|x|n"]').count() === 0 && await page.locator('input[data-ch=shF]').count() === 0);
+  await shot('1-levels');
 
-  // ---- visual ----
-  await page.click('[data-act=mode][data-id=visual]');
-  await page.click('.tabs2 [data-act=lvl][data-id="' + L2 + '"]');
-  ok('visual: map shown', await page.locator('svg#top').count() === 1);
-  await page.click('.it:has-text("Ваза") .b[data-act=sel]');
-  await page.locator('svg#top').scrollIntoViewIfNeeded();
-  const sb = await page.locator('svg#top').boundingBox();
+  // ---- map: tap, drag a suggestion, accept suggestions ----
+  await page.locator('svg#top').evaluate(e => e.scrollIntoView({ block: 'center' }));
+  let sb = await page.locator('svg#top').boundingBox();
   const m = 25.5 + 4, cm = sb.width / (2 * m);
   const at = (x, y) => [sb.x + sb.width / 2 + x * cm, sb.y + sb.height / 2 - y * cm];
-  let p = at(10, 10);
+  const k1id = r().pieces.find(x => x.name === 'Купа /1').id;
+  const g = page.locator('svg#top g[data-id="' + k1id + '"]');
+  const gx = +(await g.getAttribute('data-gx')), gy = +(await g.getAttribute('data-gy'));
+  let p = at(gx, gy);
+  await page.mouse.move(p[0], p[1]); await page.mouse.down();
+  await page.mouse.move(p[0] - 2 * cm, p[1], { steps: 3 }); await page.mouse.move(p[0] - 4 * cm, p[1], { steps: 3 }); await page.mouse.up();
+  S = await st();
+  const k1 = () => r().pieces.find(x => x.id === k1id);
+  ok('dragging a suggestion records the place', Math.abs(k1().x - (gx - 4)) <= 0.6 && Math.abs(k1().y - gy) <= 0.6, JSON.stringify([gx, gy, k1().x, k1().y]));
+  await page.click('[data-act=acceptSug]');
+  S = await st();
+  ok('"Запиши предложените места" records the rest', r().pieces.find(x => x.name === 'Купа /2').x !== null && r().pieces.find(x => x.name === 'Без мерки').x === null);
+  await page.click('.tabs2 [data-act=lvl][data-id="' + L2 + '"]');
+  await page.click('.it:has-text("Ваза") .b[data-act=sel]');
+  await page.locator('svg#top').evaluate(e => e.scrollIntoView({ block: 'center' }));
+  sb = await page.locator('svg#top').boundingBox();
+  p = at(10, 10);
   await page.mouse.click(p[0], p[1]);
   S = await st();
-  ok('visual: select, then tap the map → on that level, about there', vase().level === L2 && Math.abs(vase().x - 10) <= 0.6 && Math.abs(vase().y - 10) <= 0.6, JSON.stringify([vase().level, vase().x, vase().y]));
-  ok('visual: no coordinate fields', await page.locator('input[data-b$="|x|n"]').count() === 0);
-  ok('visual: shown as a zone, not centimetres', await page.locator('text=ръб, 2 ч').count() + await page.locator('text=среда, 2 ч').count() > 0);
-  // drag
-  await page.locator('svg#top').scrollIntoViewIfNeeded();
-  const sb2 = await page.locator('svg#top').boundingBox();
-  const at2 = (x, y) => [sb2.x + sb2.width / 2 + x * cm, sb2.y + sb2.height / 2 - y * cm];
-  p = at2(vase().x, vase().y);
-  await page.mouse.move(p[0], p[1]); await page.mouse.down();
-  await page.mouse.move(p[0] - 3 * cm, p[1], { steps: 4 }); await page.mouse.move(p[0] - 6 * cm, p[1], { steps: 4 }); await page.mouse.up();
-  S = await st();
-  ok('visual: drag still works', Math.abs(vase().x - 4) <= 0.6, String(vase().x));
-  // auto with reasons on level 1
-  await page.click('.tabs2 [data-act=lvl][data-id="' + L1 + '"]');
-  await page.click('[data-act=sel][data-id=""] >> nth=0').catch(() => {});
-  await page.click('[data-act=autoLevel]');
-  S = await st();
-  const note = await page.locator('.note.info').first().innerText();
-  ok('auto: places the unplaced and the ones on the level without a place', /сложени 5/.test(note), note);
-  ok('auto: says why the rest were not placed', /Без мерки — няма размер на основата/.test(note), note);
-  ok('auto: vase not placed, reason shown in the tray', vase().level === L2 && true);
-  await shot('2-visual');
+  ok('select, then tap the map → on that level, about there', vase().level === L2 && Math.abs(vase().x - 10) <= 0.6 && Math.abs(vase().y - 10) <= 0.6, JSON.stringify([vase().level, vase().x, vase().y]));
+  ok('place shown as a zone, not centimetres', await page.locator('text=ръб, 2 ч').count() + await page.locator('text=среда, 2 ч').count() > 0);
+  await shot('2-map');
   // halves
+  await page.click('.tabs2 [data-act=lvl][data-id="' + L1 + '"]');
   await page.click('[data-act=shPreset][data-id=halves]');
   S = await st();
   ok('two halves on a level', r().levels[0].shelves.length === 2);
@@ -164,27 +169,29 @@ function png() {
   ok('pieces across the joint are warnings, not errors', Object.values(chk.byP).flat().every(x => x.kind !== 'out'), JSON.stringify(chk.byP));
   await page.click('[data-act=shPreset][data-id=full]');
 
-  // ---- precise ----
-  await page.click('[data-act=mode][data-id=precise]');
-  const kupa = r().pieces.find(x => x.name === 'Купа /1');
+  // ---- precise (opt-in) ----
+  await page.check('input[data-ch=precise]');
+  await page.waitForTimeout(80);
   await page.click('.it:has-text("Купа /1") .b[data-act=sel]');
-  await page.fill('input[data-b="piece:' + kupa.id + '|x|n"]', '-12'); await page.press('input[data-b="piece:' + kupa.id + '|x|n"]', 'Tab'); await page.waitForTimeout(80);
-  await page.fill('input[data-b="piece:' + kupa.id + '|y|n"]', '3'); await page.press('input[data-b="piece:' + kupa.id + '|y|n"]', 'Tab'); await page.waitForTimeout(80);
+  await page.fill('input[data-b="piece:' + k1id + '|x|n"]', '-12'); await page.press('input[data-b="piece:' + k1id + '|x|n"]', 'Tab'); await page.waitForTimeout(80);
+  await page.fill('input[data-b="piece:' + k1id + '|y|n"]', '3'); await page.press('input[data-b="piece:' + k1id + '|y|n"]', 'Tab'); await page.waitForTimeout(80);
   await page.selectOption('select[data-ch=step]', '5');
   await page.click('[data-act=nudge][data-k=piece][data-dx="1"]');
   S = await st();
-  const k1 = r().pieces.find(x => x.id === kupa.id);
-  ok('precise: typed x/y, then → by 5 cm', k1.x === -7 && k1.y === 3, JSON.stringify([k1.x, k1.y]));
+  ok('precise: typed x/y, then → by 5 cm', k1().x === -7 && k1().y === 3, JSON.stringify([k1().x, k1().y]));
   await page.click('[data-act=sel][data-id=""]');
-  await page.locator('svg#top').scrollIntoViewIfNeeded();
-  const sb3 = await page.locator('svg#top').boundingBox();
-  const at3 = (x, y) => [sb3.x + sb3.width / 2 + x * cm, sb3.y + sb3.height / 2 - y * cm];
-  const post0 = r().levels[0].posts[0];
-  p = at3(post0.x, post0.y); await page.mouse.click(p[0], p[1]);
-  p = at3(15, -15); await page.mouse.click(p[0], p[1]);
+  await page.locator('svg#top').evaluate(e => e.scrollIntoView({ block: 'center' }));
+  sb = await page.locator('svg#top').boundingBox();
+  await page.locator('svg#top g[data-drag=post][data-id="0"]').click();
+  await page.waitForTimeout(100);
+  await page.locator('svg#top').evaluate(e => e.scrollIntoView({ block: 'center' }));
+  sb = await page.locator('svg#top').boundingBox();
+  await page.waitForSelector('text=Подпора 1');
+  // a spot no piece can be on: just outside the shelf, inside the chamber
+  p = at(-24.5, 0); await page.mouse.click(p[0], p[1]);
   S = await st();
   const q0 = r().levels[0].posts[0];
-  ok('precise: tap a post, tap a place → post moved', Math.abs(q0.x - 15) <= 0.6 && Math.abs(q0.y + 15) <= 0.6, JSON.stringify(q0));
+  ok('precise: tap a post, tap a place → post moved', Math.abs(q0.x + 24.5) <= 0.6 && Math.abs(q0.y) <= 0.6, JSON.stringify(q0));
   await shot('3-precise');
 
   // ---- settings: gaps ----
@@ -261,8 +268,10 @@ function png() {
   }
 
   // ---- Глина archive ----
-  const priv = path.join(__dirname, 'fixtures', 'private', 'real.json');
-  const arch = fs.existsSync(priv) ? priv : path.join(__dirname, 'fixtures', 'representative.json');
+  const pdir = path.join(__dirname, 'fixtures', 'private');
+  const reals = fs.existsSync(pdir) ? fs.readdirSync(pdir).filter(f => /^real.*\.json$/.test(f)).sort() : [];
+  const priv = reals.length ? path.join(pdir, reals[reals.length - 1]) : '';
+  const arch = priv ? priv : path.join(__dirname, 'fixtures', 'representative.json');
   await page.click('[data-act=newRun][data-id=bisque]');
   await page.click('nav button[data-id=pieces]');
   await page.setInputFiles('input[data-ch=glinaFile]', arch);
@@ -275,8 +284,46 @@ function png() {
   await page.click('nav button[data-id=plan]');
   await page.click('.it button[data-act=assign] >> nth=0');
   S = await st();
-  ok('quick: archive piece without sizes goes on a level', r().pieces.filter(x => x.level).length === 1);
+  ok('archive piece without sizes goes on a level', r().pieces.filter(x => x.level).length === 1);
   await shot('5-archive');
+
+  // ---- a real plan from the studio (private, not committed) ----
+  const her = path.join(__dirname, 'fixtures', 'private-kiln', 'pech-2026-10-28.json');
+  if (fs.existsSync(her)) {
+    const b = await newPage();
+    await b.page.goto(url); await b.page.click('nav button[data-id=file]');
+    await b.page.setInputFiles('input[data-ch=importFile]', her);
+    await b.page.waitForFunction(() => window.__kiln.S().runs.length === 2);
+    await b.page.click('nav button[data-id=plan]');
+    const H = await b.page.evaluate(() => window.__kiln.S());
+    const hr = H.runs.find(x => x.id === H.cur);
+    await b.page.click('.tabs2 [data-act=lvl][data-id="' + hr.levels[2].id + '"]');
+    const c3 = await b.page.locator('.cap').first().innerText();
+    ok('studio plan: top level says the 22 cm vessel does not fit by 2,8 cm', /не хваща с 2,8 см/.test(c3), c3);
+    ok('studio plan: kiln 51×38 counted as checked', H.kiln.checked === true);
+    // „Предложи нива“ върху реалния план: при 4 см отстояние не стига височина
+    // и го казва; при 0 см (бисквит) — всичко влиза и се прилага.
+    await b.page.click('[data-act=planLevels]');
+    const pp = await b.page.locator('.cap', { hasText: 'Предложение' }).innerText();
+    ok('studio plan, gap 4: suggestion says how much height is missing', /липсват 2,8 см/.test(pp), pp.slice(0, 300));
+    await b.page.click('[data-act=planCancel]');
+    await b.page.fill('input[data-b="run|gap|n"]', '0'); await b.page.press('input[data-b="run|gap|n"]', 'Tab'); await b.page.waitForTimeout(80);
+    await b.page.click('[data-act=planLevels]');
+    const pp2 = await b.page.locator('.cap', { hasText: 'Предложение' }).innerText();
+    ok('studio plan, gap 0: everything fits', /✓ Всичко се събира/.test(pp2), pp2.slice(0, 300));
+    if (SHOTS) await b.page.screenshot({ path: path.join(SHOTS, '6-proposal.png'), fullPage: true });
+    await b.page.click('[data-act=applyPlan]');
+    const H2 = await b.page.evaluate(() => window.__kiln.S()), hr2 = H2.runs.find(x => x.id === H2.cur);
+    const chk2 = await b.page.evaluate(() => { const S = window.__kiln.S(); return window.__kiln.G.check(S, S.runs.find(x => x.id === S.cur)); });
+    ok('studio plan applied: every piece on a level, no height errors', hr2.pieces.every(p => p.level) && !Object.values(chk2.byP).flat().some(x => x.kind === 'tall'), JSON.stringify(hr2.levels.map(L => L.postH)));
+    const caps = [];
+    for (const L of hr2.levels) { await b.page.click('.tabs2 [data-act=lvl][data-id="' + L.id + '"]'); caps.push(await b.page.locator('.cap').first().innerText()); }
+    ok('studio plan applied: every level ✓ on height and shelf', caps.every(c => !/✗/.test(c)), caps.join(' | '));
+    if (SHOTS) await b.page.screenshot({ path: path.join(SHOTS, '7-applied.png'), fullPage: true });
+    { const cur = hr2.levels[hr2.levels.length - 1]; await b.page.click('.tabs2 [data-act=lvl][data-id="' + cur.id + '"]');
+      ok('studio plan: the level shows its pieces on the map', (await b.page.locator('svg#top g[data-drag=piece]').count()) === hr2.pieces.filter(p => p.level === cur.id && p.d).length); }
+    await b.ctx.close();
+  }
 
   // ---- two-tap delete ----
   await page.click('nav button[data-id=file]');
