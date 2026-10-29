@@ -38,7 +38,7 @@
  "tests": {},
  "profiles": {},
  "backup": {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "db": [
    "pieces:0",
    "recipes:5",

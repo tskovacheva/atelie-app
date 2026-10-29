@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.31.1 · `atelie-v86`
+**Version:** v1.32.0 · `atelie-v87`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -156,7 +156,7 @@ so nothing outside the storage layer notices.
 `SCHEMA_VERSION` is the version of the data format. It is written into `rec:meta`
 (`schema`) and into every backup (`schemaVersion`) — one number for both. It
 changes only when a migration changes the format, not with every app version;
-v1.30.0 was 4; v1.31.0 is 5 (identity: codes and unit numbers).
+v1.30.0 was 4; v1.31.0 is 5 (identity: codes and unit numbers); v1.32.0 is 6 (backup gains a `kilns` section).
 
 The three historical migrations (v1.3.2, v1.4.2.3, v1.15.0) stay in
 `runMigrations()` as they were. New ones are registered in `_SCHEMA_MIGRATIONS` as
@@ -185,6 +185,20 @@ The first migration is `2026-10-identity` (v1.31.0, schema 5): codes for pieces 
 series by creation date, unit numbers for split pieces by split order; counts and
 stages untouched. The same fill also runs on every open and after an import, for
 records made by an older version after a rollback.
+
+### Kilns (v1.32.0)
+
+A registry under the „Пещи“ tab of the firings screen (first tab; the screen still
+opens on runs). A kiln: chamber (round Ø or rectangular w × depth, inner height),
+volume, power, max temperature, the „12 o'clock“ reference for layouts, a
+"dimensions checked" flag; shelf types (round, half, rectangular; size, thickness,
+count), available post heights and post thickness; default gaps (bisque, glaze,
+other) and clearance under the shelf above. Preset: Kittec CB 80 Double (Ø51 × 38
+cm, 79 l, 3.6 kW). Warnings, not blocks: shelf larger than the chamber, missing
+height or thickness. Stored in its own key `atelie_kilns` (not `rec:` records) so an
+older version neither reads nor deletes it; backups carry `kilns`. From v1.32.0 the
+record writer deletes only keys of collections it knows. Runs do not use kilns yet
+(v1.33.0).
 
 ### Basic characteristics (v1.31.1)
 
@@ -226,6 +240,7 @@ modules themselves.
 | `core/merge.js` | `_mergeEdit`, `_EDIT_OWNS` — edits merge into the stored record (see §9) |
 | `calc/shrink.js` | `_shrinkPcts`, `_poroPct` — body-test shrinkage and absorption |
 | `domain/profile.js` | `_fpRamps`, `_fpPeak`, `_fpDuration`, `_fmtDuration`, `_numOrNull` — firing programme |
+| `domain/kiln.js` | kiln registry: `KILN_PRESETS`, `_kilnNew`, `_kilnSummary`, `_shelvesSummary`, `_postSizesNorm`, `_kilnWarnings` (v1.32.0) |
 | `domain/traits.js` | size, categories, kiln size: `_readSize`, `_sizeLabel`, `_parseDims`, `_catsNorm`, `_kilnSize` (v1.31.1) |
 | `domain/units.js` | codes and unit numbers: `_nextCode`, `_assignCodes`, `_seriesFreeUnits`, `_allocUnits`, `_countChange`, `_unitsLabel`, `_migrateSeriesUnits` (v1.31.0) |
 

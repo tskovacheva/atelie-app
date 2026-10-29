@@ -103,6 +103,22 @@ const near = (a, b) => Math.abs(a - b) < 1e-9;
   eq('number: "450" → 450, "" → null', [t._numPos('450'), t._numPos('')], [450, null]);
   }
 
+  if (fs.existsSync(path.join(ROOT, 'domain/kiln.js'))) {
+  const k = await load('domain/kiln.js');
+  let n = 0; const id = () => 'id' + (++n);
+  const kt = k._kilnNew('kittec-cb80-double', id);
+  eq('preset Kittec: 51 × 38, 79 l, 3.6 kW, checked', [kt.d, kt.h, kt.volume, kt.power, kt.checked], [51, 38, 79, 3.6, true]);
+  eq('preset: shelves get ids, defaults for gaps', [!!kt.shelves[0].id, kt.gaps, kt.clear], [true, { bisque: 0, glaze: 1, other: 0.5 }, 0.5]);
+  eq('preset is a copy, not the shared object', (() => { kt.shelves[0].d = 1; return k._kilnNew('kittec-cb80-double', id).shelves[0].d; })(), 47);
+  eq('empty kiln', [k._kilnNew('', id).name, k._kilnNew('', id).shelves], ['', []]);
+  eq('summary round', k._kilnSummary({ shape: 'round', d: 51, h: 38, volume: 79, power: 3.6 }), 'Ø51 × 38 см · 79 л · 3,6 kW');
+  eq('summary rect', k._kilnSummary({ shape: 'rect', w: 40, depth: 50, h: 60 }), '40 × 50 × 60 см');
+  eq('shelves summary', k._shelvesSummary({ shelves: [{ name: 'Кръгла Ø47', shape: 'round', d: 47, t: 1.6, qty: 3 }] }), '3× Кръгла Ø47 (1,6 см)');
+  eq('post sizes: numbers, unique, sorted', k._postSizesNorm(['15', 5, '8,5', 5, 0, 'x', '10']), [5, 8.5, 10, 15]);
+  eq('warnings: shelf larger than chamber, no height', k._kilnWarnings({ name: 'X', shape: 'round', d: 45, shelves: [{ name: 'Голяма', d: 47, t: 1.5 }] }), ['Няма вътрешна височина — проверката по височина няма да работи.', 'Плоча „Голяма“ е по-голяма от камерата.']);
+  eq('no warnings for the preset', k._kilnWarnings(k._kilnNew('kittec-cb80-double', id)), []);
+  }
+
   console.log((failed ? 'FAILED ' : 'OK ') + passed + ' passed, ' + failed + ' failed');
   process.exit(failed ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });
