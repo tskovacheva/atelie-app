@@ -1,11 +1,12 @@
 // ── Ателие Service Worker ────────────────────────────────────
 // Cache strategy:
 //   Navigation (HTML): network-first → cache fallback
+//   .js / .json / .webmanifest: network-first → cache fallback (v1.32.1)
 //   Everything else:   cache-first  → network fallback
 // Bump CACHE_NAME on every deploy to trigger cache refresh.
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'atelie-v87';
+const CACHE_NAME = 'atelie-v89';
 
 const PRECACHE_URLS = [
   './',
@@ -125,6 +126,21 @@ self.addEventListener('fetch', function (event) {
             return cached || caches.match('./index.html');
           });
         })
+    );
+  } else if (/\.(js|json|webmanifest)(\?|$)/.test(new URL(req.url).pathname)) {
+    // v1.32.1: кодът и данните (app.js, модулите, наръчниците) — network-first,
+    // както index.html. Иначе при обновяване нов index.html тръгва със стар
+    // модул от кеша. Без връзка — от кеша.
+    event.respondWith(
+      fetch(req)
+        .then(function (networkRes) {
+          if (networkRes && networkRes.ok) {
+            var clone = networkRes.clone();
+            caches.open(CACHE_NAME).then(function (cache) { cache.put(req, clone); });
+          }
+          return networkRes;
+        })
+        .catch(function () { return caches.match(req); })
     );
   } else {
     // Assets → cache-first, network fallback

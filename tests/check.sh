@@ -13,6 +13,7 @@ echo "== 4. golden — еталонни архиви, повторно отва�
 echo "== 4б. identity — кодове, бройки, серии, архив (v1.31.0)"; node tests/identity.test.js
 echo "== 4в. traits — основни характеристики (v1.31.1)"; node tests/traits.test.js
 echo "== 4г. kilns — регистър на пещите (v1.32.0)"; node tests/kilns.test.js
+echo "== 4д. update — обновяване с service worker; остарели модули (v1.32.1)"; node tests/update.test.js
 echo "== 5. edits — всяка редакция пази записа"; node tests/edits.test.js
 echo "== 6. migrate — схема, миграции, връщане към предишната версия"; node tests/migrate.test.js
 echo "== 6б. edits-real — празна редакция на всеки запис от частните архиви"; node tests/edits-real.test.js

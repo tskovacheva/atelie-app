@@ -18,6 +18,12 @@ if (prev.length) {
   if (!newer(cur.app, pv.app)) { failed++; console.log('  FAIL APP_VERSION ' + cur.app + ' is not ahead of ' + pv.app); }
   if (!(cur.cache > pv.cache)) { failed++; console.log('  FAIL CACHE_NAME atelie-v' + cur.cache + ' is not ahead of atelie-v' + pv.cache); }
 }
+// v1.32.1: the modules carry the same version — index.html refuses stale ones.
+const appJs = path.join(ROOT, 'app.js');
+if (fs.existsSync(appJs) && /__glinaModulesVersion/.test(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'))) {
+  const mv = (fs.readFileSync(appJs, 'utf8').match(/__glinaModulesVersion = '([^']+)'/) || [])[1];
+  if (mv !== cur.app) { failed++; console.log('  FAIL app.js says ' + mv + ', index.html ' + cur.app); }
+}
 ['README.md', 'ROADMAP.md', 'FUNCTIONAL_SPEC.md'].forEach(d => {
   const f = path.join(ROOT, d);
   if (fs.existsSync(f) && fs.readFileSync(f, 'utf8').indexOf(cur.app) < 0) { failed++; console.log('  FAIL ' + d + ' does not mention ' + cur.app); }

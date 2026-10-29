@@ -18,5 +18,8 @@ import * as kiln from './domain/kiln.js'; // v1.32.0
 const bridge = Object.assign({}, merge, shrink, profile, units, traits, kiln);
 Object.keys(bridge).forEach(k => { window[k] = bridge[k]; });
 
+// v1.32.1: версията на модулите — index.html я сравнява със своята (APP_VERSION).
+// Сменя се заедно с APP_VERSION и CACHE_NAME (tests/versions.test.js).
+window.__glinaModulesVersion = 'v1.32.2';
 window.__glinaModulesBridged = true;
 if (typeof window.__glinaModulesReady === 'function') window.__glinaModulesReady();
