@@ -658,10 +658,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t" data-t="ui.parametri">Параметри</div><div id="drn-rows"></div></div>
     <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t" data-t="ui.alternativno-izpichane">Алтернативно изпичане</div><div id="drn-alt"></div></div>
     <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Зареждане</div>
-    <div class="ds" id="drn-plan-sec"><div class="ds-t">План на пещта</div>
-      <div style="border:1px solid var(--bdr2);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
-        <div id="drn-plan" style="flex:1;min-width:0;font-size:12px;color:var(--tx2);line-height:1.55;"></div>
-        <button onclick="openPlan(curRun)" id="drn-plan-btn" style="flex:0 0 auto;background:var(--primary);color:white;border:none;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;font-family:inherit;min-height:40px;">Отвори</button>
+    <div class="ds" id="drn-plan-sec">
+      <div style="background:var(--primary-soft);border:1px solid var(--primary);border-radius:14px;padding:14px;">
+        <div style="font-size:16px;color:var(--text);font-weight:500;margin-bottom:4px;">План на пещта</div>
+        <div id="drn-plan" style="font-size:14px;color:var(--tx2);line-height:1.55;margin-bottom:12px;"></div>
+        <button onclick="openPlan(curRun)" id="drn-plan-btn" style="width:100%;background:var(--primary);color:white;border:none;border-radius:10px;padding:13px 16px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;min-height:48px;">Отвори плана</button>
       </div>
     </div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
@@ -1990,7 +1991,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.34.0';
+const APP_VERSION = 'v1.34.1';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -8899,6 +8900,24 @@ function _runLabel(r){
   return firingMethodLabel(r.method)+(r.date?' · '+r.date:'');
 }
 
+// Закачените изделия на изпичането (стъпка с firingRunId) — както досега.
+function _drnAttached(ps,wrapL){
+  return ps.map(function(x){
+        var bits=[];
+        var w=x.ev.data&&x.ev.data.wrapping;
+        if(w)bits.push(wrapL[w]||w);
+        if(x.ev.note)bits.push(x.ev.note);
+        var _open=x.isSeries?'openSeriesDet':'openPieceDet';
+        if(x.isSeries)bits.unshift(_seriesTotal(x.piece)+' бр.');
+        else if(x.piece.seriesId){var _q=parseInt(x.piece.qty,10);bits.unshift(((isNaN(_q)||_q<1)?1:_q)+' бр.');}
+        return '<div class="li" style="padding:8px 0;">'
+          +'<div class="li-ic" style="width:34px;height:34px;" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
+          +'<div class="li-body" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')" style="cursor:pointer;"><div class="li-t" style="font-size:13px;">'+x.piece.name+'</div>'
+          +(bits.length?'<div class="li-s" style="font-size:11px;">'+bits.join(' · ')+'</div>':'')+'</div>'
+          +'<button type="button" onclick="event.stopPropagation();detachPieceFromRun(\''+x.piece.id+'\',\''+x.ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:15px;padding:4px 6px;">×</button>'
+          +'</div>';
+      }).join('');
+}
 // v1.11.0: the run detail — its pieces and tests are computed here, not stored.
 function openRunDet(id){
   var r=DB.firingRuns.find(function(x){return x.id===id;});if(!r)return;
@@ -8937,25 +8956,30 @@ function openRunDet(id){
   var wrapL={bare:'голо',foil:'фолио',saggar:'сагар',other:'друго'};
   var ps=_runPieces(id);
   var _totQty=ps.reduce(function(n,x){return n+_runRowQty(x);},0);
+  // v1.34.1: изделията от плана на пещта — „Планирани“, докато не са заредени.
+  // Само се показват: стъпка в процеса и етап идват с „Заредено“ / „Приключено“.
+  var _inRun={};ps.forEach(function(x){_inRun[x.piece.id]=1;});
+  var _pl=[],_plBy={};
+  ((r.plan&&r.plan.members)||[]).forEach(function(m){
+    if(!m.ref||_inRun[m.ref.id])return;
+    var key=m.ref.kind+':'+m.ref.id;
+    if(!_plBy[key]){_plBy[key]={ref:m.ref,name:m.name,n:0,lv:{}};_pl.push(_plBy[key]);}
+    _plBy[key].n++;
+    var li=((r.config&&r.config.levels)||[]).findIndex(function(L){return L.id===m.level;});
+    if(li>=0)_plBy[key].lv[li+1]=1;
+  });
+  var _plCnt=_pl.reduce(function(a,x){return a+x.n;},0);
   var _pcHdr=document.getElementById('drn-pieces-count');
-  if(_pcHdr)_pcHdr.textContent=ps.length?(_totQty+' бр.'):'';
-  document.getElementById('drn-pieces').innerHTML=ps.length
-    ? ps.map(function(x){
-        var bits=[];
-        var w=x.ev.data&&x.ev.data.wrapping;
-        if(w)bits.push(wrapL[w]||w);
-        if(x.ev.note)bits.push(x.ev.note);
-        var _open=x.isSeries?'openSeriesDet':'openPieceDet';
-        if(x.isSeries)bits.unshift(_seriesTotal(x.piece)+' бр.');
-        else if(x.piece.seriesId){var _q=parseInt(x.piece.qty,10);bits.unshift(((isNaN(_q)||_q<1)?1:_q)+' бр.');}
-        return '<div class="li" style="padding:8px 0;">'
-          +'<div class="li-ic" style="width:34px;height:34px;" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
-          +'<div class="li-body" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')" style="cursor:pointer;"><div class="li-t" style="font-size:13px;">'+x.piece.name+'</div>'
-          +(bits.length?'<div class="li-s" style="font-size:11px;">'+bits.join(' · ')+'</div>':'')+'</div>'
-          +'<button type="button" onclick="event.stopPropagation();detachPieceFromRun(\''+x.piece.id+'\',\''+x.ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:15px;padding:4px 6px;">×</button>'
-          +'</div>';
-      }).join('')
-    : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Няма закачени изделия. Натисни „+ Добави" горе, или от изделието: Процес → Изпичане → избери това изпичане.</div>';
+  if(_pcHdr)_pcHdr.textContent=[ps.length?_totQty+' бр.':'',_plCnt?_plCnt+' планирани':''].filter(Boolean).join(' · ');
+  var _plRows=_pl.map(function(x){
+    var rec=x.ref.kind==='series'?findSeries(x.ref.id):DB.pieces.find(function(p){return p.id===x.ref.id;});
+    var lv=Object.keys(x.lv);
+    var open=rec?(x.ref.kind==='series'?'openSeriesDet':'openPieceDet')+'(\''+rec.id+'\')':'';
+    return '<div class="li drn-planned" style="padding:8px 0;">'
+      +'<div class="li-body"'+(open?' onclick="closeDet(\'det-run\');'+open+'" style="cursor:pointer;"':'')+'><div class="li-t" style="font-size:14px;">'+_kEsc(rec?rec.name:x.name)+'</div>'
+      +'<div class="li-s" style="font-size:12px;"><span style="color:var(--primary);font-weight:500;">Планирано</span> · '+x.n+' бр.'+(lv.length?' · ниво '+lv.join(', '):' · без ниво')+'</div></div></div>';
+  }).join('');
+  document.getElementById('drn-pieces').innerHTML=(ps.length||_pl.length)?_drnAttached(ps,wrapL)+_plRows:'<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Няма закачени изделия. Добави ги в плана на пещта или с „+ Добави“ горе.</div>';
   var ts=_runTests(id);
   document.getElementById('drn-tests').innerHTML=ts.length
     ? ts.map(function(t){
@@ -8971,7 +8995,7 @@ function openRunDet(id){
     : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Няма закачени тестове.</div>';
   // v1.33.0: план на пещта — кратко; самият план е на отделен екран.
   var _pl=document.getElementById('drn-plan');if(_pl){loadKilns();_pl.textContent=_plSummary(r);}
-  var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори плана':'Направи план';
+  var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори плана на пещта':'Направи план на пещта';
   document.getElementById('drn-notes').textContent=r.notes||'—';
   _openDet('det-run');
 }
@@ -9464,6 +9488,38 @@ function _plN(v){return KilnPlan.num(v);}
 function _plF(v){v=_plN(v);return v==null?'':String(KilnPlan.r1(v)).replace('.',',');}
 // Съобщенията от геометрията са с десетична точка — тук стават със запетая.
 function _plMsg(m){return String(m||'').replace(/(\d)\.(\d)/g,'$1,$2');}
+// v1.34.1: размерите на изделието сега — от записа; бройка от серия без свой размер
+// взима размера на серията.
+function _plRecSize(ref){
+  if(!ref)return null;
+  var rec=ref.kind==='series'?findSeries(ref.id):DB.pieces.find(function(p){return p.id===ref.id;});
+  if(!rec)return null;
+  var z=_kilnSize(rec);
+  if(!z&&rec.seriesId)z=_kilnSize(findSeries(rec.seriesId));
+  return z;
+}
+function _plSizeOf(m){return {h:m.h==null?null:m.h,shape:m.shape||'round',d:m.d==null?null:m.d,w:m.w==null?null:m.w,depth:m.depth==null?null:m.depth};}
+function _plSizeFrom(z){var o={h:z.h==null?null:z.h,shape:z.shape||'round',d:null,w:null,depth:null};if(o.shape==='rect'){o.w=z.w==null?null:z.w;o.depth=z.depth==null?null:z.depth;}else o.d=z.d==null?null:z.d;return o;}
+// Бройки в плана, чиито размери изостават от изделието. Ръчно сменените в плана
+// (src 'plan') не се пипат.
+function _plStaleSizes(run){
+  return ((run&&run.plan&&run.plan.members)||[]).filter(function(m){
+    if(m.src==='plan')return false;
+    var z=_plRecSize(m.ref);if(!z)return false;
+    return JSON.stringify(_plSizeFrom(z))!==JSON.stringify(_plSizeOf(m));
+  });
+}
+function planRefreshSizes(){
+  var run=_plRun();if(!run)return;
+  var list=_plStaleSizes(run);
+  list.forEach(function(m){
+    var z=_plRecSize(m.ref),o=_plSizeFrom(z);
+    ['h','d','w','depth'].forEach(function(f){if(o[f]==null)delete m[f];else m[f]=o[f];});
+    m.shape=o.shape;m.src=z.source||'size';
+    if(o.shape!=='rect')delete m.rot;
+  });
+  plSug=null;_plTouch(run);renderPlan();toast(list.length+(list.length===1?' размер обновен':' размера обновени'));
+}
 function _plMemberLabel(m){return (m.name||'Изделие')+(m.unitLabel||'');}
 function _plSetup(run){return KilnPlan._planSetup(_plKiln(run));}
 function _plGeo(run){return KilnPlan._planRun(run);}
@@ -9507,6 +9563,7 @@ function _plSummary(run){
   var st=_plState(run),n=st.r.pieces.length;
   var bits=[st.k?st.k.name:'без пещ',st.r.levels.length+(st.r.levels.length===1?' ниво':' нива'),n+(n===1?' изделие':' изделия')];
   if(st.loose.length)bits.push(st.loose.length+' без ниво');
+  var _stl=_plStaleSizes(run).length;if(_stl)bits.push('размерите на '+_stl+' изостават от изделията');
   return bits.join(' · ')+(st.errs?' · ✗ '+st.errs+(st.errs===1?' проблем':' проблема'):st.warns?' · ⚠ '+st.warns+' за проверка':(st.loose.length?'':' · ✓'));
 }
 
@@ -9525,30 +9582,35 @@ function renderPlan(){
   }
   h+='<div class="f"><select id="pl-kiln" onchange="setPlanKiln(this.value)"><option value="">— избери пещ —</option>'
     +kilns.map(function(x){return '<option value="'+x.id+'"'+(run.kilnId===x.id?' selected':'')+'>'+_kEsc(x.name||'Пещ')+'</option>';}).join('')+'</select></div>';
-  if(run.kilnId&&!k)h+='<div style="font-size:12px;color:var(--warn);margin-bottom:6px;">Пещта на този план вече я няма в регистъра. Избери друга.</div>';
+  if(run.kilnId&&!k)h+='<div style="font-size:13px;color:var(--warn);margin-bottom:6px;">Пещта на този план вече я няма в регистъра. Избери друга.</div>';
   if(!k){h+='</div>';el.innerHTML=h;return;}
   var c=run.config||{};
-  h+='<div style="font-size:12px;color:var(--tx3);margin-bottom:8px;">'+_kEsc([_kilnSummary(k),_shelvesSummary(k)].filter(Boolean).join(' · '))+'</div>'
+  h+='<div style="font-size:13px;color:var(--tx3);margin-bottom:8px;">'+_kEsc([_kilnSummary(k),_shelvesSummary(k)].filter(Boolean).join(' · '))+'</div>'
     +'<div style="display:flex;gap:9px;align-items:flex-end;">'
     +'<div class="f" style="flex:1"><label>Отстояние, см</label><input type="text" inputmode="decimal" id="pl-gap" value="'+_plF(c.gap)+'" onchange="setPlanCfg(\'gap\',this.value)"></div>'
     +'<div class="f" style="flex:1"><label>Просвет, см</label><input type="text" inputmode="decimal" id="pl-clear" value="'+_plF(c.clear)+'" onchange="setPlanCfg(\'clear\',this.value)"></div>'
     +'<div class="f" style="flex:1"><label>На дъното, см</label><input type="text" inputmode="decimal" id="pl-floor" value="'+_plF(c.floorH)+'" onchange="setPlanCfg(\'floorH\',this.value)"></div>'
-    +'</div><div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-top:-4px;">Отстояние — между изделията на една плоча. Просвет — над най-високото изделие до плочата отгоре (или капака). На дъното — подпори под най-долната плоча; 0, ако лежи на дъното.</div></div>';
+    +'</div><div style="font-size:12.5px;color:var(--tx3);line-height:1.5;margin-top:-4px;">Отстояние — между изделията на една плоча. Просвет — над най-високото изделие до плочата отгоре (или капака). На дъното — подпори под най-долната плоча; 0, ако лежи на дъното.</div></div>';
   var st=_plState(run);
   // v1.34.0: степен на документиране — една за цялото изпичане.
   var MD={levels:['Нива','Записва кое изделие на кое ниво. Схемата не се ползва.'],scheme:['Схема','Записва и приблизителното място на плочата: избери изделие и докосни схемата, или го влачи.'],exact:['Точно','Сантиметри и завъртане за изделия, плочи и подпори — за опити.']};
   h+='<div class="ds"><div class="ds-t">Степен</div><div style="display:flex;gap:6px;" role="group" aria-label="Степен на документиране">'
     +['levels','scheme','exact'].map(function(m){var on=st.mode===m;return '<button type="button" class="fchip pl-mode" data-m="'+m+'" aria-pressed="'+on+'" onclick="setPlanMode(\''+m+'\')" style="flex:1;'+(on?'background:var(--primary);color:white;border-color:var(--primary);':'')+'">'+MD[m][0]+'</button>';}).join('')
-    +'</div><div id="pl-mode-hint" style="font-size:11px;color:var(--tx3);line-height:1.5;margin-top:6px;">'+MD[st.mode][1]+'</div></div>';
+    +'</div><div id="pl-mode-hint" style="font-size:12.5px;color:var(--tx3);line-height:1.5;margin-top:6px;">'+MD[st.mode][1]+'</div></div>';
   // Изделия и „Предложи нива“
   h+='<div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;"><span>Изделия <span style="color:var(--tx3);font-weight:400;">'+(st.r.pieces.length||'')+'</span></span>'
     +'<button onclick="openPlanAdd()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Добави</button></div>';
-  if(!st.r.pieces.length)h+='<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма изделия в плана.</div>';
+  if(!st.r.pieces.length)h+='<div style="font-size:13px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма изделия в плана.</div>';
   else{
+    var stale=_plStaleSizes(run),noSize=st.r.pieces.filter(function(p){return KilnPlan.effH(p)==null||!KilnPlan.shapeOf(p,0,0);}).length;
+    if(stale.length)h+='<div id="pl-stale" style="border:1px solid var(--warn);border-radius:12px;padding:10px 12px;margin:2px 0 10px;"><div style="font-size:13px;color:var(--text);line-height:1.5;">'+stale.length+(stale.length===1?' изделие има':' изделия имат')+' други размери в записа си, отколкото в плана (въведени или сменени след добавянето им).</div>'
+      +'<div style="font-size:13px;color:var(--tx3);margin-top:2px;">Ръчно сменените в плана не се пипат.</div>'
+      +'<button type="button" class="fchip" id="pl-refresh" onclick="planRefreshSizes()" style="margin-top:8px;background:var(--primary);color:white;border-color:var(--primary);">Вземи размерите от изделията ('+stale.length+')</button></div>';
+    else if(noSize)h+='<div style="font-size:13px;color:var(--warn);line-height:1.5;margin:2px 0 8px;">⚠ '+noSize+(noSize===1?' изделие е':' изделия са')+' без височина или основа — въведи ги в изделието или тук.</div>';
     h+='<button type="button" class="fchip" id="pl-suggest" onclick="planSuggest()" style="margin:2px 0 8px;">Предложи нива</button>';
     if(plSug)h+=_plSugHtml(run,st);
     if(st.loose.length){
-      h+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin:8px 0 4px;">Без ниво</div>';
+      h+='<div style="font-size:12.5px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin:8px 0 4px;">Без ниво</div>';
       h+=st.loose.map(function(p){return _plMemberHtml(run,st,p,_plLooseReason(st,p));}).join('');
     }
   }
@@ -9556,7 +9618,7 @@ function renderPlan(){
   // Нива — отгоре надолу, както се гледа пещта отстрани
   h+='<div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;"><span>Нива <span style="color:var(--tx3);font-weight:400;">'+(st.r.levels.length||'')+'</span></span>'
     +'<button onclick="addPlanLevel()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Ниво</button></div>';
-  if(!st.r.levels.length)h+='<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма нива. Добави ги едно по едно или натисни „Предложи нива“.</div>';
+  if(!st.r.levels.length)h+='<div style="font-size:13px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма нива. Добави ги едно по едно или натисни „Предложи нива“.</div>';
   var M=KilnPlan._planMeasures(st.S,st.r);
   for(var i=st.r.levels.length-1;i>=0;i--)h+=_plLevelHtml(run,st,M,i);
   h+='</div>';
@@ -9582,19 +9644,19 @@ function _plMemberHtml(run,st,p,note){
   }
   var lv=st.r.levels.map(function(L,i){return '<option value="'+L.id+'"'+(p.level===L.id?' selected':'')+'>Ниво '+(i+1)+(i===st.r.levels.length-1?' (горе)':'')+'</option>';}).join('');
   var rect=p.shape==='rect';
-  var inp=function(f,lab,w){return '<label style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--tx3);">'+lab+'<input type="text" inputmode="decimal" data-f="'+f+'" value="'+_plF(p[f])+'" onchange="setPlanMember(\''+p.id+'\',\''+f+'\',this.value)" style="width:'+(w||44)+'px;padding:5px 6px;font-size:12px;"></label>';};
+  var inp=function(f,lab,w){return '<label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--tx2);">'+lab+'<input type="text" inputmode="decimal" data-f="'+f+'" value="'+_plF(p[f])+'" onchange="setPlanMember(\''+p.id+'\',\''+f+'\',this.value)" style="width:'+(w||56)+'px;padding:7px 8px;font-size:14px;"></label>';};
   return '<div class="pl-m'+(sel?' pl-sel':'')+'" data-id="'+p.id+'" style="padding:8px '+(sel?'8px':'0')+';border-bottom:1px solid var(--bdr);'+(sel?'background:var(--primary-soft);border-radius:8px;':'')+'">'
     +'<div style="display:flex;align-items:center;gap:8px;">'
-      +'<div style="flex:1;min-width:0;'+(sch?'cursor:pointer;':'')+'"'+(sch?' onclick="selPlanMember(\''+p.id+'\')"':'')+'><div style="font-size:13px;color:var(--text);">'+(sch?'<b>'+p.no+'</b> · ':'')+_kEsc(_plMemberLabel(p))+'</div>'
-      +(p.code||where?'<div style="font-size:10px;color:var(--tx3);">'+_kEsc([p.code,where].filter(Boolean).join(' · '))+'</div>':'')+'</div>'
-      +'<select data-f="level" onchange="setPlanMember(\''+p.id+'\',\'level\',this.value)" style="width:auto;max-width:130px;padding:6px 8px;font-size:12px;"><option value="">— без ниво —</option>'+lv+'</select>'
+      +'<div style="flex:1;min-width:0;'+(sch?'cursor:pointer;':'')+'"'+(sch?' onclick="selPlanMember(\''+p.id+'\')"':'')+'><div style="font-size:14.5px;color:var(--text);">'+(sch?'<b>'+p.no+'</b> · ':'')+_kEsc(_plMemberLabel(p))+'</div>'
+      +(p.code||where?'<div style="font-size:13px;color:var(--tx3);">'+_kEsc([p.code,where].filter(Boolean).join(' · '))+'</div>':'')+'</div>'
+      +'<select data-f="level" onchange="setPlanMember(\''+p.id+'\',\'level\',this.value)" style="width:auto;max-width:140px;padding:8px 10px;font-size:14px;"><option value="">— без ниво —</option>'+lv+'</select>'
       +'<button type="button" onclick="removePlanMember(\''+p.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:17px;padding:4px 8px;min-height:36px;" aria-label="Извади от плана">×</button>'
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;">'
       +inp('h','в')+(rect?inp('w','ш')+inp('depth','д'):inp('d','Ø'))+inp('s','подложка')
     +'</div>'
-    +(note?'<div class="pl-note" style="font-size:11px;color:var(--tx3);margin-top:3px;">'+_kEsc(_plMsg(note))+'</div>':'')
-    +issues.map(function(x){return '<div class="pl-iss" style="font-size:11px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
+    +(note?'<div class="pl-note" style="font-size:12.5px;color:var(--tx3);margin-top:3px;">'+_kEsc(_plMsg(note))+'</div>':'')
+    +issues.map(function(x){return '<div class="pl-iss" style="font-size:12.5px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
     +'</div>';
 }
 function _plLevelHtml(run,st,M,i){
@@ -9617,23 +9679,23 @@ function _plLevelHtml(run,st,M,i){
     var noRoom=rm.failed.filter(function(f){return f.kind==='room';});
     var unchecked=rm.failed.filter(function(f){return f.kind==='size';});
     var nm=function(id){var p=ps.find(function(x){return x.id===id;});return p?_plMemberLabel(p):id;};
-    if(noRoom.length)roomLine='<div class="pl-room" style="font-size:12px;color:var(--err);margin-top:4px;">✗ Не се събират на плочата: '+_kEsc(noRoom.map(function(f){return nm(f.id);}).join(', '))+'</div>';
-    else if(rm.placed.length)roomLine='<div class="pl-room" style="font-size:12px;color:var(--ok,#4a7c59);margin-top:4px;">✓ Плоча: '+(rm.placed.length===ps.length?'всички '+ps.length+' имат място':rm.placed.length+' от '+ps.length+' имат място')+(_plN(run.config.gap)?' (с '+_plF(run.config.gap)+' см отстояние)':'')+'</div>';
-    if(unchecked.length)roomLine+='<div style="font-size:11px;color:var(--warn);margin-top:2px;">⚠ Без размер на основата, не са проверени: '+_kEsc(unchecked.map(function(f){return nm(f.id);}).join(', '))+'</div>';
+    if(noRoom.length)roomLine='<div class="pl-room" style="font-size:13px;color:var(--err);margin-top:4px;">✗ Не се събират на плочата: '+_kEsc(noRoom.map(function(f){return nm(f.id);}).join(', '))+'</div>';
+    else if(rm.placed.length)roomLine='<div class="pl-room" style="font-size:13px;color:var(--ok,#4a7c59);margin-top:4px;">✓ Плоча: '+(rm.placed.length===ps.length?'всички '+ps.length+' имат място':rm.placed.length+' от '+ps.length+' имат място')+(_plN(run.config.gap)?' (с '+_plF(run.config.gap)+' см отстояние)':'')+'</div>';
+    if(unchecked.length)roomLine+='<div style="font-size:12.5px;color:var(--warn);margin-top:2px;">⚠ Без размер на основата, не са проверени: '+_kEsc(unchecked.map(function(f){return nm(f.id);}).join(', '))+'</div>';
   }
   var tall=ps.reduce(function(a,p){var e=KilnPlan.effH(p);return e!=null&&e>a?e:a;},0);
   var meas='плочата е на '+_plF(m.bottom)+' + '+_plF(m.t)+' = '+_plF(m.top)+' см · '+(m.space==null?'място —':(last?'до капака ':'място ')+_plF(m.space)+' см')+(ps.length&&tall?' · най-високо '+_plF(tall)+(_plN(run.config.clear)?' + '+_plF(run.config.clear):'')+' см':'');
   return '<div class="pl-lv" data-id="'+L.id+'" style="border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:10px;">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:14px;color:var(--text);font-weight:500;">Ниво '+(i+1)+(last?' · горе':i===0?' · долу':'')+'</div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;color:var(--text);font-weight:500;">Ниво '+(i+1)+(last?' · горе':i===0?' · долу':'')+'</div>'
     +'<button type="button" onclick="delPlanLevel(\''+L.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:6px;min-height:36px;">Махни</button></div>'
-    +'<div class="pl-meas" style="font-size:11px;color:var(--tx3);margin:2px 0 6px;">'+_kEsc(meas)+'</div>'
+    +'<div class="pl-meas" style="font-size:12.5px;color:var(--tx3);margin:2px 0 6px;">'+_kEsc(meas)+'</div>'
     +(st.mode==='levels'
       ?'<div style="display:flex;gap:9px;"><div class="f" style="flex:1"><label>Плоча</label><select data-f="shelf" onchange="setPlanLevel(\''+L.id+'\',\'shelf\',this.value)">'+(shelfOpts||'<option value="">няма плочи в пещта</option>')+'</select></div>'+postSel+'</div>'
       :_plShelvesHtml(st,L)+(postSel?'<div style="display:flex;gap:9px;">'+postSel+'</div>':''))
-    +issues.map(function(x){return '<div class="pl-iss" style="font-size:12px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
+    +issues.map(function(x){return '<div class="pl-iss" style="font-size:13px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
     +roomLine
     +(st.mode!=='levels'?_plTopHtml(run,st,L,i):'')
-    +(ps.length?ps.map(function(p){return _plMemberHtml(run,st,p,'');}).join(''):'<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Празно ниво.</div>')
+    +(ps.length?ps.map(function(p){return _plMemberHtml(run,st,p,'');}).join(''):'<div style="font-size:13px;color:var(--tx3);font-style:italic;padding:6px 0;">Празно ниво.</div>')
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;">'
       +(L.photos||[]).map(function(pid){return '<div style="position:relative;"><img data-ph="'+pid+'" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--bg2);display:block;"><button type="button" onclick="planDelPhoto(\''+L.id+'\',\''+pid+'\')" aria-label="Махни снимката" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:12px;border:none;background:var(--surf);color:var(--accent);cursor:pointer;font-size:14px;line-height:1;">×</button></div>';}).join('')
       +'<button type="button" class="fchip" onclick="planAddPhoto(\''+L.id+'\')">+ Снимка</button>'
@@ -9668,13 +9730,13 @@ function _plRoomScheme(run,st,L,ps){
   var bad=ps.filter(function(p){return KilnPlan.positioned(p)&&(st.chk.byP[p.id]||[]).some(function(x){return x.sev==='err'&&/^(out|hit|post)$/.test(x.kind);});});
   var noBase=ps.filter(function(p){return !KilnPlan.shapeOf(p,0,0);});
   var h='';
-  if(noRoom.length)h+='<div class="pl-room" style="font-size:12px;color:var(--err);margin-top:4px;">✗ Не се събират на плочата: '+_kEsc(noRoom.map(function(f){return nm(f.id);}).join(', '))+'</div>';
-  if(bad.length)h+='<div class="pl-room" style="font-size:12px;color:var(--err);margin-top:4px;">✗ Проблем с мястото: '+_kEsc(bad.map(function(p){return nm(p.id);}).join(', '))+'</div>';
+  if(noRoom.length)h+='<div class="pl-room" style="font-size:13px;color:var(--err);margin-top:4px;">✗ Не се събират на плочата: '+_kEsc(noRoom.map(function(f){return nm(f.id);}).join(', '))+'</div>';
+  if(bad.length)h+='<div class="pl-room" style="font-size:13px;color:var(--err);margin-top:4px;">✗ Проблем с мястото: '+_kEsc(bad.map(function(p){return nm(p.id);}).join(', '))+'</div>';
   if(!noRoom.length&&!bad.length){
     var pos=ps.filter(function(p){return KilnPlan.positioned(p);}).length,sg=rm.sug.placed.length;
-    if(pos+sg)h+='<div class="pl-room" style="font-size:12px;color:var(--ok,#4a7c59);margin-top:4px;">✓ Плоча: '+(pos+sg===ps.length-noBase.length&&!noBase.length?'всички '+ps.length+' имат място':(pos+sg)+' от '+ps.length+' имат място')+(sg?' ('+sg+' предложени — пунктир)':'')+'</div>';
+    if(pos+sg)h+='<div class="pl-room" style="font-size:13px;color:var(--ok,#4a7c59);margin-top:4px;">✓ Плоча: '+(pos+sg===ps.length-noBase.length&&!noBase.length?'всички '+ps.length+' имат място':(pos+sg)+' от '+ps.length+' имат място')+(sg?' ('+sg+' предложени — пунктир)':'')+'</div>';
   }
-  if(noBase.length)h+='<div style="font-size:11px;color:var(--warn);margin-top:2px;">⚠ Без размер на основата — проверени само по височина: '+_kEsc(noBase.map(function(p){return nm(p.id);}).join(', '))+'</div>';
+  if(noBase.length)h+='<div style="font-size:12.5px;color:var(--warn);margin-top:2px;">⚠ Без размер на основата — проверени само по височина: '+_kEsc(noBase.map(function(p){return nm(p.id);}).join(', '))+'</div>';
   return h;
 }
 // Плочите на нивото: една или няколко (половинки), с място и завъртане в „Точно“.
@@ -9691,7 +9753,7 @@ function _plShelvesHtml(st,L){
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="fchip" onclick="planShelves(\''+L.id+'\',\'full\')">Цяла плоча</button>'
     +(half?'<button type="button" class="fchip" onclick="planShelves(\''+L.id+'\',\'halves\')">Две половинки</button>':'')
     +'<button type="button" class="fchip" onclick="planShelves(\''+L.id+'\',\'add\')">+ плоча</button></div>'
-    +(ex?'<div style="font-size:11px;color:var(--tx3);margin-top:4px;line-height:1.5;">x и y — от центъра на камерата, в см (x към 3 ч, y към 12 ч); половинката е с дъгата към 12 ч при 0°.</div>':'');
+    +(ex?'<div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.5;">x и y — от центъра на камерата, в см (x към 3 ч, y към 12 ч); половинката е с дъгата към 12 ч при 0°.</div>':'');
   return h+'</div>';
 }
 function _plShape(sh,attrs){
@@ -9732,7 +9794,7 @@ function _plTopHtml(run,st,L,i){
   o.push('</svg>');
   var h=o.join('');
   var selP=plSelP?r.pieces.find(function(p){return p.id===plSelP;}):null;
-  h+='<div style="font-size:11px;color:var(--tx3);line-height:1.5;">'+(selP?'Докосни схемата, за да сложиш <b>#'+selP.no+' '+_kEsc(_plMemberLabel(selP))+'</b> там. ':'Избери изделие (докосни го тук или в списъка), после докосни място. Влаченето също мести. ')
+  h+='<div style="font-size:12.5px;color:var(--tx3);line-height:1.5;">'+(selP?'Докосни схемата, за да сложиш <b>#'+selP.no+' '+_kEsc(_plMemberLabel(selP))+'</b> там. ':'Избери изделие (докосни го тук или в списъка), после докосни място. Влаченето също мести. ')
     +'Плътно — записано място; пунктир — предложено, не е записано. 12 ч — '+_kEsc(k.ref||'ориентирът от „Пещи“')+'.</div>';
   if(sg.placed&&sg.placed.length)h+='<div style="margin-top:6px;"><button type="button" class="fchip pl-acc" onclick="acceptPlanSpots(\''+L.id+'\')">Запиши предложените места ('+sg.placed.length+')</button></div>';
   if(selP&&selP.level===L.id)h+=_plSelHtml(run,st,selP);
@@ -9760,7 +9822,7 @@ function _plPostSelHtml(st,L,j){
   var q=L.posts[j],ex=st.mode==='exact';
   var num=function(f){return '<div class="f" style="flex:1;margin:0;"><label>'+f+', см</label><input type="text" inputmode="decimal" value="'+_plF(q[f])+'" onchange="setPlanPost(\''+L.id+'\','+j+',\''+f+'\',this.value)"></div>';};
   return '<div style="background:var(--bg2);border-radius:10px;padding:8px 10px;margin-top:6px;"><div style="font-size:13px;color:var(--text);">Подпора '+(j+1)+' · '+_kEsc(KilnPlan.zone(q.x,q.y,_plChamberR(st.k)))+'</div>'
-    +'<div style="font-size:11px;color:var(--tx3);">Докосни схемата, за да я преместиш.</div>'
+    +'<div style="font-size:12.5px;color:var(--tx3);">Докосни схемата, за да я преместиш.</div>'
     +(ex?'<div style="display:flex;gap:6px;margin-top:6px;">'+num('x')+num('y')+'</div>'+_plNudges('post',L.id,j):'')
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"><button type="button" class="fchip" onclick="planPosts(\''+L.id+'\',\'del\','+j+')">Махни подпората</button><button type="button" class="fchip" onclick="plSelPost=null;renderPlan();">Готово</button></div></div>';
 }
@@ -9887,12 +9949,12 @@ function _plTotalsHtml(st,M){
   if(_plN(c.floorH))parts.push('подпори на дъното '+_plF(c.floorH));
   M.levels.forEach(function(m){parts.push('плоча '+_plF(m.t)+(m.last||m.space==null?'':' + подпори '+_plF(m.space)));});
   var used=M.used,H=M.H;
-  return '<div class="pl-total" style="font-size:12px;color:var(--tx2);line-height:1.6;margin-top:6px;">'+_kEsc(parts.join(' + '))+' = '+_plF(used)+' см'
+  return '<div class="pl-total" style="font-size:13px;color:var(--tx2);line-height:1.6;margin-top:6px;">'+_kEsc(parts.join(' + '))+' = '+_plF(used)+' см'
     +(H!=null?' · до капака остават '+_plF(H-used)+' см от '+_plF(H):' · височината на камерата не е зададена')+'</div>';
 }
 function _plPostsHtml(run,k){
   var sizes=(k.posts&&k.posts.sizes)||[];
-  var h='<div class="ds"><div class="ds-t">Подпори</div><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">'+(sizes.length?'Налични в „'+_kEsc(k.name)+'“: '+sizes.map(_kNum).join(', ')+' см':'В „'+_kEsc(k.name)+'“ няма подпори.')+'</div>';
+  var h='<div class="ds"><div class="ds-t">Подпори</div><div style="font-size:13px;color:var(--tx2);margin-bottom:6px;">'+(sizes.length?'Налични в „'+_kEsc(k.name)+'“: '+sizes.map(_kNum).join(', ')+' см':'В „'+_kEsc(k.name)+'“ няма подпори.')+'</div>';
   if(plPostAsk){
     h+='<div id="pl-post-q" style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:6px;">Добави подпора '+_kNum(plPostAsk.size)+' см'+(plPostAsk.count?' ('+plPostAsk.count+' бр.)':'')+' към оборудването на „'+_kEsc(k.name)+'“? Ще я има и в следващите планове.</div>'
       +'<div style="display:flex;gap:8px;"><button type="button" class="fchip" onclick="plPostAsk=null;renderPlan();">Отказ</button><button type="button" class="fchip" id="pl-post-confirm" style="background:var(--primary);color:white;border-color:var(--primary);" onclick="planPostConfirm()">Да, добави</button></div>';
@@ -9910,27 +9972,27 @@ function _plSugHtml(run,st){
   var nm=function(id){var p=st.r.pieces.find(function(x){return x.id===id;});return p?_plMemberLabel(p):id;};
   var shelf=P.type;
   var h='<div id="pl-sug" style="border:1px solid var(--bdr2);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:var(--bg2);">';
-  h+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Допускания</div>'
-    +'<div id="pl-sug-ass" style="font-size:12px;color:var(--tx2);line-height:1.6;">'
+  h+='<div style="font-size:12.5px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Допускания</div>'
+    +'<div id="pl-sug-ass" style="font-size:13px;color:var(--tx2);line-height:1.6;">'
     +(shelf?'Плоча: '+_kEsc(shelf.name||('Ø'+_kNum(shelf.d)))+', дебелина '+_plF(shelf.t)+' см, по една на ниво. ':'')
     +'Подпори на дъното: '+_plF(c.floorH||0)+' см. Отстояние между изделията: '+_plF(c.gap||0)+' см. Просвет над най-високото: '+_plF(c.clear||0)+' см. '
     +'Налични подпори: '+(((k.posts&&k.posts.sizes)||[]).map(_kNum).join(', ')||'няма')+' см (и сборове от тях). Височина на камерата: '+_plF(k.h)+' см. '
     +'Изделията се подреждат от най-високото; всяко отива на първото ниво, на чиято плоча има място. Горе отива нивото, на което подпорите биха загубили най-много височина.'
     +'</div>';
-  h+='<div style="font-size:11px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin:10px 0 4px;">Резултат</div><div id="pl-sug-res">';
-  if(!P.levels.length)h+='<div style="font-size:12px;color:var(--tx2);">Няма какво да се предложи.</div>';
+  h+='<div style="font-size:12.5px;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin:10px 0 4px;">Резултат</div><div id="pl-sug-res">';
+  if(!P.levels.length)h+='<div style="font-size:13px;color:var(--tx2);">Няма какво да се предложи.</div>';
   for(var i=P.levels.length-1;i>=0;i--){
     var l=P.levels[i],last=i===P.levels.length-1;
     var ok=l.space==null||l.need<=l.space+0.05;
-    h+='<div style="font-size:12px;line-height:1.55;margin-bottom:6px;"><b>Ниво '+(i+1)+(last?' (горе)':'')+'</b> — '+l.ids.length+' бр., най-високо '+_plF(l.tall)+' + '+_plF(c.clear||0)+' = '+_plF(l.need)+' см; '
+    h+='<div style="font-size:13px;line-height:1.55;margin-bottom:6px;"><b>Ниво '+(i+1)+(last?' (горе)':'')+'</b> — '+l.ids.length+' бр., най-високо '+_plF(l.tall)+' + '+_plF(c.clear||0)+' = '+_plF(l.need)+' см; '
       +(last?'до капака '+_plF(l.space)+' см ':'подпори '+_plF(l.postH)+' см'+(l.combo&&l.combo.length>1?' ('+l.combo.map(_kNum).join(' + ')+')':'')+' ')
       +(ok?'<span style="color:var(--ok,#4a7c59)">✓</span>':'<span style="color:var(--err)">✗</span>')
-      +'<div style="color:var(--tx3);font-size:11px;">'+_kEsc(l.ids.map(nm).join(', '))+(l.noBase?' · '+l.noBase+' без размер на основата — проверени само по височина':'')+'</div></div>';
+      +'<div style="color:var(--tx3);font-size:12.5px;">'+_kEsc(l.ids.map(nm).join(', '))+(l.noBase?' · '+l.noBase+' без размер на основата — проверени само по височина':'')+'</div></div>';
   }
-  P.problems.forEach(function(x){h+='<div style="font-size:12px;color:var(--err);margin-top:3px;">✗ '+_kEsc(x)+'</div>';});
-  P.skipped.forEach(function(x){h+='<div style="font-size:12px;color:var(--err);margin-top:3px;">✗ '+_kEsc(nm(x.id))+': '+_kEsc(x.msg)+'</div>';});
-  if(plSug.way)h+='<div id="pl-sug-way" style="font-size:12px;color:var(--text);margin-top:6px;">→ '+_kEsc(plSug.way)+'</div>';
-  if(!P.problems.length&&!P.skipped.length&&P.levels.length)h+='<div style="font-size:12px;color:var(--ok,#4a7c59);margin-top:3px;">✓ Всичко се събира.</div>';
+  P.problems.forEach(function(x){h+='<div style="font-size:13px;color:var(--err);margin-top:3px;">✗ '+_kEsc(x)+'</div>';});
+  if(P.skipped.length)h+='<div id="pl-sug-skip" style="margin-top:6px;"><div style="font-size:13px;color:var(--err);font-weight:500;">Не са разположени ('+P.skipped.length+'):</div>'+P.skipped.map(function(x){return '<div style="font-size:13px;color:var(--err);margin-top:3px;">✗ '+_kEsc(nm(x.id))+' — '+_kEsc(x.msg)+'</div>';}).join('')+'</div>';
+  if(plSug.way)h+='<div id="pl-sug-way" style="font-size:13px;color:var(--text);margin-top:6px;">→ '+_kEsc(plSug.way)+'</div>';
+  if(!P.problems.length&&!P.skipped.length&&P.levels.length)h+='<div style="font-size:13px;color:var(--ok,#4a7c59);margin-top:3px;">✓ Всичко се събира.</div>';
   h+='</div><div style="display:flex;gap:8px;margin-top:8px;"><button type="button" class="fchip" onclick="plSug=null;renderPlan();">Затвори</button>'
     +(P.levels.length?'<button type="button" class="fchip" id="pl-sug-apply" style="background:var(--primary);color:white;border-color:var(--primary);" onclick="applyPlanSuggest()">Приеми нивата</button>':'')+'</div>';
   return h+'</div>';
@@ -9939,9 +10001,19 @@ function planSuggest(){
   var run=_plRun(),k=_plKiln(run);if(!run||!k)return;
   var S=_plSetup(run),r=_plGeo(run);
   r.levels=[];r.pieces.forEach(function(p){p.level=null;p.x=null;p.y=null;});
-  var P=KilnPlan.planLevels(S,r),way='';
+  // v1.34.1: без височина или без основа изделието не може да се провери — то не
+  // влиза в предложението и се казва защо, вместо да изглежда разположено.
+  var noData=[];
+  r.pieces=r.pieces.filter(function(p){
+    var noH=KilnPlan.effH(p)==null,noB=!KilnPlan.shapeOf(p,0,0);
+    if(noH||noB){noData.push({id:p.id,msg:noH&&noB?'няма размери — височина и Ø (или ш × д)':noH?'няма височина':'няма размер на основата — Ø (или ш × д)'});return false;}
+    return true;
+  });
+  var P=r.pieces.length?KilnPlan.planLevels(S,r):{levels:[],problems:[],skipped:[],type:null,fits:false},way='';
+  P.skipped=noData.concat(P.skipped);
+  if(!r.pieces.length)P.problems.push('Няма достатъчно данни: нито едно изделие няма и височина, и основа. Попълни размерите и опитай пак.');
   // Един изход при недостиг: по-малко отстояние, иначе изделието, което пречи.
-  if(!P.fits||P.problems.length||P.skipped.length){
+  if(r.pieces.length&&(!P.fits||P.problems.length||P.skipped.length>noData.length)){
     var gap=_plN(r.gap)||0;
     if(gap>0){
       var P0=KilnPlan.planLevels(S,Object.assign({},r,{gap:0}));
@@ -10088,7 +10160,7 @@ function _plCandidates(run){
     refs=refs.filter(function(r){return !inPlan[_plRefKey(r)];});
     if(!refs.length)return;
     out.push({key:kind+':'+rec.id,rec:rec,kind:kind,refs:refs,qty:qty,code:kind==='series'?(rec.code||''):pieceCode(rec),
-      suggest:!!attached[rec.id]||want.indexOf(rec.stage)>=0,attached:!!attached[rec.id],size:_kilnSize(rec)});
+      suggest:!!attached[rec.id]||want.indexOf(rec.stage)>=0,attached:!!attached[rec.id],size:_kilnSize(rec)||(rec.seriesId?_kilnSize(findSeries(rec.seriesId)):null)});
   };
   DB.pieces.forEach(function(p){
     if(!p||p.archivedAt)return;
@@ -10122,14 +10194,14 @@ function _renderPlanAdd(){
     return true;
   });
   if(!items.length){
-    l.innerHTML='<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;line-height:1.5;">'+(q?'Няма съвпадения.':(hidden?'Няма изделия на етап за това изпичане. Отметни „покажи и останалите“.':'Всички изделия вече са в плана.'))+'</div>';
+    l.innerHTML='<div style="padding:20px;text-align:center;color:var(--tx3);font-size:13px;font-style:italic;line-height:1.5;">'+(q?'Няма съвпадения.':(hidden?'Няма изделия на етап за това изпичане. Отметни „покажи и останалите“.':'Всички изделия вече са в плана.'))+'</div>';
   } else l.innerHTML=items.map(function(x){
     var on=!!plSel[x.key],z=x.size;
     var sub=[x.code,x.refs.length+' бр.',z?_sizeLabel(z.shape==='rect'?{h:z.h,w:z.w,depth:z.depth}:{h:z.h,w:z.d}):'без размер',x.attached?'закачено към изпичането':''].filter(Boolean).join(' · ');
     return '<div class="pla-it" data-key="'+x.key+'" onclick="togglePlanAdd(\''+x.key+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);cursor:pointer;">'
       +'<div style="width:20px;height:20px;border-radius:5px;border:2px solid '+(on?'var(--primary)':'var(--bdr2)')+';background:'+(on?'var(--primary)':'transparent')+';display:flex;align-items:center;justify-content:center;color:white;font-size:12px;flex-shrink:0;">'+(on?'✓':'')+'</div>'
-      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--text);">'+_kEsc(x.rec.name||'Изделие')+(x.kind==='series'?' <span style="font-size:10px;color:var(--tx3)">серия</span>':'')+'</div>'
-      +'<div style="font-size:10px;color:var(--tx3);">'+_kEsc(sub)+'</div></div></div>';
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--text);">'+_kEsc(x.rec.name||'Изделие')+(x.kind==='series'?' <span style="font-size:13px;color:var(--tx3)">серия</span>':'')+'</div>'
+      +'<div style="font-size:13px;color:var(--tx3);">'+_kEsc(sub)+'</div></div></div>';
   }).join('');
   var n=cands.reduce(function(a,x){return a+(plSel[x.key]?x.refs.length:0);},0);
   var b=document.getElementById('pla-confirm');if(b){b.textContent=n?'Добави '+n:'Добави';b.disabled=!n;b.style.opacity=n?'':'.5';}

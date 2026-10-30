@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.34.0 · `atelie-v93`
+**Version:** v1.34.1 · `atelie-v94`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -205,6 +205,8 @@ changes only after success; on failure (or broken storage) the form stays open w
 an error inside it and nothing is changed.
 
 ### Kiln plan (v1.33.0)
+
+**v1.34.1.** Plan members whose size differs from the current record (and was not edited in the plan) are offered a refresh; a split unit without its own size takes the series size. „Предложи нива“ leaves out pieces without height or base, naming them. The run detail lists plan members not yet in the run as „Планирано“. Standard categories: Съдове за храна, Музикални инструменти, Декорация, Скулптура, Бижута, Тестови образци, Друго.
 
 **Depths (v1.34.0).** `config.mode`: none = „Нива“ (levels only), `scheme` =
 „Схема“ (top view, tap and drag; suggested spots shown dashed until stored),
