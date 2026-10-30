@@ -24,6 +24,6 @@ window.KilnPlan = Object.freeze(Object.assign({}, kilnplan));
 
 // v1.32.1: версията на модулите — index.html я сравнява със своята (APP_VERSION).
 // Сменя се заедно с APP_VERSION и CACHE_NAME (tests/versions.test.js).
-window.__glinaModulesVersion = 'v1.35.0';
+window.__glinaModulesVersion = 'v1.35.1';
 window.__glinaModulesBridged = true;
 if (typeof window.__glinaModulesReady === 'function') window.__glinaModulesReady();
