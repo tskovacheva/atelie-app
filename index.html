@@ -1991,7 +1991,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.34.1';
+const APP_VERSION = 'v1.34.2';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -9527,7 +9527,7 @@ function _plGeo(run){return KilnPlan._planRun(run);}
 function openPlan(id){
   var run=DB.firingRuns.find(function(x){return x.id===id;});if(!run)return;
   loadKilns();
-  curPlanRun=id;plSug=null;plPostAsk=null;plSelP=null;plSelPost=null;
+  curPlanRun=id;plSug=null;plPostAsk=null;plSelP=null;plSelPost=null;plLevel=null;
   document.getElementById('pl-m').textContent=_runLabel(run);
   renderPlan();
   _openDet('det-plan');
@@ -9545,7 +9545,7 @@ function _plState(run){
   // Нива: събират ли се (без записани места). Схема/Точно: записаните места се
   // проверяват от check, останалите получават предложено място (пунктир).
   if(k)r.levels.forEach(function(L){
-    if(mode==='levels'){room[L.id]=KilnPlan._planRoom(S,r,L.id);return;}
+    if(mode==='levels'){room[L.id]=KilnPlan._planRoom(S,r,L.id);room[L.id].sug=KilnPlan._planSuggest(S,r,L.id);return;}
     var sg=KilnPlan._planSuggest(S,r,L.id);
     var pos=r.pieces.filter(function(p){return p.level===L.id&&KilnPlan.positioned(p);}).map(function(p){return p.id;});
     room[L.id]={placed:pos.concat(sg.placed.map(function(x){return x.id;})),failed:sg.failed,sug:sg};
@@ -9620,7 +9620,21 @@ function renderPlan(){
     +'<button onclick="addPlanLevel()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;">+ Ниво</button></div>';
   if(!st.r.levels.length)h+='<div style="font-size:13px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Още няма нива. Добави ги едно по едно или натисни „Предложи нива“.</div>';
   var M=KilnPlan._planMeasures(st.S,st.r);
-  for(var i=st.r.levels.length-1;i>=0;i--)h+=_plLevelHtml(run,st,M,i);
+  // v1.34.2: по едно ниво — разделите горе избират кое.
+  if(st.r.levels.length){
+    if(!plLevel||!st.r.levels.some(function(L){return L.id===plLevel;}))plLevel=st.r.levels[0].id;
+    var last=st.r.levels.length-1;
+    h+='<div class="pl-tabs" role="tablist" style="display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;">'+st.r.levels.map(function(L,i){
+      var ps=st.r.pieces.filter(function(p){return p.level===L.id;}),on=L.id===plLevel;
+      var iss=(st.chk.byL[L.id]||[]).concat.apply(st.chk.byL[L.id]||[],ps.map(function(p){return st.chk.byP[p.id]||[];}));
+      var room=st.room[L.id]&&st.room[L.id].failed.some(function(f){return f.kind==='room';});
+      var bad=room||iss.some(function(x){return x.sev==='err';})?'✗':iss.length?'⚠':ps.length?'✓':'';
+      var col=bad==='✗'?'var(--err)':bad==='⚠'?'var(--warn)':'var(--ok,#4a7c59)';
+      return '<button type="button" role="tab" aria-selected="'+on+'" class="pl-tab" data-id="'+L.id+'" onclick="setPlanLevelTab(\''+L.id+'\')" style="flex:0 0 auto;padding:10px 14px;min-height:44px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;border:1.5px solid '+(on?'var(--primary)':'var(--bdr2)')+';background:'+(on?'var(--primary)':'transparent')+';color:'+(on?'white':'var(--text)')+';">Ниво '+(i+1)+(i===last&&last?' · горе':'')+' <span style="opacity:.8">('+ps.length+')</span>'+(bad?' <span style="color:'+(on?'white':col)+';font-weight:600;">'+bad+'</span>':'')+'</button>';
+    }).join('')+'</div>';
+    var li=st.r.levels.findIndex(function(L){return L.id===plLevel;});
+    h+=_plLevelHtml(run,st,M,li);
+  }
   h+='</div>';
   // Изглед отстрани
   if(st.r.levels.length)h+='<div class="ds"><div class="ds-t">Отстрани</div>'+_plSideSvg(st,M)+_plTotalsHtml(st,M)+'</div>';
@@ -9647,7 +9661,7 @@ function _plMemberHtml(run,st,p,note){
   var inp=function(f,lab,w){return '<label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--tx2);">'+lab+'<input type="text" inputmode="decimal" data-f="'+f+'" value="'+_plF(p[f])+'" onchange="setPlanMember(\''+p.id+'\',\''+f+'\',this.value)" style="width:'+(w||56)+'px;padding:7px 8px;font-size:14px;"></label>';};
   return '<div class="pl-m'+(sel?' pl-sel':'')+'" data-id="'+p.id+'" style="padding:8px '+(sel?'8px':'0')+';border-bottom:1px solid var(--bdr);'+(sel?'background:var(--primary-soft);border-radius:8px;':'')+'">'
     +'<div style="display:flex;align-items:center;gap:8px;">'
-      +'<div style="flex:1;min-width:0;'+(sch?'cursor:pointer;':'')+'"'+(sch?' onclick="selPlanMember(\''+p.id+'\')"':'')+'><div style="font-size:14.5px;color:var(--text);">'+(sch?'<b>'+p.no+'</b> · ':'')+_kEsc(_plMemberLabel(p))+'</div>'
+      +'<div style="flex:1;min-width:0;'+(sch?'cursor:pointer;':'')+'"'+(sch?' onclick="selPlanMember(\''+p.id+'\')"':'')+'><div style="font-size:14.5px;color:var(--text);">'+(p.level?'<b>'+p.no+'</b> · ':'')+_kEsc(_plMemberLabel(p))+'</div>'
       +(p.code||where?'<div style="font-size:13px;color:var(--tx3);">'+_kEsc([p.code,where].filter(Boolean).join(' · '))+'</div>':'')+'</div>'
       +'<select data-f="level" onchange="setPlanMember(\''+p.id+'\',\'level\',this.value)" style="width:auto;max-width:140px;padding:8px 10px;font-size:14px;"><option value="">— без ниво —</option>'+lv+'</select>'
       +'<button type="button" onclick="removePlanMember(\''+p.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:17px;padding:4px 8px;min-height:36px;" aria-label="Извади от плана">×</button>'
@@ -9694,7 +9708,7 @@ function _plLevelHtml(run,st,M,i){
       :_plShelvesHtml(st,L)+(postSel?'<div style="display:flex;gap:9px;">'+postSel+'</div>':''))
     +issues.map(function(x){return '<div class="pl-iss" style="font-size:13px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
     +roomLine
-    +(st.mode!=='levels'?_plTopHtml(run,st,L,i):'')
+    +_plTopHtml(run,st,L,i)
     +(ps.length?ps.map(function(p){return _plMemberHtml(run,st,p,'');}).join(''):'<div style="font-size:13px;color:var(--tx3);font-style:italic;padding:6px 0;">Празно ниво.</div>')
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;">'
       +(L.photos||[]).map(function(pid){return '<div style="position:relative;"><img data-ph="'+pid+'" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--bg2);display:block;"><button type="button" onclick="planDelPhoto(\''+L.id+'\',\''+pid+'\')" aria-label="Махни снимката" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:12px;border:none;background:var(--surf);color:var(--accent);cursor:pointer;font-size:14px;line-height:1;">×</button></div>';}).join('')
@@ -9703,7 +9717,8 @@ function _plLevelHtml(run,st,M,i){
     +'</div>';
 }
 // ── v1.34.0: Схема и Точно ──
-var plSelP=null,plSelPost=null,plStep=1,plDrag=null;
+var plSelP=null,plSelPost=null,plStep=1,plDrag=null,plLevel=null;
+function setPlanLevelTab(id){plLevel=id;plSelPost=null;var m=plSelP&&_plMember(plSelP);if(m&&m.level&&m.level!==id)plSelP=null;renderPlan();}
 function _plMode(run){var m=run&&run.config&&run.config.mode;return m==='scheme'||m==='exact'?m:'levels';}
 function _plChamberR(k){return k&&k.shape==='rect'?Math.hypot(_plN(k.w)||50,_plN(k.depth)||50)/2:(_plN(k&&k.d)||50)/2;}
 function _plMember(id){var run=_plRun();return run&&run.plan?run.plan.members.find(function(m){return m.id===id;})||null:null;}
@@ -9793,6 +9808,7 @@ function _plTopHtml(run,st,L,i){
   });
   o.push('</svg>');
   var h=o.join('');
+  if(st.mode==='levels')return h.replace('<svg class="pl-top"','<svg class="pl-top pl-view"')+'<div style="font-size:12.5px;color:var(--tx3);line-height:1.5;">Пунктир — възможно място, само за проверка дали се събират. Местата се записват в „Схема“.</div>';
   var selP=plSelP?r.pieces.find(function(p){return p.id===plSelP;}):null;
   h+='<div style="font-size:12.5px;color:var(--tx3);line-height:1.5;">'+(selP?'Докосни схемата, за да сложиш <b>#'+selP.no+' '+_kEsc(_plMemberLabel(selP))+'</b> там. ':'Избери изделие (докосни го тук или в списъка), после докосни място. Влаченето също мести. ')
     +'Плътно — записано място; пунктир — предложено, не е записано. 12 ч — '+_kEsc(k.ref||'ориентирът от „Пещи“')+'.</div>';
@@ -9881,7 +9897,7 @@ function planPosts(lid,kind,j){
 // на празно място при избрано — премести го там; влачене — премести.
 function _plPt(svg,e){var pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;var q=pt.matrixTransform(svg.getScreenCTM().inverse());return {x:q.x,y:-q.y};}
 document.addEventListener('pointerdown',function(e){
-  var svg=e.target&&e.target.closest&&e.target.closest('svg.pl-top');if(!svg)return;
+  var svg=e.target&&e.target.closest&&e.target.closest('svg.pl-top');if(!svg||svg.classList.contains('pl-view'))return;
   var run=_plRun();if(!run)return;
   var lid=svg.getAttribute('data-lv'),g=e.target.closest('[data-drag]'),p0=_plPt(svg,e);
   if(!g){plDrag={tap:true,svg:svg,lid:lid,p0:p0};e.preventDefault();return;}
@@ -9984,7 +10000,10 @@ function _plSugHtml(run,st){
   for(var i=P.levels.length-1;i>=0;i--){
     var l=P.levels[i],last=i===P.levels.length-1;
     var ok=l.space==null||l.need<=l.space+0.05;
-    h+='<div style="font-size:13px;line-height:1.55;margin-bottom:6px;"><b>Ниво '+(i+1)+(last?' (горе)':'')+'</b> — '+l.ids.length+' бр., най-високо '+_plF(l.tall)+' + '+_plF(c.clear||0)+' = '+_plF(l.need)+' см; '
+    var mv=P.levels.length>1?'<span style="float:right;display:inline-flex;gap:6px;margin-left:8px;">'
+      +(i<P.levels.length-1?'<button type="button" class="fchip pl-up" onclick="planSugMove('+i+',1)" aria-label="Ниво '+(i+1)+' нагоре" style="min-width:44px;">↑</button>':'')
+      +(i>0?'<button type="button" class="fchip pl-down" onclick="planSugMove('+i+',-1)" aria-label="Ниво '+(i+1)+' надолу" style="min-width:44px;">↓</button>':'')+'</span>':'';
+    h+='<div class="pl-sug-lv" style="font-size:13px;line-height:1.55;margin-bottom:8px;overflow:hidden;">'+mv+'<b>Ниво '+(i+1)+(last?' (горе)':'')+'</b> — '+l.ids.length+' бр., най-високо '+_plF(l.tall)+' + '+_plF(c.clear||0)+' = '+_plF(l.need)+' см; '
       +(last?'до капака '+_plF(l.space)+' см ':'подпори '+_plF(l.postH)+' см'+(l.combo&&l.combo.length>1?' ('+l.combo.map(_kNum).join(' + ')+')':'')+' ')
       +(ok?'<span style="color:var(--ok,#4a7c59)">✓</span>':'<span style="color:var(--err)">✗</span>')
       +'<div style="color:var(--tx3);font-size:12.5px;">'+_kEsc(l.ids.map(nm).join(', '))+(l.noBase?' · '+l.noBase+' без размер на основата — проверени само по височина':'')+'</div></div>';
@@ -10027,9 +10046,18 @@ function planSuggest(){
       }
     }
   }
-  plSug={res:P,way:way};
+  plSug={res:P,way:way,S:S,r:r};
   renderPlan();
   var e=document.getElementById('pl-sug');if(e&&e.scrollIntoView)e.scrollIntoView({block:'nearest'});
+}
+// v1.34.2: ръчна смяна на реда в предложението — височините се смятат наново.
+function planSugMove(i,dir){
+  if(!plSug||!plSug.S)return;
+  var P=plSug.res,L=P.levels.slice(),j=i+dir;if(j<0||j>=L.length)return;
+  var t=L[i];L[i]=L[j];L[j]=t;
+  var R=KilnPlan._planRestack(plSug.S,plSug.r,L.map(function(l){return {ids:l.ids,tall:l.tall,noBase:l.noBase};}),P.type);
+  plSug.res=Object.assign({},P,{levels:R.levels,fits:R.fits,problems:R.problems});plSug.way='';
+  renderPlan();var e=document.getElementById('pl-sug');if(e&&e.scrollIntoView)e.scrollIntoView({block:'nearest'});
 }
 function applyPlanSuggest(){
   var run=_plRun();if(!run||!plSug)return;
@@ -10088,7 +10116,7 @@ function addPlanLevel(){
       if(pick!=null)top.postH=pick;else if(keys.length)top.postH=keys[keys.length-1];
     }
   }
-  L.push({id:uid(),shelves:sh?[{ref:sh.id,x:0,y:0,rot:0}]:[],photos:[]});
+  L.push({id:uid(),shelves:sh?[{ref:sh.id,x:0,y:0,rot:0}]:[],photos:[]});plLevel=L[L.length-1].id;
   if(_plMode(run)!=='levels')_plFillPosts(run,false);
   plSug=null;_plTouch(run);renderPlan();
 }
