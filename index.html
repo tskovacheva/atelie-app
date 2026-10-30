@@ -526,6 +526,72 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   #det-recipe.split > *{max-width:900px;}
 }
 
+/* v1.39.0: материали — групи, списък/карти/наличности, детайл, формуляр */
+.mt-grps{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;}
+.mt-grps::-webkit-scrollbar{display:none;}
+.mt-grps .fchip{font-size:12px;padding:7px 12px;}
+.mt-grps .fchip .n,.rc-side .fchip .n{opacity:.65;}
+#mt-filter-toggle{display:inline-block!important;}
+.md-ic{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:600;overflow:hidden;background:var(--bg2);color:var(--tx2);}
+.md-ic img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
+.md-ic.sm{width:42px;height:42px;border-radius:11px;font-size:12.5px;}
+.md-ic.clays,.mt-ct.clays{background:#EDE3D6;color:#7B5B3A;}.md-ic.base,.mt-ct.base{background:#E6E8E3;color:#55604F;}.md-ic.ox,.mt-ct.ox{background:#F3E1DA;color:#9A4B33;}
+.md-ic.glaze,.mt-ct.glaze{background:#E1ECF0;color:#3E6170;}.md-ic.engobe,.mt-ct.engobe{background:#E8E3F1;color:#5B4A7A;}.md-ic.underglaze,.mt-ct.underglaze{background:#F1E6EE;color:#7A4A6A;}
+.md-ic.raw,.mt-ct.raw{background:#E9E4DC;color:#6A5D4A;}.md-ic.mass,.mt-ct.mass{background:#DDEBE3;color:#3F6A55;}.mt-ct.wish{background:var(--warnbg);color:var(--warn);}
+.mt-ct{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:500;letter-spacing:.04em;white-space:nowrap;}
+.mt-gh{font-size:12px;color:var(--tx3);margin:14px 2px 6px;}
+.li.mt-r{border-left:3px solid transparent;gap:10px;}
+.li.mt-r.sel,.li.mt-c.sel{border-color:var(--primary);}
+.mt-rr{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:12px;color:var(--tx3);white-space:nowrap;margin-left:6px;}
+.stock-chip.mt-none{background:var(--bg2);color:var(--tx3);font-weight:400;}
+.stock-chip.mt-zero{background:var(--errbg);color:var(--err);}
+.li.mt-c{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:12px;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);border:2px solid transparent;}
+.li.mt-c .mt-nm{font-family:'Tenor Sans',sans-serif;font-size:16.5px;line-height:1.2;overflow-wrap:anywhere;}
+.li.mt-c > div:first-child{display:flex;gap:10px;align-items:center;}
+.mt-facts{display:flex;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);}
+.mt-facts span{background:var(--bg);border-radius:8px;padding:2px 8px;}
+.mt-cf{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--tx3);border-top:1px solid var(--bdr);padding-top:8px;}
+.mt-hint{font-size:12.5px;color:var(--tx3);margin:0 2px 6px;}
+.li.mt-st{gap:10px;}
+.mt-q{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.mt-q small{font-size:12.5px;font-weight:400;color:var(--tx3);}
+.mt-bar{height:7px;border-radius:4px;background:var(--bg2);position:relative;overflow:hidden;margin:5px 0 3px;}
+.mt-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ok,#4a7c59);}
+.mt-bar i.low{background:var(--warn);}.mt-bar i.zero{background:var(--err);}
+.mt-bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text);opacity:.5;}
+.md-head{display:flex;gap:12px;align-items:flex-start;}
+.md-head .det-t{margin-top:4px;}
+.md-stock{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:center;background:var(--surface);border-radius:12px;padding:12px 14px;margin-top:12px;}
+.md-stock .q{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;}
+.md-stock .q small{font-size:14px;font-weight:400;color:var(--tx3);}
+.md-stock .mt-bar{margin:0;height:8px;}
+.md-stock .s{grid-column:1/-1;font-size:13.5px;color:var(--tx2);line-height:1.5;}
+.md-warns{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.md-warns div{font-size:13.5px;padding:8px 12px;border-radius:10px;line-height:1.45;}
+.md-warns .w{background:var(--warnbg);color:var(--warn);}.md-warns .e{background:var(--errbg);color:var(--err);}.md-warns .i{background:var(--surface);color:var(--tx2);}
+.md-kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;}
+@media(min-width:700px){.md-kv{grid-template-columns:repeat(3,minmax(0,1fr));}}
+.md-kv small{display:block;font-size:12px;color:var(--tx3);}
+.md-kv b{font-weight:500;font-size:15px;overflow-wrap:anywhere;}
+.md-kv b.no{color:var(--tx3);font-weight:400;}
+.li.md-rr{gap:10px;align-items:center;padding:10px 0;}
+.md-bar{height:6px;border-radius:3px;background:var(--bg2);overflow:hidden;margin-top:5px;}
+.md-bar i{display:block;height:100%;background:var(--primary);}
+.md-p{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;min-width:56px;text-align:right;}
+@media(min-width:1100px){.md-secs .md-wide{grid-column:1/-1;}}
+.mi-chem{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;}
+@media(min-width:600px){.mi-chem{grid-template-columns:repeat(4,minmax(0,1fr));}}
+.mi-chem input{text-align:right;}
+#mo-mat input.bad{border-color:var(--err);}
+@media(min-width:1100px){
+  #sc-materials.split .rcl,#sc-materials.split .ph{max-width:460px;}
+  #sc-materials.split .rc-cards{grid-template-columns:minmax(0,1fr);}
+  #det-mat.split{left:460px;box-shadow:-6px 0 20px rgba(0,0,0,.06);border-left:1px solid var(--bdr);}
+  #det-mat.split .det-back{display:none;}
+  #det-mat.split .rd-top{padding-top:22px;}
+  #det-mat.split > *{max-width:900px;}
+}
+
 /* detail */
 .det{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;}
 .det.on{display:block;}
@@ -887,43 +953,20 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <!-- МАТЕРИАЛИ -->
 <div class="sc" id="sc-materials">
-  <div class="ph"><div class="ph-left"><div class="pt" data-t="ui.materiali">Материали</div></div></div>
-  <div class="stats">
-    <div class="sb"><div class="sn" id="st-clays">0</div><div class="sl" data-t="ui.glini">Глини</div></div>
-    <div class="sb"><div class="sn" id="st-glazes">0</div><div class="sl" data-t="ui.glazuri">Глазури</div></div>
-    <div class="sb"><div class="sn" id="st-mats">0</div><div class="sl" data-t="ui.surovini">Суровини</div></div>
+  <div class="ph"><div class="ph-left"><div class="pt" data-t="ui.materiali">Материали</div><div class="ps" id="cnt-mats"></div></div></div>
+  <!-- v1.39.0: каталогът по прототипа materials-v0 — групи, списък/карти/наличности -->
+  <div class="rcl">
+    <div class="mt-grps" id="mat-tabs" role="group" aria-label="Група"></div>
+    <div class="pc-tools">
+      <input class="srch" type="search" id="mat-search" placeholder="Търси по име, формула, производител, бележка…" oninput="debounce(renderMaterials,'mat-search',200)">
+      <div class="pc-seg" role="group" aria-label="Изглед"><button type="button" id="mt-v-list" onclick="setMatView('list')">Списък</button><button type="button" id="mt-v-cards" onclick="setMatView('cards')">Карти</button><button type="button" id="mt-v-stock" onclick="setMatView('stock')">Наличности</button></div>
+      <button type="button" class="pc-fbtn" id="mt-filter-toggle" onclick="toggleMatFilters()">Филтри<span id="mt-filter-badge"></span></button>
+      <select class="pc-sort" id="mt-sort" aria-label="Подреди" onchange="setSort('mat',this.value)"><option value="name">Име А–Я</option><option value="stock">Ниски наличности първо</option><option value="upd">Последна промяна</option><option value="rec">Брой рецепти</option></select>
+    </div>
+    <div class="rc-side" id="mt-side"></div>
+    <div class="pc-active" id="mt-active"></div>
+    <div id="mat-list"></div>
   </div>
-  <div class="srch-wrap" style="padding-top:8px;">
-    <input class="srch" type="search" id="mat-search" data-tp="ph.tarsi-material" placeholder="Търси материал…" oninput="debounce(renderMaterials,'mat-search',200)">
-  </div>
-  <div class="fchips">
-    <button class="fchip" id="fc-mat-lowstock" onclick="toggleFChip('mat','lowstock')" data-t="ui.samo-niski">Само ниски</button>
-  </div>
-  <div class="sort-row">
-    <span class="sort-lbl" data-t="ui.sortiray">Сортирай:</span>
-    <button class="fchip on" id="sort-mat-name" onclick="setSort('mat','name')" data-t="ui.a-ya">А→Я</button>
-    <button class="fchip" id="sort-mat-stock" onclick="setSort('mat','stock')" data-t="ui.niski-zapasi">Ниски запаси</button>
-  </div>
-  <div class="tabs" id="mat-tabs">
-    <button class="tb on" id="mbtab-clays" onclick="switchMat('clays')" data-t="ui.glini">Глини</button>
-    <button class="tb" id="mbtab-base" onclick="switchMat('base')" data-t="ui.bazovi">Базови</button>
-    <button class="tb" id="mbtab-ox" onclick="switchMat('ox')" data-t="ui.oksidi">Оксиди</button>
-    <button class="tb" id="mbtab-glaze" onclick="switchMat('glaze')" data-t="ui.glazuri">Глазури</button>
-    <button class="tb" id="mbtab-engobe" onclick="switchMat('engobe')" data-t="ui.angobi">Ангоби</button>
-    <button class="tb" id="mbtab-underglaze" onclick="switchMat('underglaze')" data-t="ui.podgl-boi">Подгл. бои</button>
-    <button class="tb" id="mbtab-raw" onclick="switchMat('raw')" data-t="ui.surovini">Суровини</button>
-    <button class="tb" id="mbtab-mass" onclick="switchMat('mass')" data-t="ui.masi">Маси</button>
-    <button class="tb" id="mbtab-wish" onclick="switchMat('wish')">Wishlist</button>
-  </div>
-  <div id="mat-clays"></div>
-  <div id="mat-base" style="display:none"></div>
-  <div id="mat-ox" style="display:none"></div>
-  <div id="mat-glaze" style="display:none"></div>
-  <div id="mat-engobe" style="display:none"></div>
-  <div id="mat-underglaze" style="display:none"></div>
-  <div id="mat-raw" style="display:none"></div>
-  <div id="mat-mass" style="display:none"></div>
-  <div id="mat-wish" style="display:none"></div>
 </div>
 
 <!-- ТЕСТОВЕ -->
@@ -1424,17 +1467,61 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <!-- DETAIL: Материал -->
 <div class="det" id="det-mat">
-  <div style="position:relative;">
-    <div class="det-hero" id="dmat-hero"><div class="empty-k" style="font-size:60px;opacity:.2" data-t="ui.k">К</div></div>
-    <button class="det-back" onclick="closeDet('det-mat')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+  <!-- v1.39.0: детайлът по прототипа materials-v0 — група, наличност, предупреждения,
+       „В рецепти“ отворена; останалото в разгъващи се секции. -->
+  <div class="rd-top">
+    <button class="det-back" onclick="closeDet('det-mat')" style="background:var(--surf)" aria-label="Назад"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+    <div class="md-head">
+      <div class="md-ic" id="dmat-hero"></div>
+      <div style="min-width:0;flex:1">
+        <div id="dmat-tags"></div>
+        <div class="det-t" id="dmat-t"></div>
+        <div class="det-m" id="dmat-m"></div>
+      </div>
+    </div>
+    <div id="dmat-stock"></div>
+    <div id="dmat-warns"></div>
+    <div class="rd-acts">
+      <button type="button" class="rd-btn" onclick="editMat()" data-t="ui.redaktiray">Редактирай</button>
+      <span id="dmat-acts"></span>
+    </div>
   </div>
   <div class="det-body">
-    <div class="det-t" id="dmat-t"></div><div class="det-m" id="dmat-m"></div>
-    <div class="ds"><div class="ds-t" data-t="ui.harakteristiki">Характеристики</div><div id="dmat-info"></div></div>
-    <div class="ds"><div class="ds-t" data-t="ui.belezhki">Бележки</div><div id="dmat-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
-    <div class="btn-row">
+    <div class="rd-secs md-secs" id="dmat-secs">
+      <div class="rd-sec md-wide" data-sec="rec" id="dmat-recipes-row"><button type="button" class="rd-sh" onclick="mdSec('rec')"><b>В рецепти</b><span id="dmat-recipes-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-recipes-val"></div></div></div>
+      <div class="rd-sec" data-sec="props"><button type="button" class="rd-sh" onclick="mdSec('props')"><b>Характеристики</b><span id="dmat-props-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-info" class="md-kv"></div></div></div>
+      <div class="rd-sec" data-sec="mass" id="dmat-mass-row"><button type="button" class="rd-sh" onclick="mdSec('mass')"><b>Състав на масата</b><span></span><i>▾</i></button><div class="rd-bd"><div id="dmat-mass-val"></div></div></div>
+      <div class="rd-sec" data-sec="geo" id="dmat-geo-row"><button type="button" class="rd-sh" onclick="mdSec('geo')"><b>Геоложки / правни бележки</b><span></span><i>▾</i></button><div class="rd-bd"><div id="dmat-geo-val" class="rd-notes"></div></div></div>
+      <div class="rd-sec" data-sec="proc" id="dmat-proc-row"><button type="button" class="rd-sh" onclick="mdSec('proc')"><b>Процесна биография</b><span id="dmat-proc-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-proc-val"></div><button type="button" class="rd-add" onclick="openRawEventMo()">+ Стъпка</button></div></div>
+      <div class="rd-sec" data-sec="notes"><button type="button" class="rd-sh" onclick="mdSec('notes')"><b>Бележки</b><span id="dmat-notes-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-notes" class="rd-notes"></div><div id="dmat-upd" class="rd-upd"></div></div></div>
+      <div class="rd-sec" data-sec="chem" id="dmat-chem"><button type="button" class="rd-sh" onclick="mdSec('chem')"><b>Химичен анализ</b><span id="dmat-chem-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-chem-grid" class="chem-grid"></div></div></div>
+      <div class="rd-sec" data-sec="inmass" id="dmat-inmass-row"><button type="button" class="rd-sh" onclick="mdSec('inmass')"><b>В маси</b><span id="dmat-inmass-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-inmass-val"></div></div></div>
+      <div class="rd-sec" data-sec="pcs" id="dmat-pieces-row"><button type="button" class="rd-sh" onclick="mdSec('pcs')"><b>Изделия</b><span id="dmat-pieces-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-pieces-val"></div></div></div>
+      <div class="rd-sec" data-sec="tests" id="dmat-tests-row"><button type="button" class="rd-sh" onclick="mdSec('tests')"><b>Тестове</b><span id="dmat-tests-n"></span><i>▾</i></button><div class="rd-bd"><div id="dmat-tests-val"></div></div></div>
+    </div>
+    <div id="dmat-mkmass-row" style="display:none;margin-top:14px"><div id="dmat-mkmass-val"></div></div>
+    <div class="btn-row" style="margin-top:18px;">
       <button class="btn bg" onclick="editMat()" data-t="ui.redaktiray">Редактирай</button>
       <button class="btn bd" onclick="delMat()" data-t="ui.iztriy">Изтрий</button>
+    </div>
+  </div>
+</div>
+
+<!-- v1.39.0: „Промени количеството“ — само наличността и прагът на материала -->
+<div class="mo" id="mo-mat-stock" onclick="closeBg(event,'mo-mat-stock')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t">Количество</div><button class="mo-x" onclick="closeMoAsk('mo-mat-stock')">×</button></div>
+      <div class="mo-b">
+        <div id="mqs-name" style="font-size:15px;margin-bottom:6px;"></div>
+        <div style="display:flex;gap:9px;">
+          <div class="f" style="flex:1"><label>Налично количество (г)</label><input type="text" inputmode="decimal" id="mqs-stock"></div>
+          <div class="f" style="flex:1"><label>Известие при под (г)</label><input type="text" inputmode="decimal" id="mqs-alert"></div>
+        </div>
+        <div style="font-size:12.5px;color:var(--tx3);line-height:1.5;">Същите полета като във формуляра. Празно — „не е въведено“; 0 — „изчерпан“. Другите данни на материала не се пипат.</div>
+        <div class="btn-row"><button class="btn bg" onclick="closeMoAsk('mo-mat-stock')">Откажи</button><button class="btn bp" onclick="saveMatStock()">Запази</button></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1848,12 +1935,14 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="mo-h"></div>
     <div class="mo-hdr"><div class="mo-t" id="mo-mat-t">Нов материал</div><button class="mo-x" onclick="closeMoAsk('mo-mat')">×</button></div>
     <div class="mo-b">
-      <div class="pha" onclick="document.getElementById('mi-ph').click()">
-        <div style="font-size:18px;margin-bottom:5px;opacity:.4">📷</div>
-        <div style="font-size:11px;color:var(--tx3)" data-t="ui.snimka-napr-test-plochka">Снимка (напр. тест плочка)</div>
-        <div class="ph-prev" id="mi-prev"></div>
+      <!-- v1.39.0: четири раздела — превключването само показва/скрива; въведеното остава. -->
+      <div class="pi-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="basic" class="on" onclick="matTabF('basic')">Основни</button>
+        <button type="button" role="tab" data-tab="props" onclick="matTabF('props')">Свойства</button>
+        <button type="button" role="tab" data-tab="stock" onclick="matTabF('stock')">Наличност</button>
+        <button type="button" role="tab" data-tab="more" onclick="matTabF('more')">Анализ и бележки</button>
       </div>
-      <input type="file" id="mi-ph" accept="image/*" style="display:none" onchange="handlePh(event,'mi-prev',mPh,1)">
+      <div class="pi-tab on" data-tab="basic">
       <div class="f"><label data-t="ui.naimenovanie">Наименование *</label><input type="text" id="mi-name"></div>
       <div class="f"><label data-t="ui.kategoriya">Категория</label>
         <select id="mi-cat" onchange="toggleMatFields()">
@@ -1863,6 +1952,28 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <option value="raw" data-t="opt.surovina-diva-glina">Суровина (дива глина)</option>
         </select>
       </div>
+      <div class="f">
+    <label data-t="ui.status">Статус</label>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+     <button type="button" id="mi-btn-have" onclick="setMatStatus('have')"
+      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--acc);background:var(--acc);color:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;" data-t="ui.nalichno">
+      Налично
+     </button>
+     <button type="button" id="mi-btn-wish" onclick="setMatStatus('wish')"
+      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--bdr2);background:transparent;color:var(--tx2);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
+      Wishlist
+     </button>
+    </div>
+    <input type="hidden" id="mi-status-val" value="have">
+   </div>
+      <div class="pha" onclick="document.getElementById('mi-ph').click()">
+        <div style="font-size:18px;margin-bottom:5px;opacity:.4">📷</div>
+        <div style="font-size:11px;color:var(--tx3)" data-t="ui.snimka-napr-test-plochka">Снимка (напр. тест плочка)</div>
+        <div class="ph-prev" id="mi-prev"></div>
+      </div>
+      <input type="file" id="mi-ph" accept="image/*" style="display:none" onchange="handlePh(event,'mi-prev',mPh,1)">
+      </div>
+      <div class="pi-tab" data-tab="props">
       <div class="f"><label data-t="ui.himichna-formula">Химична формула</label><input type="text" id="mi-formula"></div>
       <div class="f"><label data-t="ui.proizvoditel-proizhod">Производител / Произход</label>
         <input type="text" id="mi-brand" data-tp="ph.napr-sibelco-sobstvena-ferro" placeholder="напр. Sibelco, Собствена, Ferro" list="mi-brand-list" autocomplete="off">
@@ -1892,26 +2003,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
         <div class="f"><label data-t="ui.bezopasna-za-hrana">Безопасна за храна</label>
           <select id="mi-gfoodsafe">
-            <option value="">—</option>
-            <option value="yes" data-t="opt.da-bezolovna">Да (безоловна)</option>
-            <option value="no" data-t="opt.ne-olovna-dekorativna">Не (оловна / декоративна)</option>
+            <option value="">Не е посочено</option>
+            <option value="yes">Да</option>
+            <option value="no">Не</option>
           </select>
         </div>
       </div>
-      <div class="f">
-    <label data-t="ui.status">Статус</label>
-    <div style="display:flex;gap:8px;margin-top:6px;">
-     <button type="button" id="mi-btn-have" onclick="setMatStatus('have')"
-      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--acc);background:var(--acc);color:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;" data-t="ui.nalichno">
-      Налично
-     </button>
-     <button type="button" id="mi-btn-wish" onclick="setMatStatus('wish')"
-      style="flex:1;padding:10px;border-radius:var(--rs);border:2px solid var(--bdr2);background:transparent;color:var(--tx2);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
-      Wishlist
-     </button>
-    </div>
-    <input type="hidden" id="mi-status-val" value="have">
-   </div>
       <!-- v1.6.0: Raw material (wild clay) specific — origin / batch identity -->
       <div id="mi-raw-f" style="display:none">
         <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
@@ -1926,8 +2023,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         </div>
         <div style="font-size:11px;color:var(--tx3);font-style:italic;margin-bottom:6px;" data-t="ui.procesnata-biografiya-promivki-pre">Процесната биография (промивки, пресяване, отлежаване) се записва в детайлния изглед след запазване.</div>
       </div>
-   <div class="f" id="mi-stock-field"><label data-t="ui.nalichno-kolichestvo-g">Налично количество (г)</label><input type="number" id="mi-stock"></div>
-      <div class="f"><label data-t="ui.izvestie-pri-pod-g">Известие при под (г)</label><input type="number" id="mi-alert" data-tp="ph.napr-100" placeholder="напр. 100"></div>
+
+      </div>
+      <div class="pi-tab" data-tab="stock">
+      <div class="f" id="mi-stock-field"><label data-t="ui.nalichno-kolichestvo-g">Налично количество (г)</label><input type="text" inputmode="decimal" id="mi-stock"></div>
+      <div class="f"><label data-t="ui.izvestie-pri-pod-g">Известие при под (г)</label><input type="text" inputmode="decimal" id="mi-alert" data-tp="ph.napr-100" placeholder="напр. 100"></div>
       <!-- v1.5.4: Cost per unit -->
       <div style="display:flex;gap:9px;">
         <div class="f" style="flex:2"><label data-t="ui.cena">Цена (€)</label><input type="number" id="mi-cost" step="0.01" data-tp="ph.napr-4-50" placeholder="напр. 4.50"></div>
@@ -1944,22 +2044,30 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           </select>
         </div>
       </div>
+      <div style="font-size:12.5px;color:var(--tx3);line-height:1.5;margin-top:4px;">Количеството е в грама. Празно поле значи „не е въведено“; 0 значи „изчерпан“. Под прага материалът излиза в известията.</div>
+      </div>
+      <div class="pi-tab" data-tab="more">
       <div class="f">
         <label data-t="ui.himichen-analiz-oksidi-po-zhelanie">Химичен анализ (% оксиди) — по желание</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">SiO₂ %</div><input type="number" id="mi-sio2" data-tp="ph.napr-68" placeholder="напр. 68" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">Al₂O₃ %</div><input type="number" id="mi-al2o3" data-tp="ph.napr-18" placeholder="напр. 18" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">Fe₂O₃ %</div><input type="number" id="mi-fe2o3" data-tp="ph.napr-1-2" placeholder="напр. 1.2" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">CaO %</div><input type="number" id="mi-cao" data-tp="ph.napr-0-5" placeholder="напр. 0.5" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">K₂O %</div><input type="number" id="mi-k2o" data-tp="ph.napr-3" placeholder="напр. 3" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">Na₂O %</div><input type="number" id="mi-na2o" data-tp="ph.napr-0-8" placeholder="напр. 0.8" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">MgO %</div><input type="number" id="mi-mgo" data-tp="ph.napr-0-3" placeholder="напр. 0.3" step="0.1" class="chem-inp"></div>
-          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">TiO₂ %</div><input type="number" id="mi-tio2" data-tp="ph.napr-0-1" placeholder="напр. 0.1" step="0.1" class="chem-inp"></div>
+        <div class="mi-chem">
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">SiO₂ %</div><input type="text" inputmode="decimal" id="mi-sio2" data-tp="ph.napr-68" placeholder="напр. 68" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">Al₂O₃ %</div><input type="text" inputmode="decimal" id="mi-al2o3" data-tp="ph.napr-18" placeholder="напр. 18" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">Fe₂O₃ %</div><input type="text" inputmode="decimal" id="mi-fe2o3" data-tp="ph.napr-1-2" placeholder="напр. 1.2" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">CaO %</div><input type="text" inputmode="decimal" id="mi-cao" data-tp="ph.napr-0-5" placeholder="напр. 0.5" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">K₂O %</div><input type="text" inputmode="decimal" id="mi-k2o" data-tp="ph.napr-3" placeholder="напр. 3" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">Na₂O %</div><input type="text" inputmode="decimal" id="mi-na2o" data-tp="ph.napr-0-8" placeholder="напр. 0.8" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">MgO %</div><input type="text" inputmode="decimal" id="mi-mgo" data-tp="ph.napr-0-3" placeholder="напр. 0.3" step="0.1" class="chem-inp"></div>
+          <div><div style="font-size:9px;color:var(--tx3);margin-bottom:3px;">TiO₂ %</div><input type="text" inputmode="decimal" id="mi-tio2" data-tp="ph.napr-0-1" placeholder="напр. 0.1" step="0.1" class="chem-inp"></div>
         </div>
+        <div id="mi-chem-err" class="ri-err" role="alert"></div>
+        <div style="font-size:12px;color:var(--tx3);margin-top:4px;">Проценти от 0 до 100. Сборът не е задължително 100.</div>
       </div>
       <div class="f"><label data-t="ui.belezhki">Бележки</label><textarea id="mi-notes"></textarea></div>
-      <button class="btn bp" onclick="saveMat()" data-t="ui.zapazi">Запази</button>
-      <button class="btn bg" onclick="closeMoAsk('mo-mat')" data-t="ui.otkazhi">Откажи</button>
+      </div>
+      <div class="pi-foot">
+        <button class="btn bg" onclick="closeMoAsk('mo-mat')" data-t="ui.otkazhi">Откажи</button>
+        <button class="btn bp" onclick="saveMat()" data-t="ui.zapazi">Запази</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2514,7 +2622,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.38.0';
+const APP_VERSION = 'v1.39.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -3317,7 +3425,7 @@ function vDate(val){
   if(!val)return true;
   return !isNaN(Date.parse(val));
 }
-function focusEl(id){try{var el=document.getElementById(id);if(el){var tp=el.closest&&el.closest('.pi-tab');if(tp&&!tp.classList.contains('on')){if(el.closest('#mo-recipe'))recTab(tp.getAttribute('data-tab'));else piTab(tp.getAttribute('data-tab'));}el.focus();}}catch(e){}}
+function focusEl(id){try{var el=document.getElementById(id);if(el){var tp=el.closest&&el.closest('.pi-tab');if(tp&&!tp.classList.contains('on')){if(el.closest('#mo-recipe'))recTab(tp.getAttribute('data-tab'));else if(el.closest('#mo-mat'))matTabF(tp.getAttribute('data-tab'));else piTab(tp.getAttribute('data-tab'));}el.focus();}}catch(e){}}
 // v1.35.1: разделите на формуляра за изделие. Скриват и показват — полетата и
 // въведеното остават, затова записът взема всичко, видимо или не.
 function piTab(k){
@@ -5476,6 +5584,7 @@ function closeNotif(){document.getElementById('notif-panel').classList.remove('o
 function show(n){
   var _dr=document.getElementById('det-run');if(_dr&&_dr.classList.contains('split')&&_dr.classList.contains('on'))closeDet('det-run');
   var _drc=document.getElementById('det-recipe');if(_drc&&_drc.classList.contains('split')&&_drc.classList.contains('on'))closeDet('det-recipe');
+  var _dmt=document.getElementById('det-mat');if(_dmt&&_dmt.classList.contains('split')&&_dmt.classList.contains('on'))closeDet('det-mat');
   var _rw=document.getElementById('rec-work');if(_rw&&_rw.classList.contains('on'))closeDet('rec-work');
   _scrollPos[cur]=document.getElementById('main').scrollTop;
   cur=n;
@@ -5899,84 +6008,7 @@ function filterFavs(){
 }
 
 // MATERIALS
-let matTab='clays';
-function renderMaterials(){
-  var q=srchVal('mat-search');
-  var f=activeFilters.mat||{};
-  function matchMat(m){
-    if(f.lowstock&&!(m.alertAt&&m.stock!=null&&parseFloat(m.stock)<=parseFloat(m.alertAt)))return false;
-    if(q&&(m.name+' '+(m.notes||'')+' '+(m.brand||'')+' '+(m.cat||'')).toLowerCase().indexOf(q)<0)return false;
-    return true;
-  }
-  function sortMats(arr){
-    if(activeSort.mat==='stock'){return arr.slice().sort(function(a,b){return (a.stock!=null?parseFloat(a.stock):Infinity)-(b.stock!=null?parseFloat(b.stock):Infinity);});}
-    return arr.slice().sort(function(a,b){return a.name.localeCompare(b.name,'bg');});
-  }
-  var cats={clays:[],base:[],ox:[],glaze:[],engobe:[],underglaze:[],raw:[],mass:[],wish:[]};
-  DB.materials.forEach(function(m){if(m.wishlist===true){cats.wish.push(m);}else if(cats[m.cat]){cats[m.cat].push(m);}});
-  var low=getLowStock().length;
-  document.getElementById("st-clays").textContent=cats.clays.length;
-  document.getElementById("st-mats").textContent=cats.base.length+cats.ox.length;
-  var gs=document.getElementById("st-glazes");if(gs)gs.textContent=cats.glaze.length;
-  var sl=document.getElementById("st-low");if(sl)sl.textContent=low;
-  var lsChip=document.getElementById("fc-mat-lowstock");if(lsChip)lsChip.textContent=low>0?('Само ниски ('+low+')'):'Само ниски';
-  var hasQ=q||f.lowstock;
-  var lowEmpty='<div class="empty" style="padding:30px"><div class="empty-k">∅</div><div class="empty-t">Няма материали под прага</div><div class="empty-s">Всички наличности са в норма</div></div>';
-  ["clays","base","ox","glaze","engobe","underglaze","raw","mass"].forEach(function(cat){
-    var el=document.getElementById("mat-"+cat);if(!el)return;
-    var items=sortMats(cats[cat].filter(matchMat));
-    if(!items.length){el.innerHTML=f.lowstock?lowEmpty:('<div class="empty" style="padding:30px"><div class="empty-t">'+(hasQ?'Няма резултати':'Няма добавени')+'</div></div>');return;}
-    var html="";
-    items.forEach(function(m){
-      var low2=m.alertAt&&m.stock!=null&&parseFloat(m.stock)<=parseFloat(m.alertAt);
-      var ic=m.photo?"<img src=\""+m.photo+"\" style=\"width:100%;height:100%;object-fit:cover\">":matIcon(cat);
-      // v1.5.4: Include cost in sub-text if available
-      var _unitL={g:'г',kg:'кг',L:'л',ml:'мл','бр':'бр',m:'м',other:''};
-      var costStr=(m.cost!=null)?(' · '+m.cost.toFixed(2)+'€'+(m.costUnit?'/'+(_unitL[m.costUnit]||m.costUnit):'')):'';
-      // v1.18.1: stock shown as a coloured chip (green ok / terracotta low) instead of inline "⚠️".
-      var stockChip='';
-      if(m.stock!=null){
-        stockChip='<span class="stock-chip'+(low2?' sc-low':'')+'">'+m.stock+'г</span>';
-      }
-      var sub=(m.formula||"")+(m.brand?" · "+m.brand:"")+costStr+(m.updatedAt?" · ред. "+timeAgo(m.updatedAt):"");
-      // v1.7.0: A маса shows its composition instead of formula/brand/stock
-      if(m.cat==='mass')sub=_massSummary(m);
-      html+='<div class="li" onclick="openMatDet(\''+m.id+'\')">'
-        +'<div class="li-ic">'+ic+'</div>'
-        +'<div class="li-body"><div class="li-t">'+m.name+'</div><div class="li-s">'+sub+'</div></div>'
-        +(stockChip?'<div style="flex-shrink:0;margin-right:6px;">'+stockChip+'</div>':'')
-        +'<div class="li-r">›</div></div>';
-    });
-    el.innerHTML=html;
-  });
-  var wishEl=document.getElementById("mat-wish");if(!wishEl)return;
-  var wishItems=sortMats(cats.wish.filter(matchMat));
-  if(!wishItems.length){wishEl.innerHTML=f.lowstock?lowEmpty:('<div class="empty" style="padding:30px"><div class="empty-t">'+(hasQ?'Няма резултати':'Wishlist е празен')+'</div>'+(hasQ?'':'<div class="empty-s">Маркирай материал като Wishlist при добавяне</div>')+'</div>');return;}
-  var cL={clays:"Глина",base:"Базова суровина",ox:"Оксид",glaze:"Глазура",engobe:"Ангоба",underglaze:"Подглазурна боя"};
-  var wHtml="";
-  wishItems.forEach(function(m){
-    var sub=(cL[m.cat]||m.cat)+(m.formula?" · "+m.formula:"");
-    wHtml+='<div class="li" onclick="openMatDet(\''+m.id+'\')">'
-      +'<div class="li-ic">⭐</div>'
-      +'<div class="li-body"><div class="li-t">'+m.name+'</div><div class="li-s">'+sub+'</div></div>'
-      +'<span class="tag twarn" style="flex-shrink:0;margin-right:6px;">Wishlist</span>'
-      +'<div class="li-r">›</div></div>';
-  });
-  wishEl.innerHTML=wHtml;
-}
-
-function switchMat(t){
-  matTab=t;
-  ['clays','base','ox','glaze','engobe','underglaze','raw','mass','wish'].forEach(function(k){
-    var el=document.getElementById('mat-'+k);if(el)el.style.display=k===t?'block':'none';
-  });
-  document.querySelectorAll('#mat-tabs .tb').forEach(function(b){
-    b.classList.remove('on');
-  });
-  const activeBtn=document.getElementById('mbtab-'+t);
-  if(activeBtn)activeBtn.classList.add('on');
-}
-
+let matTab='all';
 // TESTS
 function renderTests(){
   var q=srchVal('test-search');
@@ -6923,164 +6955,214 @@ function openTestDet(id){
   _openDet('det-test');
 }
 
+// ── v1.39.0: МАТЕРИАЛИ по прототипа materials-v0 ─────────────────────────────
+// Само интерфейс: групи, Списък / Карти / Наличности, филтри, детайл с „В рецепти“,
+// бърза промяна на количеството (същите полета stock / alertAt). Без нов складов модел.
+var MAT_CATS=[['clays','Глини','Глина','Гл'],['base','Базови','Базова суровина','Б'],['ox','Оксиди','Оксид / Оцветител','Ox'],['glaze','Глазури','Готова глазура','Гз'],['engobe','Ангоби','Ангоба','Ан'],['underglaze','Подгл. бои','Подглазурна боя','Пб'],['raw','Суровини','Суровина (дива глина)','Сд'],['mass','Маси','Маса','М']];
+var MAT_CL={},MAT_CS={},MAT_CI={};MAT_CATS.forEach(function(c){MAT_CL[c[0]]=c[1];MAT_CS[c[0]]=c[2];MAT_CI[c[0]]=c[3];});
+var MT={view:'list',stock:'',inrec:'',chem:false,cost:false,side:false};
+(function(){try{var v=JSON.parse(localStorage.getItem('glina.materials')||'null');if(!v)return;['view','stock','inrec'].forEach(function(k){if(typeof v[k]==='string')MT[k]=v[k];});MT.chem=!!v.chem;MT.cost=!!v.cost;if(v.grp)matTab=v.grp;if(v.sort)activeSort.mat=v.sort;}catch(e){}})();
+function _mtSave(){try{localStorage.setItem('glina.materials',JSON.stringify({view:MT.view,stock:MT.stock,inrec:MT.inrec,chem:MT.chem,cost:MT.cost,grp:matTab,sort:activeSort.mat}));}catch(e){}}
+// Наличност: същото правило като известията (getLowStock) — 0 е изчерпан, под прага е ниско;
+// без въведено количество е отделно състояние, не нула.
+function _mtStock(m){if(!m||m.cat==='mass'||m.stock==null||m.stock==='')return 'none';var n=parseFloat(m.stock);if(isNaN(n))return 'none';if(n===0)return 'zero';if(m.alertAt&&n<=parseFloat(m.alertAt))return 'low';return 'ok';}
+function _mtF(n){var x=parseFloat(n);return isNaN(x)?String(n):(Math.round(x*10)/10).toLocaleString('bg-BG');}
+function _mtRecipes(m){
+  return DB.recipes.map(function(r){
+    if(!r||!Array.isArray(r.ingredients))return null;
+    var i=r.ingredients.find(function(x){return x&&((x.matId&&x.matId===m.id)||(!x.matId&&m.name&&x.name===m.name));});
+    return i?{r:r,pct:parseFloat(i.pct)||0}:null;
+  }).filter(Boolean).sort(function(a,b){return b.pct-a.pct;});
+}
+function _mtMasses(m){return DB.materials.filter(function(x){var cs=(x&&x.blend&&Array.isArray(x.blend.components))?x.blend.components:[];return x&&x.id!==m.id&&cs.some(function(c){return c&&c.ref==='mat:'+m.id;});});}
+function _mtGrp(m){return m.wishlist===true?'wish':m.cat;}
+function _mtSub(m){if(m.cat==='mass')return _massSummary(m);var uL={g:'г',kg:'кг',L:'л',ml:'мл','бр':'бр',m:'м',other:''};return [m.formula&&m.formula!=='—'?m.formula:'',m.brand,m.cost!=null?Number(m.cost).toFixed(2)+'€'+(m.costUnit?'/'+(uL[m.costUnit]||m.costUnit):''):''].filter(Boolean).join(' · ');}
+function _mtIcon(m){return m.photo?'<span class="md-ic sm"><img src="'+m.photo+'" alt=""></span>':'<span class="md-ic sm '+_pdE(m.cat)+'">'+(MAT_CI[m.cat]||'•')+'</span>';}
+function _mtChip(m){var s=_mtStock(m);if(m.cat==='mass')return '';return s==='none'?'<span class="stock-chip mt-none">без количество</span>':'<span class="stock-chip'+(s==='ok'?'':' sc-low')+(s==='zero'?' mt-zero':'')+'">'+_mtF(m.stock)+' г</span>';}
+function _mtMatch(m,q,skip){
+  var g=matTab||'all';
+  if(skip!=='grp'){if(g==='wish'){if(m.wishlist!==true)return false;}else if(g!=='all'&&(m.cat!==g||m.wishlist===true))return false;}
+  var st=_mtStock(m),f=activeFilters.mat||{};
+  var sf=MT.stock||(f.lowstock?'low':'');
+  if(skip!=='stock'){if(sf==='low'&&!(st==='low'||st==='zero'))return false;if(sf==='ok'&&st!=='ok')return false;if(sf==='none'&&(st!=='none'||m.cat==='mass'))return false;}
+  if(skip!=='inrec'){var nr=_mtRecipes(m).length;if(MT.inrec==='yes'&&!nr)return false;if(MT.inrec==='no'&&nr)return false;}
+  if(skip!=='chem'&&MT.chem&&!(m.chem&&Object.keys(m.chem).length))return false;
+  if(skip!=='cost'&&MT.cost&&m.cost==null)return false;
+  if(q){var hay=[m.name,m.formula,m.brand,m.notes,MAT_CS[m.cat],m.color,m.gcolor,m.raw&&m.raw.location,m.raw&&m.raw.geonotes].join(' ').toLowerCase();if(hay.indexOf(q)<0)return false;}
+  return true;
+}
+function _mtActive(){var a=[],f=activeFilters.mat||{},sf=MT.stock||(f.lowstock?'low':'');if(sf)a.push(['stock',{low:'Ниско или 0',ok:'Достатъчно',none:'Без количество'}[sf]]);if(MT.inrec)a.push(['inrec',MT.inrec==='yes'?'В рецепти':'Не е в рецепти']);if(MT.chem)a.push(['chem','С химичен анализ']);if(MT.cost)a.push(['cost','С цена']);return a;}
+function _mtSideHtml(q){
+  var f=activeFilters.mat||{},sf=MT.stock||(f.lowstock?'low':'');
+  var cnt=function(skip,fn){return DB.materials.filter(function(m){return _mtMatch(m,q,skip)&&fn(m);}).length;};
+  var chip=function(on,label,click,n,id){return '<button type="button" class="fchip'+(on?' on':'')+'"'+(id?' id="'+id+'"':'')+' onclick="'+click+'">'+label+(n!=null?' <span class="n">'+n+'</span>':'')+'</button>';};
+  return '<div class="pc-side-top"><h2 style="font-size:20px;font-weight:400">Филтри</h2></div>'
+    +'<h3>Наличност</h3><div class="fchips">'+[['low','Ниско или 0'],['ok','Достатъчно'],['none','Без количество']].map(function(x){return chip(sf===x[0],x[1],'mtSet(\'stock\',\''+x[0]+'\')',cnt('stock',function(m){var s=_mtStock(m);return x[0]==='low'?(s==='low'||s==='zero'):x[0]==='none'?(s==='none'&&m.cat!=='mass'):s===x[0];}),x[0]==='low'?'fc-mat-lowstock':'');}).join('')+'</div>'
+    +'<h3>Рецепти</h3><div class="fchips">'+chip(MT.inrec==='yes','Използван в рецепти','mtSet(\'inrec\',\'yes\')',cnt('inrec',function(m){return _mtRecipes(m).length>0;}))+chip(MT.inrec==='no','Не е в рецепти','mtSet(\'inrec\',\'no\')',cnt('inrec',function(m){return !_mtRecipes(m).length;}))+'</div>'
+    +'<h3>Данни</h3><div class="fchips">'+chip(MT.chem,'С химичен анализ','mtFlag(\'chem\')',cnt('chem',function(m){return !!(m.chem&&Object.keys(m.chem).length);}))+chip(MT.cost,'С цена','mtFlag(\'cost\')',cnt('cost',function(m){return m.cost!=null;}))+'</div>'
+    +'<div class="pc-fbar"><button type="button" class="btn bg" onclick="resetMatFilters()">Изчисти</button><button type="button" class="btn bp" onclick="toggleMatFilters()">Покажи</button></div>';
+}
+function _mtRow(m){var rc=_mtRecipes(m).length,sel=curMat===m.id&&document.getElementById('det-mat').classList.contains('split');
+  return '<div class="li mt-r'+(sel?' sel':'')+'" role="button" tabindex="0" onclick="openMatDet(\''+m.id+'\')">'+_mtIcon(m)+'<div class="li-body"><div class="li-t">'+_pdE(m.name)+'</div><div class="li-s">'+_pdE(_mtSub(m)||MAT_CS[m.cat]||'')+'</div></div>'
+    +'<div class="mt-rr">'+(m.wishlist===true?'<span class="tag twarn">Wishlist</span>':_mtChip(m))+(rc?'<span>'+rc+(rc===1?' рецепта':' рецепти')+'</span>':'')+'</div></div>';}
+function _mtCard(m){var rc=_mtRecipes(m).length,f=[],sel=curMat===m.id&&document.getElementById('det-mat').classList.contains('split');
+  if(m.cat==='clays'){var gl=m.fireGlazeTemp||m.fireTemp;if(gl)f.push(gl+'°C');if(m.shrink)f.push('свиване '+m.shrink+'%');if(m.color)f.push(m.color);}
+  if(m.cat==='glaze'){if(m.gfire)f.push(m.gfire+'°C');var sL={matte:'Матова',gloss:'Гланцова',satin:'Сатенена',crystal:'Кристална',textured:'Текстурирана'};if(m.surfaceType)f.push(sL[m.surfaceType]||m.surfaceType);}
+  if(m.cat==='raw'&&m.raw&&m.raw.location)f.push(m.raw.location);
+  if(m.chem&&Object.keys(m.chem).length)f.push('анализ');
+  if(m.cost!=null)f.push(_mtF(m.cost)+' €');
+  return '<div class="li mt-c'+(sel?' sel':'')+'" role="button" tabindex="0" onclick="openMatDet(\''+m.id+'\')"><div class="mt-ch">'+_mtIcon(m)+'<div style="min-width:0"><div class="mt-nm">'+_pdE(m.name)+'</div><div class="li-s">'+_pdE(_mtSub(m)||MAT_CS[m.cat]||'')+'</div></div></div>'
+    +(f.length?'<div class="mt-facts">'+f.map(function(x){return '<span>'+_pdE(x)+'</span>';}).join('')+'</div>':'')
+    +'<div class="mt-cf"><span>'+(rc?rc+(rc===1?' рецепта':' рецепти'):'не е в рецепти')+'</span>'+(m.wishlist===true?'<span class="tag twarn">Wishlist</span>':_mtChip(m))+'</div></div>';}
+function _mtStockList(list){
+  var rows=list.filter(function(m){return m.cat!=='mass'&&m.wishlist!==true;}),o={zero:0,low:1,ok:2,none:3};
+  rows.sort(function(a,b){return o[_mtStock(a)]-o[_mtStock(b)]||a.name.localeCompare(b.name,'bg');});
+  if(!rows.length)return '<div class="empty"><div class="empty-t">Няма материали с наличност в този изглед</div></div>';
+  return '<div class="mt-hint">Количеството е в грама. Чертата е прагът за известие.</div><div class="rc-list">'+rows.map(function(m){var s=_mtStock(m),n=parseFloat(m.stock)||0,al=parseFloat(m.alertAt)||0,mx=Math.max(n,al*3,1);
+    return '<div class="li mt-st" role="button" tabindex="0" onclick="openMatDet(\''+m.id+'\')"><div class="li-body"><div class="li-t">'+_pdE(m.name)+'</div>'
+      +(s==='none'?'':'<div class="mt-bar"><i class="'+s+'" style="width:'+Math.min(100,n/mx*100)+'%"></i>'+(al?'<em style="left:'+Math.min(99,al/mx*100)+'%"></em>':'')+'</div>')
+      +'<div class="li-s">'+_pdE([MAT_CS[m.cat],s==='zero'?'изчерпан':s==='low'?'под прага от '+_mtF(m.alertAt)+' г':al?'праг '+_mtF(m.alertAt)+' г':s==='none'?'количеството не е въведено':'без праг',_mtRecipes(m).length?'в '+_mtRecipes(m).length+' рецепти':''].filter(Boolean).join(' · '))+'</div></div>'
+      +'<div class="mt-q">'+(s==='none'?'—':_mtF(m.stock)+'<small> г</small>')+'</div></div>';}).join('')+'</div>';
+}
+function renderMaterials(){
+  _mtSave();
+  var q=srchVal('mat-search'),g=matTab||'all';
+  var list=DB.materials.filter(function(m){return m&&_mtMatch(m,q);});
+  var so=activeSort.mat||'name',o={zero:0,low:1,ok:2,none:3};
+  if(so==='stock')list.sort(function(a,b){return o[_mtStock(a)]-o[_mtStock(b)]||(parseFloat(a.stock)||0)-(parseFloat(b.stock)||0)||a.name.localeCompare(b.name,'bg');});
+  else if(so==='upd')list.sort(function(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));});
+  else if(so==='rec')list.sort(function(a,b){return _mtRecipes(b).length-_mtRecipes(a).length||a.name.localeCompare(b.name,'bg');});
+  else list.sort(function(a,b){return a.name.localeCompare(b.name,'bg');});
+  var gc={all:DB.materials.length,wish:DB.materials.filter(function(m){return m.wishlist===true;}).length};MAT_CATS.forEach(function(c){gc[c[0]]=DB.materials.filter(function(m){return m.cat===c[0]&&m.wishlist!==true;}).length;});
+  var low=getLowStock().length,ac=_mtActive();
+  document.getElementById('cnt-mats').textContent=(q||ac.length||g!=='all'?list.length+' от ':'')+DB.materials.length+' материала'+(low?' · '+low+' за зареждане':'');
+  document.getElementById('mat-tabs').innerHTML=[['all','Всички']].concat(MAT_CATS.map(function(c){return [c[0],c[1]];})).concat([['wish','Wishlist']]).map(function(x){return gc[x[0]]||g===x[0]?'<button type="button" class="fchip tb'+(g===x[0]?' on':'')+'" id="mbtab-'+x[0]+'" onclick="switchMat(\''+x[0]+'\')">'+x[1]+' <span class="n">'+gc[x[0]]+'</span></button>':'';}).join('');
+  ['list','cards','stock'].forEach(function(v){var b=document.getElementById('mt-v-'+v);if(b){b.classList.toggle('on',MT.view===v);if(v==='stock')b.textContent='Наличности'+(low?' · '+low:'');}});
+  var so2=document.getElementById('mt-sort');if(so2)so2.value=so;
+  var bd=document.getElementById('mt-filter-badge');if(bd)bd.textContent=ac.length?' ('+ac.length+')':'';
+  var side=document.getElementById('mt-side');if(side){side.innerHTML=_mtSideHtml(q);side.classList.toggle('on',MT.side);}
+  var act=document.getElementById('mt-active');if(act)act.innerHTML=ac.length?ac.map(function(x){return '<button type="button" class="pc-achip" onclick="mtUnset(\''+x[0]+'\')">'+_pdE(x[1])+' ✕</button>';}).join('')+'<button type="button" class="pc-achip clr" onclick="resetMatFilters()">изчисти</button>':'';
+  var el=document.getElementById('mat-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-k">∅</div><div class="empty-t">'+(q||ac.length?'Няма резултати':g==='wish'?'Wishlist е празен':'Няма добавени')+'</div></div>';return;}
+  if(MT.view==='stock'){el.innerHTML=_mtStockList(list);return;}
+  var groups=g==='all'&&so==='name'?MAT_CATS.map(function(c){return [c[0],c[1],list.filter(function(m){return m.cat===c[0]&&m.wishlist!==true;})];}).concat([['wish','Wishlist',list.filter(function(m){return m.wishlist===true;})]]).filter(function(x){return x[2].length;}):[[null,null,list]];
+  el.innerHTML=groups.map(function(x){return (x[0]?'<div class="mt-gh"><span class="mt-ct '+x[0]+'">'+x[1]+'</span> '+x[2].length+'</div>':'')+(MT.view==='cards'?'<div class="rc-cards">'+x[2].map(_mtCard).join('')+'</div>':'<div class="rc-list">'+x[2].map(_mtRow).join('')+'</div>');}).join('');
+}
+function switchMat(t){matTab=t||'all';_mtSave();renderMaterials();}
+function setMatView(v){MT.view=v;_mtSave();renderMaterials();}
+function mtSet(k,v){if(k==='stock'&&activeFilters.mat)activeFilters.mat.lowstock=false;MT[k]=MT[k]===v?'':v;_mtSave();renderMaterials();}
+function mtFlag(k){MT[k]=!MT[k];_mtSave();renderMaterials();}
+function mtUnset(k){if(k==='stock'){MT.stock='';if(activeFilters.mat)activeFilters.mat.lowstock=false;}else if(k==='inrec')MT.inrec='';else MT[k]=false;_mtSave();renderMaterials();}
+function resetMatFilters(){MT.stock='';MT.inrec='';MT.chem=false;MT.cost=false;activeFilters.mat={};var si=document.getElementById('mat-search');if(si)si.value='';_mtSave();renderMaterials();}
+function toggleMatFilters(){MT.side=!MT.side;var e=document.getElementById('mt-side');if(e)e.classList.toggle('on',MT.side);}
+// ── детайл ──
+var MD_OPEN={rec:true,props:true,mass:true,geo:true,proc:true,notes:true,chem:false,inmass:false,pcs:false,tests:false};
+function mdSec(k){MD_OPEN[k]=!MD_OPEN[k];_mdSecsDraw();}
+function _mdSecsDraw(){document.querySelectorAll('#dmat-secs .rd-sec').forEach(function(x){var on=!!MD_OPEN[x.getAttribute('data-sec')];x.classList.toggle('open',on);var b=x.querySelector('.rd-sh');if(b)b.setAttribute('aria-expanded',on);});}
+function _mdShow(id,on){var e=document.getElementById(id);if(e)e.style.display=on?'':'none';}
+function _mtFood(v){return v==='yes'?'Да':v==='no'?'Не':'Не е посочено';}
+function _mtMissing(m){
+  var x=[];if(m.cat==='mass'||m.wishlist===true)return x;
+  if(m.stock==null||m.stock==='')x.push('наличност');if(!m.brand&&m.cat!=='raw')x.push('производител / произход');
+  if(m.cat==='clays'&&!m.fireGlazeTemp&&!m.fireTemp&&!m.fireBisqueTemp)x.push('температура');
+  if(m.cat==='glaze'&&!m.gfire)x.push('температура');
+  return x;
+}
 function openMatDet(id){
-  const m=DB.materials.find(x=>x.id===id);
+  var m=DB.materials.find(function(x){return x.id===id;});
   if(!m){console.error('Mat not found:',id);return;}
-  curMat=id;
-  const hero=document.getElementById('dmat-hero');
-  if(!hero){console.error('dmat-hero not found');return;}
-  hero.innerHTML=m.photo?`<img src="${m.photo}" alt="">`:K(70);
-  const catLabel={clays:'Глина',base:'Базова суровина',ox:'Оксид / Оцветител',glaze:'Готова глазура',engobe:'Ангоба',underglaze:'Подглазурна боя',raw:'Суровина (дива глина)',mass:'Маса'};
+  var prev=curMat;curMat=id;
+  var st=_mtStock(m),recs=_mtRecipes(m);
+  document.getElementById('dmat-hero').className='md-ic '+_pdE(m.cat);
+  document.getElementById('dmat-hero').innerHTML=m.photo?'<img src="'+m.photo+'" alt="" onclick="openLb([this.src],0)">':(MAT_CI[m.cat]||'•');
+  document.getElementById('dmat-tags').innerHTML='<span class="mt-ct '+_pdE(m.cat)+'">'+_pdE(MAT_CS[m.cat]||m.cat)+'</span>'+(m.wishlist===true?' <span class="tag twarn">Wishlist — още го няма</span>':'');
   document.getElementById('dmat-t').textContent=m.name;
-  document.getElementById('dmat-m').textContent=[catLabel[m.cat]||m.cat,m.brand].filter(Boolean).join(' · ');
-  const rows=(m.cat==='mass')?[
-    // v1.7.0: A маса has no stock/status — only composition and dates
-    dr('Замесена на',m.blend&&m.blend.mixDate?new Date(m.blend.mixDate).toLocaleDateString('bg-BG'):'—'),
-    dr('Готова на',m.blend&&m.blend.readyDate?new Date(m.blend.readyDate).toLocaleDateString('bg-BG'):'—'),
-  ]:[
-    dr('Формула',m.formula),
-    dr('Производител / Произход',m.brand),
-    dr('Наличност',m.stock!=null?m.stock+'г':'—'),
-    dr('Статус',m.wishlist?'Wishlist':'Налично'),
-  ];
-  // v1.6.0: Raw material origin rows
-  if(m.cat==='raw'&&m.raw){
-    if(m.raw.location)rows.push(dr('Локация',m.raw.location));
-    if(m.raw.coords)rows.push(dr('Координати',m.raw.coords));
-    if(m.raw.date)rows.push(dr('Добито на',new Date(m.raw.date).toLocaleDateString('bg-BG')));
-    if(m.raw.weight!=null)rows.push(dr('Начално сухо тегло',m.raw.weight+'г'));
-  }
-  if(m.cat==='clays'){
-    var _bq=m.fireBisqueTemp;
-    var _gl=m.fireGlazeTemp||m.fireTemp;
-    if(_bq)rows.push(dr('Температура — бисквит',_bq+'°C'));
-    if(_gl)rows.push(dr('Температура — глазурно',_gl+'°C'));
-    rows.push(dr('Шамот',m.grog));
-    if(m.shrink)rows.push(dr('Свиваемост',m.shrink+'%'));
-    rows.push(dr('Цвят след изпичане',m.color));
-  }
-  if(m.cat==='glaze'){
-    rows.push(dr('Температура',m.gfire));
-    if(m.gcolor)rows.push(dr('Цвят',m.gcolor));
-    var surfL={matte:'Матова',gloss:'Гланцова',satin:'Сатенена',crystal:'Кристална',textured:'Текстурирана'};
-    if(m.surfaceType)rows.push(dr('Повърхност',surfL[m.surfaceType]||m.surfaceType));
-    if(m.foodsafe==='yes')rows.push(dr('Безопасна за храна','Да (безоловна)'));
-    else if(m.foodsafe==='no')rows.push(dr('Безопасна за храна','Не (декоративна)'));
-  }
-  if(m.alertAt)rows.push(dr('Известие при',m.alertAt+'г'));
-  // v1.5.4: Cost row
-  if(m.cost!=null){
-    var _unitLabels={g:'грам',kg:'килограм',L:'литър',ml:'милилитър','бр':'брой',m:'метър',other:''};
-    var _unit=m.costUnit?(_unitLabels[m.costUnit]||m.costUnit):'';
-    rows.push(dr('Цена',m.cost.toFixed(2)+' €'+(_unit?' / '+_unit:'')));
-  }
-  document.getElementById('dmat-info').innerHTML=rows.filter(Boolean).join('');
+  document.getElementById('dmat-m').textContent=[m.formula&&m.formula!=='—'?m.formula:'',m.brand].filter(Boolean).join(' · ');
+  // наличност
+  var sh='';
+  if(m.cat!=='mass'&&m.wishlist!==true){var n=parseFloat(m.stock)||0,al=parseFloat(m.alertAt)||0,mx=Math.max(n,al*3,1);
+    var uL={g:'грам',kg:'килограм',L:'литър',ml:'милилитър','бр':'брой',m:'метър',other:''};
+    sh='<div class="md-stock"><div class="q">'+(st==='none'?'—':_mtF(m.stock)+'<small> г</small>')+'</div><div>'+(st==='none'?'':'<div class="mt-bar"><i class="'+st+'" style="width:'+Math.min(100,n/mx*100)+'%"></i>'+(al?'<em style="left:'+Math.min(99,al/mx*100)+'%"></em>':'')+'</div>')+'</div>'
+      +'<div class="s">'+(st==='none'?'Количеството не е въведено.':st==='zero'?'<b style="color:var(--err)">Изчерпан.</b>':st==='low'?'<b style="color:var(--warn)">Под прага</b> от '+_mtF(m.alertAt)+' г.':'Достатъчно'+(al?' — прагът е '+_mtF(m.alertAt)+' г.':'.'))
+      +(m.cost!=null?' Цена: '+Number(m.cost).toFixed(2)+' €'+(m.costUnit&&uL[m.costUnit]?' / '+uL[m.costUnit]:'')+'.':'')
+      +' <button type="button" class="rd-link" id="dmat-qstock" onclick="openMatStock()">Промени количеството</button></div></div>';}
+  document.getElementById('dmat-stock').innerHTML=sh;
+  // предупреждения — изведени от данните
+  var w=[];
+  if(m.cat==='glaze'&&m.foodsafe==='no')w.push(['i','Безопасна за храна: Не (по данните на материала).']);
+  if(st==='zero')w.push(['e','Изчерпан'+(recs.length?' — използва се в '+recs.length+(recs.length===1?' рецепта':' рецепти'):'')+'.']);
+  else if(st==='low')w.push(['w','Под прага'+(recs.length?' — използва се в '+recs.length+(recs.length===1?' рецепта':' рецепти'):'')+'.']);
+  var miss=_mtMissing(m);if(miss.length)w.push(['i','Непълни данни: '+miss.join(', ')+'. <button type="button" class="rd-link" onclick="editMat()">Допълни</button>']);
+  document.getElementById('dmat-warns').innerHTML=w.length?'<div class="md-warns">'+w.map(function(x){return '<div class="'+x[0]+'">'+x[1]+'</div>';}).join('')+'</div>':'';
+  document.getElementById('dmat-acts').innerHTML=m.cat==='raw'?'<button type="button" class="rd-btn" onclick="openRawEventMo()">+ Стъпка</button>':'';
+  // в рецепти
+  _mdShow('dmat-recipes-row',m.cat!=='mass');
+  document.getElementById('dmat-recipes-n').textContent=recs.length?recs.length+(recs.length===1?' рецепта':' рецепти'):'няма';
+  var max=recs.length?Math.max(recs[0].pct,1):1;
+  document.getElementById('dmat-recipes-val').innerHTML=recs.length?recs.map(function(x){var r=x.r;return '<div class="li md-rr" role="button" tabindex="0" onclick="openRecipeDet(\''+r.id+'\')"><div class="li-body"><div class="li-t">'+_pdE(r.name||'—')+(_recVersionLabel(r)?' <span class="rc-ver">'+_recVersionLabel(r)+'</span>':'')+'</div><div class="li-s">'+_pdE([r.temp?r.temp+'°C':'',r.cone?'Конус '+r.cone:'',(r.ingredients||[]).length+' съставки'].filter(Boolean).join(' · '))+'</div><div class="md-bar"><i style="width:'+(x.pct/max*100)+'%"></i></div></div><div class="md-p">'+_mtF(x.pct)+'%</div></div>';}).join('')+'<div class="rd-note">Подредени по дял в рецептата.</div>':'<div class="rd-empty">Не участва в рецепти.</div>';
+  // характеристики
+  var rows=(m.cat==='mass')?[
+    ['Замесена на',m.blend&&m.blend.mixDate?new Date(m.blend.mixDate).toLocaleDateString('bg-BG'):''],
+    ['Готова на',m.blend&&m.blend.readyDate?new Date(m.blend.readyDate).toLocaleDateString('bg-BG'):'']
+  ]:[['Формула',m.formula],['Производител / Произход',m.brand],['Статус',m.wishlist===true?'Wishlist':'Налично']];
+  if(m.cat==='raw'&&m.raw){rows.push(['Локация',m.raw.location],['Координати',m.raw.coords],['Добито на',m.raw.date?new Date(m.raw.date).toLocaleDateString('bg-BG'):''],['Начално сухо тегло',m.raw.weight!=null?m.raw.weight+' г':'']);}
+  if(m.cat==='clays'){var gl=m.fireGlazeTemp||m.fireTemp;rows.push(['Температура — бисквит',m.fireBisqueTemp?m.fireBisqueTemp+'°C':''],['Температура — глазурно',gl?gl+'°C':''],['Шамот',m.grog],['Свиваемост',m.shrink?m.shrink+'%':''],['Цвят след изпичане',m.color]);}
+  if(m.cat==='glaze'){var sL={matte:'Матова',gloss:'Гланцова',satin:'Сатенена',crystal:'Кристална',textured:'Текстурирана'};rows.push(['Температура',m.gfire],['Цвят',m.gcolor],['Повърхност',m.surfaceType?(sL[m.surfaceType]||m.surfaceType):''],['Безопасна за храна',_mtFood(m.foodsafe)]);}
+  if(m.alertAt)rows.push(['Известие при',m.alertAt+'г']);
+  document.getElementById('dmat-props-n').textContent=MAT_CS[m.cat]||'';
+  document.getElementById('dmat-info').innerHTML=rows.map(function(x){return '<div><small>'+x[0]+'</small><b class="'+(x[1]?'':'no')+'">'+(x[1]?_pdE(x[1]):'—')+'</b></div>';}).join('');
+  // бележки
   document.getElementById('dmat-notes').textContent=m.notes||'—';
-  document.getElementById('dmat-info').innerHTML+=m.updatedAt?dr('Последно редактирано',new Date(m.updatedAt).toLocaleDateString('bg-BG')):'';
-  // Chemical analysis section
-  var chemSection=document.getElementById('dmat-chem');
-  if(!chemSection){
-    chemSection=document.createElement('div');chemSection.id='dmat-chem';
-    chemSection.className='ds';
-    var chemTitle=document.createElement('div');chemTitle.className='ds-t';chemTitle.textContent='Химичен анализ';
-    chemSection.appendChild(chemTitle);
-    var chemGrid=document.createElement('div');chemGrid.id='dmat-chem-grid';chemGrid.className='chem-grid';
-    chemSection.appendChild(chemGrid);
-    document.getElementById('dmat-notes').parentNode.insertBefore(chemSection,document.getElementById('dmat-notes').parentNode.querySelector('.ds:last-of-type'));
-  }
-  var chemGrid2=document.getElementById('dmat-chem-grid');
-  if(m.chem&&Object.keys(m.chem).length){
-    chemSection.style.display='block';
-    var chemLabels={sio2:'SiO₂',al2o3:'Al₂O₃',fe2o3:'Fe₂O₃',cao:'CaO',k2o:'K₂O',na2o:'Na₂O',mgo:'MgO',tio2:'TiO₂'};
-    chemGrid2.innerHTML=Object.keys(m.chem).map(function(k){
-      return '<div class="chem-cell"><div class="chem-val">'+m.chem[k]+'%</div><div class="chem-lbl">'+(chemLabels[k]||k)+'</div></div>';
-    }).join('');
-  } else {
-    chemSection.style.display='none';
-  }
-  // Related recipes (derived) — match by matId OR fallback to name
-  var _mrRow=document.getElementById('dmat-recipes-row');
-  if(!_mrRow){
-    _mrRow=document.createElement('div');_mrRow.id='dmat-recipes-row';_mrRow.className='ds';
-    _mrRow.innerHTML='<div class="ds-t">Използван в рецепти</div><div id="dmat-recipes-val"></div>';
-    var _mrAnchor=document.getElementById('dmat-notes').parentNode;
-    _mrAnchor.insertBefore(_mrRow,_mrAnchor.querySelector('.ds:last-of-type'));
-  }
-  var _relRec=DB.recipes.filter(function(r){
-    if(!r||!Array.isArray(r.ingredients))return false;
-    return r.ingredients.some(function(i){
-      if(!i)return false;
-      if(i.matId&&i.matId===id)return true;
-      if(!i.matId&&m.name&&i.name&&i.name===m.name)return true;
-      return false;
-    });
-  });
-  var _mrVal=document.getElementById('dmat-recipes-val');
-  if(_relRec.length){
-    _mrRow.style.display='';
-    _mrVal.innerHTML=_relRec.map(function(r){
-      var sub=[r.temp?r.temp+'°C':'',r.cone?'Конус '+r.cone:''].filter(Boolean).join(' · ');
-      var ing=(r.ingredients||[]).find(function(i){return i&&((i.matId&&i.matId===id)||(!i.matId&&i.name===m.name));});
-      var pct=ing&&ing.pct!=null?ing.pct+'%':'';
-      return '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-mat\');openRecipeDet(\''+r.id+'\')">'
-        +'<div class="li-ic">'+(r.photo?'<img src="'+r.photo+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div>'
-        +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(r.name||'—')+(pct?' <span style="font-size:10px;color:var(--tx3)">· '+pct+'</span>':'')+'</div><div class="li-s">'+sub+'</div></div>'
-        +'<div class="li-r">›</div></div>';
-    }).join('');
-  } else {
-    _mrRow.style.display='none';
-  }
-  // Related pieces (when material is used as a ready glaze on a piece)
-  var _mpRow=document.getElementById('dmat-pieces-row');
-  if(!_mpRow){
-    _mpRow=document.createElement('div');_mpRow.id='dmat-pieces-row';_mpRow.className='ds';
-    _mpRow.innerHTML='<div class="ds-t">Използвана в изделия</div><div id="dmat-pieces-val"></div>';
-    var _mpAnchor=document.getElementById('dmat-notes').parentNode;
-    _mpAnchor.insertBefore(_mpRow,_mpAnchor.querySelector('.ds:last-of-type'));
-  }
-  var _relMatPcs=DB.pieces.concat(DB.series||[]).filter(function(p){return p&&p.material===id;});
-  var _mpVal=document.getElementById('dmat-pieces-val');
-  if(_relMatPcs.length){
-    _mpRow.style.display='';
-    _mpVal.innerHTML=_relMatPcs.map(function(p){
-      var ph=(p.photos&&p.photos[0])?'<img src="'+p.photos[0]+'" style="width:100%;height:100%;object-fit:cover">':K(20);
-      var sub=[p.date||'',stageLabel(p.stage||'greenware')].filter(Boolean).join(' · ');
-      return '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-mat\');openPieceDet(\''+p.id+'\')">'
-        +'<div class="li-ic">'+ph+'</div>'
-        +'<div class="li-body"><div class="li-t" style="font-size:14px">'+(p.name||'—')+'</div><div class="li-s">'+sub+'</div></div>'
-        +'<div class="li-r">›</div></div>';
-    }).join('');
-  } else {
-    _mpRow.style.display='none';
-  }
-  // Related tests (when material is used as ready glaze in a test)
-  var _mtRow=document.getElementById('dmat-tests-row');
-  if(!_mtRow){
-    _mtRow=document.createElement('div');_mtRow.id='dmat-tests-row';_mtRow.className='ds';
-    _mtRow.innerHTML='<div class="ds-t">Използвана в тестове</div><div id="dmat-tests-val"></div>';
-    var _mtAnchor=document.getElementById('dmat-notes').parentNode;
-    _mtAnchor.insertBefore(_mtRow,_mtAnchor.querySelector('.ds:last-of-type'));
-  }
-  var _relMatTests=DB.tests.filter(function(te){return te&&te.materialId===id;});
-  var _mtVal=document.getElementById('dmat-tests-val');
-  if(_relMatTests.length){
-    _mtRow.style.display='';
-    _mtVal.innerHTML=_relMatTests.map(function(te){
-      var ph=(te.photos&&te.photos[0])?'<img src="'+te.photos[0]+'" style="width:100%;height:100%;object-fit:cover">':K(20);
-      var sub=[te.date||'',te.temp?te.temp+'°C':''].filter(Boolean).join(' · ');
-      return '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="closeDet(\'det-mat\');openTestDet(\''+te.id+'\')">'
-        +'<div class="li-ic">'+ph+'</div>'
-        +'<div class="li-body"><div class="li-t" style="font-size:14px">Тест</div><div class="li-s">'+sub+'</div></div>'
-        +'<div class="li-r">›</div></div>';
-    }).join('');
-  } else {
-    _mtRow.style.display='none';
-  }
-  // v1.6.0: Raw material process biography (geonotes + process timeline)
-  _renderRawSection(m);
-  // v1.7.0: Маса composition
-  _renderMassSection(m);
-  _openDet('det-mat');
+  document.getElementById('dmat-notes-n').textContent=m.notes?'има':'—';
+  document.getElementById('dmat-upd').textContent=m.updatedAt?'Последно редактирано: '+new Date(m.updatedAt).toLocaleDateString('bg-BG'):'';
+  // химичен анализ
+  var hasChem=!!(m.chem&&Object.keys(m.chem).length);_mdShow('dmat-chem',hasChem);
+  var chemLabels={sio2:'SiO₂',al2o3:'Al₂O₃',fe2o3:'Fe₂O₃',cao:'CaO',k2o:'K₂O',na2o:'Na₂O',mgo:'MgO',tio2:'TiO₂'};
+  document.getElementById('dmat-chem-n').textContent=hasChem?Object.keys(m.chem).length+' оксида':'';
+  document.getElementById('dmat-chem-grid').innerHTML=hasChem?Object.keys(m.chem).map(function(k){return '<div class="chem-cell"><div class="chem-val">'+_pdE(m.chem[k])+'%</div><div class="chem-lbl">'+(chemLabels[k]||k)+'</div></div>';}).join(''):'';
+  // в маси
+  var ms=_mtMasses(m);_mdShow('dmat-inmass-row',ms.length>0);
+  document.getElementById('dmat-inmass-n').textContent=ms.length?String(ms.length):'';
+  document.getElementById('dmat-inmass-val').innerHTML=ms.map(function(x){var c=x.blend.components.find(function(y){return y&&y.ref==='mat:'+m.id;});return '<div class="li rd-li" onclick="openMatDet(\''+x.id+'\')"><span class="md-ic sm mass">М</span><div class="li-body"><div class="li-t">'+_pdE(x.name)+'</div><div class="li-s">'+(c&&c.pct!=null?c.pct+'%':'')+'</div></div><div class="li-r">›</div></div>';}).join('');
+  // изделия: като глина и като готова глазура
+  var all=DB.pieces.concat(DB.series||[]),pcs=all.filter(function(p){return p&&(p.clay===id||p.material===id);});
+  _mdShow('dmat-pieces-row',pcs.length>0);
+  document.getElementById('dmat-pieces-n').textContent=pcs.length?String(pcs.length):'';
+  document.getElementById('dmat-pieces-val').innerHTML=pcs.map(function(p){var ser=!!findSeries(p.id)&&!p.seriesId,ph=getLatestPhoto(p);return '<div class="li rd-li" onclick="'+(ser?'openSeriesDet':'openPieceDet')+'(\''+p.id+'\')"><div class="li-ic">'+(ph?'<img src="'+ph+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div><div class="li-body"><div class="li-t" style="font-size:14px">'+_pdE(p.name||'—')+'</div><div class="li-s">'+_pdE([p.clay===id?'глина':'готова глазура',stageLabel(p.stage||'wet')].join(' · '))+'</div></div><div class="li-r">›</div></div>';}).join('');
+  // тестове: готова глазура или маса
+  var ts=DB.tests.filter(function(t){return t&&(t.materialId===id||t.bodyRef==='mat:'+id);});
+  _mdShow('dmat-tests-row',ts.length>0);
+  document.getElementById('dmat-tests-n').textContent=ts.length?String(ts.length):'';
+  document.getElementById('dmat-tests-val').innerHTML=ts.map(function(t){return '<div class="li rd-li" onclick="openTestDet(\''+t.id+'\')"><div class="li-ic">'+(t.photos&&t.photos[0]?'<img src="'+t.photos[0]+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div><div class="li-body"><div class="li-t" style="font-size:14px">'+(t.bodyRef?'Тест на маса':'Тест')+'</div><div class="li-s">'+_pdE([t.date,t.temp?t.temp+'°C':'',t.rat].filter(Boolean).join(' · '))+'</div></div><div class="li-r">›</div></div>';}).join('');
+  // дивата глина и масата — съществуващите функции
+  _renderRawSection(m);_renderMassSection(m);
+  var ev=(m.raw&&Array.isArray(m.raw.events))?m.raw.events.length:0;document.getElementById('dmat-proc-n').textContent=m.cat==='raw'?ev+(ev===1?' стъпка':' стъпки'):'';
+  _mdSecsDraw();
+  var d=document.getElementById('det-mat'),sp=window.innerWidth>=1100&&cur==='materials';
+  d.classList.toggle('split',sp);document.getElementById('sc-materials').classList.toggle('split',sp);
+  if(sp){var nv=document.getElementById('nav');d.style.bottom=(nv?nv.offsetHeight:0)+'px';}else d.style.bottom='';
+  if(prev!==id)d.scrollTop=0;
+  if(!d.classList.contains('on'))_openDet('det-mat');
+  if(sp)renderMaterials();
+}
+// ── бърза промяна на количеството: само stock и alertAt на същия запис ──
+function openMatStock(){
+  var m=DB.materials.find(function(x){return x.id===curMat;});if(!m)return;
+  document.getElementById('mqs-name').textContent=m.name;
+  document.getElementById('mqs-stock').value=m.stock!=null?m.stock:'';
+  document.getElementById('mqs-alert').value=m.alertAt!=null?m.alertAt:'';
+  openMo('mo-mat-stock');
+  setTimeout(function(){var e=document.getElementById('mqs-stock');if(e){e.focus();e.select();}},50);
+}
+function saveMatStock(){
+  var m=DB.materials.find(function(x){return x.id===curMat;});if(!m)return;
+  var sv=String(document.getElementById('mqs-stock').value).trim().replace(',','.'),av=String(document.getElementById('mqs-alert').value).trim().replace(',','.');
+  if(sv!==''&&(isNaN(Number(sv))||Number(sv)<0)){toast('Наличност трябва да е неотрицателно число');focusEl('mqs-stock');return;}
+  if(av!==''&&(isNaN(Number(av))||Number(av)<0)){toast('Праг за известие трябва да е неотрицателно число');focusEl('mqs-alert');return;}
+  m.stock=sv===''?null:parseFloat(sv);
+  m.alertAt=av===''?null:av;
+  m.updatedAt=new Date().toISOString();
+  save();closeMo('mo-mat-stock');updateNotifBadge();renderMaterials();openMatDet(m.id);toast('Количеството е записано');
 }
 
 // v1.6.0: Render raw-material geonotes + process timeline in material detail
@@ -8404,7 +8486,14 @@ function openMatMo(m){
   var _rg=document.getElementById('mi-raw-geonotes');if(_rg)_rg.value=_raw.geonotes||'';
   toggleMatFields();
   document.getElementById('mi-cat').onchange=toggleMatFields;
+  matTabF('basic');var _ce0=document.getElementById('mi-chem-err');if(_ce0)_ce0.textContent='';
   renderPrev('mi-prev',mPh);openMo('mo-mat');
+}
+function matTabF(k){
+  var mo=document.getElementById('mo-mat');if(!mo)return;
+  mo.querySelectorAll('.pi-tabs button').forEach(function(b){var on=b.getAttribute('data-tab')===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  mo.querySelectorAll('.pi-tab').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-tab')===k);});
+  var sh=mo.querySelector('.mo-sh');if(sh)sh.scrollTop=0;
 }
 function toggleMatFields(){
   const cat=document.getElementById('mi-cat').value;
@@ -8437,21 +8526,31 @@ function saveMat(){
   const cat=document.getElementById('mi-cat').value;
   var statusVal=document.getElementById('mi-status-val');
   const isWishlist=statusVal&&statusVal.value==='wish';
-  const stockVal=document.getElementById('mi-stock').value;
-  if(!isWishlist&&!vPosNum(stockVal,'Наличност')){focusEl('mi-stock');return;}
-  const alertVal=document.getElementById('mi-alert').value;
-  if(!vPosNum(alertVal,'Праг за известие')){focusEl('mi-alert');return;}
-  var chemFieldsV=['sio2','al2o3','fe2o3','cao','k2o','na2o','mgo','tio2'];
+  const stockVal=String(document.getElementById('mi-stock').value).trim().replace(',','.');
+  if(!isWishlist&&(!vPosNum(stockVal,'Наличност')||(stockVal!==''&&isNaN(Number(stockVal))&&!toast('Наличност трябва да е число')))){focusEl('mi-stock');return;}
+  const alertVal=String(document.getElementById('mi-alert').value).trim().replace(',','.');
+  if(!vPosNum(alertVal,'Праг за известие')||(alertVal!==''&&isNaN(Number(alertVal))&&!toast('Праг за известие трябва да е число'))){focusEl('mi-alert');return;}
+  // v1.39.0: химичният анализ — числа от 0 до 100 (със запетая или точка). Невалидна
+  // стойност спира записа с грешка на полето, вместо да изчезне. Сбор 100% не се иска.
+  var chemFieldsV=['sio2','al2o3','fe2o3','cao','k2o','na2o','mgo','tio2'],_chemL={sio2:'SiO₂',al2o3:'Al₂O₃',fe2o3:'Fe₂O₃',cao:'CaO',k2o:'K₂O',na2o:'Na₂O',mgo:'MgO',tio2:'TiO₂'};
+  var _ce=document.getElementById('mi-chem-err');if(_ce)_ce.textContent='';
+  chemFieldsV.forEach(function(f){var e=document.getElementById('mi-'+f);if(e)e.classList.remove('bad');});
   for(var ci=0;ci<chemFieldsV.length;ci++){
-    var cel=document.getElementById('mi-'+chemFieldsV[ci]);
-    if(cel&&cel.value!==''&&parseFloat(cel.value)<0){toast(chemFieldsV[ci].toUpperCase()+' не може да е отрицателно');cel.focus();return;}
+    var cel=document.getElementById('mi-'+chemFieldsV[ci]);if(!cel)continue;
+    var cv=String(cel.value).trim().replace(',','.');
+    if(cv==='')continue;
+    var cn=parseFloat(cv);
+    if(!/^\d+(\.\d+)?$/.test(cv)||!(cn>=0&&cn<=100)){
+      var _msg=_chemL[chemFieldsV[ci]]+': „'+cel.value+'“ не е процент от 0 до 100.';
+      matTabF('more');cel.classList.add('bad');if(_ce)_ce.textContent=_msg;toast(_msg);cel.focus();return;
+    }
   }
   const m={id:editId||uid(),name,updatedAt:new Date().toISOString(),cat,
     wishlist:isWishlist,
     formula:document.getElementById('mi-formula').value,
     brand:document.getElementById('mi-brand').value,
     stock:!isWishlist&&stockVal!==''?parseFloat(stockVal):null,
-    alertAt:document.getElementById('mi-alert').value||null,
+    alertAt:alertVal||null,
     notes:document.getElementById('mi-notes').value,
     photo:mPh[0]||null};
   if(cat==='clays'){
@@ -8474,13 +8573,13 @@ function saveMat(){
   var chem={};
   chemFields.forEach(function(f){
     var el=document.getElementById('mi-'+f);
-    if(el&&el.value!=='')chem[f]=parseFloat(el.value);
+    var _v=el?String(el.value).trim().replace(',','.'):'';if(_v!=='')chem[f]=parseFloat(_v);
   });
   if(Object.keys(chem).length)m.chem=chem;
   // v1.5.4: Save cost fields
   var costEl=document.getElementById('mi-cost');
   if(costEl&&costEl.value!==''){
-    var costVal=parseFloat(costEl.value);
+    var costVal=parseFloat(String(costEl.value).replace(',','.'));
     if(!isNaN(costVal)&&costVal>=0)m.cost=costVal;
   }
   var costUnitEl=document.getElementById('mi-cost-unit');
@@ -8510,7 +8609,10 @@ function saveMat(){
     cb(m,'material');
     return;
   }
-  closeMo('mo-mat');renderMaterials();switchMat(isWishlist?'wish':cat);updateNotifBadge();toast(editId?'Обновено':'Добавено!');editId=null;
+  closeMo('mo-mat');renderMaterials();updateNotifBadge();toast(editId?'Обновено':'Добавено!');
+  // v1.39.0: групата не се сменя; на широк екран материалът се показва отново вдясно.
+  if(cur==='materials'&&window.innerWidth>=1100)openMatDet(m.id);
+  editId=null;
 }
 function editMat(){var _m=DB.materials.find(m=>m.id===curMat);closeDet('det-mat',true);if(_m&&_m.cat==='mass'){openMassMo(_m);}else{openMatMo(_m);}}
 function delMat(){
@@ -8765,6 +8867,7 @@ function closeDet(id, _keepHistory){
 // v1.4.4: Helper for opening detail views with history support
 // v1.37.0: детайлът на изпичане вдясно от списъка (широк екран) — списъкът се разширява обратно.
 function _onOverlayClosed(id){
+  if(id==='det-mat'){var fm=document.getElementById('sc-materials');if(fm&&fm.classList.contains('split')){fm.classList.remove('split');document.getElementById('det-mat').classList.remove('split');if(typeof renderMaterials==='function')renderMaterials();}}
   if(id==='det-recipe'){var fr=document.getElementById('sc-recipes');if(fr&&fr.classList.contains('split')){fr.classList.remove('split');document.getElementById('det-recipe').classList.remove('split');if(typeof renderRecipes==='function')renderRecipes();}}
   if(id==='det-run'){var f=document.getElementById('sc-fp');if(f&&f.classList.contains('split')){f.classList.remove('split');document.getElementById('det-run').classList.remove('split');if(typeof renderFiringRuns==='function')renderFiringRuns();}}
 }
