@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.34.1 · `atelie-v94`
+**Version:** v1.35.2 · `atelie-v98`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -205,6 +205,14 @@ changes only after success; on failure (or broken storage) the form stays open w
 an error inside it and nothing is changed.
 
 ### Kiln plan (v1.33.0)
+
+**v1.35.2.** The new-version notice is a bar (`#upd-bar`) with „Обнови“ (reload; asks first if an open form has unsaved changes) and „По-късно“ (hide for this session).
+
+**v1.35.1.** Piece and series detail: header (code, type, categories, stage, size, clay), „Последно“ with a shortcut, collapsible sections; „Добави в план на изпичане“ adds plan members. Piece form in four tabs (show/hide only).
+
+**v1.35.0 — after.** `run.state` planned / loaded / completed / interrupted (none = completed); `loadedAt`, `endedAt`; loading creates firing steps from the plan (`data.fromPlan`, series with `data.units`; an unlinked step of the same day is adopted, `adoptedByPlan`); only a completed run moves the stage; `members[].result/resultNote`, `levels[].cone/coneResult/photosAfter`; `corrections[] {at, what, from, to, reason}`; `refireOf`.
+
+**v1.34.2.** The plan shows one level at a time, chosen by tabs; in „Нива“ the top view is read-only.
 
 **v1.34.1.** Plan members whose size differs from the current record (and was not edited in the plan) are offered a refresh; a split unit without its own size takes the series size. „Предложи нива“ leaves out pieces without height or base, naming them. The run detail lists plan members not yet in the run as „Планирано“. Standard categories: Съдове за храна, Музикални инструменти, Декорация, Скулптура, Бижута, Тестови образци, Друго.
 
