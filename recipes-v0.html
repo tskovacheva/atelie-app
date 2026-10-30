@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Рецепти · прототип v0</title>
+<link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Прототип „Рецепти и глазури“ (v0). Самостоятелен, примерни данни в паметта.
+   Не чете и не пише данните на Глина. */
+:root{
+  --bg:#F3F2EF;--surface:#FFFFFF;--text:#2F3437;--muted:#646C71;--primary:#6F837B;--primary-d:#56685F;
+  --primary-soft:#DCE4E0;--bg2:#E8E7E4;--bdr:rgba(47,52,55,.10);--bdr2:rgba(47,52,55,.22);
+  --tx2:#41474A;--ok:#4F7362;--okbg:#E5EEE8;--warn:#A9603F;--warnbg:#F6E9E2;--err:#9E4234;--errbg:#F5E3DF;
+  --r:14px;--shadow:0 2px 10px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:var(--text)}
+button{cursor:pointer}
+h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;font-weight:400}
+.proto{position:sticky;top:0;z-index:30;background:rgba(243,242,239,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--bdr)}
+.proto .in{max-width:1400px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.proto b{font-weight:500;font-size:14px;color:var(--muted);margin-right:auto}
+.proto select{min-height:38px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--surface);padding:4px 8px;font-size:14px;max-width:60vw}
+.page{max-width:1400px;margin:0 auto;padding:0 16px 120px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+@media(min-width:1100px){.wrap{grid-template-columns:420px minmax(0,1fr);align-items:start}
+  .col-list{position:sticky;top:60px;max-height:calc(100vh - 70px);overflow:auto;padding-right:4px}
+  .back{display:none!important}}
+@media(max-width:1099px){.wrap.det .col-list{display:none}.wrap.list .col-det{display:none}}
+.head{display:flex;align-items:flex-end;gap:10px;padding:18px 0 10px;flex-wrap:wrap}
+.head h1{font-size:30px;margin-right:auto}
+.cnt{font-size:14px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:9px 16px;border-radius:12px;border:1.5px solid var(--bdr2);background:var(--surface);font-size:15px;font-weight:500;text-align:center}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.sm{min-height:38px;padding:6px 12px;font-size:14px}
+.btn.ghost{border-color:transparent;background:none;color:var(--primary-d)}
+.btn.warn{border-color:var(--err);color:var(--err)}
+.tag-new{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.03em;background:#FFF3D6;color:#7A5A12;border-radius:6px;padding:1px 6px;vertical-align:middle;margin-left:4px;white-space:nowrap}
+.tag-fut{display:inline-block;font-size:11px;font-weight:500;background:#ECE7F4;color:#5B4A7A;border-radius:6px;padding:1px 6px;vertical-align:middle;margin-left:4px;white-space:nowrap}
+/* видове глазура — тонове като rtag в Глина */
+.gt{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:500;background:var(--bg2);color:var(--tx2);white-space:nowrap}
+.gt.ash{background:#E9E4DC;color:#6A5D4A}.gt.matte{background:#E6E8E3;color:#55604F}.gt.gloss{background:#E1ECF0;color:#3E6170}
+.gt.crystal{background:#E8E3F1;color:#5B4A7A}.gt.shino{background:#F3E4D8;color:#8F5A3A}.gt.celadon{background:#DDEBE3;color:#3F6A55}
+.gt.tenmoku{background:#E8DCD3;color:#5E3B2B}
+.cone{display:inline-flex;padding:2px 9px;border-radius:999px;font-size:12.5px;background:var(--surface);border:1px solid var(--bdr2);color:var(--tx2);white-space:nowrap}
+.ver{display:inline-flex;padding:1px 7px;border-radius:7px;font-size:12px;font-weight:600;background:var(--primary-soft);color:var(--primary-d);vertical-align:middle}
+/* каталог */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 8px}
+.search{flex:1 1 200px;min-width:0}
+.search input{width:100%;min-height:46px;padding:10px 14px;border:1.5px solid var(--bdr2);border-radius:12px;background:var(--surface);outline:none}
+.search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+select.sel{min-height:46px;padding:8px 10px;border:1.5px solid var(--bdr2);border-radius:12px;background:var(--surface);font-size:15px}
+.seg{display:inline-flex;background:var(--bg2);border-radius:12px;padding:3px}
+.seg button{border:none;background:none;padding:7px 12px;border-radius:9px;font-size:14px;min-height:40px;color:var(--tx2)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:500}
+.qchips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.qchips::-webkit-scrollbar{display:none}
+.chip{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:999px;padding:6px 12px;min-height:38px;font-size:14px;white-space:nowrap}
+.chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.chip .n{opacity:.7;font-size:12.5px;margin-left:3px}
+.active{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 8px}
+.achip{display:inline-flex;align-items:center;gap:6px;background:var(--primary-soft);color:var(--primary-d);border:none;border-radius:999px;padding:5px 12px;font-size:14px;min-height:34px}
+.cards{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+@media(min-width:600px) and (max-width:1099px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rc{display:flex;flex-direction:column;text-align:left;width:100%;background:var(--surface);border:2px solid transparent;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;padding:0}
+.rc.sel{border-color:var(--primary)}
+.rc .top{display:flex;gap:12px;padding:12px 12px 8px}
+.rc .ph{width:64px;height:64px;border-radius:12px;flex-shrink:0;background:var(--primary-soft);overflow:hidden}
+.rc .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.rc .nm{font-family:'Tenor Sans',sans-serif;font-size:18px;line-height:1.2}
+.rc .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;align-items:center}
+.rc .ings{padding:0 12px 10px;display:flex;flex-direction:column;gap:4px}
+.mini{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:13.5px}
+.mini .b{height:6px;border-radius:3px;background:var(--bg2);overflow:hidden;margin-top:2px}
+.mini .b i{display:block;height:100%;background:var(--primary)}
+.mini .p{text-align:right;color:var(--tx2);font-variant-numeric:tabular-nums}
+.rc .foot{display:flex;gap:10px;padding:8px 12px;border-top:1px solid var(--bdr);font-size:13px;color:var(--muted);background:#FBFAF8}
+.rc .foot .w{color:var(--err)}
+.fav{color:#B5473A}
+.lst{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.lr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bdr);width:100%;text-align:left;border-left:3px solid transparent;border-top:none;border-right:none;background:none}
+.lr.sel{border-left-color:var(--primary);background:#F7F8F6}
+.lr .nm{font-size:15.5px;font-weight:500}
+.lr .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr .r{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.empty{padding:30px 10px;text-align:center;color:var(--muted)}
+/* филтри */
+.fs{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px}
+.fs h4{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:10px 0 6px}
+.fs h4:first-child{margin-top:0}
+.fs .chips{display:flex;gap:6px;flex-wrap:wrap}
+/* детайл */
+.dh{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-top:14px}
+.dh h2{font-size:27px;line-height:1.15;margin:4px 0 6px}
+.dh .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dh .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.hero .img{aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--primary-soft);max-height:240px}
+.hero .img img{width:100%;height:100%;object-fit:cover;display:block}
+@media(min-width:760px){.hero.has{grid-template-columns:220px minmax(0,1fr)}.hero .img{max-height:none}}
+/* състав — най-четимото място */
+.comp{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;margin-top:12px}
+.comp h3{font-size:20px;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.comp h3 .r{margin-left:auto;font-family:'Jost',sans-serif;font-size:14px}
+.sum{font-weight:600}
+.sum.ok{color:var(--ok)}.sum.bad{color:var(--err)}
+.batch{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0 6px;padding:10px;background:var(--bg);border-radius:12px}
+.batch label{font-size:14px;color:var(--tx2);margin-right:2px}
+.batch input{width:110px;min-height:44px;padding:8px 10px;border:1.5px solid var(--bdr2);border-radius:10px;font-size:18px;font-weight:500;text-align:right;background:var(--surface)}
+.batch button{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:999px;padding:6px 11px;min-height:38px;font-size:14px}
+.batch button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.ing{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:4px 10px;align-items:center;padding:11px 0;border-top:1px solid var(--bdr)}
+.ing.g{grid-template-columns:minmax(0,1fr) 58px 84px}
+.ing:first-of-type{border-top:none}
+.ing .n{font-size:17px;line-height:1.25;min-width:0}
+.ing .n button{border:none;background:none;padding:0;font-size:17px;text-align:left;color:var(--text);text-decoration:underline;text-decoration-color:var(--bdr2);text-underline-offset:3px}
+.ing .n small{display:block;font-size:12.5px;color:var(--muted)}
+.ing .n small.no{color:var(--err)}
+.ing .p{text-align:right;font-size:17px;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.ing .gv{text-align:right;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.ing .bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--bg2);overflow:hidden}
+.ing .bar i{display:block;height:100%;background:var(--primary)}
+.ing .bar i.no{background:var(--err)}
+.tot{display:grid;grid-template-columns:minmax(0,1fr) 58px 84px;gap:10px;padding:10px 0 0;border-top:2px solid var(--bdr2);font-weight:600}
+.tot span{text-align:right}
+.tot span:first-child{text-align:left}
+.sec{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);margin-top:12px;overflow:hidden}
+.sec>button.shd{display:flex;align-items:center;gap:8px;width:100%;border:none;background:none;padding:14px 16px;text-align:left;min-height:54px}
+.sec>button.shd b{font-family:'Tenor Sans',sans-serif;font-weight:400;font-size:18px}
+.sec>button.shd span{margin-left:auto;font-size:13.5px;color:var(--muted)}
+.sec>button.shd i{font-style:normal;color:var(--muted);transition:transform .15s}
+.sec.open>button.shd i{transform:rotate(180deg)}
+.sec .bd{display:none;padding:0 16px 14px}
+.sec.open .bd{display:block}
+@media(min-width:1100px){.secs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}.secs .sec{margin-top:12px}}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.kv div small{display:block;font-size:12.5px;color:var(--muted)}
+.kv div b{font-weight:500;font-size:15.5px}
+.li{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:none;background:none;border-top:1px solid var(--bdr);padding:9px 0}
+.li:first-child{border-top:none}
+.li img,.li .ph{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--primary-soft)}
+.li .t{font-size:15px;font-weight:500}
+.li .s{font-size:13px;color:var(--muted)}
+.li .go{margin-left:auto;color:var(--muted)}
+.stars{color:#B98A2E;letter-spacing:1px}
+.vrow{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--bdr);width:100%;text-align:left;border-left:none;border-right:none;border-bottom:none;background:none}
+.vrow:first-child{border-top:none}
+.vrow .vb{width:38px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:var(--primary-soft);color:var(--primary-d);flex-shrink:0}
+.vrow.cur .vb{background:var(--primary);color:#fff}
+.diff{font-size:13px;margin-top:2px}
+.diff .up{color:var(--ok)}.diff .dn{color:var(--err)}
+.notes{font-size:15.5px;line-height:1.6;white-space:pre-wrap;color:var(--tx2)}
+.morebar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+/* работен режим */
+.work{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column}
+.work .top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bdr);background:var(--surface)}
+.work .top b{flex:1;font-family:'Tenor Sans',sans-serif;font-weight:400;font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work .body{flex:1;overflow:auto;padding:12px 16px 24px;max-width:720px;width:100%;margin:0 auto}
+.wi{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 12px;margin-top:8px;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);width:100%;text-align:left;border:2px solid transparent}
+.wi .ck{width:36px;height:36px;border-radius:50%;border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}
+.wi.done{opacity:.55}
+.wi.done .ck{background:var(--ok);border-color:var(--ok)}
+.wi.next{border-color:var(--primary)}
+.wi .n{font-size:20px;line-height:1.2}
+.wi .n small{display:block;font-size:13.5px;color:var(--muted)}
+.wi .g{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;line-height:1}
+.wi .g small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+/* формуляр */
+.sh-bg{position:fixed;inset:0;background:rgba(30,32,33,.35);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sh{background:var(--bg);width:100%;max-width:680px;max-height:94vh;display:flex;flex-direction:column;border-radius:20px 20px 0 0}
+@media(min-width:700px){.sh-bg{align-items:center}.sh{border-radius:20px}}
+.sh .hd{display:flex;align-items:center;gap:8px;padding:16px 16px 8px}
+.sh .hd h2{font-size:22px;flex:1}
+.sh .bd{overflow:auto;padding:0 16px 16px;flex:1}
+.sh .ft{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--bdr);background:var(--bg);border-radius:0 0 20px 20px}
+.sh .ft .btn{flex:1}
+.ftabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--bg2);border-radius:12px;padding:4px;margin:4px 0 12px}
+.ftabs button{border:none;background:none;border-radius:9px;min-height:44px;font-size:14.5px;color:var(--tx2);line-height:1.2}
+.ftabs button small{display:block;font-size:11.5px;color:var(--muted)}
+.ftabs button.on{background:var(--surface);color:var(--text);font-weight:500;box-shadow:var(--shadow)}
+.ftabs button.err{color:var(--err)}
+.f{margin-top:12px}
+.f label{display:block;font-size:13.5px;color:var(--muted);margin-bottom:5px}
+.f input,.f textarea,.f select{width:100%;min-height:46px;padding:10px 12px;border:1.5px solid var(--bdr2);border-radius:12px;background:var(--surface)}
+.f textarea{min-height:110px;resize:vertical}
+.f .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+.f .err{font-size:13px;color:var(--err);margin-top:4px}
+.pick{display:flex;gap:6px;flex-wrap:wrap}
+.pick button{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:999px;padding:6px 12px;min-height:40px;font-size:14px}
+.pick button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) 92px 40px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--bdr)}
+.erow:first-child{border-top:none}
+.erow .m{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:12px;min-height:48px;padding:6px 10px;text-align:left;font-size:15.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.erow .m small{display:block;font-size:12px;color:var(--muted)}
+.erow input{min-height:48px;border:1.5px solid var(--bdr2);border-radius:12px;padding:6px 10px;text-align:right;font-size:18px;width:100%;background:var(--surface)}
+.erow .x{border:none;background:none;font-size:22px;color:var(--muted);min-height:44px}
+.erow .mv{display:flex;flex-direction:column}
+.sumbar{position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0}
+.sumbar .track{height:10px;border-radius:5px;background:var(--bg2);overflow:hidden;display:flex}
+.sumbar .track i{display:block;height:100%}
+.sumbar .lbl{display:flex;justify-content:space-between;font-size:14px;margin-top:4px}
+.msearch{margin-top:10px}
+.mres{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);margin-top:6px;max-height:260px;overflow:auto}
+.mres button{display:flex;gap:8px;width:100%;border:none;border-bottom:1px solid var(--bdr);background:none;text-align:left;padding:10px 12px;min-height:46px;align-items:center}
+.mres button small{margin-left:auto;font-size:12.5px;color:var(--muted)}
+.lock{font-size:14px;color:var(--tx2);background:var(--bg);border-radius:10px;padding:12px;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:999px;font-size:15px;z-index:90;max-width:calc(100% - 24px);text-align:center}
+.fbtn{display:none}
+@media(max-width:1099px){.fbtn{display:inline-flex}.fside{display:none}}
+</style>
+</head>
+<body>
+<div class="proto"><div class="in">
+  <b>Прототип · Рецепти v0</b>
+  <select aria-label="Пример" onchange="if(this.value)openRec(this.value);this.value=''">
+    <option value="">Пример…</option>
+    <option value="r1">Проста — Чиста пепел</option>
+    <option value="r5">С повече съставки — Гланц ^6</option>
+    <option value="r2b">Вариант — Класическа пепелна v2</option>
+    <option value="r3">Със свързани тестове — Иглолистна</option>
+  </select>
+  <button class="btn sm" onclick="resetDemo()">Нулирай</button>
+</div></div>
+<div class="page"><div class="wrap list" id="wrap">
+  <section class="col-list" id="colList"></section>
+  <section class="col-det" id="colDet"></section>
+</div></div>
+<div id="layer"></div>
+<script>
+'use strict';
+// ── речници (като в Глина) ──
+var TYPES={ash:'Пепелна',matte:'Матова',gloss:'Гланцова',crystal:'Кристална',shino:'Shino',celadon:'Celadon',tenmoku:'Tenmoku',other:'Друго'};
+var CONES=[['06','Конус 06 (~999°C)'],['04','Конус 04 (~1060°C)'],['6','Конус 6 (~1222°C)'],['8','Конус 8 (~1252°C)'],['10','Конус 10 (~1285°C)']];
+function svg(c1,c2){return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><rect width="120" height="90" fill="#E9E4DC"/><rect x="18" y="10" width="84" height="70" rx="6" fill="'+c1+'"/><path d="M18 52 Q60 40 102 56 L102 80 L18 80Z" fill="'+c2+'" opacity=".7"/></svg>');}
+var MATS=[
+  {id:'m1',name:'Пепел бук+дъб',cat:'Суровини',stock:2400,unit:'г',note:'Пресята на 80 меш, измита 2 пъти.'},
+  {id:'m2',name:'Каолин',cat:'Суровини',stock:5200,unit:'г'},
+  {id:'m3',name:'Кварцов пясък',cat:'Суровини',stock:3100,unit:'г'},
+  {id:'m4',name:'Бентонит',cat:'Суровини',stock:800,unit:'г'},
+  {id:'m5',name:'Шамот',cat:'Суровини',stock:1500,unit:'г'},
+  {id:'m6',name:'Пепел иглолистни',cat:'Суровини',stock:900,unit:'г'},
+  {id:'m7',name:'Al₂O₃',cat:'Оксиди',stock:400,unit:'г'},
+  {id:'m8',name:'Fe₂O₃',cat:'Оксиди',stock:350,unit:'г',alert:100},
+  {id:'m9',name:'TiO₂',cat:'Оксиди',stock:60,unit:'г',alert:100},
+  {id:'m10',name:'Фрита 3134',cat:'Суровини',stock:2000,unit:'г'},
+  {id:'m11',name:'Калиев фелдшпат',cat:'Суровини',stock:2500,unit:'г'},
+  {id:'m12',name:'Волластонит',cat:'Суровини',stock:1000,unit:'г'},
+  {id:'m13',name:'Цинков оксид',cat:'Оксиди',stock:300,unit:'г'},
+  {id:'m14',name:'Кобалтов карбонат',cat:'Оксиди',stock:40,unit:'г'}
+];
+var PROFILES=[{id:'fp1',name:'Глазура 1240 ^6',peak:1240,hold:10,ramps:'150°/ч до 600° → 100°/ч до 1100° → 60°/ч до 1240° · 10 мин'},{id:'fp2',name:'Пепелна 1260 бавна',peak:1260,hold:20,ramps:'100°/ч до 600° → 150°/ч до 1200° → 50°/ч до 1260° · 20 мин'}];
+function I(m,p){var mm=MATS.find(function(x){return x.id===m;});return mm?{matId:m,name:mm.name,pct:p}:{matId:'__c',name:m,pct:p};}
+function seed(){
+  return {
+    recipes:[
+      {id:'r1',name:'Чиста пепел — диагностична',glazeType:'ash',temp:'1240',cone:'6',fp:'fp2',fav:true,photo:svg('#9C8F78','#C9BEA6'),notes:'Показва истинския характер на пепелта. Постави поднос!\nНанася се гъсто, 2 потапяния.',ingredients:[I('m1',80),I('m2',20)],upd:'2026-10-20'},
+      {id:'r2',name:'Класическа пепелна',glazeType:'ash',temp:'1240',cone:'6',fp:'fp1',lineageId:'r2',version:1,notes:'Стандартна отправна точка.',ingredients:[I('m1',50),I('m2',25),I('m3',20),I('m4',3),I('m5',2)],upd:'2026-08-12'},
+      {id:'r2b',name:'Класическа пепелна',glazeType:'ash',temp:'1240',cone:'6',fp:'fp1',lineageId:'r2',version:2,versionNote:'по-малко кварц, малко желязо',notes:'Стандартна отправна точка. v2: по-топъл тон, по-малко течене.',ingredients:[I('m1',50),I('m2',25),I('m3',18),I('m8',2),I('m4',3),I('m5',2)],upd:'2026-10-02'},
+      {id:'r3',name:'Иглолистна — матова',glazeType:'matte',temp:'1240',cone:'6',fp:'fp1',fav:true,notes:'Тествай до класическата пепелна за сравнение.',ingredients:[I('m6',55),I('m2',25),I('m3',15),I('m7',3),I('m4',2)],upd:'2026-10-25'},
+      {id:'r4',name:'Пепел + Fe₂O₃ — земна',glazeType:'tenmoku',temp:'1260',cone:'8',notes:'Топли кафяво-охрени тонове.',ingredients:[I('m1',50),I('m2',22),I('m3',18),I('m8',7),I('m4',3)],upd:'2026-09-14'},
+      {id:'r5',name:'Гланц прозрачна ^6 с кобалт',glazeType:'gloss',temp:'1222',cone:'6',fp:'fp1',photo:svg('#3E5D8C','#7E9CC7'),notes:'Прозрачна основа с 1% кобалт — синьо. Без кобалта е чиста прозрачна.',ingredients:[I('m10',30),I('m11',25),I('m12',12),I('m2',15),I('m3',15),I('m13',2),I('m14',1)],upd:'2026-10-27'},
+      {id:'r6',name:'Пепел от лозе — проба',glazeType:'ash',temp:'1240',cone:'',notes:'Дивата пепел още я няма в материалите.',ingredients:[I('Пепел от лозе (дива)',60),I('m2',20),I('m3',18)],upd:'2026-10-29'}
+    ],
+    tests:[
+      {id:'t1',recipeId:'r3',date:'2026-10-25',temp:'1240',hold:'10',surf:'Матова',flow:'Ниско',def:'Няма',rat:4,clay:'Xi Beach 100',photo:svg('#7D8F6E','#A9B795'),notes:'Кадифена, леко зеленикава на ръба.'},
+      {id:'t2',recipeId:'r3',date:'2026-10-11',temp:'1240',hold:'',surf:'Сатенена',flow:'Средно',def:'Пинхоли',rat:3,clay:'PRNF Black',photo:svg('#5F6B55','#8E9A7C'),notes:'Пинхоли на тъмната маса — по-дебел слой.'},
+      {id:'t3',recipeId:'r3',date:'2026-09-28',temp:'1220',hold:'',surf:'Сурова / недопечена',flow:'',def:'Незастопен кварц',rat:2,clay:'Xi Beach 100',photo:svg('#B8B39E','#D3CFBE'),notes:'Недопечено при 1220.'},
+      {id:'t4',recipeId:'r2',date:'2026-08-15',temp:'1240',surf:'Гланцова',flow:'Силно',def:'Няма',rat:3,clay:'PRNF Black',photo:svg('#8E7F5C','#B9A97D'),notes:'Тече към дъното.'},
+      {id:'t5',recipeId:'r2b',date:'2026-10-05',temp:'1240',surf:'Сатенена',flow:'Средно',def:'Няма',rat:5,clay:'PRNF Black',photo:svg('#8C6B48','#B38A5E'),notes:'Точно това търсех.'},
+      {id:'t6',recipeId:'r1',date:'2026-10-21',temp:'1240',surf:'Гланцова',flow:'Много силно',def:'Пълзене',rat:3,clay:'Xi Beach 100',photo:svg('#9C8F78','#C9BEA6'),notes:'Стича се — поднос задължително.'}
+    ],
+    pieces:[{id:'p1',name:'Купичка за сос',recipe:'r3',stage:'Изпечено',photo:svg('#7D8F6E','#A9B795')},{id:'p2',name:'Чаша за чай /3',recipe:'r3',stage:'Глазирано',photo:svg('#8E9A7C','#A9B795')},{id:'p3',name:'Чиния 22 см',recipe:'r2b',stage:'Готово',photo:svg('#8C6B48','#B38A5E')}]
+  };
+}
+var D=seed();
+var S={id:null,view:'cards',q:'',types:[],temp:'',cones:[],fav:false,tests:'',ing:[],allver:false,sort:'upd',open:{},batch:'',filters:false};
+var W={id:null,done:{}};
+// ── помощни ──
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function rec(id){return D.recipes.find(function(r){return r.id===id;});}
+function mat(id){return MATS.find(function(m){return m.id===id;});}
+function lin(r){return r.lineageId||r.id;}
+function vers(r){return D.recipes.filter(function(x){return lin(x)===lin(r);}).sort(function(a,b){return (a.version||1)-(b.version||1);});}
+function latest(r){var v=vers(r);return v[v.length-1].id===r.id;}
+function vlabel(r){return vers(r).length>1?'v'+(r.version||1):'';}
+function dname(r){return r.name+(vlabel(r)?' '+vlabel(r):'');}
+function sum(r){return r.ingredients.reduce(function(a,i){return a+(parseFloat(i.pct)||0);},0);}
+function testsOf(r){return D.tests.filter(function(t){return t.recipeId===r.id;});}
+function piecesOf(r){return D.pieces.filter(function(p){return p.recipe===r.id;});}
+function photoOf(r){if(r.photo)return r.photo;var t=testsOf(r).find(function(t){return t.photo;});return t?t.photo:null;}
+function have(i){return i.matId&&i.matId!=='__c'&&!!mat(i.matId);}
+function toast(t){var e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(function(){e.remove();},2200);}
+function fmt(n){return (Math.round(n*10)/10).toString().replace('.',',');}
+function stars(n){return '<span class="stars">'+'★★★★★'.slice(0,n)+'</span><span style="color:var(--bdr2)">'+'★★★★★'.slice(n)+'</span>';}
+function tempBand(r){var t=parseFloat(r.temp);if(!t)return '';return t<1200?'lt':t<=1240?'mid':'gt';}
+// ── каталог ──
+function matches(r){
+  if(!S.allver&&!latest(r))return false;
+  if(S.fav&&!r.fav)return false;
+  if(S.types.length&&S.types.indexOf(r.glazeType)<0)return false;
+  if(S.temp&&tempBand(r)!==S.temp)return false;
+  if(S.cones.length&&S.cones.indexOf(r.cone)<0)return false;
+  if(S.tests==='with'&&!testsOf(r).length)return false;
+  if(S.tests==='without'&&testsOf(r).length)return false;
+  if(S.ing.length&&!S.ing.every(function(n){return r.ingredients.some(function(i){return i.name===n;});}))return false;
+  if(S.q){var q=S.q.toLowerCase(),h=[r.name,r.notes,TYPES[r.glazeType],r.temp].concat(r.ingredients.map(function(i){return i.name;})).join(' ').toLowerCase();if(h.indexOf(q)<0)return false;}
+  return true;
+}
+function activeChips(){
+  var a=[];
+  S.types.forEach(function(v){a.push(['types',v,TYPES[v]]);});
+  if(S.temp)a.push(['temp','',{lt:'<1200°C',mid:'1200–1240°C',gt:'>1240°C'}[S.temp]]);
+  S.cones.forEach(function(v){a.push(['cones',v,'Конус '+v]);});
+  if(S.fav)a.push(['fav','','♥ Любими']);
+  if(S.tests)a.push(['tests','',S.tests==='with'?'С тестове':'Без тестове']);
+  S.ing.forEach(function(v){a.push(['ing',v,'съдържа '+v]);});
+  if(S.allver)a.push(['allver','','Всички версии']);
+  return a;
+}
+function filtersHtml(){
+  var vis=D.recipes.filter(function(r){return S.allver||latest(r);});
+  var c=function(f){var n=0;vis.forEach(function(r){if(f(r))n++;});return n;};
+  var ingNames={};vis.forEach(function(r){r.ingredients.forEach(function(i){ingNames[i.name]=(ingNames[i.name]||0)+1;});});
+  var chip=function(on,label,click,n){return '<button class="chip'+(on?' on':'')+'" onclick="'+click+'">'+esc(label)+(n!=null?'<span class="n">'+n+'</span>':'')+'</button>';};
+  return '<div class="fs"><h4>Вид глазура</h4><div class="chips">'+Object.keys(TYPES).map(function(k){var n=c(function(r){return r.glazeType===k;});return n||S.types.indexOf(k)>=0?chip(S.types.indexOf(k)>=0,TYPES[k],'tog(\'types\',\''+k+'\')',n):'';}).join('')+'</div>'
+    +'<h4>Температура</h4><div class="chips">'+[['lt','<1200°C'],['mid','1200–1240°C'],['gt','>1240°C']].map(function(x){return chip(S.temp===x[0],x[1],'S.temp=S.temp===\''+x[0]+'\'?\'\':\''+x[0]+'\';go()',c(function(r){return tempBand(r)===x[0];}));}).join('')+'</div>'
+    +'<h4>Конус</h4><div class="chips">'+CONES.map(function(x){return chip(S.cones.indexOf(x[0])>=0,'Конус '+x[0],'tog(\'cones\',\''+x[0]+'\')',c(function(r){return r.cone===x[0];}));}).join('')+'</div>'
+    +'<h4>Тестове</h4><div class="chips">'+chip(S.tests==='with','С тестове','S.tests=S.tests===\'with\'?\'\':\'with\';go()',c(function(r){return testsOf(r).length;}))+chip(S.tests==='without','Без тестове','S.tests=S.tests===\'without\'?\'\':\'without\';go()',c(function(r){return !testsOf(r).length;}))+'</div>'
+    +'<h4>Съдържа съставка</h4><div class="chips">'+Object.keys(ingNames).sort(function(a,b){return ingNames[b]-ingNames[a];}).slice(0,12).map(function(n){return chip(S.ing.indexOf(n)>=0,n,'togI('+JSON.stringify(n).replace(/"/g,'&quot;')+')',ingNames[n]);}).join('')+'</div>'
+    +'<h4>Други</h4><div class="chips">'+chip(S.fav,'♥ Любими','S.fav=!S.fav;go()',c(function(r){return r.fav;}))+chip(S.allver,'Всички версии','S.allver=!S.allver;go()')+'</div></div>';
+}
+function listHtml(){
+  var list=D.recipes.filter(matches),ac=activeChips();
+  var srt={upd:function(a,b){return b.upd.localeCompare(a.upd);},name:function(a,b){return a.name.localeCompare(b.name,'bg')||(a.version||1)-(b.version||1);},temp:function(a,b){return (parseFloat(a.temp)||0)-(parseFloat(b.temp)||0);}}[S.sort];
+  list.sort(srt);
+  var h='<div class="head"><h1>Рецепти</h1><span class="cnt">'+list.length+' от '+D.recipes.filter(latest).length+'</span><button class="btn pri" onclick="editRec(null)">+ Нова</button></div>';
+  h+='<div class="tools"><div class="search"><input type="search" id="q" placeholder="Търси по име, съставка, бележка…" value="'+esc(S.q)+'" oninput="S.q=this.value;goKeep()"></div>'
+    +'<div class="seg" role="group" aria-label="Изглед"><button class="'+(S.view==='cards'?'on':'')+'" onclick="S.view=\'cards\';go()">Карти</button><button class="'+(S.view==='list'?'on':'')+'" onclick="S.view=\'list\';go()">Списък</button></div>'
+    +'<button class="btn fbtn" onclick="S.filters=!S.filters;go()">Филтри'+(ac.length?' ('+ac.length+')':'')+'</button>'
+    +'<select class="sel" aria-label="Подреди" onchange="S.sort=this.value;go()">'+[['upd','Последна промяна'],['name','Име А–Я'],['temp','Температура']].map(function(o){return '<option value="'+o[0]+'"'+(S.sort===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>';
+  h+='<div class="qchips">'+Object.keys(TYPES).filter(function(k){return D.recipes.some(function(r){return r.glazeType===k;});}).map(function(k){return '<button class="chip'+(S.types.indexOf(k)>=0?' on':'')+'" onclick="tog(\'types\',\''+k+'\')">'+TYPES[k]+'</button>';}).join('')+'<button class="chip'+(S.fav?' on':'')+'" onclick="S.fav=!S.fav;go()">♥ Любими</button></div>';
+  h+='<div class="fside" '+(S.filters?'style="display:block"':'')+'>'+filtersHtml()+'</div>';
+  if(ac.length)h+='<div class="active">'+ac.map(function(x){return '<button class="achip" onclick="unset(\''+x[0]+'\','+JSON.stringify(x[1]).replace(/"/g,'&quot;')+')">'+esc(x[2])+' ✕</button>';}).join('')+'<button class="achip" style="background:none;text-decoration:underline" onclick="clearF()">изчисти</button></div>';
+  if(!list.length)return h+'<div class="empty">Нищо не отговаря на търсенето и филтрите.</div>';
+  if(S.view==='cards')h+='<div class="cards">'+list.map(cardHtml).join('')+'</div>';
+  else h+='<div class="lst">'+list.map(rowHtml).join('')+'</div>';
+  return h;
+}
+function cardHtml(r){
+  var ph=photoOf(r),s=sum(r),ok=Math.abs(s-100)<0.5,nt=testsOf(r).length,max=Math.max.apply(null,r.ingredients.map(function(i){return i.pct;}));
+  var top=r.ingredients.slice().sort(function(a,b){return b.pct-a.pct;});
+  return '<button class="rc'+(S.id===r.id?' sel':'')+'" onclick="openRec(\''+r.id+'\')"><div class="top"><div class="ph">'+(ph?'<img src="'+ph+'" alt="">':'')+'</div><div style="min-width:0"><div class="nm">'+(r.fav?'<span class="fav">♥</span> ':'')+esc(r.name)+(vlabel(r)?' <span class="ver">'+vlabel(r)+'</span>':'')+'</div>'
+    +'<div class="meta">'+(r.glazeType?'<span class="gt '+r.glazeType+'">'+TYPES[r.glazeType]+'</span>':'')+(r.temp?'<span class="cone">'+r.temp+'°C</span>':'')+(r.cone?'<span class="cone">Конус '+r.cone+'</span>':'')+'</div></div></div>'
+    +'<div class="ings">'+top.slice(0,4).map(function(i){return '<div class="mini"><div><div>'+esc(i.name)+'</div><div class="b"><i style="width:'+(i.pct/max*100)+'%"></i></div></div><div class="p">'+fmt(i.pct)+'%</div></div>';}).join('')+(top.length>4?'<div style="font-size:12.5px;color:var(--muted)">+ още '+(top.length-4)+'</div>':'')+'</div>'
+    +'<div class="foot"><span class="'+(ok?'':'w')+'">Σ '+fmt(s)+'%</span><span>'+r.ingredients.length+' съставки</span><span>'+(nt?nt+(nt===1?' тест':' теста'):'без тестове')+'</span></div></button>';
+}
+function rowHtml(r){
+  var s=sum(r),ok=Math.abs(s-100)<0.5,nt=testsOf(r).length;
+  return '<button class="lr'+(S.id===r.id?' sel':'')+'" onclick="openRec(\''+r.id+'\')"><div style="min-width:0"><div class="nm">'+(r.fav?'<span class="fav">♥</span> ':'')+esc(r.name)+(vlabel(r)?' <span class="ver">'+vlabel(r)+'</span>':'')+'</div>'
+    +'<div class="s">'+[TYPES[r.glazeType],r.temp?r.temp+'°C':'',r.cone?'К '+r.cone:''].filter(Boolean).join(' · ')+'</div><div class="s">'+r.ingredients.map(function(i){return esc(i.name)+' '+fmt(i.pct);}).join(' · ')+'</div></div>'
+    +'<div class="r"><div style="color:'+(ok?'var(--ok)':'var(--err)')+'">Σ '+fmt(s)+'%</div><div>'+(nt?nt+' т.':'—')+'</div></div></button>';
+}
+// ── детайл ──
+function detHtml(r){
+  if(!r)return '<div class="empty" style="padding-top:80px">Избери рецепта от списъка.</div>';
+  var ph=photoOf(r),s=sum(r),ok=Math.abs(s-100)<0.5,fp=PROFILES.find(function(p){return p.id===r.fp;});
+  var h='<button class="btn ghost back" style="margin-top:10px;padding-left:0" onclick="closeRec()">‹ Рецепти</button>';
+  h+='<div class="dh"><div class="hero'+(ph?' has':'')+'">'+(ph?'<div class="img"><img src="'+ph+'" alt=""></div>':'')+'<div><div class="meta">'+(r.glazeType?'<span class="gt '+r.glazeType+'">'+TYPES[r.glazeType]+'</span>':'')+(vlabel(r)?'<span class="ver">'+vlabel(r)+(latest(r)?' · сегашна':' · по-стара')+'</span>':'')+'</div>'
+    +'<h2>'+esc(r.name)+' <button class="btn ghost sm" style="padding:0 6px;min-height:32px;font-size:22px" onclick="favT()" aria-label="Любима">'+(r.fav?'<span class="fav">♥</span>':'♡')+'</button></h2>'
+    +'<div class="kv" style="margin-top:6px"><div><small>Температура</small><b>'+(r.temp?r.temp+'°C':'—')+'</b></div><div><small>Конус</small><b>'+(r.cone?r.cone:'—')+'</b></div><div style="grid-column:1/-1"><small>Препоръчан профил</small><b>'+(fp?'<button class="btn ghost sm" style="padding:0;min-height:0;text-decoration:underline" onclick="profSheet(\''+fp.id+'\')">'+esc(fp.name)+'</button>':'—')+'</b></div></div>'
+    +'<div class="acts"><button class="btn pri" onclick="work(\''+r.id+'\')">Приготви</button><button class="btn" onclick="editRec(\''+r.id+'\')">Редактирай</button><button class="btn" onclick="dup(\''+r.id+'\')">Дублирай</button></div></div></div></div>';
+  // състав — винаги отворен
+  var b=parseFloat(S.batch)||0,max=Math.max.apply(null,r.ingredients.map(function(i){return i.pct;}));
+  h+='<div class="comp"><h3>Състав <span class="r sum '+(ok?'ok':'bad')+'">Σ '+fmt(s)+'%</span></h3>'
+    +(!ok?'<div style="font-size:13.5px;color:var(--err)">Сборът не е 100% — граматa се смятат от процента, общото тегло ще е '+(b?fmt(b*s/100)+' г':fmt(s)+'% от партидата')+'.</div>':'')
+    +'<div class="batch"><label for="bt">Партида</label><input id="bt" inputmode="decimal" placeholder="г" value="'+esc(S.batch)+'" oninput="S.batch=this.value.replace(\',\',\'.\');drawComp()"><span>г</span>'+[100,500,1000,2000].map(function(n){return '<button class="'+(b===n?'on':'')+'" onclick="S.batch=\''+n+'\';go()">'+n+'</button>';}).join('')+'</div>'
+    +'<div id="compRows">'+compRows(r)+'</div>'
+    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px">Грамажът — както калкулаторът в Глина: процентът по партидата. ✓ — материалът е в „Материали“; натисни, за да го отвориш.</div></div>';
+  // секции
+  var tests=testsOf(r),pcs=piecesOf(r),vs=vers(r);
+  h+='<div class="secs">'
+    +sec('tests','Тестове',tests.length?tests.length+(tests.length===1?' тест':' теста'):'няма',testsHtml(r,tests))
+    +sec('ver','Версии',vs.length>1?vs.length+' версии':'една',versHtml(r,vs))
+    +sec('notes','Бележки',r.notes?'има':'—','<div class="notes">'+(r.notes?esc(r.notes):'<span style="color:var(--muted)">Няма бележки.</span>')+'</div><div style="font-size:12.5px;color:var(--muted);margin-top:10px">Приготвянето и нанасянето са в бележките. <span class="tag-fut">бъдеща възможност</span> отделни полета „Приготвяне“ и „Нанасяне“.</div>')
+    +sec('pcs','Изделия с тази глазура',pcs.length?String(pcs.length):'няма',pcs.length?pcs.map(function(p){return '<button class="li" onclick="toast(\'В Глина: детайлът на „'+esc(p.name)+'“\')"><img src="'+p.photo+'" alt=""><div><div class="t">'+esc(p.name)+'</div><div class="s">'+esc(p.stage)+'</div></div><span class="go">›</span></button>';}).join(''):'<div style="color:var(--muted);font-size:14px">Още не е използвана в изделие.</div>')
+    +'</div>';
+  h+='<div class="morebar"><button class="btn" onclick="toast(\'В Глина: „+ Нов тест“ с тази рецепта\')">+ Нов тест</button><button class="btn" onclick="toast(\'В Глина: „+ Ново изделие“ с тази глазура\')">+ Ново изделие</button><button class="btn" onclick="newVer(\''+r.id+'\')">+ Нова версия</button><button class="btn warn" onclick="del(\''+r.id+'\')">Изтрий</button></div>';
+  return h;
+}
+function compRows(r){
+  var b=parseFloat(S.batch)||0,max=Math.max.apply(null,r.ingredients.map(function(i){return i.pct;})),s=sum(r);
+  var h=r.ingredients.map(function(i){var hv=have(i),m=hv?mat(i.matId):null;
+    return '<div class="ing'+(b?' g':'')+'"><div class="n">'+(hv?'<button onclick="matSheet(\''+i.matId+'\')">'+esc(i.name)+'</button><small>✓ в материалите'+(m.stock!=null?' · налично '+m.stock+' '+m.unit:'')+'</small>':esc(i.name)+'<small class="no">✗ няма го в материалите</small>')+'</div>'
+      +'<div class="p">'+fmt(i.pct)+'%</div>'+(b?'<div class="gv">'+fmt(i.pct/100*b)+' г</div>':'')
+      +'<div class="bar"><i class="'+(hv?'':'no')+'" style="width:'+(i.pct/max*100)+'%"></i></div></div>';}).join('');
+  if(b)h+='<div class="tot"><span>Общо</span><span>'+fmt(s)+'%</span><span>'+fmt(b*s/100)+' г</span></div>';
+  return h;
+}
+function drawComp(){var r=rec(S.id);var el=document.getElementById('compRows');if(el)el.innerHTML=compRows(r);document.querySelectorAll('.batch button').forEach(function(x){x.classList.toggle('on',parseFloat(S.batch)===parseFloat(x.textContent));});}
+function sec(k,title,sumTxt,body){var open=S.open[k]!==undefined?S.open[k]:(k==='tests'||k==='notes');return '<div class="sec'+(open?' open':'')+'"><button class="shd" onclick="S.open[\''+k+'\']=!'+open+';go()" aria-expanded="'+open+'"><b>'+title+'</b><span>'+sumTxt+'</span><i>▾</i></button><div class="bd">'+body+'</div></div>';}
+function testsHtml(r,tests){
+  if(!tests.length)return '<div style="color:var(--muted);font-size:14px">Няма свързани тестове.</div>'+(vers(r).length>1?'<div style="font-size:13px;color:var(--muted);margin-top:6px">Тестовете на другите версии са при тях — виж „Версии“.</div>':'');
+  return tests.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).map(function(t){
+    return '<button class="li" onclick="testSheet(\''+t.id+'\')"><img src="'+t.photo+'" alt=""><div style="min-width:0"><div class="t">'+t.date+' · '+stars(t.rat)+'</div><div class="s">'+[t.surf,t.flow?'течене: '+t.flow.toLowerCase():'',t.def&&t.def!=='Няма'?t.def:'',t.temp?t.temp+'°C':''].filter(Boolean).map(esc).join(' · ')+'</div><div class="s">'+esc(t.clay||'')+'</div></div><span class="go">›</span></button>';}).join('');
+}
+function versHtml(r,vs){
+  var h='';
+  if(vs.length<=1)h+='<div style="color:var(--muted);font-size:14px">Една версия. Нова се прави сама, ако смениш състава, а към рецептата сочат тестове — тестовете остават при състава, с който са правени.</div>';
+  else h+=vs.slice().reverse().map(function(v){var cur=v.id===r.id,nt=testsOf(v).length,prev=vs[vs.indexOf(v)-1];
+    return '<button class="vrow'+(cur?' cur':'')+'" '+(cur?'':'onclick="openRec(\''+v.id+'\')"')+'><span class="vb">v'+(v.version||1)+'</span><div style="flex:1;min-width:0"><div style="font-size:14px">'+[v.upd,nt?nt+(nt===1?' тест':' теста'):'без тестове',v.versionNote||''].filter(Boolean).map(esc).join(' · ')+'</div>'+(prev?'<div class="diff">'+diff(prev,v)+'</div>':'')+'</div>'+(cur?'<span style="font-size:12.5px;color:var(--primary-d);font-weight:600">отворена</span>':'<span style="color:var(--muted)">›</span>')+'</button>';}).join('');
+  return h+'<button class="btn sm" style="margin-top:10px" onclick="newVer(\''+r.id+'\')">+ Нова версия</button>';
+}
+// Разликата в състава спрямо предишната версия — изведена, само показва.
+function diff(a,b){
+  var key=function(i){return i.name;},A={},B={},out=[];a.ingredients.forEach(function(i){A[key(i)]=i.pct;});b.ingredients.forEach(function(i){B[key(i)]=i.pct;});
+  Object.keys(B).forEach(function(k){if(!(k in A))out.push('<span class="up">+ '+esc(k)+' '+fmt(B[k])+'%</span>');else if(A[k]!==B[k])out.push('<span class="'+(B[k]>A[k]?'up':'dn')+'">'+esc(k)+' '+fmt(A[k])+'→'+fmt(B[k])+'%</span>');});
+  Object.keys(A).forEach(function(k){if(!(k in B))out.push('<span class="dn">− '+esc(k)+'</span>');});
+  return out.length?'спрямо предишната: '+out.join(' · '):'съставът е същият';
+}
+// ── листове: материал, тест, профил ──
+function sheet(title,body,foot){document.getElementById('layer').innerHTML='<div class="sh-bg" onclick="if(event.target===this)closeSheet()"><div class="sh" role="dialog"><div class="hd"><h2>'+title+'</h2><button class="btn sm" onclick="closeSheet()">✕</button></div><div class="bd">'+body+'</div>'+(foot?'<div class="ft">'+foot+'</div>':'')+'</div></div>';}
+function closeSheet(){document.getElementById('layer').innerHTML='';}
+function matSheet(id){var m=mat(id);var used=D.recipes.filter(function(r){return r.ingredients.some(function(i){return i.matId===id;});});
+  var b=parseFloat(S.batch)||0,r=rec(S.id),need=r&&b?(r.ingredients.find(function(i){return i.matId===id;})||{}).pct/100*b:0;
+  sheet(esc(m.name),'<div class="kv"><div><small>Категория</small><b>'+esc(m.cat)+'</b></div><div><small>Наличност</small><b'+(m.alert&&m.stock<=m.alert?' style="color:var(--err)"':'')+'>'+m.stock+' '+m.unit+(m.alert&&m.stock<=m.alert?' · под прага':'')+'</b></div></div>'
+    +(need?'<div class="lock" style="margin-top:12px">За партида '+fmt(b)+' г трябват '+fmt(need)+' г. <span class="tag-fut">бъдеща възможност</span> сравнение със склада за цялата рецепта.</div>':'')
+    +(m.note?'<div class="notes" style="margin-top:12px">'+esc(m.note)+'</div>':'')
+    +'<h4 style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:14px 0 4px">В рецепти ('+used.length+')</h4>'+used.map(function(x){return '<button class="li" onclick="closeSheet();openRec(\''+x.id+'\')"><div><div class="t">'+esc(dname(x))+'</div><div class="s">'+fmt(x.ingredients.find(function(i){return i.matId===id;}).pct)+'%</div></div><span class="go">›</span></button>';}).join(''),
+    '<button class="btn" onclick="closeSheet()">Затвори</button><button class="btn" onclick="toast(\'В Глина: пълният детайл на материала\')">Отвори в Материали</button>');}
+function testSheet(id){var t=D.tests.find(function(x){return x.id===id;}),r=rec(t.recipeId);
+  sheet('Тест · '+t.date,'<img src="'+t.photo+'" alt="" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px">'
+    +'<div class="kv" style="margin-top:12px"><div><small>Рецепта</small><b>'+esc(dname(r))+'</b></div><div><small>Оценка</small><b>'+stars(t.rat)+'</b></div><div><small>Повърхност</small><b>'+esc(t.surf||'—')+'</b></div><div><small>Течене</small><b>'+esc(t.flow||'—')+'</b></div><div><small>Дефекти</small><b>'+esc(t.def||'—')+'</b></div><div><small>Глина</small><b>'+esc(t.clay||'—')+'</b></div><div><small>Температура</small><b>'+(t.temp?t.temp+'°C':'—')+'</b></div><div><small>Задръжка</small><b>'+(t.hold?t.hold+' мин':'—')+'</b></div></div>'
+    +(t.notes?'<div class="notes" style="margin-top:12px">'+esc(t.notes)+'</div>':''),'<button class="btn" onclick="closeSheet()">Затвори</button><button class="btn" onclick="toast(\'В Глина: детайлът на теста\')">Отвори теста</button>');}
+function profSheet(id){var p=PROFILES.find(function(x){return x.id===id;});sheet(esc(p.name),'<div class="kv"><div><small>Пик</small><b>'+p.peak+'°C</b></div><div><small>Задръжка</small><b>'+p.hold+' мин</b></div></div><div class="notes" style="margin-top:12px">'+esc(p.ramps)+'</div>','<button class="btn" onclick="closeSheet()">Затвори</button>');}
+// ── работен режим: приготвяне ──
+function work(id){W={id:id,done:{}};if(!parseFloat(S.batch))S.batch='1000';drawWork();}
+function drawWork(){
+  var r=rec(W.id),b=parseFloat(S.batch)||0,next=r.ingredients.findIndex(function(i,k){return !W.done[k];});
+  document.getElementById('layer').innerHTML='<div class="work"><div class="top"><button class="btn sm" onclick="closeWork()">✕</button><b>'+esc(dname(r))+'</b></div><div class="body">'
+    +'<div class="batch" style="margin-top:0"><label for="wb">Партида</label><input id="wb" inputmode="decimal" value="'+esc(S.batch)+'" onchange="S.batch=this.value.replace(\',\',\'.\');drawWork()"><span>г</span>'+[100,500,1000,2000].map(function(n){return '<button class="'+(b===n?'on':'')+'" onclick="S.batch=\''+n+'\';drawWork()">'+n+'</button>';}).join('')+'</div>'
+    +'<div style="font-size:13px;color:var(--muted);margin:2px 0 6px">Отметни всяка съставка, когато я претеглиш. <span class="tag-new">нов изглед</span> отметките не се записват.</div>'
+    +r.ingredients.map(function(i,k){return '<button class="wi'+(W.done[k]?' done':'')+(k===next?' next':'')+'" onclick="W.done['+k+']=!W.done['+k+'];drawWork()"><span class="ck">'+(W.done[k]?'✓':'')+'</span><div class="n">'+esc(i.name)+'<small>'+fmt(i.pct)+'%'+(have(i)?'':' · няма го в материалите')+'</small></div><div class="g">'+fmt(i.pct/100*b)+'<small>г</small></div></button>';}).join('')
+    +'<div class="tot" style="margin-top:14px"><span>Общо</span><span>'+fmt(sum(r))+'%</span><span>'+fmt(b*sum(r)/100)+' г</span></div>'
+    +(r.notes?'<div class="sec open" style="margin-top:14px"><div class="bd" style="display:block;padding-top:12px"><div style="font-size:13px;color:var(--muted);margin-bottom:4px">Бележки</div><div class="notes">'+esc(r.notes)+'</div></div></div>':'')
+    +'</div></div>';
+}
+function closeWork(){document.getElementById('layer').innerHTML='';go();}
+// ── формуляр ──
+var F=null;
+function editRec(id,base,verOf){
+  var r=id?rec(id):base||null;
+  F={id:id,verOf:verOf||null,tab:'basic',name:r?r.name:'',temp:r?r.temp:'',glazeType:r?r.glazeType:'',cone:r?r.cone:'',fp:r?r.fp||'':'',notes:r?r.notes||'':'',photo:r?r.photo:null,ings:r?JSON.parse(JSON.stringify(r.ingredients)):[],q:'',err:{}};
+  if(!r)F.ings=[];
+  drawForm();
+}
+function fsum(){return F.ings.reduce(function(a,i){return a+(parseFloat(i.pct)||0);},0);}
+function drawForm(){
+  var s=fsum(),title=F.verOf?'Нова версия на „'+esc(rec(F.verOf).name)+'“':F.id?'Редактирай рецепта':'Нова рецепта';
+  var tabs=[['basic','Основни',F.name?'✓':'име *'],['comp','Състав',F.ings.length+' · Σ '+fmt(s)+'%'],['more','Бележки и снимка',F.notes?'✓':'']];
+  var h='<div class="ftabs">'+tabs.map(function(t){return '<button class="'+(F.tab===t[0]?'on ':'')+(F.err[t[0]]?'err':'')+'" onclick="F.tab=\''+t[0]+'\';drawForm()">'+t[1]+'<small>'+t[2]+'</small></button>';}).join('')+'</div>';
+  if(F.tab==='basic'){
+    h+='<div class="f"><label>Наименование *</label><input id="fn" value="'+esc(F.name)+'" oninput="F.name=this.value">'+(F.err.name?'<div class="err">Въведи наименование</div>':'')+'</div>'
+      +'<div class="f"><label>Вид глазура</label><div class="pick">'+Object.keys(TYPES).map(function(k){return '<button class="'+(F.glazeType===k?'on':'')+'" onclick="F.glazeType=F.glazeType===\''+k+'\'?\'\':\''+k+'\';drawForm()">'+TYPES[k]+'</button>';}).join('')+'</div></div>'
+      +'<div class="f"><label>Целева температура, °C</label><input inputmode="numeric" value="'+esc(F.temp)+'" placeholder="1240" oninput="F.temp=this.value"></div>'
+      +'<div class="f"><label>Конус / температурен диапазон</label><div class="pick">'+CONES.map(function(c){return '<button class="'+(F.cone===c[0]?'on':'')+'" onclick="F.cone=F.cone===\''+c[0]+'\'?\'\':\''+c[0]+'\';drawForm()">'+c[1]+'</button>';}).join('')+'</div></div>'
+      +'<div class="f"><label>Препоръчан профил</label><select onchange="F.fp=this.value"><option value="">—</option>'+PROFILES.map(function(p){return '<option value="'+p.id+'"'+(F.fp===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join('')+'</select></div>';
+  } else if(F.tab==='comp'){
+    var cols=['#6F837B','#A9603F','#4A5F80','#B98A2E','#8C7BA8','#6E8F86','#C08A70','#9DB0A0'];
+    h+='<div class="sumbar"><div class="track">'+F.ings.map(function(i,k){return '<i style="width:'+Math.min(100,parseFloat(i.pct)||0)+'%;background:'+cols[k%cols.length]+'"></i>';}).join('')+'</div><div class="lbl"><span>Σ <b class="sum '+(Math.abs(s-100)<0.5?'ok':'bad')+'">'+fmt(s)+'%</b></span><span style="color:var(--muted)">'+(Math.abs(s-100)<0.5?'точно 100%':s<100?'до 100% остават '+fmt(100-s)+'%':'с '+fmt(s-100)+'% над 100')+'</span></div></div>'
+      +(F.err.comp?'<div class="f"><div class="err">'+esc(F.err.comp)+'</div></div>':'')
+      +'<div>'+F.ings.map(function(i,k){var hv=have(i);return '<div class="erow"><button class="m" onclick="F.swap='+k+';F.q=\'\';drawForm();setTimeout(function(){var q=document.getElementById(\'mq\');if(q)q.focus();},30)">'+esc(i.name||'— избери —')+'<small>'+(hv?'✓ от материалите':i.name?'✏ друго (не е в материалите)':'')+'</small></button>'
+        +'<input inputmode="decimal" value="'+esc(i.pct)+'" aria-label="% '+esc(i.name)+'" oninput="F.ings['+k+'].pct=this.value.replace(\',\',\'.\');updSum()"><button class="x" aria-label="Махни" onclick="F.ings.splice('+k+',1);drawForm()">×</button></div>';}).join('')+'</div>'
+      +'<div class="f msearch"><label>'+(F.swap!=null?'Смени „'+esc(F.ings[F.swap].name||'')+'“ с':'Добави съставка')+'</label><input id="mq" placeholder="Търси в материалите…" value="'+esc(F.q)+'" oninput="F.q=this.value;drawMatRes()"></div><div class="mres" id="mres">'+matRes()+'</div>';
+  } else {
+    h+='<div class="f"><label>Бележки</label><textarea oninput="F.notes=this.value" placeholder="приготвяне, нанасяне, наблюдения">'+esc(F.notes)+'</textarea><div class="hint">Приготвянето и нанасянето се пишат тук — в Глина няма отделни полета за тях.</div></div>'
+      +'<div class="f"><label>Снимка на резултата</label><div style="display:flex;gap:10px;align-items:center">'+(F.photo?'<img src="'+F.photo+'" style="width:96px;height:72px;border-radius:10px;object-fit:cover">':'')+'<label class="btn sm" style="cursor:pointer">'+(F.photo?'Смени':'+ Снимка')+'<input type="file" accept="image/*" hidden onchange="if(this.files[0]){F.photo=URL.createObjectURL(this.files[0]);drawForm();}"></label>'+(F.photo?'<button class="btn sm ghost" onclick="F.photo=null;drawForm()">Махни</button>':'')+'</div></div>';
+  }
+  var keepFocus=document.activeElement&&document.activeElement.id==='mq';
+  document.getElementById('layer').innerHTML='<div class="sh-bg"><div class="sh" role="dialog"><div class="hd"><h2>'+title+'</h2><button class="btn sm" onclick="askClose()">✕</button></div><div class="bd" id="fbd">'+h+'</div><div class="ft"><button class="btn" onclick="askClose()">Откажи</button><button class="btn pri" onclick="saveF()">Запази</button></div></div></div>';
+  if(keepFocus){var q=document.getElementById('mq');q.focus();q.setSelectionRange(q.value.length,q.value.length);}
+}
+function updSum(){var s=fsum();var l=document.querySelector('.sumbar .lbl');if(l)l.innerHTML='<span>Σ <b class="sum '+(Math.abs(s-100)<0.5?'ok':'bad')+'">'+fmt(s)+'%</b></span><span style="color:var(--muted)">'+(Math.abs(s-100)<0.5?'точно 100%':s<100?'до 100% остават '+fmt(100-s)+'%':'с '+fmt(s-100)+'% над 100')+'</span>';var cols=['#6F837B','#A9603F','#4A5F80','#B98A2E','#8C7BA8','#6E8F86','#C08A70','#9DB0A0'];var t=document.querySelector('.sumbar .track');if(t)t.innerHTML=F.ings.map(function(i,k){return '<i style="width:'+Math.min(100,parseFloat(i.pct)||0)+'%;background:'+cols[k%cols.length]+'"></i>';}).join('');}
+function matRes(){
+  var q=(F.q||'').toLowerCase(),used=F.ings.map(function(i){return i.matId;});
+  var list=MATS.filter(function(m){return !q||m.name.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+  return list.map(function(m){var u=used.indexOf(m.id)>=0;return '<button '+(u?'disabled style="opacity:.45"':'')+' onclick="pickMat(\''+m.id+'\')">'+esc(m.name)+'<small>'+(u?'вече е в рецептата':esc(m.cat))+'</small></button>';}).join('')
+    +(q?'<button onclick="pickCustom()">✏ „'+esc(F.q)+'“ — друго, не е в материалите<small>както „Друго…“ в Глина</small></button>':'');
+}
+function drawMatRes(){var el=document.getElementById('mres');if(el)el.innerHTML=matRes();}
+function pickMat(id){var m=mat(id);if(F.swap!=null){F.ings[F.swap].matId=id;F.ings[F.swap].name=m.name;F.swap=null;}else F.ings.push({matId:id,name:m.name,pct:''});F.q='';drawForm();var ins=document.querySelectorAll('.erow input');if(ins.length&&!F.ings[F.ings.length-1].pct)ins[ins.length-1].focus();}
+function pickCustom(){var n=F.q.trim();if(!n)return;if(F.swap!=null){F.ings[F.swap]={matId:'__c',name:n,pct:F.ings[F.swap].pct};F.swap=null;}else F.ings.push({matId:'__c',name:n,pct:''});F.q='';drawForm();}
+function askClose(){if(confirm('Да затворя ли без запазване?'))closeSheet();}
+// Проверките — като saveRecipe в Глина: име, поне 1 съставка, положителни проценти, без повторен материал.
+function saveF(){
+  F.err={};
+  if(!F.name.trim()){F.err.name=1;F.err.basic=1;}
+  var valid=F.ings.filter(function(i){return i.name&&i.pct;});
+  var bad=valid.find(function(i){return !(parseFloat(i.pct)>0);});
+  var seen={},dupI=valid.find(function(i){if(i.matId&&i.matId!=='__c'){if(seen[i.matId])return true;seen[i.matId]=1;}return false;});
+  if(!valid.length)F.err.comp='Добави поне 1 съставка.';else if(bad)F.err.comp='Процентът на „'+bad.name+'“ трябва да е положително число.';else if(dupI)F.err.comp='„'+dupI.name+'“ е два пъти в състава.';
+  if(F.err.name||F.err.comp){F.tab=F.err.name?'basic':'comp';drawForm();return;}
+  var data={name:F.name.trim(),temp:F.temp,glazeType:F.glazeType,cone:F.cone,fp:F.fp,notes:F.notes,photo:F.photo,ingredients:valid.map(function(i){return {matId:i.matId,name:i.name,pct:parseFloat(i.pct)};}),upd:new Date().toISOString().slice(0,10)};
+  if(F.verOf){var base=rec(F.verOf);var nv=mkVer(base,data,'');closeSheet();openRec(nv.id);toast('Създадена версия v'+nv.version);return;}
+  if(F.id){
+    var old=rec(F.id),changed=JSON.stringify(old.ingredients.map(function(i){return i.name+'|'+i.pct;}).sort())!==JSON.stringify(data.ingredients.map(function(i){return i.name+'|'+i.pct;}).sort());
+    if(changed&&testsOf(old).length){versionAsk(old,data);return;}
+    Object.assign(old,data);closeSheet();go();toast('Обновено');return;
+  }
+  var r=Object.assign({id:'r'+Date.now(),fav:false},data);D.recipes.push(r);closeSheet();openRec(r.id);toast('Добавено!');
+}
+function mkVer(base,data,note){
+  var vs=vers(base),max=vs.reduce(function(m,x){return Math.max(m,x.version||1);},0);
+  vs.forEach(function(x){x.lineageId=lin(base);x.version=x.version||1;});
+  var nv=Object.assign({id:'r'+Date.now(),lineageId:lin(base),version:max+1,fav:false},data);if(note)nv.versionNote=note;D.recipes.push(nv);return nv;
+}
+// Пазачът от Глина v1.10.0: съставът се сменя, а към рецептата сочат тестове.
+function versionAsk(old,data){
+  var n=testsOf(old).length,nx=vers(old).reduce(function(m,x){return Math.max(m,x.version||1);},0)+1;
+  document.getElementById('layer').innerHTML+='<div class="sh-bg" style="z-index:65"><div class="sh"><div class="hd"><h2>Съставът се променя</h2></div><div class="bd"><div style="font-size:15.5px;line-height:1.55">'+n+(n===1?' тест сочи':' теста сочат')+' към тази рецепта и описва'+(n===1?'':'т')+' сегашния ѝ състав.</div>'
+    +'<button class="btn pri" style="width:100%;margin-top:14px;flex-direction:column;align-items:flex-start;text-align:left" onclick="vAns(true)">Запази като нова версия v'+nx+'<span style="font-weight:400;font-size:13.5px;opacity:.9">тестовете остават при v'+(old.version||1)+'</span></button>'
+    +'<button class="btn" style="width:100%;margin-top:8px;flex-direction:column;align-items:flex-start;text-align:left" onclick="vAns(false)">Запази върху сегашната<span style="font-weight:400;font-size:13.5px;color:var(--muted)">тестовете ще описват състав, който вече го няма</span></button>'
+    +'<button class="btn ghost" style="width:100%;margin-top:4px" onclick="this.closest(\'.sh-bg\').remove()">Назад към формуляра</button></div></div></div>';
+  window._va={old:old,data:data};
+}
+function vAns(asNew){var o=window._va.old,d=window._va.data;if(asNew){var nv=mkVer(o,d,'');closeSheet();openRec(nv.id);toast('Създадена версия v'+nv.version);}else{Object.assign(o,d);closeSheet();go();toast('Обновено');}}
+function newVer(id){var r=rec(id);editRec(null,r,id);}
+function dup(id){var r=rec(id),c=JSON.parse(JSON.stringify(r));c.id='r'+Date.now();c.name=r.name+' (копие)';c.fav=false;delete c.lineageId;delete c.version;delete c.versionNote;c.upd=new Date().toISOString().slice(0,10);D.recipes.push(c);openRec(c.id);toast('Дублирано');}
+function del(id){var r=rec(id),nt=testsOf(r).length,np=piecesOf(r).length;if(!confirm('Изтрий рецептата?'+(nt||np?'\n\nСвързани записи ще останат без рецепта:'+(nt?'\n• '+nt+' теста':'')+(np?'\n• '+np+' изделия':'')+'\n(Те НЕ се изтриват.)':'')))return;D.recipes=D.recipes.filter(function(x){return x.id!==id;});S.id=null;go();toast('Изтрито');}
+function favT(){var r=rec(S.id);r.fav=!r.fav;go();toast(r.fav?'Добавено в любими':'Премахнато от любими');}
+// ── навигация ──
+function tog(k,v){var a=S[k],i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);go();}
+function togI(n){tog('ing',n);}
+function unset(k,v){if(k==='types'||k==='cones'||k==='ing')S[k]=S[k].filter(function(x){return x!==v;});else if(k==='temp'||k==='tests')S[k]='';else S[k]=false;go();}
+function clearF(){S.types=[];S.temp='';S.cones=[];S.fav=false;S.tests='';S.ing=[];S.allver=false;S.q='';go();}
+function openRec(id){S.id=id;S.open={};go();if(window.innerWidth<1100)window.scrollTo(0,0);}
+function closeRec(){S.id=null;go();}
+function resetDemo(){D=seed();S={id:null,view:'cards',q:'',types:[],temp:'',cones:[],fav:false,tests:'',ing:[],allver:false,sort:'upd',open:{},batch:'',filters:false};closeSheet();go();toast('Демото е нулирано');}
+function go(){
+  if(!S.id&&window.innerWidth>=1100)S.id='r3';
+  document.getElementById('wrap').className='wrap '+(S.id?'det':'list');
+  document.getElementById('colList').innerHTML=listHtml();
+  document.getElementById('colDet').innerHTML=detHtml(S.id?rec(S.id):null);
+}
+function goKeep(){var q=document.getElementById('q'),pos=q.selectionStart;document.getElementById('colList').innerHTML=listHtml();q=document.getElementById('q');q.focus();try{q.setSelectionRange(pos,pos);}catch(e){}}
+window.addEventListener('keydown',function(e){if(e.key==='Escape'){if(document.querySelector('.work'))closeWork();else if(document.querySelector('.sh-bg'))closeSheet();}});
+go();
+</script>
+</body>
+</html>
