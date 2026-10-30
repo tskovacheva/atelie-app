@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Изделия · списък v0</title>
+<link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Прототип „Изделия — списък“ (v0). Самостоятелен, с 60+ примерни записа.
+   Не чете и не пише данните на Глина. */
+:root{
+  --bg:#F3F2EF;--surface:#FFFFFF;--text:#2F3437;--muted:#646C71;--primary:#6F837B;--primary-d:#56685F;
+  --primary-soft:#DCE4E0;--bg2:#E8E7E4;--bdr:rgba(47,52,55,.10);--bdr2:rgba(47,52,55,.22);
+  --tx2:#41474A;--ok:#4F7362;--okbg:#E5EEE8;--warn:#A9603F;--warnbg:#F6E9E2;--err:#9E4234;--errbg:#F5E3DF;
+  --r:14px;--shadow:0 2px 10px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select{font-family:inherit;font-size:16px;color:var(--text)}
+button{cursor:pointer}
+.serif,h1,h2{font-family:'Tenor Sans',sans-serif;font-weight:400}
+/* лента на прототипа */
+.proto{position:sticky;top:0;z-index:30;background:rgba(243,242,239,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--bdr)}
+.proto .in{max-width:1400px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.proto b{font-weight:500;font-size:14px;color:var(--muted);margin-right:auto}
+.seg{display:inline-flex;background:var(--bg2);border-radius:12px;padding:3px}
+.seg button{border:none;background:none;padding:8px 12px;border-radius:9px;font-size:14px;min-height:40px;color:var(--tx2)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:500}
+/* оформление */
+.page{max-width:1400px;margin:0 auto;padding:0 16px 100px;display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:960px){.page{grid-template-columns:260px 1fr;align-items:start}.side{position:sticky;top:70px;max-height:calc(100vh - 80px);overflow:auto}.fbtn{display:none!important}}
+@media(max-width:959px){.side{display:none}.side.open{display:block;position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:16px 16px 100px}}
+.head{display:flex;align-items:flex-end;gap:10px;padding:18px 0 10px;flex-wrap:wrap}
+.head h1{font-size:32px;margin-right:auto}
+.cnt{font-size:14px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:9px 16px;border-radius:12px;border:1.5px solid var(--bdr2);background:var(--surface);font-size:15px;font-weight:500}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.sm{min-height:38px;padding:6px 12px;font-size:14px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:sticky;top:57px;z-index:20;background:var(--bg);padding:8px 0}
+.search{flex:1 1 220px;min-width:0;position:relative}
+.search input{width:100%;min-height:46px;padding:10px 14px 10px 40px;border:1.5px solid var(--bdr2);border-radius:12px;background:var(--surface);outline:none}
+.search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.search:before{content:'⌕';position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+select.sort{min-height:46px;padding:8px 12px;border:1.5px solid var(--bdr2);border-radius:12px;background:var(--surface)}
+.active{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px}
+.achip{display:inline-flex;align-items:center;gap:6px;background:var(--primary-soft);color:var(--primary-d);border:none;border-radius:999px;padding:6px 12px;font-size:14px;min-height:34px}
+/* филтри */
+.fsec{margin-top:16px}
+.fsec h3{font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:999px;padding:6px 12px;min-height:38px;font-size:14px}
+.chip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.chip .n{opacity:.7;font-size:12.5px;margin-left:3px}
+/* етап */
+.st{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:500;background:var(--okbg);color:var(--ok);white-space:nowrap}
+.st.wet,.st.leather-hard{background:#ECEAE3;color:#6A6253}
+.st.bone-dry{background:#EFE7DA;color:#7B6440}
+.st.bisque{background:#F3E4D8;color:#8F5A3A}
+.st.glazed{background:#E4E9F1;color:#4A5F80}
+.st.fired{background:var(--okbg);color:var(--ok)}
+.st.finished{background:#DCE4E0;color:var(--primary-d)}
+.st.out{background:var(--errbg);color:var(--err)}
+.st.mix{background:var(--warnbg);color:var(--warn)}
+/* галерия */
+.gal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:600px){.gal{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
+@media(min-width:1200px){.gal{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;border:none;text-align:left;padding:0;display:flex;flex-direction:column;min-width:0}
+.card .img{aspect-ratio:4/3;background:var(--primary-soft);position:relative}
+.card .img img{width:100%;height:100%;object-fit:cover;display:block}
+.card .img .badge{position:absolute;left:8px;top:8px;background:rgba(47,52,55,.78);color:#fff;font-size:12px;padding:2px 8px;border-radius:999px}
+.card .b{padding:9px 10px 10px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.card .nm{font-size:15.5px;font-weight:500;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card .meta{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.card.arch{opacity:.65}
+.card.ser{outline:2px solid var(--primary-soft)}
+.expand{border:none;background:var(--bg);border-top:1px solid var(--bdr);padding:8px 10px;font-size:13.5px;color:var(--primary-d);text-align:left;min-height:40px;font-weight:500}
+.members{grid-column:1/-1;background:var(--surface);border-radius:var(--r);padding:10px;box-shadow:var(--shadow);border-left:4px solid var(--primary)}
+.members .mh{font-size:14px;color:var(--muted);margin:0 0 8px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.mcard{display:flex;gap:8px;align-items:center;border:1px solid var(--bdr);border-radius:12px;padding:6px;background:var(--bg);text-align:left;min-width:0}
+.mcard img,.mcard .ph{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--primary-soft)}
+.mcard .t{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* списък */
+.lst{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.lrow{display:grid;grid-template-columns:48px 1fr auto auto;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bdr);width:100%;border-left:none;border-right:none;border-top:none;background:none;text-align:left;min-height:62px}
+.lrow img,.lrow .ph{width:48px;height:48px;border-radius:10px;object-fit:cover;background:var(--primary-soft)}
+.lrow .nm{font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .meta{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .c{display:none}
+.lrow.arch{opacity:.6}
+.lrow.mem{padding-left:34px;background:var(--bg)}
+@media(max-width:599px){.lrow .st.mix{display:none}}
+.lrow .tog{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:10px;min-width:44px;min-height:38px;font-size:13px;padding:0 8px}
+@media(min-width:900px){
+  .lrow{grid-template-columns:48px minmax(180px,2fr) 130px 120px 140px 110px 96px 64px}
+  .lrow .c{display:block;font-size:14px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow .meta.sm{display:none}
+  .lhead{display:grid;grid-template-columns:48px minmax(180px,2fr) 130px 120px 140px 110px 96px 64px;gap:10px;padding:10px 12px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--bdr2)}
+}
+@media(max-width:899px){.lhead{display:none}}
+.more{display:block;margin:14px auto 0}
+.empty{padding:40px 10px;text-align:center;color:var(--muted)}
+/* ателие */
+.home{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:900px){.home{grid-template-columns:1fr 1fr}}
+.box{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.box h2{font-size:20px;margin-bottom:10px}
+.qa{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:900px){.qa{grid-template-columns:repeat(4,1fr)}}
+.qa button{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:14px;padding:12px;min-height:64px;text-align:left;font-size:15px;font-weight:500}
+.qa button span{display:block;font-size:13px;color:var(--muted);font-weight:400}
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.pipe button{border:none;background:var(--bg);border-radius:12px;padding:10px;text-align:left;min-height:64px}
+.pipe .n{font-size:24px;font-family:'Tenor Sans',sans-serif}
+.pipe .l{font-size:13px;color:var(--muted)}
+.mini{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bdr);width:100%;border-left:none;border-right:none;border-top:none;background:none;text-align:left}
+.mini img,.mini .ph{width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--primary-soft);flex-shrink:0}
+.mini .t{font-size:15px;font-weight:500}
+.mini .s{font-size:13px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:999px;font-size:15px;z-index:60;max-width:calc(100% - 24px)}
+.fbar{position:sticky;bottom:0;background:var(--bg);padding:12px 0;display:flex;gap:8px}
+</style>
+</head>
+<body>
+<div class="proto"><div class="in">
+  <b>Прототип · Изделия v0</b>
+  <div class="seg" role="group" aria-label="Изглед">
+    <button data-v="gal" onclick="setView('gal')">Галерия</button>
+    <button data-v="list" onclick="setView('list')">Списък</button>
+    <button data-v="home" onclick="setView('home')">Моето ателие</button>
+  </div>
+</div></div>
+<div class="page" id="page">
+  <aside class="side" id="side"></aside>
+  <main id="main"></main>
+</div>
+<script>
+'use strict';
+// ── примерни данни (детерминирани) ──
+var STAGES=[['wet','Сурово'],['leather-hard','Кожна влажност'],['bone-dry','Сухо'],['bisque','Бисквит'],['glazed','Глазирано'],['fired','Изпечено'],['finished','Готово']];
+var OUT=[['broken','Счупено'],['scrapped','Бракувано'],['gifted','Подарено'],['sold','Продадено']];
+var SL={};STAGES.concat(OUT).forEach(function(s){SL[s[0]]=s[1];});
+var CATS=['Съдове за храна','Музикални инструменти','Декорация','Скулптура','Бижута','Тестови образци','Друго'];
+var CLAYS=['Шамотна бяла','Червена теракота','Xi Beach 100','Порцелан P10','Дива глина Владо Тричков'];
+var TECH=['Точене','Платки','Ръчно формоване','Фурш / намотки','Калъп','Куринуки'];
+var TYPES=[['чаша','Съдове за храна','cup',['Чаша за чай','Чаша за кафе','Голяма чаша','Чаша с дръжка']],['купа','Съдове за храна','bowl',['Купа за салата','Малка купа','Купа за супа']],
+  ['чиния','Съдове за храна','plate',['Чиния 22 см','Десертна чиния','Плато']],['ваза','Декорация','vase',['Ваза висока','Ваза бутилка','Ваза пъпка']],
+  ['окарина','Музикални инструменти','oca',['Окарина кит','Окарина костенурка','Окарина птица','Окарина 12 дупки']],['свирка','Музикални инструменти','oca',['Свирка славей','Водна свирка','Мини свирка']],
+  ['плочка','Тестови образци','tile',['Тест плочка','Плочка глазура','Плочка ангоба']],['купичка за сос','Съдове за храна','bowl',['Купичка за сос','Купичка соево']],
+  ['висулка','Бижута','tile',['Висулка лист','Обеци кръг','Висулка луна']],['скулптура','Скулптура','vase',['Птица','Глава','Котка']],['кана','Съдове за храна','cup',['Кана за мляко','Кана вода']]];
+var COLORS=['#8FA39B','#C9B38F','#B9A68C','#7D8F9C','#D8B35A','#A7826B','#8C7BA8','#6E8F86','#C08A70','#9DB0A0'];
+var seed=7;function rnd(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646;}
+function pick(a){return a[Math.floor(rnd()*a.length)];}
+function img(kind,col){
+  var s={cup:'<path d="M70 70h100l-10 100q-2 14-16 14H96q-14 0-16-14z" fill="'+col+'"/><path d="M168 95q32 0 30 28t-34 26" fill="none" stroke="'+col+'" stroke-width="12"/>',
+    oca:'<ellipse cx="120" cy="125" rx="80" ry="48" fill="'+col+'"/><circle cx="95" cy="112" r="7" fill="#F3F2EF"/><circle cx="125" cy="108" r="7" fill="#F3F2EF"/><circle cx="150" cy="118" r="7" fill="#F3F2EF"/>',
+    plate:'<ellipse cx="120" cy="130" rx="100" ry="40" fill="'+col+'"/><ellipse cx="120" cy="124" rx="70" ry="24" fill="#fff" opacity=".25"/>',
+    bowl:'<path d="M40 100h160q-6 70-80 70T40 100z" fill="'+col+'"/>',vase:'<path d="M100 40h40v30q30 20 30 60t-50 60q-50-10-50-60t30-60z" fill="'+col+'"/>',tile:'<rect x="50" y="60" width="140" height="120" rx="8" fill="'+col+'"/>'}[kind];
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180"><rect width="240" height="180" fill="#E9E4DC"/><g transform="translate(0,-25)">'+s+'</g></svg>');
+}
+function day(n){var d=new Date(2026,6,1);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function gen(){
+  var items=[],no=1;
+  var stW=['wet','leather-hard','bone-dry','bone-dry','bisque','bisque','glazed','fired','fired','finished','finished','broken','gifted','sold'];
+  for(var i=0;i<52;i++){
+    var t=pick(TYPES),name=pick(t[3])+(rnd()<.3?' '+pick(['синя','бяла','медна','пясъчна','зелена','с релеф']):''),st=pick(stW),d=Math.floor(rnd()*118);
+    var cats=[t[1]];if(rnd()<.2)cats.push(pick(CATS));
+    items.push({id:'p'+i,kind:'piece',code:'GL-2026-'+String(no++).padStart(3,'0'),name:name,type:t[0],cats:cats.filter(function(c,k,a){return a.indexOf(c)===k;}),clay:pick(CLAYS),tech:pick(TECH),stage:st,
+      date:day(d),upd:day(Math.min(120,d+Math.floor(rnd()*30))),photo:rnd()<.85?img(t[2],pick(COLORS)):null,size:rnd()<.7?{h:Math.round(rnd()*20+2),w:Math.round(rnd()*20+4)}:null,archived:rnd()<.07});
+  }
+  // серии с отделени парчета
+  for(var s=0;s<9;s++){
+    var t2=pick(TYPES),cnt=4+Math.floor(rnd()*9),d2=Math.floor(rnd()*110),st2=pick(['bone-dry','bisque','bisque','glazed','fired']);
+    var se={id:'s'+s,kind:'series',code:'GL-2026-'+String(no++).padStart(3,'0'),name:pick(t2[3])+' ×'+cnt,type:t2[0],cats:[t2[1]],clay:pick(CLAYS),tech:pick(TECH),stage:st2,count:cnt,
+      date:day(d2),upd:day(Math.min(120,d2+Math.floor(rnd()*20))),photo:img(t2[2],pick(COLORS)),size:{h:Math.round(rnd()*10+2),w:Math.round(rnd()*15+6)},members:[],archived:false};
+    var left=cnt,u=1;
+    var k=Math.floor(rnd()*3);
+    for(var m=0;m<k&&left>1;m++){
+      var q=Math.min(left-1,1+Math.floor(rnd()*3)),units=[];for(var x=0;x<q;x++)units.push(u++);left-=q;
+      se.members.push({id:se.id+'m'+m,kind:'piece',seriesId:se.id,code:se.code+'/'+(q>1?units[0]+'–'+units[q-1]:units[0]),name:pick(['Жълти','Сини','Бели','Счупена','С релеф']),qty:q,stage:pick(['fired','finished','broken','glazed']),photo:img(t2[2],pick(COLORS)),upd:day(Math.min(120,d2+25))});
+    }
+    se.free=left;
+    items.push(se);
+  }
+  return items;
+}
+var ALL=gen();
+// ── състояние ──
+var KEY='glina.list.v0';
+var S={view:'gal',q:'',stages:[],cats:[],clays:[],techs:[],kind:'all',arch:'active',sort:'date',open:{},limit:40};
+try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv)Object.keys(S).forEach(function(k){if(sv[k]!==undefined&&k!=='open'&&k!=='limit')S[k]=sv[k];});}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fd(d){var m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||'');return m?m[3]+'.'+m[2]:'';}
+function isOut(s){return OUT.some(function(o){return o[0]===s;});}
+function size(z){return z?'в'+z.h+' × Ø'+z.w:'';}
+function mixed(se){var t={};t[se.stage]=se.free;se.members.forEach(function(m){t[m.stage]=(t[m.stage]||0)+m.qty;});var k=Object.keys(t).filter(function(x){return t[x];});return k.length>1?k.map(function(x){return SL[x]+' '+t[x];}).join(' · '):'';}
+function stBadge(it){var mx=it.kind==='series'&&mixed(it);return '<span class="st '+(isOut(it.stage)?'out':it.stage)+'">'+SL[it.stage]+'</span>'+(mx?'<span class="st mix" title="'+esc(mx)+'">смесен</span>':'');}
+function toast(t){var e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(function(){e.remove();},1800);}
+function openItem(id){var it=ALL.find(function(x){return x.id===id;})||ALL.reduce(function(a,x){return a||(x.members||[]).find(function(m){return m.id===id;});},null);toast('В Глина: детайлът на „'+(it?it.name:'')+'“');}
+// ── филтриране ──
+function matches(it){
+  if(S.arch==='active'&&it.archived)return false;
+  if(S.arch==='arch'&&!it.archived)return false;
+  if(S.kind==='piece'&&it.kind!=='piece')return false;
+  if(S.kind==='series'&&it.kind!=='series')return false;
+  if(S.stages.length){var sts=[it.stage].concat((it.members||[]).map(function(m){return m.stage;}));if(!sts.some(function(s){return S.stages.indexOf(s)>=0;}))return false;}
+  if(S.cats.length&&!it.cats.some(function(c){return S.cats.indexOf(c)>=0;}))return false;
+  if(S.clays.length&&S.clays.indexOf(it.clay)<0)return false;
+  if(S.techs.length&&S.techs.indexOf(it.tech)<0)return false;
+  if(S.q){var q=S.q.toLowerCase(),hay=[it.name,it.code,it.type,it.clay,it.tech].concat(it.cats).concat((it.members||[]).map(function(m){return m.name+' '+m.code;})).join(' ').toLowerCase();if(hay.indexOf(q)<0)return false;}
+  return true;
+}
+function sorted(list){
+  var f={date:function(a,b){return b.date.localeCompare(a.date);},name:function(a,b){return a.name.localeCompare(b.name,'bg');},upd:function(a,b){return b.upd.localeCompare(a.upd);}}[S.sort];
+  return list.slice().sort(f);
+}
+function counts(key,vals,get){var c={};ALL.forEach(function(it){if(S.arch==='active'&&it.archived)return;get(it).forEach(function(v){c[v]=(c[v]||0)+1;});});return c;}
+// ── рендер ──
+function render(){
+  document.querySelectorAll('.seg button').forEach(function(b){b.classList.toggle('on',b.dataset.v===S.view);});
+  var page=document.getElementById('page');
+  page.style.gridTemplateColumns=S.view==='home'?'1fr':'';
+  document.getElementById('side').style.display=S.view==='home'?'none':'';
+  if(S.view==='home'){document.getElementById('main').innerHTML=homeView();return;}
+  document.getElementById('side').innerHTML=sideHtml();
+  document.getElementById('main').innerHTML=listHtml();
+}
+function chipGroup(title,key,vals,labels,cnt){
+  return '<div class="fsec"><h3>'+title+'</h3><div class="chips">'+vals.map(function(v,i){var on=S[key].indexOf(v)>=0;return '<button class="chip'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="tog(\''+key+'\','+JSON.stringify(v).replace(/"/g,'&quot;')+')">'+esc(labels?labels[i]:v)+(cnt&&cnt[v]?'<span class="n">'+cnt[v]+'</span>':'')+'</button>';}).join('')+'</div></div>';
+}
+function radio(title,key,opts){return '<div class="fsec"><h3>'+title+'</h3><div class="chips">'+opts.map(function(o){var on=S[key]===o[0];return '<button class="chip'+(on?' on':'')+'" onclick="S.'+key+'=\''+o[0]+'\';go()">'+o[1]+'</button>';}).join('')+'</div></div>';}
+function sideHtml(){
+  var sc=counts('stage',null,function(it){return [it.stage];});
+  return '<div style="display:flex;align-items:center;justify-content:space-between"><h2 style="font-size:20px">Филтри</h2><button class="btn sm fbtn" onclick="document.getElementById(\'side\').classList.remove(\'open\')">Готово</button></div>'
+    +radio('Вид запис','kind',[['all','Всички'],['piece','Единични'],['series','Серии']])
+    +chipGroup('Етап','stages',STAGES.concat(OUT).map(function(s){return s[0];}),STAGES.concat(OUT).map(function(s){return s[1];}),sc)
+    +chipGroup('Категория','cats',CATS,null,counts('c',null,function(it){return it.cats;}))
+    +chipGroup('Глина','clays',CLAYS,null,counts('c',null,function(it){return [it.clay];}))
+    +chipGroup('Техника','techs',TECH,null,counts('c',null,function(it){return [it.tech];}))
+    +radio('Архив','arch',[['active','Активни'],['arch','Само архив'],['all','Всички']])
+    +'<div class="fbar"><button class="btn" style="flex:1" onclick="clearF()">Изчисти</button><button class="btn pri fbtn" style="flex:1" onclick="document.getElementById(\'side\').classList.remove(\'open\')">Покажи</button></div>';
+}
+function activeChips(){
+  var a=[];
+  if(S.kind!=='all')a.push(['kind',S.kind==='piece'?'Единични':'Серии']);
+  S.stages.forEach(function(v){a.push(['stages:'+v,SL[v]]);});
+  S.cats.forEach(function(v){a.push(['cats:'+v,v]);});S.clays.forEach(function(v){a.push(['clays:'+v,v]);});S.techs.forEach(function(v){a.push(['techs:'+v,v]);});
+  if(S.arch!=='active')a.push(['arch',S.arch==='arch'?'Само архив':'С архива']);
+  return a;
+}
+function listHtml(){
+  var list=sorted(ALL.filter(matches)),ac=activeChips();
+  var h='<div class="head"><h1>Изделия</h1><span class="cnt">'+list.length+' от '+ALL.filter(function(x){return !x.archived;}).length+'</span><button class="btn pri" onclick="toast(\'В Глина: ново изделие\')">+ Ново</button></div>';
+  h+='<div class="tools"><div class="search"><input type="search" id="q" placeholder="Търси по име, код, вид, глина…" value="'+esc(S.q)+'" oninput="S.q=this.value;S.limit=40;goKeep()"></div>'
+    +'<button class="btn fbtn" onclick="document.getElementById(\'side\').classList.add(\'open\')">Филтри'+(ac.length?' ('+ac.length+')':'')+'</button>'
+    +'<select class="sort" aria-label="Подреди" onchange="S.sort=this.value;go()">'+[['date','Най-нови'],['upd','Последна промяна'],['name','Име А–Я']].map(function(o){return '<option value="'+o[0]+'"'+(S.sort===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>';
+  if(ac.length)h+='<div class="active">'+ac.map(function(x){return '<button class="achip" onclick="unset(\''+esc(x[0]).replace(/'/g,"\\'")+'\')">'+esc(x[1])+' ✕</button>';}).join('')+'<button class="achip" style="background:none;text-decoration:underline" onclick="clearF()">изчисти всички</button></div>';
+  if(!list.length)return h+'<div class="empty">Нищо не отговаря на търсенето и филтрите.</div>';
+  var shown=list.slice(0,S.limit);
+  h+=S.view==='gal'?galHtml(shown):lstHtml(shown);
+  if(list.length>S.limit)h+='<button class="btn more" onclick="S.limit+=40;go()">Покажи още ('+(list.length-S.limit)+')</button>';
+  return h;
+}
+function galHtml(list){
+  var h='<div class="gal">';
+  list.forEach(function(it){
+    var ser=it.kind==='series';
+    h+='<div class="card'+(it.archived?' arch':'')+(ser?' ser':'')+'"><button style="border:none;background:none;padding:0;text-align:left" onclick="openItem(\''+it.id+'\')"><div class="img">'+(it.photo?'<img src="'+it.photo+'" alt="" loading="lazy">':'')+(ser?'<span class="badge">серия · '+it.count+' бр.</span>':'')+'</div>'
+      +'<div class="b"><div class="nm">'+esc(it.name)+'</div><div class="meta">'+esc(it.code)+(it.size?' · '+size(it.size):'')+'</div><div class="row">'+stBadge(it)+'</div></div></button>'
+      +(ser&&it.members.length?'<button class="expand" aria-expanded="'+!!S.open[it.id]+'" onclick="S.open[\''+it.id+'\']=!S.open[\''+it.id+'\'];go()">'+(S.open[it.id]?'▴ Скрий':'▾ '+it.members.length+' отделени')+'</button>':'')+'</div>';
+    if(ser&&S.open[it.id])h+='<div class="members"><div class="mh">'+esc(it.name)+' · '+it.free+' бр. заедно'+(mixed(it)?' · '+esc(mixed(it)):'')+'</div><div class="mgrid">'+it.members.map(function(m){return '<button class="mcard" onclick="openItem(\''+m.id+'\')"><img src="'+m.photo+'" alt=""><div style="min-width:0"><div class="t">'+esc(m.name)+'</div><div style="font-size:12.5px;color:var(--muted)">'+esc(m.code)+' · '+m.qty+' бр.</div><span class="st '+(isOut(m.stage)?'out':m.stage)+'">'+SL[m.stage]+'</span></div></button>';}).join('')+'</div></div>';
+  });
+  return h+'</div>';
+}
+function lstHtml(list){
+  var h='<div class="lst"><div class="lhead"><span></span><span>Име</span><span>Етап</span><span>Размер</span><span>Глина</span><span>Техника</span><span>Промяна</span><span></span></div>';
+  list.forEach(function(it){
+    var ser=it.kind==='series';
+    h+='<div class="lrow'+(it.archived?' arch':'')+'" role="button" tabindex="0" onclick="openItem(\''+it.id+'\')">'+(it.photo?'<img src="'+it.photo+'" alt="" loading="lazy">':'<span class="ph"></span>')
+      +'<div style="min-width:0"><div class="nm">'+esc(it.name)+(ser?' <span style="font-size:12.5px;color:var(--muted);font-weight:400">· серия '+it.count+' бр.</span>':'')+'</div><div class="meta">'+esc(it.code)+' · '+esc(it.type)+'</div><div class="meta sm">'+[ser&&mixed(it)?'смесен':'',size(it.size),it.clay].filter(Boolean).map(esc).join(' · ')+'</div></div>'
+      +'<div style="display:flex;gap:4px;flex-wrap:wrap">'+stBadge(it)+'</div>'
+      +'<div class="c">'+esc(size(it.size)||'—')+'</div><div class="c">'+esc(it.clay)+'</div><div class="c">'+esc(it.tech)+'</div><div class="c">'+fd(it.upd)+'</div>'
+      +(ser&&it.members.length?'<button class="tog c" style="display:block" aria-expanded="'+!!S.open[it.id]+'" onclick="event.stopPropagation();S.open[\''+it.id+'\']=!S.open[\''+it.id+'\'];go()">'+(S.open[it.id]?'▴':'▾ '+it.members.length)+'</button>':'<span class="c"></span>')
+      +'</div>';
+    if(ser&&it.members.length&&!S.open[it.id])h=h.replace(/<span class="c"><\/span>(<\/div>)$/,'$1');
+    if(ser&&S.open[it.id])it.members.forEach(function(m){h+='<div class="lrow mem" role="button" tabindex="0" onclick="openItem(\''+m.id+'\')"><img src="'+m.photo+'" alt=""><div style="min-width:0"><div class="nm">'+esc(m.name)+'</div><div class="meta">'+esc(m.code)+' · '+m.qty+' бр.</div></div><div><span class="st '+(isOut(m.stage)?'out':m.stage)+'">'+SL[m.stage]+'</span></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c">'+fd(m.upd)+'</div><div class="c"></div></div>';});
+  });
+  h+='</div>';
+  // на телефон бутонът за серията стои в реда
+  return h.replace(/class="tog c" style="display:block"/g,'class="tog" style="display:block"');
+}
+// ── Моето ателие (експериментално) ──
+function homeView(){
+  var act=ALL.filter(function(x){return !x.archived;});
+  var by=function(s){return act.filter(function(x){return x.stage===s;}).length;};
+  var recent=act.slice().sort(function(a,b){return b.upd.localeCompare(a.upd);}).slice(0,6);
+  var wait=act.filter(function(x){return x.stage==='bone-dry'||x.stage==='glazed';}).slice(0,6);
+  var h='<div class="head"><h1>Моето ателие</h1><span class="cnt">експериментален начален екран</span></div><div class="home">';
+  h+='<div class="box" style="grid-column:1/-1"><h2>Бързи действия</h2><div class="qa">'
+    +'<button onclick="toast(\'Ново изделие\')">+ Ново изделие<span>или серия</span></button>'
+    +'<button onclick="toast(\'Ново изпичане\')">+ Изпичане<span>план на пещта</span></button>'
+    +'<button onclick="toast(\'Стъпка на изделие\')">+ Стъпка<span>етап, декорация, снимка</span></button>'
+    +'<button onclick="setView(\'list\');setTimeout(function(){var q=document.getElementById(\'q\');if(q)q.focus();},50)">Търси<span>по име или код</span></button></div></div>';
+  h+='<div class="box"><h2>В работа</h2><div class="pipe">'+[['wet','Сурово'],['leather-hard','Кожна'],['bone-dry','Сухо'],['bisque','Бисквит'],['glazed','Глазирано'],['fired','Изпечено']].map(function(s){return '<button onclick="S.stages=[\''+s[0]+'\'];setView(\'gal\')"><div class="n">'+by(s[0])+'</div><div class="l">'+s[1]+'</div></button>';}).join('')+'</div></div>';
+  h+='<div class="box"><h2>Планирани изпичания</h2>'
+    +'<button class="mini" onclick="toast(\'План на пещта\')"><span class="ph" style="display:flex;align-items:center;justify-content:center">🔥</span><div><div class="t">Бисквит ноември</div><div class="s">06.11 · Kittec CB 80 · 2 нива · 24 изделия</div></div></button>'
+    +'<button class="mini" onclick="toast(\'План на пещта\')"><span class="ph" style="display:flex;align-items:center;justify-content:center">🔥</span><div><div class="t">Глазурно 1240</div><div class="s">14.11 · план без нива · 9 изделия</div></div></button></div>';
+  h+='<div class="box"><h2>Чакат изпичане</h2>'+wait.map(function(x){return '<button class="mini" onclick="openItem(\''+x.id+'\')">'+(x.photo?'<img src="'+x.photo+'" alt="">':'<span class="ph"></span>')+'<div><div class="t">'+esc(x.name)+'</div><div class="s">'+esc(x.code)+' · '+SL[x.stage]+' → '+(x.stage==='bone-dry'?'бисквит':'глазурно')+'</div></div></button>';}).join('')+'</div>';
+  h+='<div class="box"><h2>Последно пипани</h2>'+recent.map(function(x){return '<button class="mini" onclick="openItem(\''+x.id+'\')">'+(x.photo?'<img src="'+x.photo+'" alt="">':'<span class="ph"></span>')+'<div><div class="t">'+esc(x.name)+'</div><div class="s">'+esc(x.code)+' · '+SL[x.stage]+' · '+fd(x.upd)+'</div></div></button>';}).join('')+'</div>';
+  return h+'</div>';
+}
+// ── действия ──
+function setView(v){S.view=v;S.limit=40;go();window.scrollTo(0,0);}
+function go(){persist();render();}
+function goKeep(){persist();var pos=document.getElementById('q').selectionStart;document.getElementById('side').innerHTML=sideHtml();document.getElementById('main').innerHTML=listHtml();var q=document.getElementById('q');q.focus();try{q.setSelectionRange(pos,pos);}catch(e){}}
+function tog(k,v){var a=S[k],i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);S.limit=40;go();}
+function unset(x){if(x==='kind')S.kind='all';else if(x==='arch')S.arch='active';else{var p=x.split(':'),k=p[0],v=p.slice(1).join(':');S[k]=S[k].filter(function(y){return y!==v;});}go();}
+function clearF(){S.stages=[];S.cats=[];S.clays=[];S.techs=[];S.kind='all';S.arch='active';S.q='';go();}
+render();
+</script>
+</body>
+</html>

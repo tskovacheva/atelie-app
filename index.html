@@ -422,6 +422,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 <div id="toast"></div>
+<div id="upd-bar" role="status" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:600;background:var(--text);color:var(--bg);border-radius:16px;padding:10px 10px 10px 16px;gap:8px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:calc(100% - 24px);width:max-content;">
+  <span class="upd-t" style="font-size:14px;">Има нова версия</span>
+  <button type="button" onclick="updLater()" style="background:none;border:1px solid rgba(255,255,255,.35);color:inherit;border-radius:10px;padding:8px 12px;min-height:40px;font-size:14px;font-family:inherit;cursor:pointer;">По-късно</button>
+  <button type="button" id="upd-now" onclick="updNow()" style="background:var(--primary);border:none;color:white;border-radius:10px;padding:8px 14px;min-height:40px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">Обнови</button>
+</div>
 
 <div id="app">
 <div id="main">
@@ -2068,7 +2073,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.35.1';
+const APP_VERSION = 'v1.35.2';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -11587,6 +11592,7 @@ if ('serviceWorker' in navigator) {
       .then(function (reg) {
         if (!reg) return;
         console.log('[SW] Registered, scope:', reg.scope);
+        try { caches.keys().then(function (k) { window.__glinaBootCache = (k.filter(function (x) { return /^atelie-v/.test(x); }).sort().pop()) || null; }); } catch (e) {}
         // v1.4.4: Manually check for updates on load (more aggressive)
         try { reg.update(); } catch (e) { /* ignore */ }
         reg.addEventListener('updatefound', function () {
@@ -11615,23 +11621,48 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// v1.4.4: Show update toast with manual reload button
+// v1.35.2: известието за нова версия. Досега беше обикновеният toast, който е с
+// pointer-events:none — докосването не стигаше до него, а то оставаше на екрана до
+// следващото отваряне. Сега е отделна лента с „Обнови“ и „По-късно“. Новият service
+// worker вече е активен (skipWaiting при инсталиране) — обновяването е само
+// презареждане. Отворен формуляр с незапазени промени не се губи без питане.
+var _updShown=false;
 function showUpdateToast(waitingWorker) {
-  var t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = 'Нова версия — натисни за обнова';
-  t.classList.add('on');
-  t.style.cursor = 'pointer';
-  t.style.bottom = '90px';
-  t.style.background = 'var(--primary)';
-  t.style.color = 'white';
-  t.onclick = function () {
-    // Ask the waiting SW to take control immediately, then reload
-    if (waitingWorker) {
-      try { waitingWorker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-    }
-    setTimeout(function () { window.location.reload(); }, 200);
-  };
+  if (_updShown) return;
+  _updShown = true;
+  var b = document.getElementById('upd-bar');
+  if (!b) return;
+  b.style.display = 'flex';
+  b._worker = waitingWorker || null;
+}
+function updLater() {
+  var b = document.getElementById('upd-bar');
+  if (b) b.style.display = 'none';
+  // Следващото отваряне и без това зарежда новата версия.
+}
+function _openDirtyForms() {
+  return Object.keys(_moSnap || {}).filter(function (id) {
+    var el = document.getElementById(id);
+    return el && el.classList.contains('on') && _moIsDirty(id);
+  });
+}
+function updNow() {
+  var dirty = _openDirtyForms();
+  if (dirty.length && !confirm('Има отворен формуляр с незапазени промени.\n\nЗапази го първо — или натисни OK, за да обновиш без тях.')) return false;
+  var b = document.getElementById('upd-bar');
+  if (b) { b.querySelector('.upd-t').textContent = 'Обновявам…'; b.querySelectorAll('button').forEach(function (x) { x.disabled = true; }); }
+  var w = b && b._worker;
+  if (w) { try { w.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {} }
+  // Кратко изчакване: последният запис в IndexedDB да приключи.
+  setTimeout(function () { window.location.reload(); }, 400);
+  return true;
+}
+// Ако новият service worker се активира, без да мине през „installed“ пред очите ни
+// (напр. приложението е било на заден план), известието идва от съобщението му.
+if (navigator.serviceWorker) {
+  navigator.serviceWorker.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'SW_UPDATED' && e.data.cacheName && window.__glinaBootCache && e.data.cacheName !== window.__glinaBootCache) showUpdateToast(null);
+  });
 }
 </script>
 
