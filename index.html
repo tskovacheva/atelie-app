@@ -156,6 +156,115 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .twarn{background:var(--warnbg);color:var(--warn);}
 .terr{background:var(--errbg);color:var(--err);}
 
+/* v1.36.0: каталог „Изделия“ — галерия и списък (по list-v0), филтри отстрани на
+   широк екран и като лист на телефон. Ширините на списъка следват контейнера, не
+   прозореца, затова таблицата не излиза извън екрана и до панела с филтри. */
+.pcl{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:0 14px;}
+@media(min-width:960px){.pcl{grid-template-columns:240px minmax(0,1fr);align-items:start;padding:0 18px;}
+  .pc-side{position:sticky;top:76px;max-height:calc(100dvh - 160px);overflow:auto;}
+  .pc-fbtn,.pc-side .pc-side-x,.pc-side .pc-show{display:none!important;}}
+@media(max-width:959px){.pc-side{display:none;}
+  .pc-side.on{display:block;position:fixed;inset:0;z-index:120;background:var(--bg);overflow:auto;padding:18px 16px 0;}}
+.pc-main{min-width:0;container-type:inline-size;}
+.pc-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 0 4px;}
+.pc-tools .srch{flex:1 1 200px;min-width:0;width:auto;}
+.pc-seg{display:inline-flex;background:#E5E7E6;border-radius:99px;padding:3px;}
+.pc-seg button{border:none;background:none;padding:6px 12px;border-radius:99px;font-family:inherit;font-size:13px;color:var(--tx2);min-height:34px;cursor:pointer;}
+.pc-seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:500;}
+.pc-sort{min-height:38px;padding:6px 10px;border:1.5px solid var(--bdr2);border-radius:99px;background:var(--surface);font-family:inherit;font-size:13px;color:var(--text);}
+.pc-fbtn{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:99px;min-height:38px;padding:6px 14px;font-family:inherit;font-size:13px;color:var(--text);cursor:pointer;}
+.pc-active{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px;}
+.pc-achip{display:inline-flex;align-items:center;gap:6px;background:var(--primary-soft);color:var(--text);border:none;border-radius:99px;padding:5px 11px;font-family:inherit;font-size:12.5px;min-height:32px;cursor:pointer;}
+.pc-achip.clr{background:none;text-decoration:underline;color:var(--tx2);}
+.pc-side h3{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:16px 0 8px;}
+.pc-side .fchips{padding:0;}
+.pc-side .fchip .n{opacity:.65;margin-left:3px;}
+.pc-side-top{display:flex;align-items:center;justify-content:space-between;}
+.pc-side-top h2{font-size:20px;font-weight:400;}
+.pc-fbar{display:flex;gap:8px;margin-top:18px;position:sticky;bottom:0;background:var(--bg);padding:10px 0;}
+.pc-fbar .btn{flex:1;}
+/* етап и смесен етап */
+.pc-st{display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center;}
+.stage-badge.sb-mix{background:var(--warnbg);color:var(--warn);}
+.pc-match{font-size:11.5px;color:var(--primary);line-height:1.3;}
+/* галерия */
+#pieces-grid.pcg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:6px 0 0;}
+@container (min-width:560px){#pieces-grid.pcg{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));}}
+.pcc{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-width:0;cursor:pointer;}
+.pcc .im{aspect-ratio:4/3;background:var(--primary-soft);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pcc .im img{width:100%;height:100%;object-fit:cover;display:block;}
+.pcc .im .bdg{position:absolute;left:7px;top:7px;background:rgba(47,52,55,.78);color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;}
+.pcc .b{padding:9px 10px 10px;display:flex;flex-direction:column;gap:4px;min-width:0;}
+.pcc .nm{font-family:'Tenor Sans',sans-serif;font-size:15px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;}
+.pcc .mt{font-size:11.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcc.arch,.pcr.arch{opacity:.65;}
+.pcc.ser{box-shadow:var(--shadow),inset 0 0 0 2px var(--primary-soft);}
+.pc-exp{border:none;background:var(--bg);border-top:1px solid var(--bdr);padding:8px 10px;font-family:inherit;font-size:12.5px;color:var(--primary);text-align:left;min-height:38px;font-weight:500;cursor:pointer;width:100%;}
+.pc-mem{grid-column:1/-1;background:var(--surface);border-radius:14px;padding:10px;box-shadow:var(--shadow);border-left:4px solid var(--primary);}
+.pc-mem .mh{font-size:12.5px;color:var(--tx2);margin:0 0 8px;}
+.pc-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+.pc-mc{display:flex;gap:8px;align-items:center;border:1px solid var(--bdr);border-radius:12px;padding:6px;background:var(--bg);min-width:0;cursor:pointer;}
+.pc-mc .pim{width:44px;height:44px;border-radius:8px;flex-shrink:0;background:var(--primary-soft);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.pc-mc .pim img{width:100%;height:100%;object-fit:cover;}
+.pc-mc .t{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-mc .s{font-size:11.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-mc.dim,.pcr.dim{opacity:.45;}
+.pc-mc.hit,.pcr.mem.hit{box-shadow:inset 0 0 0 2px var(--primary-soft);}
+/* списък: компактен; таблица, когато контейнерът е достатъчно широк */
+#pieces-grid.pcls{display:block;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-top:6px;}
+.pcr.pc{border-radius:0;box-shadow:none;transform:none;}
+.pcr{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bdr);min-height:60px;cursor:pointer;}
+.pcr .pim{width:46px;height:46px;border-radius:10px;background:var(--primary-soft);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.pcr .pim img{width:100%;height:100%;object-fit:cover;}
+.pcr .nm{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcr .mt{font-size:11.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcr .c{display:none;}
+.pcr .rt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.pcr.mem{padding-left:28px;background:var(--bg);}
+.pc-tog{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:10px;min-width:42px;min-height:34px;font-family:inherit;font-size:12px;padding:0 8px;cursor:pointer;color:var(--text);}
+.pclh{display:none;}
+@container (min-width:680px){
+  .pcr,.pclh{grid-template-columns:46px minmax(0,2.4fr) minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr) 64px 52px;}
+  .pclh{display:grid;gap:10px;padding:9px 12px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--bdr2);}
+  .pcr .c{display:block;font-size:13px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .pcr .rt{display:contents;}
+  .pcr .mt.sm{display:none;}
+}
+.pc-more{display:block;margin:14px auto 0;}
+/* Моето ателие */
+.hm{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);padding:0 14px;}
+@media(min-width:900px){.hm{grid-template-columns:1fr 1fr;padding:0 18px;}}
+.hm-box{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:16px;min-width:0;}
+.hm-box h2{font-size:19px;font-weight:400;margin-bottom:10px;}
+.hm-qa{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+@media(min-width:900px){.hm-qa{grid-template-columns:repeat(4,minmax(0,1fr));}}
+.hm-qa button{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:14px;padding:12px;min-height:62px;text-align:left;font-family:inherit;font-size:14.5px;font-weight:500;color:var(--text);cursor:pointer;}
+.hm-qa button span{display:block;font-size:12px;color:var(--muted);font-weight:400;}
+.hm-pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;}
+.hm-pipe button{border:none;background:var(--bg);border-radius:12px;padding:10px;text-align:left;min-height:62px;font-family:inherit;cursor:pointer;color:var(--text);}
+.hm-pipe .n{font-size:22px;font-family:'Tenor Sans',sans-serif;}
+.hm-pipe .l{font-size:12px;color:var(--muted);}
+.hm-li{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;min-width:0;}
+.hm-li:last-child{border-bottom:none;}
+.hm-li .pim{width:40px;height:40px;border-radius:8px;background:var(--primary-soft);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.hm-li .pim img{width:100%;height:100%;object-fit:cover;}
+.hm-li .t{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hm-li .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hm-empty{font-size:13px;color:var(--muted);padding:6px 0;}
+/* голям преглед на снимките (детайл на изделие и серия) */
+.lb{display:none;position:fixed;inset:0;z-index:400;background:rgba(20,22,23,.94);align-items:center;justify-content:center;}
+.lb.on{display:flex;}
+.lb img{max-width:100%;max-height:100%;object-fit:contain;}
+.lb button{position:absolute;border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:50%;width:46px;height:46px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.lb .x{top:14px;right:14px;}
+.lb .pv{left:12px;top:50%;transform:translateY(-50%);}
+.lb .nx{right:12px;top:50%;transform:translateY(-50%);}
+.lb .ct{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;opacity:.8;}
+.det-hero .hn{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;align-items:center;}
+.det-hero .hn button{border:none;background:rgba(255,255,255,.88);color:var(--text);border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;box-shadow:var(--shadow);}
+.det-hero .hn span{background:rgba(47,52,55,.72);color:#fff;font-size:12px;border-radius:99px;padding:3px 9px;}
+.det-hero img{cursor:zoom-in;}
+
 /* detail */
 .det{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;}
 .det.on{display:block;}
@@ -174,6 +283,19 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   .det > *{max-width:660px;margin-left:auto;margin-right:auto;}
   .det-hero{aspect-ratio:16/9;max-height:min(38vh,300px);}
   .det-body{padding-bottom:60px;}
+}
+/* v1.36.0: детайлът на изделие и серия. В v1.35.1 снимката заемаше първия екран;
+   сега е с таван на телефон, а на широк екран е вляво до заглавната част. */
+.det-pd .det-hero{aspect-ratio:4/3;max-height:min(34vh,260px);}
+.det-pd .det-head{padding:20px 18px 0;}
+.det-pd .det-body{padding-top:14px;}
+@media(min-width:760px){.det-pd .det-hero{aspect-ratio:16/9;max-height:min(34vh,280px);}}
+@media(min-width:900px){
+  .det.det-pd > *{max-width:1040px;}
+  .det-pd .det-top{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px;padding:24px 24px 0;align-items:start;}
+  .det-pd .det-hero{aspect-ratio:4/3;max-height:min(60vh,440px);border-radius:16px;}
+  .det-pd .det-head{padding:0;}
+  .det-pd .det-body{padding:18px 24px 60px;}
 }
 .det-t{font-family:'Tenor Sans',sans-serif;font-size:32px;color:var(--text);line-height:1.15;margin-bottom:5px;letter-spacing:-0.005em;}
 .det-m{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:22px;}
@@ -435,54 +557,48 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div class="sc on" id="sc-pieces">
   <div class="ph">
     <div class="ph-left"><div class="pt" data-t="ui.izdeliya">Изделия</div><div class="ps" id="cnt-pieces"></div></div>
-    <div class="ph-right">
+    <div class="ph-right" style="display:flex;gap:8px;">
+      <div class="ic-btn" onclick="show('home')" id="home-btn" title="Моето ателие" aria-label="Моето ателие">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>
+      </div>
       <div class="ic-btn" onclick="openNotif()" id="notif-btn">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </div>
     </div>
   </div>
-  <div class="srch-wrap">
-    <input class="srch" type="search" id="pc-search" data-tp="ph.tarsi-po-ime-glina-tehnika-belezhk" placeholder="Търси по име, глина, техника, бележка…" oninput="debounce(renderPieces,'pc-search',200)">
-  </div>
-  <!-- v1.5.2: Filter toggle button + collapsible filter area -->
-  <div style="padding:6px 14px 0;display:flex;align-items:center;justify-content:space-between;">
-    <button id="pc-filter-toggle" onclick="togglePcFilters()" style="background:none;border:none;color:var(--tx2);font-size:12px;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px;font-family:inherit;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-      <span data-t="ui.filtri-i-sortirane">Филтри и сортиране</span>
-      <span id="pc-filter-badge" style="display:none;background:var(--primary);color:white;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600;"></span>
-      <span id="pc-filter-chev" style="font-size:12px;color:var(--tx3);transition:transform .2s ease;">▾</span>
-    </button>
-  </div>
-  <div id="pc-filter-body" style="display:none;">
-    <div class="fchips" style="padding-top:8px;">
-      <button class="fchip pf-chip" data-stage="wet" onclick="setPieceStageFilter('wet')" data-t="ui.surovo">Сурово</button>
-      <button class="fchip pf-chip" data-stage="leather-hard" onclick="setPieceStageFilter('leather-hard')" data-t="ui.kozhna-vlazhnost">Кожна влажност</button>
-      <button class="fchip pf-chip" data-stage="bone-dry" onclick="setPieceStageFilter('bone-dry')" data-t="ui.suho">Сухо</button>
-      <button class="fchip pf-chip" data-stage="bisque" onclick="setPieceStageFilter('bisque')" data-t="ui.biskvit">Бисквит</button>
-      <button class="fchip pf-chip" data-stage="glazed" onclick="setPieceStageFilter('glazed')" data-t="ui.glazirano">Глазирано</button>
-      <button class="fchip pf-chip" data-stage="fired" onclick="setPieceStageFilter('fired')" data-t="ui.izpecheno">Изпечено</button>
-      <button class="fchip pf-chip" data-stage="finished" onclick="setPieceStageFilter('finished')" data-t="ui.gotovo">Готово</button>
-      <button class="fchip pf-chip" data-stage="broken" onclick="setPieceStageFilter('broken')" data-t="ui.schupeno">Счупено</button>
-      <button class="fchip pf-chip" data-stage="scrapped" onclick="setPieceStageFilter('scrapped')" data-t="ui.brakuvano">Бракувано</button>
-      <button class="fchip pf-chip" data-stage="gifted" onclick="setPieceStageFilter('gifted')" data-t="ui.podareno">Подарено</button>
-      <button class="fchip pf-chip" data-stage="sold" onclick="setPieceStageFilter('sold')" data-t="ui.prodadeno">Продадено</button>
-    </div>
-    <div class="fchips">
-      <button class="fchip" id="fc-pc-hasglz" onclick="togglePcChip('hasglz')" data-t="ui.s-glazura">С глазура</button>
-      <button class="fchip" id="fc-pc-noglz" onclick="togglePcChip('noglz')" data-t="ui.bez-glazura">Без глазура</button>
-      <button class="fchip" id="fc-pc-hasph" onclick="togglePcChip('hasph')" data-t="ui.sas-snimka">Със снимка</button>
-      <button class="fchip" id="fc-pc-noph" onclick="togglePcChip('noph')" data-t="ui.bez-snimka">Без снимка</button>
-      <button class="fchip" id="fc-pc-arch" onclick="togglePcChip('arch')">Архив</button>
-    </div>
-    <div class="sort-row">
-      <span class="sort-lbl" data-t="ui.sortiray">Сортирай:</span>
-      <button class="fchip on" id="sort-pc-upd" onclick="setPcSort('upd')" data-t="ui.posledno">Последно</button>
-      <button class="fchip" id="sort-pc-name" onclick="setPcSort('name')" data-t="ui.a-ya">А→Я</button>
-      <button class="fchip" id="sort-pc-date" onclick="setPcSort('date')" data-t="ui.data">Дата</button>
-      <button class="fchip" id="pc-reset" onclick="resetPcFilters()" style="margin-left:auto;" data-t="ui.izchisti">Изчисти</button>
+  <!-- v1.36.0: каталогът — филтри отстрани (на телефон като лист), галерия или списък -->
+  <div class="pcl">
+    <aside class="pc-side" id="pc-side"></aside>
+    <div class="pc-main">
+      <div class="pc-tools">
+        <input class="srch" type="search" id="pc-search" placeholder="Търси по име, код, глина, техника…" oninput="debounce(renderPieces,'pc-search',200)">
+        <div class="pc-seg" role="group" aria-label="Изглед"><button type="button" id="pc-v-gal" onclick="setPcView('gal')">Галерия</button><button type="button" id="pc-v-list" onclick="setPcView('list')">Списък</button></div>
+        <button type="button" class="pc-fbtn" id="pc-filter-toggle" onclick="togglePcFilters()">Филтри<span id="pc-filter-badge"></span></button>
+        <select class="pc-sort" id="pc-sort" aria-label="Подреди" onchange="setPcSort(this.value)"><option value="upd">Последна промяна</option><option value="date">Най-нови</option><option value="name">Име А–Я</option></select>
+      </div>
+      <div class="pc-active" id="pc-active"></div>
+      <div id="pieces-grid" class="pcg"></div>
+      <div id="pc-more"></div>
     </div>
   </div>
-  <div class="grid" id="pieces-grid"></div>
+</div>
+
+<!-- v1.36.0: Моето ателие — обзор, изведен от данните; не е начален екран -->
+<div class="sc" id="sc-home">
+  <div class="ph">
+    <div class="ph-left"><div class="pt">Моето ателие</div><div class="ps" id="cnt-home"></div></div>
+    <div class="ph-right"><div class="ic-btn" onclick="show('pieces')" title="Изделия" aria-label="Към изделията"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div></div>
+  </div>
+  <div class="hm" id="home-body"></div>
+</div>
+
+<!-- v1.36.0: голям преглед на снимките -->
+<div class="lb" id="lb" onclick="if(event.target===this)closeDet('lb')">
+  <img id="lb-img" alt="">
+  <button type="button" class="x" onclick="closeDet('lb')" aria-label="Затвори">✕</button>
+  <button type="button" class="pv" id="lb-pv" onclick="lbStep(-1)" aria-label="Предишна">‹</button>
+  <button type="button" class="nx" id="lb-nx" onclick="lbStep(1)" aria-label="Следваща">›</button>
+  <div class="ct" id="lb-ct"></div>
 </div>
 
 <!-- РЕЦЕПТИ -->
@@ -830,14 +946,15 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <button class="fab" id="fab" onclick="addNew()">+</button>
 
 <!-- DETAIL: Изделие -->
-<div class="det" id="det-piece">
+<div class="det det-pd" id="det-piece">
+  <div class="det-top">
   <div style="position:relative">
     <div class="det-hero" id="dpi-hero"></div>
     <button class="det-back" onclick="closeDet('det-piece')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
   </div>
+  <div class="det-head" id="dpi-head"></div>
+  </div>
   <div class="det-body">
-    <!-- v1.35.1: заглавна част, следваща стъпка, секции -->
-    <div id="dpi-head"></div>
     <div id="dpi-secs"></div>
     <div class="btn-row" style="margin-top:18px;">
       <button class="btn bg" onclick="editPiece()" data-t="ui.redaktiray">Редактирай</button>
@@ -923,13 +1040,15 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 </div>
 
 <!-- DETAIL: Серия (v1.20.0, А7 фаза 2) -->
-<div class="det" id="det-series">
+<div class="det det-pd" id="det-series">
+  <div class="det-top">
   <div style="position:relative">
     <div class="det-hero" id="dse-hero"></div>
     <button class="det-back" onclick="closeDet('det-series')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
   </div>
+  <div class="det-head" id="dse-head"></div>
+  </div>
   <div class="det-body">
-    <div id="dse-head"></div>
     <div id="dse-secs"></div>
     <div class="btn-row" style="margin-top:18px;">
       <button class="btn bg" onclick="editSeries()" data-t="ui.redaktiray">Редактирай</button>
@@ -2073,7 +2192,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.35.2';
+const APP_VERSION = 'v1.36.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -2738,7 +2857,6 @@ function stageLabel(v){
   var s=STAGES_ALL.find(function(x){return x.v===v;});
   return s?s.l:v;
 }
-var pieceStageFilter='';
 
 // v1.20.0 (А7 фаза 2): `series` — партида изделия с общ процес. Изделието получава
 // `seriesId`; списъкът с членове е изведен, не съхранен.
@@ -5039,8 +5157,9 @@ function show(n){
   document.querySelectorAll('.sc').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('sc-'+n).classList.add('on');
-  document.getElementById('nb-'+n).classList.add('on');
-  document.getElementById('fab').style.display=n==='lib'?'none':'flex';
+  // v1.36.0: „Моето ателие“ няма свой бутон долу — стои под „Изделия“.
+  var _nb=document.getElementById('nb-'+(n==='home'?'pieces':n));if(_nb)_nb.classList.add('on');
+  document.getElementById('fab').style.display=(n==='lib'||n==='home')?'none':'flex';
   render(n);
   var sv=_scrollPos[n];if(sv){var mx=document.getElementById('main');if(mx)setTimeout(function(){mx.scrollTop=sv;},0);}
 }
@@ -5056,6 +5175,7 @@ function addNew(){
 // ══ RENDER ══
 function render(s){
   if(s==='pieces')renderPieces();
+  else if(s==='home')renderHome();
   else if(s==='recipes')renderRecipes();
   else if(s==='materials')renderMaterials();
   else if(s==='tests')renderTests();
@@ -5095,97 +5215,314 @@ function clayName(v){
 }
 // Съвпада ли записът с текущия филтър по етап. За изделие — собственият му етап;
 // за серия — кой да е етап в разбивката ѝ, включително този на остатъка.
-function _stageFilterMatches(p){
-  if(!pieceStageFilter)return true;
-  if(findSeries(p.id)){
-    return _seriesStageSummary(p).parts.some(function(x){return x.stage===pieceStageFilter;});
+// v1.36.0: КАТАЛОГ „Изделия“ (по одобрения прототип list-v0). Галерия и списък,
+// филтри с повече от една стойност, активни чипове, подреждане. Изгледът и
+// филтрите живеят в PC (и в localStorage), затова остават при връщане от детайла
+// и при следващо отваряне. Търсенето остава в полето си. Данните не се пипат.
+var PC_KEY='glina.catalog';
+var PC={view:'gal',stages:[],cats:[],clays:[],techs:[],kind:'all',arch:'active',open:{},limit:60};
+(function(){
+  try{
+    var v=JSON.parse(localStorage.getItem(PC_KEY)||'null');if(!v)return;
+    ['view','kind','arch'].forEach(function(k){if(typeof v[k]==='string')PC[k]=v[k];});
+    ['stages','cats','clays','techs'].forEach(function(k){if(Array.isArray(v[k]))PC[k]=v[k];});
+    if(v.f&&typeof v.f==='object')activeFilters.pc=v.f;
+    if(v.sort)activeSort.pc=v.sort;
+  }catch(e){}
+})();
+function _pcSave(){
+  try{localStorage.setItem(PC_KEY,JSON.stringify({view:PC.view,stages:PC.stages,cats:PC.cats,clays:PC.clays,techs:PC.techs,kind:PC.kind,arch:PC.arch,f:activeFilters.pc,sort:activeSort.pc}));}catch(e){}
+}
+function _pcQty(p){var q=parseInt(p.qty,10);return isNaN(q)||q<1?1:q;}
+// Отделено парче стои под серията си, ако и двете са от един и същ вид (активни
+// или в архива). Иначе — например серията е архивирана, а парчето не — е отделен запис.
+function _pcNested(p){
+  if(!p||!p.seriesId)return false;
+  var se=findSeries(p.seriesId);
+  return !!se&&!!se.archivedAt===!!p.archivedAt;
+}
+// Частите на серията: неотделените бройки (на етапа на серията) и всяко отделено парче.
+function _pcParts(se){
+  var mem=_seriesMembers(se.id),out=[];
+  var rem=_seriesRemaining(se);
+  if(rem>0)out.push({free:true,stage:normalizeStageValue(se.stage||'wet'),n:rem,units:(typeof _seriesFreeUnits==='function'&&se.nextUnitNo)?_seriesFreeUnits(se,mem):[]});
+  mem.forEach(function(m){out.push({m:m,stage:normalizeStageValue(m.stage||'wet'),n:_pcQty(m)});});
+  return out;
+}
+function _pcStageOk(rec,isSer){
+  if(!PC.stages.length)return true;
+  if(isSer)return _pcParts(rec).some(function(x){return PC.stages.indexOf(x.stage)>=0;});
+  return PC.stages.indexOf(normalizeStageValue(rec.stage||'wet'))>=0;
+}
+// Съвместимост: един етап (както досега) — сега включва/изключва от избраните.
+function _stageFilterMatches(p){return _pcStageOk(p,!!findSeries(p.id)&&!p.seriesId);}
+function _pcArchOk(rec){return PC.arch==='all'||(PC.arch==='arch')===!!rec.archivedAt;}
+function _pcCats(rec){return Array.isArray(rec.categories)?rec.categories.filter(Boolean):[];}
+function _pcRecords(){
+  var out=[];
+  DB.pieces.forEach(function(p){if(p&&!_pcNested(p))out.push({rec:p,ser:false});});
+  (DB.series||[]).forEach(function(se){if(se)out.push({rec:se,ser:true});});
+  return out;
+}
+// Всичко, освен изброения ключ — за броячите в панела.
+function _pcMatch(x,q,skip){
+  var p=x.rec,f=activeFilters.pc||{};
+  if(!_pcArchOk(p))return false;
+  if(skip!=='kind'&&PC.kind!=='all'&&(PC.kind==='series')!==x.ser)return false;
+  if(skip!=='stages'&&!_pcStageOk(p,x.ser))return false;
+  if(skip!=='cats'&&PC.cats.length&&!_pcCats(p).some(function(c){return PC.cats.indexOf(c)>=0;}))return false;
+  if(skip!=='clays'&&PC.clays.length&&PC.clays.indexOf(clayName(p.clay))<0)return false;
+  if(skip!=='techs'&&PC.techs.length&&PC.techs.indexOf(p.technique||'')<0)return false;
+  var hasGlaze=!!(p.recipe||p.material);
+  if(f.hasglz&&!hasGlaze)return false;
+  if(f.noglz&&hasGlaze)return false;
+  var hasPh=Array.isArray(p.photos)&&p.photos.length>0;
+  if(f.hasph&&!hasPh)return false;
+  if(f.noph&&hasPh)return false;
+  if(q){
+    var hay=[p.name,p.type,clayName(p.clay),p.technique,p.notes,_pcCats(p).join(' '),x.ser?(p.code||''):pieceCode(p)];
+    if(x.ser)_seriesMembers(p.id).forEach(function(m){hay.push(m.name,pieceCode(m));});
+    if(hay.join(' ').toLowerCase().indexOf(q)<0)return false;
   }
-  return normalizeStageValue(p.stage||'wet')===pieceStageFilter;
+  return true;
+}
+function _pcStBadges(p,isSer){
+  var st=normalizeStageValue(p.stage||'wet');
+  if(isSer){
+    var sum=_seriesStageSummary(p);
+    if(sum.mixed)return '<span class="pc-st"><span class="stage-badge sb-'+sum.parts[0].stage+'">'+_pdE(stageLabel(sum.parts[0].stage))+'</span><span class="stage-badge sb-mix" title="'+_pdE(sum.parts.map(function(x){return stageLabel(x.stage)+' '+x.count;}).join(' · '))+'">смесен</span></span>';
+  }
+  return '<span class="pc-st"><span class="stage-badge sb-'+st+'">'+_pdE(stageLabel(st))+'</span></span>';
+}
+// При филтър по етап: кои бройки на серията отговарят.
+function _pcHits(se){
+  if(!PC.stages.length)return '';
+  var parts=_pcParts(se),tot=0,by={};
+  parts.forEach(function(x){if(PC.stages.indexOf(x.stage)>=0){tot+=x.n;by[x.stage]=(by[x.stage]||0)+x.n;}});
+  if(!tot)return '';
+  return 'Отговарят '+tot+' от '+_seriesTotal(se)+' бр.: '+Object.keys(by).map(function(k){return stageLabel(k)+' '+by[k];}).join(' · ');
+}
+function _pcImg(p){var ph=getLatestPhoto(p);return ph?'<img src="'+ph+'" alt="" loading="lazy">':K(28);}
+function _pcSize(p){return _sizeLabel(p.size)||(p.dimensions?p.dimensions+' см':'');}
+function _pcOpen(p,isSer){return (isSer?'openSeriesDet':'openPieceDet')+'(\''+p.id+'\')';}
+function _pcDate(d){var m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||'');return m?m[3]+'.'+m[2]+'.'+m[1].slice(2):'';}
+function _pcMembersHtml(se,mode){
+  var parts=_pcParts(se),code=se.code||'';
+  var cls=function(x){return PC.stages.length?(PC.stages.indexOf(x.stage)>=0?' hit':' dim'):'';};
+  return parts.map(function(x){
+    var m=x.m,st='<span class="stage-badge sb-'+x.stage+'">'+_pdE(stageLabel(x.stage))+'</span>';
+    var nm=m?(m.name||'—'):'Неотделени',sub=m?(pieceCode(m)+' · '+x.n+' бр.'):((x.units&&x.units.length&&code?code+_unitsLabel(x.units)+' · ':'')+x.n+' бр. заедно');
+    var on=m?'openPieceDet(\''+m.id+'\')':'openSeriesDet(\''+se.id+'\')';
+    var img=m?_pcImg(m):_pcImg(se);
+    if(mode==='list')return '<div class="pcr mem'+cls(x)+(m&&m.archivedAt?' arch':'')+'" role="button" tabindex="0" onclick="'+on+'"><span class="pim">'+img+'</span><div style="min-width:0"><div class="nm">'+_pdE(nm)+'</div><div class="mt">'+_pdE(sub)+'</div></div><div class="rt">'+st+'</div></div>';
+    return '<div class="pc-mc'+cls(x)+'" role="button" tabindex="0" onclick="'+on+'"><span class="pim">'+img+'</span><div style="min-width:0"><div class="t">'+_pdE(nm)+'</div><div class="s">'+_pdE(sub)+'</div>'+st+'</div></div>';
+  }).join('');
+}
+function _pcCard(x){
+  var p=x.rec,ser=x.ser,code=ser?(p.code||''):pieceCode(p),sz=_pcSize(p);
+  var mem=ser?_seriesMembers(p.id):[],open=!!PC.open[p.id],hits=ser?_pcHits(p):'';
+  var _se=!ser&&p.seriesId?findSeries(p.seriesId):null;
+  var h='<div class="pc pcc'+(p.archivedAt?' arch':'')+(ser?' ser':'')+'">'
+    +'<div role="button" tabindex="0" onclick="'+_pcOpen(p,ser)+'">'
+    +'<div class="im">'+_pcImg(p)+(ser?'<span class="bdg">серия · '+_seriesTotal(p)+' бр.</span>':'')+'</div>'
+    +'<div class="b"><div class="nm">'+_pdE(p.name||'')+'</div>'
+    +'<div class="mt">'+_pdE([code+(p.archivedAt?' · в архива':''),sz].filter(Boolean).join(' · '))+'</div>'
+    +(_se?'<div class="mt">От серия '+_pdE(_se.name||'')+' · '+_pcQty(p)+' бр.</div>':'')
+    +((p.type||p.clay)?'<div class="mt">'+_pdE([p.type,clayName(p.clay)].filter(Boolean).join(' · '))+'</div>':'')
+    +'<div>'+_pcStBadges(p,ser)+'</div>'
+    +(hits?'<div class="pc-match">'+_pdE(hits)+'</div>':'')
+    +'</div></div>'
+    +(ser&&mem.length?'<button type="button" class="pc-exp" aria-expanded="'+open+'" onclick="pcToggleSer(\''+p.id+'\')">'+(open?'▴ Скрий':'▾ '+mem.length+' отделени')+'</button>':'')
+    +'</div>';
+  if(ser&&open&&mem.length){
+    var sum=_seriesStageSummary(p);
+    h+='<div class="pc-mem"><div class="mh">'+_pdE(p.name||'')+' · '+_seriesRemaining(p)+' бр. заедно'+(sum.mixed?' · '+_pdE(sum.parts.map(function(y){return stageLabel(y.stage)+' '+y.count;}).join(' · ')):'')+'</div><div class="pc-mgrid">'+_pcMembersHtml(p,'gal')+'</div></div>';
+  }
+  return h;
+}
+function _pcRow(x){
+  var p=x.rec,ser=x.ser,code=ser?(p.code||''):pieceCode(p),sz=_pcSize(p);
+  var mem=ser?_seriesMembers(p.id):[],open=!!PC.open[p.id],hits=ser?_pcHits(p):'';
+  var _se=!ser&&p.seriesId?findSeries(p.seriesId):null;
+  var tog=ser&&mem.length?'<button type="button" class="pc-tog" aria-expanded="'+open+'" onclick="event.stopPropagation();pcToggleSer(\''+p.id+'\')">'+(open?'▴':'▾ '+mem.length)+'</button>':'';
+  var h='<div class="pc pcr'+(p.archivedAt?' arch':'')+'" role="button" tabindex="0" onclick="'+_pcOpen(p,ser)+'">'
+    +'<span class="pim">'+_pcImg(p)+'</span>'
+    +'<div style="min-width:0"><div class="nm">'+_pdE(p.name||'')+(ser?' <span style="font-size:12px;color:var(--tx3);font-weight:400">· серия '+_seriesTotal(p)+' бр.</span>':'')+'</div>'
+    +'<div class="mt">'+_pdE([code+(p.archivedAt?' · в архива':''),p.type,_se?'от серия '+(_se.name||''):''].filter(Boolean).join(' · '))+'</div>'
+    +'<div class="mt sm">'+_pdE([sz,clayName(p.clay)].filter(Boolean).join(' · '))+'</div>'
+    +(hits?'<div class="pc-match">'+_pdE(hits)+'</div>':'')+'</div>'
+    +'<div class="rt">'+_pcStBadges(p,ser)
+    +'<div class="c">'+_pdE(sz||'—')+'</div><div class="c">'+_pdE(clayName(p.clay)||'—')+'</div><div class="c">'+_pdE(p.technique||'—')+'</div><div class="c">'+_pcDate(p.updatedAt||p.date)+'</div>'
+    +(tog||'<span class="c"></span>')+'</div></div>';
+  if(ser&&open&&mem.length)h+=_pcMembersHtml(p,'list');
+  return h;
+}
+function pcToggleSer(id){PC.open[id]=!PC.open[id];renderPieces();}
+function _pcChip(key,v,label,n){
+  var on=PC[key].indexOf(v)>=0,attr=JSON.stringify(v).replace(/"/g,'&quot;');
+  var extra=key==='stages'?' data-stage="'+_pdE(v)+'"':'';
+  return '<button type="button" class="fchip'+(key==='stages'?' pf-chip':'')+(on?' on':'')+'"'+extra+' aria-pressed="'+on+'" onclick="pcTog(\''+key+'\','+attr+')">'+_pdE(label)+(n?'<span class="n">'+n+'</span>':'')+'</button>';
+}
+function _pcRadio(key,opts){
+  return '<div class="fchips">'+opts.map(function(o){var on=PC[key]===o[0];return '<button type="button" class="fchip'+(on?' on':'')+'"'+(o[2]?' id="'+o[2]+'"':'')+' onclick="pcSet(\''+key+'\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>';
+}
+function _pcSideHtml(all,q){
+  var cnt=function(key,get){var c={};all.forEach(function(x){if(!_pcMatch(x,q,key))return;get(x).forEach(function(v){if(v)c[v]=(c[v]||0)+1;});});return c;};
+  var uniq=function(get){var s={};all.forEach(function(x){if(_pcArchOk(x.rec))get(x).forEach(function(v){if(v)s[v]=1;});});return Object.keys(s).sort(function(a,b){return a.localeCompare(b,'bg');});};
+  var stOf=function(x){return x.ser?_pcParts(x.rec).map(function(y){return y.stage;}).filter(function(v,i,a){return a.indexOf(v)===i;}):[normalizeStageValue(x.rec.stage||'wet')];};
+  var catOf=function(x){return _pcCats(x.rec);},clayOf=function(x){return [clayName(x.rec.clay)];},techOf=function(x){return [x.rec.technique||''];};
+  var sc=cnt('stages',stOf),cc=cnt('cats',catOf),lc=cnt('clays',clayOf),tc=cnt('techs',techOf);
+  var withSel=function(list,sel){sel.forEach(function(v){if(list.indexOf(v)<0)list.push(v);});return list;};
+  var cats=withSel(uniq(catOf),PC.cats),clays=withSel(uniq(clayOf),PC.clays),techs=withSel(uniq(techOf),PC.techs);
+  var f=activeFilters.pc||{};
+  var fc=function(k,l){return '<button type="button" class="fchip'+(f[k]?' on':'')+'" id="fc-pc-'+k+'" onclick="togglePcChip(\''+k+'\')">'+l+'</button>';};
+  return '<div class="pc-side-top"><h2>Филтри</h2><button type="button" class="btn bg pc-side-x" style="width:auto;padding:8px 14px" onclick="closeDet(\'pc-side\')">Готово</button></div>'
+    +'<h3>Вид запис</h3>'+_pcRadio('kind',[['all','Всички'],['piece','Единични'],['series','Серии']])
+    +'<h3>Етап</h3><div class="fchips">'+STAGES.concat(OUTCOMES).map(function(s){return _pcChip('stages',s.v,s.l,sc[s.v]);}).join('')+'</div>'
+    +(cats.length?'<h3>Категория</h3><div class="fchips">'+cats.map(function(v){return _pcChip('cats',v,v,cc[v]);}).join('')+'</div>':'')
+    +(clays.length?'<h3>Глина</h3><div class="fchips">'+clays.map(function(v){return _pcChip('clays',v,v,lc[v]);}).join('')+'</div>':'')
+    +(techs.length?'<h3>Техника</h3><div class="fchips">'+techs.map(function(v){return _pcChip('techs',v,v,tc[v]);}).join('')+'</div>':'')
+    +'<h3>Глазура и снимка</h3><div class="fchips">'+fc('hasglz','С глазура')+fc('noglz','Без глазура')+fc('hasph','Със снимка')+fc('noph','Без снимка')+'</div>'
+    +'<h3>Архив</h3>'+_pcRadio('arch',[['active','Активни'],['arch','Само архив','fc-pc-arch'],['all','Всички']])
+    +'<div class="pc-fbar"><button type="button" class="btn bg" id="pc-reset" onclick="resetPcFilters()">Изчисти</button><button type="button" class="btn bp pc-show" onclick="closeDet(\'pc-side\')">Покажи</button></div>';
+}
+function _pcActive(){
+  var a=[],f=activeFilters.pc||{};
+  if(PC.kind!=='all')a.push(['kind','',PC.kind==='piece'?'Единични':'Серии']);
+  PC.stages.forEach(function(v){a.push(['stages',v,stageLabel(v)]);});
+  ['cats','clays','techs'].forEach(function(k){PC[k].forEach(function(v){a.push([k,v,v]);});});
+  [['hasglz','С глазура'],['noglz','Без глазура'],['hasph','Със снимка'],['noph','Без снимка']].forEach(function(x){if(f[x[0]])a.push(['f',x[0],x[1]]);});
+  if(PC.arch!=='active')a.push(['arch','',PC.arch==='arch'?'Само архив':'С архива']);
+  return a;
 }
 function renderPieces(){
+  if(cur==='home')renderHome();
   var q=srchVal('pc-search');
-  var f=activeFilters.pc||{};
-  // v1.20.0 (А7 фаза 2): сериите живеят в същия списък като изделията — една карта
-  // за партидата, не десет реда. Различават се по маркер `_isSeries`, за да минат
-  // през същите филтри и сортиране без второ копие на логиката.
-  var _all=DB.pieces.slice();
-  (DB.series||[]).forEach(function(se){
-    if(se)_all.push(se);
-  });
-  var total=_all.length;
-  // v1.31.0: архивираните се показват само с филтъра „Архив“ — и тогава само те.
-  var _arch=!!f.arch;
-  total=_all.filter(function(p){return !p.archivedAt;}).length;
-  var items=_all.filter(function(p){
-    if(!!p.archivedAt!==_arch)return false;
-    // v1.5.2: Normalize both sides — legacy English values map to BG (greenware→wet, glaze-fired→finished)
-    // v1.23.1: серия със смесен етап се четеше само по собствения си етап, тоест
-    // по остатъка. Филтър „Счупено" не намираше партидата, в която две чинии са
-    // счупени. Серията съвпада, ако кое да е от парчетата ѝ е на този етап.
-    if(pieceStageFilter&&!_stageFilterMatches(p))return false;
-    var hasGlaze=!!(p.recipe||p.material);
-    if(f.hasglz&&!hasGlaze)return false;
-    if(f.noglz&&hasGlaze)return false;
-    var hasPh=Array.isArray(p.photos)&&p.photos.length>0;
-    if(f.hasph&&!hasPh)return false;
-    if(f.noph&&hasPh)return false;
-    if(q){
-      var hay=((p.name||'')+' '+(p.type||'')+' '+clayName(p.clay)+' '+(p.technique||'')+' '+(p.notes||'')+' '+(Array.isArray(p.categories)?p.categories.join(' '):'')+' '+pieceCode(p)).toLowerCase();
-      if(hay.indexOf(q)<0)return false;
-    }
-    return true;
-  });
+  var all=_pcRecords();
+  var total=all.filter(function(x){return !x.rec.archivedAt;}).length;
+  var items=all.filter(function(x){return _pcMatch(x,q);});
   var sortK=activeSort.pc||'name';
-  if(sortK==='name'){items.sort(function(a,b){return (a.name||'').localeCompare(b.name||'','bg');});}
-  else if(sortK==='date'){items.sort(function(a,b){var ad=a.date||a.updatedAt||0,bd=b.date||b.updatedAt||0;return new Date(bd)-new Date(ad);});}
-  else{items.sort(function(a,b){var ad=a.updatedAt||a.date||0,bd=b.updatedAt||b.date||0;return new Date(bd)-new Date(ad);});}
-  var hasF=!!pieceStageFilter||!!q||Object.keys(f).some(function(k){return f[k];});
-  var _nSeries=(DB.series||[]).length;
-  var _totalTxt=total+' изделия'+(_nSeries?' · '+_nSeries+' серии':'');
-  document.getElementById('cnt-pieces').textContent=hasF?(items.length+' от '+total+' изделия'):_totalTxt;
-  var g=document.getElementById('pieces-grid');
-  if(!items.length){g.innerHTML=hasF?'<div class="empty" style="grid-column:1/-1"><div class="empty-k">∅</div><div class="empty-t">Няма съвпадения</div><div class="empty-s">Промени търсенето или филтрите</div></div>':'<div class="empty" style="grid-column:1/-1"><div class="empty-k">К</div><div class="empty-t">Няма изделия</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
-  g.innerHTML=items.map(function(p){
-    var sn=normalizeStageValue(p.stage||'wet');
-    var sl=stageLabel(sn);
-    var thumb=getLatestPhoto(p);
-    var ic=thumb?'<img src="'+thumb+'" alt="">':K(40);
-    // v1.18.0: horizontal card with inline fields + icons, coloured stage chip.
-    var glz=(p.recipe||p.material)?_glazeNameFor(p):'';
-    var _ruler='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="1"/><line x1="7" y1="7" x2="7" y2="11"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="17" y1="7" x2="17" y2="11"/></svg>';
-    var _clayIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 Q4 20 12 20 Q20 20 20 14"/><path d="M6 14 Q6 9 12 9 Q18 9 18 14"/></svg>';
-    var _dropIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 Q6 11 6 15 A6 6 0 0 0 18 15 Q18 11 12 3 Z"/></svg>';
-    var _stackIc='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L21 8 L12 13 L3 8 Z"/><path d="M3 13 L12 18 L21 13"/></svg>';
-    var rows='';
-    var _szl=_sizeLabel(p.size)||(p.dimensions?p.dimensions+' см':''); // v1.31.1
-    if(_szl)rows+='<div class="pchr">'+_ruler+'<span class="pchr-l">Размер</span><span class="pchr-v">'+_szl+'</span></div>';
-    var cn=clayName(p.clay);
-    if(cn)rows+='<div class="pchr">'+_clayIc+'<span class="pchr-l">Глина</span><span class="pchr-v">'+cn+'</span></div>';
-    rows+='<div class="pchr">'+_dropIc+'<span class="pchr-l">Глазура</span><span class="pchr-v">'+(glz||'—')+'</span></div>';
-    var _mSe=p.seriesId?findSeries(p.seriesId):null;
-    if(_mSe){
-      var _mq=parseInt(p.qty,10);if(isNaN(_mq)||_mq<1)_mq=1;
-      rows='<div class="pchr">'+_stackIc+'<span class="pchr-l">От серия</span><span class="pchr-v">'+(_mSe.name||'')+' · '+_mq+' бр.</span></div>'+rows;
-    }
-    var _se=!!findSeries(p.id);
-    if(_se){
-      var _tot=_seriesTotal(p),_split=_seriesSplitCount(p.id);
-      var _cntTxt=_tot+' бр.'+(_split>0?' · '+_split+' отделени':'');
-      rows='<div class="pchr">'+_stackIc+'<span class="pchr-l">Серия</span><span class="pchr-v">'+_cntTxt+'</span></div>'+rows;
-    }
-    return '<div class="pc pc-h" onclick="'+(_se?'openSeriesDet':'openPieceDet')+'(\''+p.id+'\')">'
-      +'<div class="pch-img">'+ic+'</div>'
-      +'<div class="pch-body">'
-        +'<div class="pch-top">'
-          +'<div style="min-width:0;"><div class="pch-name">'+(p.name||'')+'</div>'
-            +(pieceCode(p)?'<div class="pch-code" style="font-size:11px;color:var(--tx3);letter-spacing:.03em;">'+pieceCode(p)+(p.archivedAt?' · в архива':'')+'</div>':'')
-            +(p.type?'<div class="pch-clay" style="font-style:italic;">'+p.type+'</div>':'')+'</div>'
-          +(sl?'<span class="stage-badge sb-'+sn+'" style="flex-shrink:0;">'+sl+'</span>':'')
-        +'</div>'
-        +'<div class="pch-rows">'+rows+'</div>'
-        +(p.date?'<div class="pch-date">'+p.date+'</div>':'')
-      +'</div></div>';
-  }).join('');
+  var ts=function(v){var t=v?new Date(v).getTime():0;return isNaN(t)?0:t;};
+  if(sortK==='name')items.sort(function(a,b){return (a.rec.name||'').localeCompare(b.rec.name||'','bg');});
+  else if(sortK==='date')items.sort(function(a,b){return ts(b.rec.date||b.rec.createdAt||b.rec.updatedAt)-ts(a.rec.date||a.rec.createdAt||a.rec.updatedAt);});
+  else items.sort(function(a,b){return ts(b.rec.updatedAt||b.rec.date)-ts(a.rec.updatedAt||a.rec.date);});
+  var ac=_pcActive(),hasF=!!q||ac.length>0;
+  var _nSeries=(DB.series||[]).filter(function(x){return x&&!x.archivedAt;}).length;
+  document.getElementById('cnt-pieces').textContent=hasF?(items.length+' от '+total+' записа'):(total+' записа'+(_nSeries?' · '+_nSeries+' серии':''));
+  var side=document.getElementById('pc-side');if(side)side.innerHTML=_pcSideHtml(all,q);
+  var badge=document.getElementById('pc-filter-badge');if(badge)badge.textContent=ac.length?' ('+ac.length+')':'';
+  var act=document.getElementById('pc-active');
+  if(act)act.innerHTML=ac.length?ac.map(function(x){return '<button type="button" class="pc-achip" onclick="pcUnset(\''+x[0]+'\','+JSON.stringify(x[1]).replace(/"/g,'&quot;')+')">'+_pdE(x[2])+' ✕</button>';}).join('')+'<button type="button" class="pc-achip clr" onclick="resetPcFilters()">изчисти всички</button>':'';
+  ['gal','list'].forEach(function(v){var b=document.getElementById('pc-v-'+v);if(b){b.classList.toggle('on',PC.view===v);b.setAttribute('aria-pressed',PC.view===v);}});
+  var so=document.getElementById('pc-sort');if(so)so.value=sortK;
+  var g=document.getElementById('pieces-grid'),more=document.getElementById('pc-more');
+  g.className=PC.view==='list'?'pcls':'pcg';
+  if(more)more.innerHTML='';
+  if(!items.length){g.className='';g.innerHTML=hasF?'<div class="empty"><div class="empty-k">∅</div><div class="empty-t">Няма съвпадения</div><div class="empty-s">Промени търсенето или филтрите</div></div>':'<div class="empty"><div class="empty-k">К</div><div class="empty-t">Няма изделия</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
+  var shown=items.slice(0,PC.limit);
+  g.innerHTML=PC.view==='list'
+    ?'<div class="pclh"><span></span><span>Име</span><span>Етап</span><span>Размер</span><span>Глина</span><span>Техника</span><span>Промяна</span><span></span></div>'+shown.map(_pcRow).join('')
+    :shown.map(_pcCard).join('');
+  if(more&&items.length>PC.limit)more.innerHTML='<button type="button" class="btn bg pc-more" style="width:auto;padding:10px 18px" onclick="PC.limit+=60;renderPieces()">Покажи още ('+(items.length-PC.limit)+')</button>';
+}
+function setPcView(v){PC.view=v==='list'?'list':'gal';_pcSave();renderPieces();}
+function pcTog(key,v){var a=PC[key],i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);PC.limit=60;_pcSave();renderPieces();}
+function pcSet(key,v){PC[key]=v;PC.limit=60;_pcSave();renderPieces();}
+function pcUnset(key,v){
+  if(key==='kind')PC.kind='all';
+  else if(key==='arch')PC.arch='active';
+  else if(key==='f'){if(activeFilters.pc)activeFilters.pc[v]=false;}
+  else PC[key]=PC[key].filter(function(y){return y!==v;});
+  _pcSave();renderPieces();
+}
+function togglePcChip(key){
+  activeFilters.pc=activeFilters.pc||{};
+  if(key==='arch'){PC.arch=PC.arch==='arch'?'active':'arch';_pcSave();renderPieces();return;}
+  var pairs={hasglz:'noglz',noglz:'hasglz',hasph:'noph',noph:'hasph'};
+  var nextVal=!activeFilters.pc[key];
+  activeFilters.pc[key]=nextVal;
+  if(nextVal&&pairs[key])activeFilters.pc[pairs[key]]=false;
+  _pcSave();renderPieces();
+}
+function setPcSort(key){activeSort.pc=key;_pcSave();renderPieces();}
+function setPieceStageFilter(v){if(v)pcTog('stages',normalizeStageValue(v));}
+function resetPcFilters(){
+  activeFilters.pc={};
+  PC.stages=[];PC.cats=[];PC.clays=[];PC.techs=[];PC.kind='all';PC.arch='active';PC.limit=60;
+  var si=document.getElementById('pc-search');if(si)si.value='';
+  _pcSave();renderPieces();
+}
+// На телефон филтрите са лист над списъка; назад го затваря.
+function togglePcFilters(){
+  var el=document.getElementById('pc-side');if(!el)return;
+  if(el.classList.contains('on')){closeDet('pc-side');return;}
+  el.classList.add('on');_pushOverlay('det','pc-side');
+}
+function _updatePcFilterBadge(){var b=document.getElementById('pc-filter-badge'),n=_pcActive().length;if(b)b.textContent=n?' ('+n+')':'';}
+
+// v1.36.0: МОЕТО АТЕЛИЕ — обзор, изведен от данните. Отделен екран (бутонът с
+// къщичка в „Изделия“), не начален.
+function _homeActiveRuns(){return (DB.firingRuns||[]).filter(function(r){var s=_runState(r);return s==='planned'||s==='loaded';});}
+// Колко бройки на всеки запис вече са в активен план (планиран или зареден).
+function _homePlanned(){
+  var n={};
+  _homeActiveRuns().forEach(function(r){((r.plan&&r.plan.members)||[]).forEach(function(m){if(m.ref&&m.ref.id)n[m.ref.id]=(n[m.ref.id]||0)+1;});});
+  return n;
+}
+// Чакат изпичане: сухи (за бисквит) и глазирани (за глазурно), без бройките,
+// които вече са в активен план.
+function _homeWaiting(){
+  var planned=_homePlanned(),out=[];
+  DB.pieces.forEach(function(p){
+    if(!p||p.archivedAt)return;
+    var st=normalizeStageValue(p.stage||'wet');if(st!=='bone-dry'&&st!=='glazed')return;
+    var left=_pcQty(p)-(planned[p.id]||0);
+    if(left>0)out.push({rec:p,ser:false,stage:st,n:left,qty:_pcQty(p)});
+  });
+  (DB.series||[]).forEach(function(se){
+    if(!se||se.archivedAt)return;
+    var st=normalizeStageValue(se.stage||'wet');if(st!=='bone-dry'&&st!=='glazed')return;
+    var rem=_seriesRemaining(se),left=rem-(planned[se.id]||0);
+    if(left>0)out.push({rec:se,ser:true,stage:st,n:left,qty:rem});
+  });
+  return out;
+}
+function _homeLi(onclick,img,t,s){return '<div class="hm-li" role="button" tabindex="0" onclick="'+onclick+'"><span class="pim">'+img+'</span><div style="min-width:0"><div class="t">'+_pdE(t)+'</div><div class="s">'+_pdE(s)+'</div></div></div>';}
+function homeGo(fn){show('pieces');if(fn)fn();}
+function homeStage(st){PC.stages=[st];PC.kind='all';PC.arch='active';PC.limit=60;var si=document.getElementById('pc-search');if(si)si.value='';_pcSave();show('pieces');}
+function homeNewRun(){show('fp');if(typeof switchFP==='function')switchFP('runs');editId=null;openRunMo(null);}
+function homeSearch(){show('pieces');setTimeout(function(){var q=document.getElementById('pc-search');if(q)q.focus();},50);}
+function renderHome(){
+  var body=document.getElementById('home-body');if(!body)return;
+  var pcs=DB.pieces.filter(function(p){return p&&!p.archivedAt;}),ses=(DB.series||[]).filter(function(s){return s&&!s.archivedAt;});
+  // В работа: бройки по етап (серията — по частите си).
+  var by={};
+  pcs.forEach(function(p){if(_pcNested(p))return;var st=normalizeStageValue(p.stage||'wet');by[st]=(by[st]||0)+_pcQty(p);});
+  ses.forEach(function(se){_pcParts(se).forEach(function(x){if(x.m&&x.m.archivedAt)return;by[x.stage]=(by[x.stage]||0)+x.n;});});
+  var work=['wet','leather-hard','bone-dry','bisque','glazed','fired'];
+  var runs=_homeActiveRuns().slice().sort(function(a,b){return String(a.date||'9').localeCompare(String(b.date||'9'));});
+  var wait=_homeWaiting();
+  var recent=pcs.concat(ses).slice().sort(function(a,b){return String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''));}).slice(0,6);
+  document.getElementById('cnt-home').textContent=pcs.length+ses.length+' записа';
+  var h='<div class="hm-box" style="grid-column:1/-1"><h2>Бързи действия</h2><div class="hm-qa">'
+    +'<button type="button" onclick="homeGo(function(){editId=null;editKind=\'piece\';openPieceMo();})">+ Ново изделие<span>или серия</span></button>'
+    +'<button type="button" onclick="homeNewRun()">+ Изпичане<span>ново изпичане и план</span></button>'
+    +'<button type="button" onclick="homeSearch()">Търси<span>по име или код</span></button>'
+    +'<button type="button" onclick="show(\'fp\')">Изпичания<span>пещи и профили</span></button></div></div>';
+  h+='<div class="hm-box"><h2>В работа</h2><div class="hm-pipe">'+work.map(function(s){return '<button type="button" onclick="homeStage(\''+s+'\')"><div class="n">'+(by[s]||0)+'</div><div class="l">'+_pdE(stageLabel(s))+'</div></button>';}).join('')+'</div></div>';
+  h+='<div class="hm-box"><h2>Планирани изпичания</h2>'+(runs.length?runs.map(function(r){
+    var k=r.kilnId?KILNS.find(function(z){return z&&z.id===r.kilnId;}):null,L=((r.config&&r.config.levels)||[]).length,n=((r.plan&&r.plan.members)||[]).length;
+    return _homeLi('show(\'fp\');openRunDet(\''+r.id+'\')','<span style="font-size:18px">🔥</span>',_runLabel(r),[RUN_STATES[_runState(r)],r.date,k&&k.name,L?L+(L===1?' ниво':' нива'):'',n+' бр. в плана'].filter(Boolean).join(' · '));
+  }).join(''):'<div class="hm-empty">Няма планирани изпичания.</div>')+'</div>';
+  h+='<div class="hm-box"><h2>Чакат изпичане</h2>'+(wait.length?wait.slice(0,8).map(function(x){
+    var p=x.rec,code=x.ser?(p.code||''):pieceCode(p);
+    return _homeLi(_pcOpen(p,x.ser),_pcImg(p),p.name||'—',[code,stageLabel(x.stage)+' → '+(x.stage==='bone-dry'?'бисквит':'глазурно'),x.n<x.qty?x.n+' от '+x.qty+' бр. без план':(x.n>1?x.n+' бр.':'')].filter(Boolean).join(' · '));
+  }).join('')+(wait.length>8?'<div class="hm-empty">и още '+(wait.length-8)+'</div>':''):'<div class="hm-empty">Нищо не чака — всичко сухо и глазирано е в план.</div>')+'</div>';
+  h+='<div class="hm-box"><h2>Последно променени</h2>'+(recent.length?recent.map(function(p){
+    var ser=!!findSeries(p.id)&&!p.seriesId;
+    return _homeLi(_pcOpen(p,ser),_pcImg(p),p.name||'—',[ser?(p.code||''):pieceCode(p),ser&&_seriesStageSummary(p).mixed?'смесен етап':stageLabel(p.stage||'wet'),_pcDate(p.updatedAt||p.date)].filter(Boolean).join(' · '));
+  }).join(''):'<div class="hm-empty">Още няма изделия.</div>')+'</div>';
+  body.innerHTML=h;
 }
 
 // v1.18.0: resolve a display name for a piece's glaze (recipe or ready material).
@@ -5230,73 +5567,6 @@ function getLatestPhoto(p){
   }
   return null;
 }
-function togglePcChip(key){
-  activeFilters.pc=activeFilters.pc||{};
-  var pairs={hasglz:'noglz',noglz:'hasglz',hasph:'noph',noph:'hasph'};
-  var nextVal=!activeFilters.pc[key];
-  activeFilters.pc[key]=nextVal;
-  if(nextVal&&pairs[key])activeFilters.pc[pairs[key]]=false;
-  Object.keys(pairs).concat(['arch']).forEach(function(k){
-    var el=document.getElementById('fc-pc-'+k);if(el)el.classList.toggle('on',!!activeFilters.pc[k]);
-  });
-  _updatePcFilterBadge();
-  renderPieces();
-}
-function setPcSort(key){
-  activeSort.pc=key;
-  document.querySelectorAll('[id^="sort-pc-"]').forEach(function(b){b.classList.remove('on');});
-  var el=document.getElementById('sort-pc-'+key);if(el)el.classList.add('on');
-  renderPieces();
-}
-function setPieceStageFilter(v){
-  pieceStageFilter=(pieceStageFilter===v)?'':v;
-  document.querySelectorAll('.pf-chip').forEach(function(b){
-    b.classList.toggle('on',b.dataset.stage===pieceStageFilter);
-  });
-  _updatePcFilterBadge();
-  renderPieces();
-}
-function resetPcFilters(){
-  activeFilters.pc={};
-  pieceStageFilter='';
-  activeSort.pc='name';
-  var si=document.getElementById('pc-search');if(si)si.value='';
-  document.querySelectorAll('#sc-pieces .fchip.on').forEach(function(b){b.classList.remove('on');});
-  var defSort=document.getElementById('sort-pc-name');if(defSort)defSort.classList.add('on');
-  _updatePcFilterBadge();
-  renderPieces();
-}
-
-// v1.5.2: Toggle filter section visibility
-function togglePcFilters(){
-  var body=document.getElementById('pc-filter-body');
-  var chev=document.getElementById('pc-filter-chev');
-  if(!body)return;
-  var isOpen=body.style.display!=='none';
-  body.style.display=isOpen?'none':'block';
-  if(chev)chev.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
-}
-
-// v1.5.2: Update filter badge (count of active filters)
-function _updatePcFilterBadge(){
-  var f=activeFilters.pc||{};
-  var count=0;
-  if(pieceStageFilter)count++;
-  if(f.hasglz)count++;
-  if(f.noglz)count++;
-  if(f.hasph)count++;
-  if(f.noph)count++;
-  var badge=document.getElementById('pc-filter-badge');
-  if(badge){
-    if(count>0){
-      badge.style.display='inline-block';
-      badge.textContent=count;
-    } else {
-      badge.style.display='none';
-    }
-  }
-}
-
 // RECIPES
 function renderRecipes(){
   var q=srchVal('rec-search');
@@ -5704,9 +5974,59 @@ function _pdFirings(o,kind){
   return {n:rows.length,body:(rows.length?rows.join(''):'<div class="pd-empty">Не е било в изпичане.</div>')
     +(isTerminalStage(o.stage)?'':'<button type="button" class="pd-add" onclick="openPdPlan(\''+kind+'\',\'\')">Добави в план на изпичане</button>')};
 }
+// v1.36.0: снимката в детайла. Всички снимки на записа (последната първа); при
+// повече от една — стрелки и брояч; натискане отваря големия преглед.
+function _detPhotos(o){
+  var out=[],seen={};
+  var add=function(x){if(x&&!seen[x]){seen[x]=1;out.push(x);}};
+  var evs=(typeof _effectiveEvents==='function')?_effectiveEvents(o):(Array.isArray(o.events)?o.events:[]);
+  evs.slice().sort(function(a,b){return String(b&&b.date||'').localeCompare(String(a&&a.date||''));}).forEach(function(e){
+    if(e&&Array.isArray(e.photos))e.photos.slice().reverse().forEach(add);
+  });
+  (Array.isArray(o.photos)?o.photos:[]).forEach(add);
+  if(!out.length&&o.seriesId){var se=findSeries(o.seriesId);if(se&&Array.isArray(se.photos))se.photos.forEach(add);}
+  var first=getLatestPhoto(o);
+  if(first&&out[0]!==first){out=out.filter(function(x){return x!==first;});out.unshift(first);}
+  return out;
+}
+var _hero={id:'',list:[],i:0},_lb={list:[],i:0};
+function _detHero(id,o){
+  _hero={id:id,list:_detPhotos(o),i:0};
+  _heroDraw();
+}
+function _heroDraw(){
+  var el=document.getElementById(_hero.id);if(!el)return;
+  var L=_hero.list,n=L.length;
+  if(!n){el.innerHTML=K(70);return;}
+  el.innerHTML='<img src="'+L[_hero.i]+'" alt="" onclick="openLb(_hero.list,_hero.i)">'
+    +(n>1?'<div class="hn"><button type="button" aria-label="Предишна снимка" onclick="heroStep(-1)">‹</button><span>'+(_hero.i+1)+' / '+n+'</span><button type="button" aria-label="Следваща снимка" onclick="heroStep(1)">›</button></div>':'');
+}
+function heroStep(d){var n=_hero.list.length;if(n<2)return;_hero.i=(_hero.i+d+n)%n;_heroDraw();}
+function openLb(list,i){
+  if(!list||!list.length)return;
+  _lb={list:list.slice(),i:i||0};_lbDraw();
+  var el=document.getElementById('lb');
+  if(!el.classList.contains('on')){el.classList.add('on');_pushOverlay('det','lb');}
+}
+function _lbDraw(){
+  var n=_lb.list.length;
+  document.getElementById('lb-img').src=_lb.list[_lb.i]||'';
+  document.getElementById('lb-ct').textContent=n>1?(_lb.i+1)+' / '+n:'';
+  document.getElementById('lb-pv').style.display=n>1?'':'none';
+  document.getElementById('lb-nx').style.display=n>1?'':'none';
+}
+function lbStep(d){var n=_lb.list.length;if(n<2)return;_lb.i=(_lb.i+d+n)%n;_lbDraw();}
+document.addEventListener('keydown',function(e){
+  var el=document.getElementById('lb');if(!el||!el.classList.contains('on'))return;
+  if(e.key==='ArrowLeft')lbStep(-1);else if(e.key==='ArrowRight')lbStep(1);else if(e.key==='Escape')closeDet('lb');
+});
+(function(){
+  var x0=null;
+  document.addEventListener('touchstart',function(e){var el=document.getElementById('lb');x0=el&&el.classList.contains('on')&&e.touches.length===1?e.touches[0].clientX:null;},{passive:true});
+  document.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)lbStep(dx<0?1:-1);},{passive:true});
+})();
 function _renderPieceDet(p){
-  var hero=getLatestPhoto(p);
-  document.getElementById('dpi-hero').innerHTML=hero?'<img src="'+hero+'" alt="">':K(70);
+  _detHero('dpi-hero',p);
   var ar=!!p.archivedAt;
   document.getElementById('dpi-restore').style.display=ar?'':'none';
   document.getElementById('dpi-del').textContent=ar?'Изтрий завинаги':'Архивирай';
@@ -5731,8 +6051,7 @@ function _renderPieceDet(p){
   document.getElementById('dpi-secs').innerHTML=h;
 }
 function _renderSeriesDet(se){
-  var hero=getLatestPhoto(se);
-  document.getElementById('dse-hero').innerHTML=hero?'<img src="'+hero+'" alt="">':K(70);
+  _detHero('dse-hero',se);
   var ar=!!se.archivedAt;
   document.getElementById('dse-restore').style.display=ar?'':'none';
   document.getElementById('dse-del').textContent=ar?'Изтрий завинаги':'Архивирай';
