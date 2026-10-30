@@ -454,21 +454,56 @@ function planLevels(S, r) {
     q.x = s2.x; q.y = s2.y; sim.pieces.push(q); g.ids.push(p.id); g.tall = h;
   });
   if (!groups.length) return out;
-  // Коя група горе: там височината не се закръгля до подпори, затова горе
-  // отива групата, при която закръгляването би загубило най-много. При равенство —
-  // най-високата. Останалите — отдолу нагоре по реда, в който са отворени.
+  // Редът на нивата (v1.34.2): от всички подредби (до 5 групи) — първо тази, която
+  // се събира, после с най-малко подпори една върху друга, после с най-много
+  // място до капака. Горе височината не се закръгля до подпори. При повече групи —
+  // старото правило: горе отива групата, при която закръгляването губи най-много.
   var combos = postCombos(S.postSizes, Math.max(H || 60, 20));
   var keys = Object.keys(combos).map(Number).sort(function (a, b) { return a - b; });
   function rounded(need) { var k = keys.find(function (v) { return v >= need - 1e-9; }); return k != null ? k : need; }
   var best = 0, bestLoss = -1;
   groups.forEach(function (g, i) { var need = g.tall + clear, loss = rounded(need) - need; if (loss > bestLoss + 1e-9) { best = i; bestLoss = loss; } });
   var ordered = groups.filter(function (g, i) { return i !== best; }).concat([groups[best]]);
-  var t = num(type.t) || 0, z = floorH;
+  var pick = _planRestack(S, r, ordered, type);
+  if (groups.length <= 5) {
+    _perms(groups).forEach(function (o) {
+      var c = _planRestack(S, r, o, type);
+      if (_stackBetter(c, pick)) pick = c;
+    });
+  }
+  out.levels = pick.levels; out.fits = pick.fits; out.problems = out.problems.concat(pick.problems);
+  return out;
+}
+function _perms(a) {
+  if (a.length <= 1) return [a.slice()];
+  var o = [];
+  a.forEach(function (x, i) { _perms(a.slice(0, i).concat(a.slice(i + 1))).forEach(function (p) { o.push([x].concat(p)); }); });
+  return o;
+}
+function _stackBetter(a, b) {
+  if (a.fits !== b.fits) return a.fits;
+  // Нито една не се събира: по-малкият недостиг е по-добрият.
+  if (!a.fits && Math.abs((a.slack || 0) - (b.slack || 0)) > 1e-9) return (a.slack || 0) > (b.slack || 0);
+  if (a.problems.length !== b.problems.length) return a.problems.length < b.problems.length;
+  if (a.stacked !== b.stacked) return a.stacked < b.stacked;
+  return (a.slack || 0) > (b.slack || 0) + 1e-9;
+}
+// Височините за дадена подредба на групите (отдолу нагоре): подпори под всяко
+// ниво без горното, мястото до капака, проблемите. Ползва се и от „Размени“.
+function _planRestack(S, r, ordered, type) {
+  var clear = Math.max(0, num(r.clear) || 0), H = num(S.kiln && S.kiln.h), floorH = num(r.floorH) || 0;
+  var combos = postCombos(S.postSizes, Math.max(H || 60, 20));
+  var keys = Object.keys(combos).map(Number).sort(function (a, b) { return a - b; });
+  var types = (S.shelves || []).filter(function (t) { return t.shape !== 'half' && shelfShape(t, {}); });
+  var shelves = types.reduce(function (a, t) { return a + (num(t.qty) || 0); }, 0);
+  var out = { levels: [], problems: [], fits: true, stacked: 0, slack: 0 };
+  var t = num(type && type.t) || 0, z = floorH;
   ordered.forEach(function (g, i) {
     var last = i === ordered.length - 1, need = g.tall + clear, lv = { ids: g.ids, tall: g.tall, need: need, noBase: g.noBase, bottom: z, top: z + t };
     if (!last) {
       var k = keys.find(function (v) { return v >= need - 1e-9; });
       lv.postH = k != null ? k : r1(need); lv.combo = k != null ? combos[k] : null;
+      out.stacked += k != null ? combos[k].length - 1 : 5;
       if (k == null) out.problems.push('Ниво ' + (i + 1) + ' иска подпори ' + fc(need) + ' см — няма такава комбинация от наличните.');
       z = lv.top + lv.postH;
       lv.space = lv.postH;
@@ -476,8 +511,11 @@ function planLevels(S, r) {
     out.levels.push(lv);
   });
   var top = out.levels[out.levels.length - 1];
-  out.fits = top.space == null || top.space >= top.need - 0.05;
-  if (!out.fits) out.problems.push('Не стига височина: горното ниво иска ' + fc(top.need) + ' см, до тавана остават ' + fc(top.space) + ' см (липсват ' + fc(top.need - top.space) + ' см).');
+  if (top) {
+    out.fits = top.space == null || top.space >= top.need - 0.05;
+    out.slack = top.space == null ? 0 : top.space - top.need;
+    if (!out.fits) out.problems.push('Не стига височина: горното ниво иска ' + fc(top.need) + ' см, до тавана остават ' + fc(top.space) + ' см (липсват ' + fc(top.need - top.space) + ' см).');
+  }
   if (shelves && out.levels.length > shelves) out.problems.push('Нужни са ' + out.levels.length + ' плочи, а в „Пещ“ има ' + shelves + '.');
   return out;
 }
@@ -570,4 +608,4 @@ function _planSuggest(S, r, levelId) {
   return res;
 }
 
-export { effH, num, r1, shelfType, shelfShape, levelShelves, chamberShape, shapeOf, toPoly, samples, bound, xExtent, pointOut, hull, overhangOn, overhang, chamberOut, axes, proj, convexIntersect, segDist, polyDist, gapBetween, stack, positioned, zone, label, postShapes, check, defaultPosts, clock, findSpot, quickReason, autoArrange, fc, byHeight, planLevels, postCombos, parseDims, _planSetup, _planGap, _planRun, _planMeasures, _planRoom, _planSuggest };
+export { effH, num, r1, shelfType, shelfShape, levelShelves, chamberShape, shapeOf, toPoly, samples, bound, xExtent, pointOut, hull, overhangOn, overhang, chamberOut, axes, proj, convexIntersect, segDist, polyDist, gapBetween, stack, positioned, zone, label, postShapes, check, defaultPosts, clock, findSpot, quickReason, autoArrange, fc, byHeight, planLevels, _perms, _stackBetter, _planRestack, postCombos, parseDims, _planSetup, _planGap, _planRun, _planMeasures, _planRoom, _planSuggest };
