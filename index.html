@@ -263,7 +263,134 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .det-hero .hn{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;align-items:center;}
 .det-hero .hn button{border:none;background:rgba(255,255,255,.88);color:var(--text);border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;box-shadow:var(--shadow);}
 .det-hero .hn span{background:rgba(47,52,55,.72);color:#fff;font-size:12px;border-radius:99px;padding:3px 9px;}
-.det-hero img{cursor:zoom-in;}
+.det-hero img.hfg{position:relative;object-fit:contain;cursor:zoom-in;}
+.det-hero img.hbg{position:absolute;inset:0;object-fit:cover;filter:blur(16px) saturate(.9);transform:scale(1.15);opacity:.85;}
+
+/* v1.37.0: изпичания — регистър, детайл в три раздела, „Какво остава“, „До пещта“ */
+.rn-list{padding:0 14px;}
+.rn-tools{margin-bottom:6px;}
+.rn-chips{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none;}
+.rn-chips::-webkit-scrollbar{display:none;}
+.rn-chips .fchip{font-size:12px;padding:7px 12px;}
+.rn-tools2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.rn-tools2 .srch{flex:1 1 200px;width:auto;min-width:0;}
+.rn-grp{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;}
+.rn-c{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;cursor:pointer;border:2px solid transparent;}
+.rn-c.sel{border-color:var(--primary);}
+.rn-c1{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;}
+.rn-nm{font-family:'Tenor Sans',sans-serif;font-size:17px;line-height:1.2;overflow-wrap:anywhere;}
+.rn-mt{font-size:12.5px;color:var(--tx3);margin-top:3px;}
+.rn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.rn-pill{background:var(--bg);border-radius:8px;padding:3px 8px;font-size:12px;color:var(--tx2);}
+.rn-pill.w{background:var(--warnbg);color:var(--warn);}
+.rn-bar{height:5px;background:var(--bg2);border-radius:3px;overflow:hidden;margin-top:8px;}
+.rn-bar i{display:block;height:100%;background:var(--ok,#4a7c59);}
+.rn-st{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:500;white-space:nowrap;}
+.rn-st:before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
+.rn-st.planned{background:#E4E9F1;color:#4A5F80;}
+.rn-st.loaded{background:var(--warnbg);color:var(--warn);}
+.rn-st.completed{background:var(--okbg);color:var(--ok);}
+.rn-st.interrupted{background:var(--errbg);color:var(--err);}
+.rn-top{position:relative;background:var(--bg2);padding:62px 18px 16px;}
+.rn-top .det-t{margin-top:6px;}
+.rn-top .det-m{margin-bottom:6px;}
+.rn-flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:6px 0 10px;}
+.rn-flow span{font-size:12.5px;padding:4px 10px;border-radius:99px;background:var(--surface);color:var(--tx3);}
+.rn-flow span.done{background:var(--okbg);color:var(--ok);}
+.rn-flow span.cur{background:var(--text);color:#fff;}
+.rn-flow span.bad{background:var(--errbg);color:var(--err);}
+.rn-flow em{font-style:normal;color:var(--tx3);}
+#drn-state .ds{margin-bottom:0;}
+.rn-todo{background:#FFF8EA;border:1px solid #F0DDB5;border-radius:14px;padding:12px 14px;margin-bottom:14px;}
+.rn-todo.ok{background:var(--okbg);border-color:transparent;color:var(--ok);}
+.rn-todo-h{font-family:'Tenor Sans',sans-serif;font-size:16px;margin-bottom:4px;}
+.rn-todo-g{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin:8px 0 2px;}
+.rn-todo-g.att{color:var(--warn);}
+.rn-todo ul{list-style:none;padding:0;margin:0;}
+.rn-todo li{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:5px 0;border-top:1px dashed #EBD9B1;}
+.rn-todo li:first-child{border-top:none;}
+.rn-todo li span{flex:1;}
+.rn-todo li button{border:none;background:none;color:var(--primary);font-family:inherit;font-size:13px;font-weight:500;text-decoration:underline;cursor:pointer;flex-shrink:0;}
+.rn-todo-n{font-size:13.5px;color:var(--tx2);margin-top:6px;}
+.rn-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--bg2);border-radius:14px;padding:4px;margin:0 0 14px;position:sticky;top:0;z-index:5;}
+.rn-tabs button{border:none;background:none;border-radius:11px;min-height:46px;font-family:inherit;font-size:14.5px;color:var(--tx2);padding:4px 6px;line-height:1.2;cursor:pointer;}
+.rn-tabs button small{display:block;font-size:11.5px;color:var(--tx3);}
+.rn-tabs button.on{background:var(--surface);color:var(--text);font-weight:500;box-shadow:var(--shadow);}
+.rn-pane{display:none;}
+.rn-pane.on{display:block;}
+.rn-card{background:var(--primary-soft);border:1px solid var(--primary);border-radius:14px;padding:14px;}
+.rn-main{width:100%;background:var(--primary);color:white;border:none;border-radius:10px;padding:13px 16px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;min-height:48px;margin-top:8px;}
+.rn-warns div{font-size:13.5px;padding:6px 10px;border-radius:9px;margin-top:6px;line-height:1.4;}
+.rn-warns .w{background:var(--warnbg);color:var(--warn);}
+.rn-warns .e{background:var(--errbg);color:var(--err);}
+.rn-warns .o{background:var(--okbg);color:var(--ok);}
+.rn-pick{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:1.5px solid var(--bdr2);background:var(--surface);border-radius:12px;padding:10px 12px;margin-top:8px;min-height:56px;font-family:inherit;cursor:pointer;color:var(--text);}
+.rn-pick.sel{border-color:var(--primary);}
+.rn-pick .ic{width:36px;height:36px;border-radius:10px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
+.rn-pick .b{display:flex;flex-direction:column;min-width:0;}
+.rn-pick .t{font-size:15px;font-weight:500;}
+.rn-pick .s{font-size:12.5px;color:var(--tx3);line-height:1.4;}
+.rn-pick .go{margin-left:auto;color:var(--tx3);font-size:20px;}
+.rn-curve svg{max-width:100%;height:auto;}
+.rn-pva{width:100%;border-collapse:collapse;font-size:14px;}
+.rn-pva th{font-weight:500;color:var(--tx3);font-size:11px;text-align:left;padding:4px 6px;letter-spacing:.05em;text-transform:uppercase;}
+.rn-pva td{padding:7px 6px;border-top:1px solid var(--bdr);}
+.rn-pva td.dif{color:var(--warn);}
+.rn-lock{font-size:14px;color:var(--tx2);background:var(--bg2);border-radius:10px;padding:12px;line-height:1.5;margin-bottom:14px;}
+.rn-fr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.rn-fr label{font-size:12px;}
+.rn-cone{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 0;border-top:1px solid var(--bdr);}
+.rn-cone:first-of-type{border-top:none;}
+.rn-cone b{font-weight:500;font-size:14px;}
+.rn-cone input{padding:8px 10px;font-size:15px;}
+@media(min-width:600px){.rn-cone{grid-template-columns:70px minmax(0,1fr) auto;align-items:center;}}
+.rn-res{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.rn-cone .rn-res{margin-top:0;}
+.rn-res button{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:99px;padding:5px 11px;min-height:38px;font-family:inherit;font-size:13.5px;cursor:pointer;color:var(--text);}
+.rn-res button.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+.rn-res button.on.bad{background:var(--err);border-color:var(--err);}
+.rn-rrow{padding:10px 0;border-top:1px solid var(--bdr);}
+.rn-rrow:first-of-type{border-top:none;}
+.rn-rrow .top{display:flex;gap:8px;align-items:baseline;}
+.rn-rrow .nm{flex:1;min-width:0;font-size:14.5px;font-weight:500;}
+.rn-rrow .lv{font-size:12px;color:var(--tx3);}
+.rn-rrow input{margin-top:6px;padding:8px 10px;font-size:14.5px;}
+.rn-phs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.rn-phs img{width:72px;height:72px;border-radius:9px;object-fit:cover;background:var(--bg2);}
+.rn-phs .add,.rn-phadd{width:80px;height:72px;border-radius:9px;border:1.5px dashed var(--bdr2);background:none;color:var(--tx3);font-family:inherit;font-size:12px;cursor:pointer;}
+.rn-phadd{height:80px;}
+.rn-km{display:none;position:fixed;inset:0;z-index:300;background:var(--bg);flex-direction:column;}
+.rn-km.on{display:flex;}
+.km-top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bdr);}
+.km-top b{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.km-top span{font-size:12.5px;color:var(--tx3);white-space:nowrap;}
+.km-x{width:40px;height:40px;border-radius:50%;border:1px solid var(--bdr2);background:var(--surface);font-size:16px;cursor:pointer;}
+.km-body{flex:1;overflow:auto;padding:16px;max-width:640px;width:100%;margin:0 auto;}
+.km-prog{display:flex;gap:3px;flex-wrap:wrap;}
+.km-prog i{flex:1 0 10px;height:8px;border-radius:3px;background:var(--bg2);cursor:pointer;}
+.km-prog i.d{background:var(--ok,#4a7c59);}
+.km-prog i.c{background:var(--text);}
+.km-meta{font-size:13px;color:var(--tx3);margin-top:16px;}
+.km-nm{font-family:'Tenor Sans',sans-serif;font-size:27px;line-height:1.15;overflow-wrap:anywhere;}
+.km-big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px;}
+.km-big button{min-height:62px;border-radius:14px;border:1.5px solid var(--bdr2);background:var(--surface);font-family:inherit;font-size:17px;cursor:pointer;color:var(--text);}
+.km-big button.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+.km-big button.on.bad{background:var(--err);border-color:var(--err);}
+.km-clr{border:none;background:none;color:var(--tx2);text-decoration:underline;font-family:inherit;font-size:13.5px;margin-top:8px;cursor:pointer;}
+.km-auto{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--tx2);margin-top:12px;}
+.km-auto input{width:auto;}
+.km-undo{display:flex;gap:10px;align-items:center;background:var(--text);color:#fff;border-radius:12px;padding:10px 14px;margin-top:12px;font-size:14px;}
+.km-undo button{margin-left:auto;border:none;background:none;color:#fff;font-weight:600;text-decoration:underline;font-family:inherit;font-size:14px;cursor:pointer;}
+.km-nav{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--bdr);max-width:640px;width:100%;margin:0 auto;}
+.km-nav .btn{margin:0;padding:14px 8px;}
+.km-nav .btn:disabled{opacity:.4;}
+@media(min-width:1100px){
+  #sc-fp.split #run-list,#sc-fp.split .ph,#sc-fp.split #fp-hint,#sc-fp.split .tabs{max-width:440px;}
+  #det-run.split{left:440px;box-shadow:-6px 0 20px rgba(0,0,0,.06);border-left:1px solid var(--bdr);}
+  #det-run.split .det-back{display:none;}
+  #det-run.split .rn-top{padding-top:22px;}
+  #det-run.split > *{max-width:860px;}
+}
 
 /* detail */
 .det{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;}
@@ -838,45 +965,80 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 
 <!-- DETAIL: Изпичане (firing run) — v1.11.0 -->
 <div class="det" id="det-run">
-  <div style="position:relative;background:var(--bg2);padding:62px 18px 18px;">
-    <button class="det-back" onclick="closeDet('det-run')" style="background:var(--surf);">
+  <!-- v1.37.0: изпичането по прототипа firing-v0 — заглавие със състоянието и действията,
+       „Какво остава“, после Подготовка / Зареждане / Резултати като раздели. -->
+  <div class="rn-top">
+    <button class="det-back" onclick="closeDet('det-run')" style="background:var(--surf);" aria-label="Назад">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     </button>
+    <div id="drn-pill"></div>
     <div class="det-t" id="drn-t"></div>
     <div class="det-m" id="drn-m"></div>
+    <div id="drn-flow"></div>
+    <div id="drn-state"></div>
   </div>
   <div class="det-body">
-    <!-- v1.33.2: Подготовка / Зареждане / Резултати -->
-    <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;margin:0 0 10px;">Подготовка</div>
-    <div class="ds"><div class="ds-t" data-t="ui.parametri">Параметри</div><div id="drn-rows"></div></div>
-    <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t" data-t="ui.alternativno-izpichane">Алтернативно изпичане</div><div id="drn-alt"></div></div>
-    <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Зареждане</div>
-    <div id="drn-state"></div>
-    <div class="ds" id="drn-plan-sec">
-      <div style="background:var(--primary-soft);border:1px solid var(--primary);border-radius:14px;padding:14px;">
-        <div style="font-size:16px;color:var(--text);font-weight:500;margin-bottom:4px;">План на пещта</div>
-        <div id="drn-plan" style="font-size:14px;color:var(--tx2);line-height:1.55;margin-bottom:12px;"></div>
-        <button onclick="openPlan(curRun)" id="drn-plan-btn" style="width:100%;background:var(--primary);color:white;border:none;border-radius:10px;padding:13px 16px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;min-height:48px;">Отвори плана</button>
-      </div>
+    <div id="drn-todo"></div>
+    <div class="rn-tabs" id="drn-tabs" role="tablist"></div>
+    <div class="rn-pane" data-pane="prep">
+      <div class="ds"><div class="ds-t" data-t="ui.parametri">Параметри</div><div id="drn-rows"></div></div>
+      <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t" data-t="ui.alternativno-izpichane">Алтернативно изпичане</div><div id="drn-alt"></div></div>
+      <div id="drn-pick"></div>
+      <div id="drn-pva"></div>
+      <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
+        <span data-t="ui.testove">Тестове</span>
+        <button onclick="openRunTestAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
+      </div><div id="drn-tests"></div></div>
     </div>
-    <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
-      <span>Изделия в това изпичане <span id="drn-pieces-count" style="color:var(--tx3);font-weight:400;"></span></span>
-      <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
-    </div><div id="drn-pieces"></div></div>
-    <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Резултати</div>
-    <div id="drn-results"></div>
-    <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
-    <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
-      <span data-t="ui.testove">Тестове</span>
-      <button onclick="openRunTestAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
-    </div><div id="drn-tests"></div></div>
-    <div class="ds"><div class="ds-t" data-t="ui.belezhki">Бележки</div><div id="drn-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
+    <div class="rn-pane" data-pane="load">
+      <div class="ds" id="drn-plan-sec">
+        <div class="rn-card">
+          <div style="font-size:16px;color:var(--text);font-weight:500;margin-bottom:4px;">План на пещта</div>
+          <div id="drn-plan" style="font-size:14px;color:var(--tx2);line-height:1.55;margin-bottom:8px;"></div>
+          <div id="drn-side"></div>
+          <div id="drn-warns"></div>
+          <button onclick="openPlan(curRun)" id="drn-plan-btn" class="rn-main">Отвори плана</button>
+        </div>
+      </div>
+      <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Изделия в това изпичане <span id="drn-pieces-count" style="color:var(--tx3);font-weight:400;"></span></span>
+        <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
+      </div><div id="drn-pieces"></div></div>
+    </div>
+    <div class="rn-pane" data-pane="res">
+      <div id="drn-res-lock"></div>
+      <div id="drn-km-box"></div>
+      <div id="drn-real"></div>
+      <div id="drn-cones"></div>
+      <div id="drn-mres"></div>
+      <div id="drn-results"></div>
+      <div class="ds" id="drn-ph-sec"><div class="ds-t">Снимки</div><div id="drn-lvph"></div>
+        <div style="font-size:13px;color:var(--tx2);margin:10px 0 6px;">Общи снимки на изпичането</div>
+        <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:6px;flex-wrap:wrap;"></div>
+        <input type="file" id="drn-ph-in" accept="image/*" multiple style="display:none" onchange="rnAddRunPhotos(this)">
+      </div>
+      <div class="ds"><div class="ds-t" data-t="ui.belezhki">Бележки</div><div id="drn-notes" style="font-size:13px;color:var(--tx2);line-height:1.65;"></div></div>
+    </div>
     <div class="btn-row">
       <button class="btn bg" onclick="openRunMo(curRun)" data-t="ui.redaktiray">Редактирай</button>
       <button class="btn bd" onclick="deleteRun()" data-t="ui.iztriy">Изтрий</button>
     </div>
   </div>
 </div>
+
+<!-- v1.37.0: избор и преглед на пещ и профил, без да се напуска изпичането -->
+<div class="mo" id="mo-rn-pick" onclick="closeBg(event,'mo-rn-pick')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t" id="rnp-t">Пещ</div><button class="mo-x" onclick="closeMo('mo-rn-pick')">×</button></div>
+      <div class="mo-b"><div id="rnp-body"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- v1.37.0: „До пещта“ — резултатите една по една -->
+<div class="rn-km" id="rn-km"></div>
 
 <!-- DETAIL: Kiln plan (v1.33.0) -->
 <div class="det" id="det-plan">
@@ -889,7 +1051,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
   <div class="det-body">
     <div id="pl-body"></div>
-    <input type="file" id="pl-photo-in" accept="image/*" style="display:none" onchange="planPhotoPicked(this)">
+    <input type="file" id="pl-photo-in" accept="image/*" style="display:none" onchange="planPhotoPicked(this).then(_rnAfterPhoto)">
   </div>
 </div>
 
@@ -2192,7 +2354,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.36.0';
+const APP_VERSION = 'v1.37.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -5152,6 +5314,7 @@ function closeNotif(){document.getElementById('notif-panel').classList.remove('o
 
 // ══ NAV ══
 function show(n){
+  var _dr=document.getElementById('det-run');if(_dr&&_dr.classList.contains('split')&&_dr.classList.contains('on'))closeDet('det-run');
   _scrollPos[cur]=document.getElementById('main').scrollTop;
   cur=n;
   document.querySelectorAll('.sc').forEach(s=>s.classList.remove('on'));
@@ -5998,7 +6161,8 @@ function _heroDraw(){
   var el=document.getElementById(_hero.id);if(!el)return;
   var L=_hero.list,n=L.length;
   if(!n){el.innerHTML=K(70);return;}
-  el.innerHTML='<img src="'+L[_hero.i]+'" alt="" onclick="openLb(_hero.list,_hero.i)">'
+  // v1.37.0: цялото изделие (contain), а празното поле — същата снимка, размита.
+  el.innerHTML='<img class="hbg" src="'+L[_hero.i]+'" alt="" aria-hidden="true"><img class="hfg" src="'+L[_hero.i]+'" alt="" onclick="openLb(_hero.list,_hero.i)">'
     +(n>1?'<div class="hn"><button type="button" aria-label="Предишна снимка" onclick="heroStep(-1)">‹</button><span>'+(_hero.i+1)+' / '+n+'</span><button type="button" aria-label="Следваща снимка" onclick="heroStep(1)">›</button></div>':'');
 }
 function heroStep(d){var n=_hero.list.length;if(n<2)return;_hero.i=(_hero.i+d+n)%n;_heroDraw();}
@@ -8249,7 +8413,7 @@ function _popOverlayHistory(){
 var _moSnap={};
 // Пикери и справки, не формуляри — там няма работа за губене, а изборът се прави
 // пак с два тапа.
-var _MO_NO_GUARD={'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1};
+var _MO_NO_GUARD={'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1,'mo-rn-pick':1};
 
 function _moSnapshot(id){
   var el=document.getElementById(id);if(!el)return '';
@@ -8307,6 +8471,7 @@ function closeMo(id){
 function closeBg(e,id){if(e.target===e.currentTarget)closeMoAsk(id);}
 function closeDet(id, _keepHistory){
   document.getElementById(id).classList.remove('on');
+  _onOverlayClosed(id);
   var i = _overlayStack.length - 1;
   while (i >= 0) {
     if (_overlayStack[i].id === id) { _overlayStack.splice(i,1); break; }
@@ -8321,6 +8486,10 @@ function closeDet(id, _keepHistory){
   var sv=_scrollPos[cur];if(sv){var mx=document.getElementById('main');if(mx)setTimeout(function(){mx.scrollTop=sv;},50);}
 }
 // v1.4.4: Helper for opening detail views with history support
+// v1.37.0: детайлът на изпичане вдясно от списъка (широк екран) — списъкът се разширява обратно.
+function _onOverlayClosed(id){
+  if(id==='det-run'){var f=document.getElementById('sc-fp');if(f&&f.classList.contains('split')){f.classList.remove('split');document.getElementById('det-run').classList.remove('split');if(typeof renderFiringRuns==='function')renderFiringRuns();}}
+}
 function _openDet(id){
   document.getElementById(id).classList.add('on');
   _pushOverlay('detail', id);
@@ -8349,6 +8518,7 @@ window.addEventListener('popstate', function(e){
     var el = document.getElementById(top.id);
     if (el) {
       el.classList.remove('on');
+      _onOverlayClosed(top.id);
       // ev-type-popup uses inline display style
       if (top.id === 'ev-type-popup') el.style.display = 'none';
     }
@@ -9198,6 +9368,7 @@ var runAdditives=[];      // ['mat:<id>' | free text]
 var curRun=null;
 
 function switchFP(t){
+  var _dr=document.getElementById('det-run');if(t!=='runs'&&_dr&&_dr.classList.contains('split')&&_dr.classList.contains('on'))closeDet('det-run');
   fpTab=t;
   ['kilns','runs','profiles'].forEach(function(k){
     var b=document.getElementById('fptab-'+k);if(b)b.classList.toggle('on',k===t);
@@ -9360,14 +9531,21 @@ function _drnAttached(ps,wrapL){
       }).join('');
 }
 // v1.11.0: the run detail — its pieces and tests are computed here, not stored.
+var _rnLast=null;
 function openRunDet(id){
   var r=DB.firingRuns.find(function(x){return x.id===id;});if(!r)return;
   curRun=id;
   document.getElementById('drn-t').textContent=_runLabel(r);
   document.getElementById('drn-m').textContent=[r.date,firingMethodLabel(r.method)].filter(Boolean).join(' · ');
-  document.getElementById('drn-photos').innerHTML=(r.photos||[]).map(function(src){
-    return '<img src="'+src+'" style="width:80px;height:80px;border-radius:var(--rs);object-fit:cover;flex-shrink:0;" alt="">';
-  }).join('');
+  // v1.37.0: общите снимки — голям преглед при докосване; добавяне на място.
+  var _rph=(r.photos||[]).slice();
+  document.getElementById('drn-photos').innerHTML=_rph.map(function(src,i){
+    return '<img src="'+src+'" onclick="openLb(_rnPh,'+i+')" style="width:80px;height:80px;border-radius:var(--rs);object-fit:cover;flex-shrink:0;cursor:zoom-in;" alt="">';
+  }).join('')+'<button type="button" class="rn-phadd" onclick="document.getElementById(\'drn-ph-in\').click()">+ снимка</button>';
+  window._rnPh=_rph;
+  var _st=_runState(r);
+  document.getElementById('drn-pill').innerHTML='<span class="rn-st '+_st+'">'+RUN_STATES[_st]+'</span>';
+  document.getElementById('drn-flow').innerHTML=_rnFlowHtml(r);
   var fp=r.firingProfileId?DB.firingProfiles.find(function(x){return x.id===r.firingProfileId;}):null;
   var atmL={oxidation:'Окислително',reduction:'Редукционно'};
   var purL={bisque:'Бисквит',glaze:'Глазурно','single-fire':'Еднопек',alternative:'Алтернативно'};
@@ -9440,9 +9618,306 @@ function openRunDet(id){
   // v1.33.0: план на пещта — кратко; самият план е на отделен екран.
   var _pl=document.getElementById('drn-plan');if(_pl){loadKilns();_pl.textContent=_plSummary(r);}
   var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори плана на пещта':'Направи план на пещта';
-  document.getElementById('drn-notes').textContent=r.notes||'—';
-  _openDet('det-run');
+  // v1.37.0: „Какво остава“, избор на пещ и профил, раздели, „Резултати“.
+  if(curRun!==_rnLast){rnTabSel=null;_rnLast=curRun;document.getElementById('det-run').scrollTop=0;}
+  document.getElementById('drn-todo').innerHTML=_rnTodoHtml(r);
+  document.getElementById('drn-pick').innerHTML=_rnPickHtml(r);
+  document.getElementById('drn-pva').innerHTML=_rnPvaHtml(r);
+  _rnLoadExtra(r);_rnResExtra(r);_rnTabsDraw();
+  // На широк екран: детайлът стои вдясно от списъка.
+  var _d=document.getElementById('det-run'),_sp=window.innerWidth>=1100&&cur==='fp'&&fpTab==='runs';
+  _d.classList.toggle('split',_sp);document.getElementById('sc-fp').classList.toggle('split',_sp);
+  if(_sp){var _nv=document.getElementById('nav');_d.style.bottom=(_nv?_nv.offsetHeight:0)+'px';}else _d.style.bottom='';
+  if(!_d.classList.contains('on'))_openDet('det-run');
+  if(_sp)renderFiringRuns();
 }
+
+// ── v1.37.0: ИЗПИЧАНИЯ по прототипа firing-v0 ─────────────────────────────────
+// Само интерфейс: регистър, детайл в три раздела, „Какво остава“, избор на пещ и
+// профил, „До пещта“. Пише в същите полета чрез същите функции (setRunState,
+// setPlanResult, setPlanCone, planAddPhoto, setPlanKiln) — без втори механизъм.
+var RN={st:'all',q:'',kiln:'',sort:'date'};
+(function(){try{var v=JSON.parse(localStorage.getItem('glina.runs')||'null');if(v)['st','kiln','sort'].forEach(function(k){if(typeof v[k]==='string')RN[k]=v[k];});}catch(e){}})();
+function _rnSave(){try{localStorage.setItem('glina.runs',JSON.stringify({st:RN.st,kiln:RN.kiln,sort:RN.sort}));}catch(e){}}
+var _RN_KILN_METHODS={electric:1,gas:1,wood:1,soda:1,salt:1};
+function _rnKilnMethod(r){return !r.method||!!_RN_KILN_METHODS[r.method];}
+function _rnMembers(r){return (r&&r.plan&&Array.isArray(r.plan.members))?r.plan.members:[];}
+function _rnLevels(r){return (r&&r.config&&Array.isArray(r.config.levels))?r.config.levels:[];}
+function _rnKiln(r){return r&&r.kilnId?KILNS.find(function(k){return k&&k.id===r.kilnId;})||null:null;}
+function _rnProfile(r){return r&&r.firingProfileId?DB.firingProfiles.find(function(x){return x.id===r.firingProfileId;})||null:null;}
+var _RN_PURPOSE={bisque:'Бисквит',glaze:'Глазурно','single-fire':'Еднопек',alternative:'Алтернативно'};
+// Какво остава: „Изисква внимание“ и „Може да се допълни“. Само съвет — нищо не блокира.
+function _rnTodo(r){
+  var att=[],opt=[],st=_runState(r),M=_rnMembers(r),L=_rnLevels(r),kilnM=_rnKilnMethod(r),hasPlan=_plHas(r);
+  var legacy=!r.state&&st==='completed';
+  if(st==='planned'){
+    if(kilnM&&!r.kilnId)att.push(['Няма избрана пещ','prep']);
+    if(r.method==='electric'&&!r.firingProfileId)opt.push(['Няма избран температурен профил','prep']);
+    if(!M.length&&!_runPieces(r.id).length)att.push(['Няма изделия в плана','load']);
+    if(hasPlan&&r.kilnId){
+      var ps=_plState(r);
+      if(ps.loose.length)att.push([ps.loose.length+(ps.loose.length===1?' изделие е':' изделия са')+' без ниво','load']);
+      if(ps.errs)att.push(['Планът има '+ps.errs+(ps.errs===1?' проблем':' проблема')+' при зареждането','load']);
+      if(ps.warns)opt.push([ps.warns+' '+(ps.warns===1?'бележка':'бележки')+' в плана за проверка','load']);
+      var nos=M.filter(function(m){return m.h==null;}).length;
+      if(nos)att.push([nos+(nos===1?' изделие е':' изделия са')+' без височина — не се проверява дали се събира','load']);
+      var stl=_plStaleSizes(r).length;if(stl)opt.push(['Размерите на '+stl+' изостават от изделията','load']);
+    }
+  } else if(st==='completed'||st==='interrupted'){
+    var nr=M.filter(function(m){return !m.result;}).length;
+    if(nr)att.push([nr+(nr===1?' бройка е':' бройки са')+' без резултат','res']);
+    if(kilnM&&L.length){var nc=L.filter(function(x){return !x.coneResult;}).length;if(nc)opt.push(['Конус: '+nc+(nc===1?' ниво без отбелязване':' нива без отбелязване'),'res']);}
+    if(kilnM&&r.peakTemp==null&&!legacy)opt.push(['Реалната пикова температура не е записана','res']);
+    if(!(r.photos||[]).length&&!L.some(function(x){return (x.photosAfter||[]).length;}))opt.push(['Няма снимки след изпичането','res']);
+    if(!r.notes)opt.push(['Няма наблюдения','res']);
+  }
+  var next=st==='planned'&&M.length?'Когато пещта е заредена: „Заредено — потвърди“.':st==='loaded'?'След изпичането: „Приключено“ или „Прекъснато“.':'';
+  return {att:att,opt:opt,next:next};
+}
+function _rnTodoHtml(r){
+  var t=_rnTodo(r),st=_runState(r);
+  if(!t.att.length&&!t.opt.length&&!t.next){
+    return (st==='completed'||st==='interrupted')&&_rnMembers(r).length?'<div class="rn-todo ok"><b>Документирано ✓</b></div>':'';
+  }
+  var li=function(x){return '<li><span>'+_kEsc(x[0])+'</span><button type="button" onclick="rnTab(\''+x[1]+'\')">'+{prep:'Подготовка',load:'Зареждане',res:'Резултати'}[x[1]]+'</button></li>';};
+  return '<div class="rn-todo"><div class="rn-todo-h">Какво остава</div>'
+    +(t.att.length?'<div class="rn-todo-g att">Изисква внимание</div><ul>'+t.att.map(li).join('')+'</ul>':'')
+    +(t.opt.length?'<div class="rn-todo-g">Може да се допълни</div><ul>'+t.opt.map(li).join('')+'</ul>':'')
+    +(t.next?'<div class="rn-todo-n">→ '+_kEsc(t.next)+'</div>':'')+'</div>';
+}
+// ── регистър ──
+function _rnPlanPill(r){
+  var M=_rnMembers(r),np=_runPieces(r.id).length;
+  if(!_plHas(r))return np?'<span class="rn-pill">'+np+(np===1?' изделие':' изделия')+(M.length?'':' · без план')+'</span>':'<span class="rn-pill'+(_runState(r)==='planned'?' w':'')+'">няма изделия</span>';
+  var L=_rnLevels(r).length,bad='';
+  if(r.kilnId){try{var ps=_plState(r);bad=ps.errs?' · ✗ '+ps.errs:ps.loose.length?' · '+ps.loose.length+' без ниво':ps.warns?' · ⚠ '+ps.warns:' · ✓';}catch(e){}}
+  return '<span class="rn-pill'+(/✗|без ниво/.test(bad)?' w':'')+'">план: '+L+(L===1?' ниво':' нива')+' · '+M.length+' бр.'+bad+'</span>';
+}
+function _rnCard(r){
+  var st=_runState(r),k=_rnKiln(r),fp=_rnProfile(r),M=_rnMembers(r),t=_rnTodo(r);
+  var done=M.filter(function(m){return m.result;}).length,on=_runOn(r)&&M.length;
+  var docs=(st==='completed'||st==='interrupted')&&t.att.length;
+  return '<div class="rn-c'+(curRun===r.id&&document.getElementById('det-run').classList.contains('split')?' sel':'')+'" role="button" tabindex="0" onclick="openRunDet(\''+r.id+'\')">'
+    +'<div class="rn-c1"><div style="min-width:0"><div class="rn-nm">'+_kEsc(_runLabel(r))+'</div>'
+    +'<div class="rn-mt">'+_kEsc([r.date,_RN_PURPOSE[r.purpose],k?k.name:firingMethodLabel(r.method),r.peakTemp!=null?r.peakTemp+'°C':''].filter(Boolean).join(' · '))+'</div></div>'
+    +'<span class="rn-st '+st+'">'+RUN_STATES[st]+'</span></div>'
+    +'<div class="rn-row">'+(fp?'<span class="rn-pill">'+_kEsc(fp.name)+'</span>':'')+_rnPlanPill(r)+(function(){var n=_runTests(r.id).length;return n?'<span class="rn-pill">'+n+(n===1?' тест':' теста')+'</span>':'';})()+(docs?'<span class="rn-pill w">за документиране</span>':'')+'</div>'
+    +(on?'<div class="rn-bar"><i style="width:'+Math.round(done/M.length*100)+'%"></i></div><div class="rn-mt" style="font-size:12px">резултати '+done+' от '+M.length+' бр.</div>':'')
+    +'</div>';
+}
+function renderFiringRuns(){
+  _updateFPCount();
+  var l=document.getElementById('run-list');if(!l)return;
+  loadKilns();
+  if(!DB.firingRuns.length){
+    l.innerHTML='<div style="padding:40px 18px;text-align:center;color:var(--tx3);"><div style="font-size:32px;opacity:.35;margin-bottom:10px;">🔥</div><div style="font-size:13px;line-height:1.6;">Още няма изпичания.<br>Изпичането е конкретното събитие: дата, пещ, профил, изделия и резултати. Натисни +.</div></div>';
+    return;
+  }
+  var c={all:0,planned:0,loaded:0,completed:0,interrupted:0,todo:0};
+  DB.firingRuns.forEach(function(r){var s=_runState(r);c.all++;c[s]++;if((s==='completed'||s==='interrupted')&&_rnTodo(r).att.length)c.todo++;});
+  var q=(RN.q||'').trim().toLowerCase();
+  var list=DB.firingRuns.filter(function(r){
+    var s=_runState(r);
+    if(RN.st==='todo'){if(!((s==='completed'||s==='interrupted')&&_rnTodo(r).att.length))return false;}
+    else if(RN.st!=='all'&&s!==RN.st)return false;
+    if(RN.kiln&&r.kilnId!==RN.kiln)return false;
+    if(q){var k=_rnKiln(r),fp=_rnProfile(r);
+      var hay=[_runLabel(r),r.date,_RN_PURPOSE[r.purpose],firingMethodLabel(r.method),k&&k.name,fp&&fp.name,r.notes].concat(_rnMembers(r).map(function(m){return m.name+' '+(m.code||'');})).join(' ').toLowerCase();
+      if(hay.indexOf(q)<0)return false;}
+    return true;
+  });
+  var byName=function(a,b){return _runLabel(a).localeCompare(_runLabel(b),'bg');};
+  var byDate=function(a,b){return String(b.date||'').localeCompare(String(a.date||''));};
+  list.sort(RN.sort==='name'?byName:byDate);
+  var up=list.filter(function(r){return _runState(r)==='planned';}),inK=list.filter(function(r){return _runState(r)==='loaded';}),past=list.filter(function(r){var s=_runState(r);return s==='completed'||s==='interrupted';});
+  if(RN.sort!=='name')up.sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
+  var chips=[['all','Всички'],['planned','Планирани'],['loaded','Заредени'],['completed','Приключени'],['interrupted','Прекъснати'],['todo','За документиране']].map(function(x){
+    return '<button type="button" class="fchip'+(RN.st===x[0]?' on':'')+'" onclick="rnSet(\'st\',\''+x[0]+'\')">'+x[1]+' <span style="opacity:.6">'+c[x[0]]+'</span></button>';}).join('');
+  var kilns=KILNS.filter(function(k){return k&&!k.archivedAt;});
+  var h='<div class="rn-tools"><div class="rn-chips">'+chips+'</div>'
+    +'<div class="rn-tools2"><input class="srch" type="search" id="rn-q" placeholder="Търси по име, пещ, профил, изделие…" value="'+_kEsc(RN.q)+'" oninput="RN.q=this.value;debounce(renderFiringRuns,\'rn-q\',200)">'
+    +(kilns.length?'<select class="pc-sort" aria-label="Пещ" onchange="rnSet(\'kiln\',this.value)"><option value="">Всички пещи</option>'+kilns.map(function(k){return '<option value="'+k.id+'"'+(RN.kiln===k.id?' selected':'')+'>'+_kEsc(k.name||'Пещ')+'</option>';}).join('')+'</select>':'')
+    +'<select class="pc-sort" aria-label="Подреди" onchange="rnSet(\'sort\',this.value)"><option value="date"'+(RN.sort==='date'?' selected':'')+'>По дата</option><option value="name"'+(RN.sort==='name'?' selected':'')+'>По име</option></select></div></div>';
+  if(!list.length)h+='<div class="empty"><div class="empty-k">∅</div><div class="empty-t">Няма изпичания с тези филтри</div></div>';
+  if(up.length)h+='<div class="rn-grp">Предстоящи</div>'+up.map(_rnCard).join('');
+  if(inK.length)h+='<div class="rn-grp">Заредени — в пещта</div>'+inK.map(_rnCard).join('');
+  if(past.length)h+='<div class="rn-grp">Минали</div>'+past.map(_rnCard).join('');
+  var foc=document.activeElement&&document.activeElement.id==='rn-q',pos=foc?document.activeElement.selectionStart:0;
+  l.innerHTML='<div class="rn-list">'+h+'</div>';
+  if(foc){var qi=document.getElementById('rn-q');qi.focus();try{qi.setSelectionRange(pos,pos);}catch(e){}}
+}
+function rnSet(k,v){RN[k]=v;_rnSave();renderFiringRuns();}
+// ── детайл ──
+var rnTabSel=null;
+function rnTab(t){rnTabSel=t;_rnTabsDraw();var b=document.getElementById('drn-tabs');if(b&&b.getBoundingClientRect().top<0){var d=document.getElementById('det-run');d.scrollTop+=b.getBoundingClientRect().top;}}
+function _rnDefTab(r){var st=_runState(r);if(!r.state&&st==='completed'&&!_rnMembers(r).length)return 'res';return st==='planned'||st==='loaded'?'load':'res';}
+function _rnTabsDraw(){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var tab=rnTabSel||_rnDefTab(r),M=_rnMembers(r),k=_rnKiln(r),fp=_rnProfile(r);
+  var nres=M.filter(function(m){return !m.result;}).length,np=M.length||_runPieces(r.id).reduce(function(n,x){return n+_runRowQty(x);},0);
+  var sub={prep:(k||!_rnKilnMethod(r))&&(fp||r.method!=='electric')?'✓':'за попълване',load:np+' бр.',res:!_runOn(r)&&_runState(r)==='planned'?'след зареждане':nres?nres+' без резултат':'✓'};
+  document.getElementById('drn-tabs').innerHTML=[['prep','Подготовка'],['load','Зареждане'],['res','Резултати']].map(function(x){
+    return '<button type="button" role="tab" aria-selected="'+(tab===x[0])+'" class="'+(tab===x[0]?'on':'')+'" data-tab="'+x[0]+'" onclick="rnTab(\''+x[0]+'\')">'+x[1]+'<small>'+sub[x[0]]+'</small></button>';}).join('');
+  document.querySelectorAll('#det-run .rn-pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-pane')===tab);});
+}
+function _rnFlowHtml(r){
+  var st=_runState(r);if(!r.state&&st==='completed')return '';
+  var idx={planned:0,loaded:1,completed:2,interrupted:2}[st];
+  return '<div class="rn-flow">'+[['planned','Планирано'],['loaded','Заредено'],['end',st==='interrupted'?'Прекъснато':'Приключено']].map(function(s,i){
+    return (i?'<em>›</em>':'')+'<span class="'+(i<idx?'done':i===idx?(st==='interrupted'?'bad':'cur'):'')+'">'+s[1]+'</span>';}).join('')+'</div>';
+}
+function _rnPickHtml(r){
+  if(!_rnKilnMethod(r)&&!r.kilnId&&!r.firingProfileId)return '';
+  var k=_rnKiln(r),fp=_rnProfile(r);
+  return '<div class="ds"><div class="ds-t">Пещ и профил</div>'
+    +'<button type="button" class="rn-pick" onclick="rnPickKiln()"><span class="ic">▣</span><span class="b"><span class="t">'+(k?_kEsc(k.name||'Пещ'):'Избери пещ')+'</span><span class="s">'+_kEsc(k?[_kilnSummary(k),_shelvesSummary(k)].filter(Boolean).join(' · '):'физическата пещ — камера, плочи, подпори')+'</span></span><span class="go">›</span></button>'
+    +'<button type="button" class="rn-pick" onclick="rnPickProfile()"><span class="ic">∿</span><span class="b"><span class="t">'+(fp?_kEsc(fp.name):'Избери профил')+'</span><span class="s">'+_kEsc(fp?[fpTypeLabel(fp.type),_fpPeak(fp)!=null?'пик '+_fpPeak(fp)+'°C':''].filter(Boolean).join(' · '):'температурната програма — планираното')+'</span></span><span class="go">›</span></button></div>';
+}
+function _rnPvaHtml(r){
+  var fp=_rnProfile(r);if(!_rnKilnMethod(r)&&!fp&&r.peakTemp==null)return '';
+  var rr=fp?_fpRamps(fp):[],hold=null;for(var i=rr.length-1;i>=0;i--){if(rr[i].hold!=null){hold=rr[i].hold;break;}}
+  var pk=fp?_fpPeak(fp):null;
+  return '<div class="ds"><div class="ds-t">Планирано и реално</div><table class="rn-pva"><tr><th></th><th>По профил</th><th>Реално</th></tr>'
+    +'<tr><td>Пикова темп.</td><td>'+(pk!=null?pk+'°C':'—')+'</td><td class="'+(pk!=null&&r.peakTemp!=null&&Math.abs(r.peakTemp-pk)>5?'dif':'')+'">'+(r.peakTemp!=null?r.peakTemp+'°C':'—')+'</td></tr>'
+    +'<tr><td>Задръжка</td><td>'+(hold!=null?hold+' мин':'—')+'</td><td>'+(r.holdMin!=null?r.holdMin+' мин':'—')+'</td></tr>'
+    +'<tr><td>Конуси</td><td>—</td><td>'+_kEsc(r.cones||'—')+'</td></tr></table>'
+    +'<div style="font-size:12.5px;color:var(--tx3);margin-top:4px;">Реалното се записва в „Резултати“.</div></div>';
+}
+function _rnLoadExtra(r){
+  var side=document.getElementById('drn-side'),w=document.getElementById('drn-warns');
+  side.innerHTML='';w.innerHTML='';
+  if(!_plHas(r)||!r.kilnId)return;
+  try{
+    var st=_plState(r);if(!st.k||!st.r.levels.length)return;
+    var M=KilnPlan._planMeasures(st.S,st.r);
+    side.innerHTML='<div style="margin:6px 0 4px;">'+_plSideSvg(st,M)+'</div>';
+    var msgs=[];
+    Object.keys(st.room).forEach(function(id){st.room[id].failed.filter(function(f){return f.kind==='room';}).forEach(function(f){msgs.push(['e',_plLevelName(r,id)+': '+(f.msg||'не се събира')]);});});
+    Object.keys(st.chk.byL).forEach(function(id){st.chk.byL[id].forEach(function(x){msgs.push([x.sev==='err'?'e':'w',_plLevelName(r,id)+': '+x.msg]);});});
+    var byId={};st.r.pieces.forEach(function(p){byId[p.id]=p;});
+    Object.keys(st.chk.byP).forEach(function(id){st.chk.byP[id].forEach(function(x){msgs.push([x.sev==='err'?'e':'w',(byId[id]?_plMemberLabel(byId[id])+': ':'')+x.msg]);});});
+    if(st.loose.length)msgs.push(['w','Без ниво: '+st.loose.map(_plMemberLabel).join(', ')]);
+    w.innerHTML='<div class="rn-warns">'+(msgs.length?msgs.slice(0,8).map(function(m){return '<div class="'+m[0]+'">'+(m[0]==='e'?'✗ ':'⚠ ')+_kEsc(_plMsg(m[1]))+'</div>';}).join('')+(msgs.length>8?'<div class="w">и още '+(msgs.length-8)+' — в плана</div>':''):'<div class="o">✓ Всичко е на ниво и се събира.</div>')+'</div>';
+  }catch(e){}
+}
+function _rnResExtra(r){
+  var st=_runState(r),on=_runOn(r),M=_rnMembers(r),L=_rnLevels(r),kilnM=_rnKilnMethod(r);
+  var g=function(id){return document.getElementById(id);};
+  g('drn-res-lock').innerHTML=(!on&&st==='planned')?'<div class="rn-lock">Резултатите по изделия се записват след „Заредено“. Сега изпичането е план — изделията още не са в пещта.</div>':'';
+  g('drn-km-box').innerHTML=on&&M.length?'<div class="rn-card" style="margin-bottom:16px"><div style="font-size:16px;font-weight:500;margin-bottom:4px;">До пещта</div><div style="font-size:13px;color:var(--tx2);margin-bottom:10px;line-height:1.5;">Една бройка на екран, големи бутони. Записва в резултата и бележката на бройката в плана.</div><button type="button" class="rn-main" id="drn-km-btn" onclick="rnKm()">Запиши резултатите една по една</button></div>':'';
+  var num=function(f,lab,v){return '<div class="f" style="margin:0"><label>'+lab+'</label><input type="text" inputmode="decimal" data-f="'+f+'" value="'+(v==null?'':_kEsc(v))+'" onchange="rnSetField(\''+f+'\',this.value)"></div>';};
+  g('drn-real').innerHTML=(st==='planned'&&!(!r.state))?'':'<div class="ds"><div class="ds-t">Реални параметри</div><div class="rn-fr">'
+    +(kilnM?num('peakTemp','Пик, °C',r.peakTemp)+num('holdMin','Задръжка, мин',r.holdMin)+'<div class="f" style="margin:0"><label>Конуси</label><input type="text" data-f="cones" value="'+_kEsc(r.cones||'')+'" onchange="rnSetField(\'cones\',this.value)"></div>'
+      :num('duration','Времетраене, ч',r.duration))+'</div></div>';
+  g('drn-cones').innerHTML=on&&kilnM&&L.length?'<div class="ds"><div class="ds-t">Конуси по нива</div>'+L.map(function(Lv,i){
+    return '<div class="rn-cone"><b>Ниво '+(i+1)+'</b><input type="text" placeholder="конус, напр. 06" value="'+_kEsc(Lv.cone||'')+'" onchange="rnCone(\''+Lv.id+'\',\'cone\',this.value)"><div class="rn-res">'+CONE_RESULTS.map(function(x){return '<button type="button" class="'+(Lv.coneResult===x?'on':'')+'" onclick="rnCone(\''+Lv.id+'\',\'coneResult\',\''+(Lv.coneResult===x?'':x)+'\')">'+x+'</button>';}).join('')+'</div></div>';}).join('')+'</div>':'';
+  g('drn-mres').innerHTML=on&&M.length?'<div class="ds"><div class="ds-t">Резултати по бройки <span style="color:var(--tx3);font-weight:400">'+M.filter(function(m){return m.result;}).length+' от '+M.length+'</span></div>'+_rnOrder(r).map(function(m){
+    return '<div class="rn-rrow"><div class="top"><span class="nm">'+_kEsc(_plMemberLabel(m))+'</span><span class="lv">'+_kEsc(_plLevelName(r,m.level))+'</span></div><div class="rn-res">'
+      +RUN_RESULTS.map(function(x){return '<button type="button" class="'+(m.result===x?'on'+(x!=='Добре'?' bad':''):'')+'" onclick="rnRes(\''+m.id+'\',\''+(m.result===x?'':x)+'\')">'+x+'</button>';}).join('')+'</div>'
+      +(m.result&&m.result!=='Добре'||m.resultNote?'<input type="text" placeholder="бележка — какво точно, къде" value="'+_kEsc(m.resultNote||'')+'" onchange="rnNote(\''+m.id+'\',this.value)">':'')+'</div>';}).join('')+'</div>':'';
+  g('drn-lvph').innerHTML=on&&L.length?L.map(function(Lv,i){
+    return '<div style="font-size:13px;color:var(--tx2);margin-top:6px;">Ниво '+(i+1)+((Lv.photos||[]).length?' · '+Lv.photos.length+' преди':'')+'</div><div class="rn-phs">'+(Lv.photosAfter||[]).map(function(pid){return '<img data-ph="'+pid+'" alt="">';}).join('')+'<button type="button" class="add" onclick="rnLevelPhoto(\''+Lv.id+'\')">+ снимка след</button></div>';}).join(''):'';
+  document.querySelectorAll('#drn-lvph img[data-ph]').forEach(function(img){var id=img.getAttribute('data-ph');if(_phUrls[id]){img.src=_phUrls[id];return;}_phGet(id).then(function(b){if(b&&b instanceof Blob){_phUrls[id]=URL.createObjectURL(b);img.src=_phUrls[id];}});});
+  g('drn-notes').innerHTML='<textarea id="drn-notes-in" rows="3" placeholder="какво се случи, какво да се промени следващия път" onchange="rnSetField(\'notes\',this.value)" style="width:100%;">'+_kEsc(r.notes||'')+'</textarea>';
+}
+// Ред на бройките: по нива (отдолу нагоре), после без ниво — както в плана.
+function _rnOrder(r){
+  var L=_rnLevels(r),idx={};L.forEach(function(x,i){idx[x.id]=i;});
+  return _rnMembers(r).map(function(m,i){return {m:m,i:i};}).sort(function(a,b){var la=a.m.level in idx?idx[a.m.level]:99,lb=b.m.level in idx?idx[b.m.level]:99;return la-lb||a.i-b.i;}).map(function(x){return x.m;});
+}
+function _rnRefresh(){if(curRun&&document.getElementById('det-run').classList.contains('on'))openRunDet(curRun);renderFiringRuns();}
+function _rnAfterPhoto(){_rnRefresh();}
+function _rnWith(fn){var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;curPlanRun=r.id;fn(r);}
+function rnRes(mid,v){_rnWith(function(){setPlanResult(mid,v);});_rnRefresh();}
+function rnNote(mid,v){_rnWith(function(){setPlanResultNote(mid,v);});}
+function rnCone(lid,f,v){_rnWith(function(){setPlanCone(lid,f,v);});_rnRefresh();}
+function rnLevelPhoto(lid){_rnWith(function(){planAddPhoto(lid,true);});}
+// Същите полета като формуляра „Редактирай изпичане“.
+function rnSetField(f,v){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  v=String(v==null?'':v).trim();
+  if(f==='notes'||f==='cones'){if(v)r[f]=v;else delete r[f];}
+  else{var n=v===''?null:parseFloat(v.replace(',','.'));if(n==null||isNaN(n))delete r[f];else r[f]=n;}
+  r.updatedAt=new Date().toISOString();save();_rnTabsDraw();
+  var td=document.getElementById('drn-todo');if(td)td.innerHTML=_rnTodoHtml(r);
+  document.getElementById('drn-pva').innerHTML=_rnPvaHtml(r);renderFiringRuns();
+}
+function rnAddRunPhotos(inp){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var files=Array.from(inp.files||[]);inp.value='';
+  var sink=[];sink.push=function(x){r.photos=(r.photos||[]).concat([x]);r.updatedAt=new Date().toISOString();save();_rnRefresh();return 0;};
+  setTimeout(function(){files.forEach(function(f){if((r.photos||[]).length<5)resizeAndAdd(f,sink,5,'drn-ph-none');else toast('Максимум 5 снимки');});},50);
+}
+// ── пещ и профил: избор и преглед в лист ──
+function rnPickKiln(){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;loadKilns();
+  var ks=KILNS.filter(function(k){return k&&!k.archivedAt;});
+  document.getElementById('rnp-t').textContent='Пещ';
+  document.getElementById('rnp-body').innerHTML='<div style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:8px;">Физическата пещ. Регистърът на пещите остава в „Пещи“.</div>'
+    +(ks.length?ks.map(function(k){var w=_kilnWarnings(k);return '<button type="button" class="rn-pick'+(r.kilnId===k.id?' sel':'')+'" onclick="rnSetKiln(\''+k.id+'\')"><span class="ic">▣</span><span class="b"><span class="t">'+_kEsc(k.name||'Пещ')+(r.kilnId===k.id?' ✓':'')+'</span><span class="s">'+_kEsc([_kilnSummary(k),_shelvesSummary(k),k.posts&&k.posts.sizes&&k.posts.sizes.length?'подпори '+k.posts.sizes.map(_kNum).join(', ')+' см':''].filter(Boolean).join(' · '))+'</span>'+(w.length?'<span class="s" style="color:var(--warn)">'+_kEsc(w[0])+'</span>':'')+'</span></button>';}).join('')
+      :'<div class="rn-lock">Още няма пещи.</div>')
+    +'<div class="btn-row"><button class="btn bg" onclick="closeMo(\'mo-rn-pick\')">Затвори</button><button class="btn bg" onclick="closeMo(\'mo-rn-pick\');openKilnMo(null)">+ Нова пещ</button></div>';
+  openMo('mo-rn-pick');
+}
+function rnSetKiln(id){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  if(r.kilnId!==id){_rnWith(function(){setPlanKiln(id);});}
+  closeMo('mo-rn-pick');_rnRefresh();
+}
+function rnPickProfile(){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  document.getElementById('rnp-t').textContent='Температурен профил';
+  document.getElementById('rnp-body').innerHTML='<div style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:8px;">Програмата на пещта — планираното. Реалното се записва в резултатите.</div>'
+    +(DB.firingProfiles.length?DB.firingProfiles.map(function(fp){var rr=_fpRamps(fp);
+      return '<div class="rn-pick'+(r.firingProfileId===fp.id?' sel':'')+'" style="display:block"><div style="display:flex;gap:8px;align-items:flex-start"><span class="b" style="flex:1"><span class="t">'+_kEsc(fp.name)+(r.firingProfileId===fp.id?' ✓':'')+'</span><span class="s">'+_kEsc([fpTypeLabel(fp.type),_fpPeak(fp)!=null?'пик '+_fpPeak(fp)+'°C':''].filter(Boolean).join(' · '))+'</span>'
+        +'<span class="s">'+_kEsc(rr.map(function(x){return (x.rate!=null?x.rate+'°/ч':'')+(x.to!=null?' до '+x.to+'°':'')+(x.hold!=null?' · '+x.hold+' мин':'');}).join(' → '))+'</span></span>'
+        +'<button type="button" class="fchip" style="min-height:40px" onclick="rnSetProfile(\''+fp.id+'\')">'+(r.firingProfileId===fp.id?'Избран':'Избери')+'</button></div>'
+        +'<div class="rn-curve">'+(typeof _fpCurveSvg==='function'?_fpCurveSvg(fp,false):'')+'</div></div>';}).join('')
+      :'<div class="rn-lock">Още няма профили.</div>')
+    +'<div class="btn-row"><button class="btn bg" onclick="closeMo(\'mo-rn-pick\')">Затвори</button><button class="btn bg" onclick="closeMo(\'mo-rn-pick\');openFPMo(null)">+ Нов профил</button></div>';
+  openMo('mo-rn-pick');
+}
+function rnSetProfile(id){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  if(r.firingProfileId!==id){r.firingProfileId=id;r.updatedAt=new Date().toISOString();save();}
+  closeMo('mo-rn-pick');_rnRefresh();
+}
+// ── „До пещта“: една бройка на екран ──
+var KM={i:0,auto:false};
+try{KM.auto=localStorage.getItem('glina.km.auto')==='1';}catch(e){}
+function rnKm(){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var O=_rnOrder(r);KM.ids=O.map(function(m){return m.id;});
+  var first=O.findIndex(function(m){return !m.result;});KM.i=first<0?0:first;KM.undo=null;
+  var el=document.getElementById('rn-km');el.classList.add('on');_pushOverlay('detail','rn-km');_rnKmDraw();
+}
+function _rnKmDraw(){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var M=_rnMembers(r),n=KM.ids.length,m=M.find(function(x){return x.id===KM.ids[KM.i];});if(!m)return;
+  var done=KM.ids.filter(function(id){var x=M.find(function(y){return y.id===id;});return x&&x.result;}).length;
+  document.getElementById('rn-km').innerHTML='<div class="km-top"><button type="button" class="km-x" onclick="closeDet(\'rn-km\');_rnRefresh()" aria-label="Затвори">✕</button><b>'+_kEsc(_runLabel(r))+'</b><span>'+(KM.i+1)+' от '+n+' · записани '+done+'</span></div>'
+    +'<div class="km-body"><div class="km-prog">'+KM.ids.map(function(id,i){var x=M.find(function(y){return y.id===id;});return '<i class="'+(i===KM.i?'c':x&&x.result?'d':'')+'" onclick="KM.i='+i+';_rnKmDraw()"></i>';}).join('')+'</div>'
+    +'<div class="km-meta">'+_kEsc([m.code,_plLevelName(r,m.level)].filter(Boolean).join(' · '))+'</div><div class="km-nm" id="km-nm">'+_kEsc(_plMemberLabel(m))+'</div>'
+    +'<div class="km-big">'+RUN_RESULTS.map(function(x){return '<button type="button" class="'+(m.result===x?'on'+(x!=='Добре'?' bad':''):'')+'" onclick="rnKmSet(\''+x+'\')">'+x+'</button>';}).join('')+'</div>'
+    +(m.result?'<button type="button" class="km-clr" onclick="rnKmSet(\'\')">Изчисти резултата</button>':'')
+    +'<div class="f" style="margin-top:12px"><label>Бележка</label><input type="text" id="km-note" value="'+_kEsc(m.resultNote||'')+'" placeholder="по желание" onchange="rnNote(\''+m.id+'\',this.value)"></div>'
+    +'<label class="km-auto"><input type="checkbox" '+(KM.auto?'checked':'')+' onchange="KM.auto=this.checked;try{localStorage.setItem(\'glina.km.auto\',this.checked?\'1\':\'0\')}catch(e){}"> Напред след „Добре“</label>'
+    +(KM.undo?'<div class="km-undo">'+_kEsc(KM.undo.label)+' <button type="button" onclick="rnKmUndo()">Отмени</button></div>':'')
+    +'<div style="font-size:12.5px;color:var(--tx3);margin-top:10px;line-height:1.5;">Снимките след изпичането са по нива и общи — в „Резултати“.</div></div>'
+    +'<div class="km-nav"><button type="button" class="btn bg" '+(KM.i?'':'disabled')+' onclick="KM.i--;KM.undo=null;_rnKmDraw()">‹ Предишна</button><button type="button" class="btn bg" onclick="rnKmSkip()">Пропусни</button><button type="button" class="btn bp" onclick="rnKmNext()">'+(KM.i<n-1?'Следваща ›':'Готово')+'</button></div>';
+}
+function rnKmSet(v){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var id=KM.ids[KM.i],m=_rnMembers(r).find(function(x){return x.id===id;});if(!m)return;
+  var old=m.result||'';if(old===v){return;}
+  _rnWith(function(){setPlanResult(id,v);});
+  KM.undo=null;
+  if(v==='Добре'&&KM.auto&&KM.i<KM.ids.length-1){KM.undo={i:KM.i,id:id,old:old,label:_plMemberLabel(m)+': Добре'};KM.i++;}
+  _rnKmDraw();
+}
+function rnKmUndo(){var u=KM.undo;if(!u)return;KM.undo=null;KM.i=u.i;_rnWith(function(){setPlanResult(u.id,u.old);});_rnKmDraw();}
+function rnKmSkip(){var M=_rnMembers(DB.firingRuns.find(function(x){return x.id===curRun;}));KM.undo=null;for(var j=1;j<=KM.ids.length;j++){var k=(KM.i+j)%KM.ids.length,x=M.find(function(y){return y.id===KM.ids[k];});if(x&&!x.result){KM.i=k;_rnKmDraw();return;}}toast('Всички имат резултат');}
+function rnKmNext(){KM.undo=null;if(KM.i<KM.ids.length-1){KM.i++;_rnKmDraw();}else{closeDet('rn-km');_rnRefresh();}}
 
 function openRunMo(id){
   curRun=id||null;
@@ -11035,29 +11510,6 @@ function _plPhotosFromBackup(map){
       return fetch(map[id]).then(function(r){return r.blob();}).then(function(b){return _phPut(id,b);}).then(function(ok){if(ok)n++;}).catch(function(){});
     })).then(function(){return n;});
   });
-}
-
-function renderFiringRuns(){
-  _updateFPCount();
-  var l=document.getElementById('run-list');if(!l)return;
-  var items=DB.firingRuns.slice().sort(function(a,b){
-    return (b.date||'').localeCompare(a.date||'');
-  });
-  if(!items.length){
-    l.innerHTML='<div style="padding:40px 18px;text-align:center;color:var(--tx3);"><div style="font-size:32px;opacity:.35;margin-bottom:10px;">🔥</div><div style="font-size:13px;line-height:1.6;">Още няма изпичания.<br>Изпичането е това, което наистина се е случило — с дата и с парчетата вътре.</div></div>';
-    return;
-  }
-  l.innerHTML=items.map(function(r){
-    var np=_runPieces(r.id).length, nt=_runTests(r.id).length;
-    var load=[];
-    if(np)load.push(np+(np===1?' изделие':' изделия'));
-    if(nt)load.push(nt+(nt===1?' тест':' теста'));
-    var sub=[_runState(r)!=='completed'?RUN_STATES[_runState(r)]:'',r.date,firingMethodLabel(r.method),r.peakTemp?r.peakTemp+'°C':'',load.join(' · ')].filter(Boolean).join(' · ');
-    return '<div class="li" onclick="openRunDet(\''+r.id+'\')">'
-      +'<div class="li-ic">'+(r.photos&&r.photos[0]?'<img src="'+r.photos[0]+'" alt="" style="width:100%;height:100%;object-fit:cover;">':'<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;">'+firingMethodIcon(r.method)+'</div>')+'</div>'
-      +'<div class="li-body"><div class="li-t">'+_runLabel(r)+'</div><div class="li-s">'+sub+'</div></div>'
-      +'<div class="li-r">›</div></div>';
-  }).join('');
 }
 
 function firingMethodIcon(m){
