@@ -658,6 +658,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t" data-t="ui.parametri">Параметри</div><div id="drn-rows"></div></div>
     <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t" data-t="ui.alternativno-izpichane">Алтернативно изпичане</div><div id="drn-alt"></div></div>
     <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Зареждане</div>
+    <div id="drn-state"></div>
     <div class="ds" id="drn-plan-sec">
       <div style="background:var(--primary-soft);border:1px solid var(--primary);border-radius:14px;padding:14px;">
         <div style="font-size:16px;color:var(--text);font-weight:500;margin-bottom:4px;">План на пещта</div>
@@ -670,6 +671,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
     </div><div id="drn-pieces"></div></div>
     <div class="rn-grp" style="font-size:16px;color:var(--text);font-weight:500;border-top:1px solid var(--bdr);margin:18px 0 10px;padding-top:14px;">Резултати</div>
+    <div id="drn-results"></div>
     <div id="drn-photos" style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;"></div>
     <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
       <span data-t="ui.testove">Тестове</span>
@@ -1991,7 +1993,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.34.2';
+const APP_VERSION = 'v1.35.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -4038,6 +4040,10 @@ function _hasStageEvents(piece){
 // state, carrying "at which stage" context. "finished" is never set automatically.
 function _firingStageValue(ev){
   if(!ev||ev.type!=='firing'||!ev.data)return null;
+  // v1.35.0: планирано, заредено или прекъснато изпичане не мести етапа. Без
+  // състояние (всички отпреди v1.35.0) — приключено, както досега.
+  var _st=(typeof _evFiringRun==='function')?_evFiringRun(ev):null;
+  if(_st&&_st.state&&_st.state!=='completed')return null;
   // A linked run answers for the purpose; otherwise the event's own field does.
   var purpose=ev.data.firingPurpose;
   if(!purpose){
@@ -4190,9 +4196,13 @@ function _effectiveEvents(o){
     }
   });
   var shared=[];
+  var myUnits=Array.isArray(o.units)?o.units.map(Number):null;
   se.events.forEach(function(e){
     if(!e)return;
     if(stopDate&&e.date&&e.date>stopDate)return;
+    // v1.35.0: стъпка на серията за определени бройки (изпичане от план) стига само
+    // до отделено парче със същите номера.
+    if(e.data&&Array.isArray(e.data.units)&&myUnits&&!e.data.units.some(function(u){return myUnits.indexOf(Number(u))>=0;}))return;
     var c={};for(var k in e){if(Object.prototype.hasOwnProperty.call(e,k))c[k]=e[k];}
     c._fromSeries=true;
     shared.push(c);
@@ -8887,7 +8897,7 @@ function _runPieces(runId){
 // Колко физически парчета влизат в пещта от този ред.
 function _runRowQty(x){
   if(!x||!x.piece)return 1;
-  if(x.isSeries)return _seriesTotal(x.piece);
+  if(x.isSeries)return x.ev&&x.ev.data&&Array.isArray(x.ev.data.units)?x.ev.data.units.length:_seriesTotal(x.piece);
   var q=parseInt(x.piece.qty,10);
   return (isNaN(q)||q<1)?1:q;
 }
@@ -8908,7 +8918,7 @@ function _drnAttached(ps,wrapL){
         if(w)bits.push(wrapL[w]||w);
         if(x.ev.note)bits.push(x.ev.note);
         var _open=x.isSeries?'openSeriesDet':'openPieceDet';
-        if(x.isSeries)bits.unshift(_seriesTotal(x.piece)+' бр.');
+        if(x.isSeries)bits.unshift((x.ev.data&&Array.isArray(x.ev.data.units)?x.ev.data.units.length+' бр. ('+_unitsLabel(x.ev.data.units)+')':_seriesTotal(x.piece)+' бр.'));
         else if(x.piece.seriesId){var _q=parseInt(x.piece.qty,10);bits.unshift(((isNaN(_q)||_q<1)?1:_q)+' бр.');}
         return '<div class="li" style="padding:8px 0;">'
           +'<div class="li-ic" style="width:34px;height:34px;" onclick="closeDet(\'det-run\');'+_open+'(\''+x.piece.id+'\')">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
@@ -8993,6 +9003,9 @@ function openRunDet(id){
           +'</div>';
       }).join('')
     : '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;">Няма закачени тестове.</div>';
+  // v1.35.0: състоянието и действията му; резултатите накратко.
+  var _sb=document.getElementById('drn-state');if(_sb)_sb.innerHTML=_runStateHtml(r);
+  var _rs=document.getElementById('drn-results');if(_rs)_rs.innerHTML=_runResultsHtml(r);
   // v1.33.0: план на пещта — кратко; самият план е на отделен екран.
   var _pl=document.getElementById('drn-plan');if(_pl){loadKilns();_pl.textContent=_plSummary(r);}
   var _plb=document.getElementById('drn-plan-btn');if(_plb)_plb.textContent=_plHas(r)?'Отвори плана на пещта':'Направи план на пещта';
@@ -9068,6 +9081,9 @@ function saveRun(){
     if(i>=0)DB.firingRuns[i]=_mergeEdit(DB.firingRuns[i],r,_EDIT_OWNS.run);else DB.firingRuns.push(r); // v1.29.0
   } else {
     r.createdAt=new Date().toISOString();
+    // v1.35.0: изпичане за днес или по-късно започва като план; за минала дата —
+    // без състояние (приключено), за да се попълват старите както досега.
+    if(r.date>=_todayISO())r.state='planned';
     DB.firingRuns.push(r);
   }
   save();closeMo('mo-run');
@@ -9143,6 +9159,8 @@ function _runAttachPlan(piece,run){
 
 function openRunAttach(){
   if(!curRun)return;
+  var _r=DB.firingRuns.find(function(x){return x.id===curRun;});
+  if(_r&&(_runState(_r)==='planned'||_r.state==='loaded')){loadKilns();curPlanRun=_r.id;plRunReturn=true;openPlanAdd();return;}
   runAttachSel={};
   var srch=document.getElementById('ra-srch');if(srch)srch.value='';
   _renderRunAttachList();
@@ -9466,6 +9484,226 @@ function delKiln(){
   });
 }
 
+// ══ СЛЕД (v1.35.0) ══════════════════════════════════════════
+// Състояние на изпичането: planned → loaded → completed | interrupted. Без
+// състояние = приключено (всички отпреди). „Заредено“ създава стъпки „изпичане“ за
+// изделията от плана (за серия — с номерата на бройките); етапът се мести само при
+// „Приключено“ (_firingStageValue). Резултатите са в плана, по бройка.
+var RUN_STATES={planned:'Планирано',loaded:'Заредено',completed:'Приключено',interrupted:'Прекъснато'};
+var RUN_RESULTS=['Добре','Пукнато','Деформирано','Залепнало','Счупено','Друго'];
+var CONE_RESULTS=['Недоогрят','Точно','Преогрят'];
+var plRunReturn=false;
+function _todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function _runState(r){
+  if(r&&r.state&&RUN_STATES[r.state])return r.state;
+  // План отпреди v1.35.0 (без състояние), за който още нищо не е закачено — план.
+  if(r&&r.plan&&Array.isArray(r.plan.members)&&r.plan.members.length&&!_runPieces(r.id).length)return 'planned';
+  return 'completed';
+}
+// Зареденото, приключеното и прекъснатото — тогава планът е факт и промените се пишат.
+function _runOn(r){return !!(r&&(r.state==='loaded'||r.state==='completed'||r.state==='interrupted'));}
+function _plLevelName(run,id){if(!id)return 'без ниво';var i=((run.config&&run.config.levels)||[]).findIndex(function(L){return L.id===id;});return i<0?'?':'ниво '+(i+1);}
+function _runLog(run,what,from,to){
+  if(!_runOn(run))return;
+  (run.corrections=run.corrections||[]).push({id:uid(),at:new Date().toISOString(),what:what,from:from==null?'':String(from),to:to==null?'':String(to),reason:''});
+}
+function _runRec(ref){return !ref?null:ref.kind==='series'?findSeries(ref.id):DB.pieces.find(function(p){return p.id===ref.id;})||null;}
+// Стъпките на изпичането според плана: една на изделие, една на серия (с бройките).
+// Идемпотентно: създава липсващите, обновява бройките, маха тези от плана, чиито
+// изделия вече ги няма в него. Чужди стъпки (закачени на ръка) не се пипат.
+function _runSync(run){
+  if(!_runOn(run))return;
+  var want={};
+  ((run.plan&&run.plan.members)||[]).forEach(function(m){
+    if(!m.ref)return;var k=m.ref.kind+':'+m.ref.id;
+    var w=want[k]=want[k]||{ref:m.ref,units:[]};
+    if(m.ref.unit!=null)w.units.push(Number(m.ref.unit));
+  });
+  var touched=[];
+  Object.keys(want).forEach(function(k){
+    var w=want[k],rec=_runRec(w.ref);if(!rec)return;
+    ensurePieceEvents(rec);
+    var ev=rec.events.find(function(e){return e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id;});
+    if(!ev){
+      var plan=_runAttachPlan(rec,run);
+      if(plan.kind==='adopt'){
+        ev=plan.ev;ev.data.firingRunId=run.id;ev.data.adoptedByPlan=true;
+        delete ev.data.method;delete ev.data.atmosphere;delete ev.data.firingPurpose;delete ev.data.temp;delete ev.data.duration;delete ev.data.profileId;
+      } else {ev={id:uid(),type:'firing',date:run.date,note:'',photos:[],data:{firingRunId:run.id,fromPlan:true}};rec.events.push(ev);}
+    }
+    if(w.ref.kind==='series'&&w.units.length)ev.data.units=w.units.sort(function(a,b){return a-b;});
+    rec.updatedAt=new Date().toISOString();touched.push(rec);
+  });
+  DB.pieces.concat(DB.series||[]).forEach(function(rec){
+    if(!rec||!Array.isArray(rec.events))return;
+    var k=(DB.pieces.indexOf(rec)>=0?'piece':'series')+':'+rec.id;
+    if(want[k])return;
+    var n=rec.events.length;
+    rec.events=rec.events.filter(function(e){return !(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.fromPlan);});
+    rec.events.forEach(function(e){if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.adoptedByPlan){_detachEventFromRun(e,run);delete e.data.adoptedByPlan;}});
+    if(rec.events.length!==n)touched.push(rec);
+  });
+  _runRestage(run,touched);
+}
+// Махане на всичко, което „Заредено“ е направило (връщане в план).
+function _runUnload(run){
+  var touched=[];
+  DB.pieces.concat(DB.series||[]).forEach(function(rec){
+    if(!rec||!Array.isArray(rec.events))return;
+    var n=rec.events.length,ch=false;
+    rec.events=rec.events.filter(function(e){return !(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.fromPlan);});
+    rec.events.forEach(function(e){if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.adoptedByPlan){_detachEventFromRun(e,run);delete e.data.adoptedByPlan;ch=true;}});
+    if(ch||rec.events.length!==n)touched.push(rec);
+  });
+  _runRestage(run,touched);
+}
+function _runRestage(run,extra){
+  var seen={};
+  var all=(extra||[]).slice();
+  DB.pieces.concat(DB.series||[]).forEach(function(rec){
+    if(rec&&Array.isArray(rec.events)&&rec.events.some(function(e){return e&&e.data&&e.data.firingRunId===run.id;}))all.push(rec);
+  });
+  all.forEach(function(rec){
+    if(!rec||seen[rec.id])return;seen[rec.id]=1;
+    recomputePieceStage(rec);
+    if(DB.series&&DB.series.indexOf(rec)>=0)_seriesMembers(rec.id).forEach(recomputePieceStage);
+  });
+}
+function setRunState(id,to){
+  var run=DB.firingRuns.find(function(x){return x.id===id;});if(!run)return;
+  var from=_runState(run);
+  if(to==='loaded'&&from==='planned'){
+    var n=((run.plan&&run.plan.members)||[]).length;
+    if(!n){toast('Планът е празен — добави изделия');return;}
+    var loose=run.plan.members.filter(function(m){return !m.level;}).length;
+    if(!confirm('Заредено — потвърди?\n\n'+n+(n===1?' изделие':' изделия')+' от плана получават стъпка „изпичане“ в процеса си.'+(loose?' '+loose+' от тях са без ниво.':'')+'\nЕтапът се мести чак при „Приключено“.'))return;
+    run.state='loaded';run.loadedAt=new Date().toISOString();
+    _runSync(run);
+  } else if(to==='completed'||to==='interrupted'){
+    var end=_todayISO();if(run.date&&run.date>end)end=run.date;
+    if(!confirm(to==='completed'?'Приключено?\n\nЕтапът на изделията се мести с дата '+end+'.':'Прекъснато?\n\nЕтапът на изделията не се мести. Резултатите и бележките могат да се запишат.'))return;
+    if(from==='planned'){run.state='loaded';run.loadedAt=new Date().toISOString();_runSync(run);}
+    run.state=to;run.endedAt=end;
+    DB.pieces.concat(DB.series||[]).forEach(function(rec){(rec&&rec.events||[]).forEach(function(e){if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.fromPlan)e.date=end;});});
+    _runRestage(run);
+  } else if(to==='loaded'&&(from==='completed'||from==='interrupted')){
+    if(!confirm('Отвори отново?\n\nИзпичането става „Заредено“ — етапът на изделията се връща, докато не го приключиш пак.'))return;
+    run.state='loaded';delete run.endedAt;_runRestage(run);
+  } else if(to==='planned'&&from==='loaded'){
+    if(!confirm('Върни в план?\n\nСтъпките, които „Заредено“ създаде в изделията, се махат. Резултатите в плана остават.'))return;
+    run.state='planned';delete run.loadedAt;_runUnload(run);
+  } else return;
+  run.updatedAt=new Date().toISOString();
+  save();renderFiringRuns();openRunDet(run.id);
+  toast(RUN_STATES[run.state]);
+}
+function _runStateHtml(r){
+  var st=_runState(r),legacy=!r.state&&st==='completed';
+  var col={planned:'var(--tx2)',loaded:'var(--warn)',completed:'var(--ok,#4a7c59)',interrupted:'var(--err)'}[st];
+  var btn=function(to,t,main){return '<button type="button" class="fchip run-st" data-to="'+to+'" onclick="setRunState(\''+r.id+'\',\''+to+'\')" style="min-height:44px;font-size:14px;'+(main?'background:var(--primary);color:white;border-color:var(--primary);':'')+'">'+t+'</button>';};
+  var acts=st==='planned'?btn('loaded','Заредено — потвърди',true)
+    :st==='loaded'?btn('completed','Приключено',true)+btn('interrupted','Прекъснато')+btn('planned','← Върни в план')
+    :(legacy?'':btn('loaded','Отвори отново'));
+  var refire=(st==='completed'||st==='interrupted')&&r.config?'<button type="button" class="fchip" id="drn-refire" onclick="refireRun(\''+r.id+'\')" style="min-height:44px;font-size:14px;">Повтори изпичането</button>':'';
+  if(legacy&&!refire)return '';
+  var when=[r.loadedAt?'заредено '+String(r.loadedAt).slice(0,10):'',r.endedAt?(st==='interrupted'?'прекъснато ':'приключено ')+r.endedAt:''].filter(Boolean).join(' · ');
+  return '<div class="ds" id="drn-state-box"><div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><span style="font-size:13px;color:var(--tx3);">Състояние</span><span id="drn-state-v" style="font-size:16px;font-weight:500;color:'+col+';">'+RUN_STATES[st]+'</span>'+(when?'<span style="font-size:12.5px;color:var(--tx3);">'+when+'</span>':'')+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'+acts+refire+'</div>'
+    +(st==='planned'?'<div style="font-size:12.5px;color:var(--tx3);margin-top:6px;line-height:1.5;">Докато е план, изделията не получават стъпка и етапът не се мени.</div>':'')
+    +(st==='loaded'?'<div style="font-size:12.5px;color:var(--tx3);margin-top:6px;line-height:1.5;">Стъпките са в процеса на изделията; етапът се мести при „Приключено“. Промените в плана от тук нататък се записват в дневника.</div>':'')
+    +'</div>';
+}
+function _runResultsHtml(r){
+  var M=(r.plan&&r.plan.members)||[];
+  var h='';
+  if(M.length&&_runOn(r)){
+    var c={};M.forEach(function(m){var k=m.result||'';c[k]=(c[k]||0)+1;});
+    var parts=RUN_RESULTS.filter(function(x){return c[x];}).map(function(x){return x+' '+c[x];});
+    if(c[''])parts.push('без резултат '+c['']);
+    var cones=((r.config&&r.config.levels)||[]).map(function(L,i){return L.cone||L.coneResult?'ниво '+(i+1)+': '+[L.cone,L.coneResult].filter(Boolean).join(' — '):'';}).filter(Boolean);
+    h+='<div class="ds" id="drn-res"><div class="ds-t">Резултати по изделия</div><div style="font-size:14px;color:var(--text);line-height:1.6;">'+_kEsc(parts.join(' · '))+'</div>'
+      +(cones.length?'<div style="font-size:13px;color:var(--tx2);margin-top:4px;">Конуси — '+_kEsc(cones.join('; '))+'</div>':'')
+      +'<button type="button" class="fchip" onclick="openPlan(\''+r.id+'\')" style="margin-top:8px;min-height:44px;font-size:14px;">Запиши резултати в плана</button></div>';
+  }
+  var C=r.corrections||[];
+  if(C.length){
+    h+='<div class="ds" id="drn-corr"><div class="ds-t">Дневник на промените ('+C.length+')</div>'+C.slice().reverse().map(function(x){
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--bdr);"><div style="font-size:13px;color:var(--text);">'+_kEsc(x.what)+(x.from||x.to?': '+_kEsc(x.from||'—')+' → '+_kEsc(x.to||'—'):'')+'</div>'
+        +'<div style="font-size:12px;color:var(--tx3);">'+String(x.at).slice(0,16).replace('T',' ')+'</div>'
+        +'<input type="text" class="corr-reason" placeholder="причина (по желание)" value="'+_kEsc(x.reason||'')+'" onchange="setCorrReason(\''+r.id+'\',\''+x.id+'\',this.value)" style="margin-top:4px;padding:6px 8px;font-size:13px;"></div>';
+    }).join('')+'</div>';
+  }
+  return h;
+}
+function setCorrReason(rid,cid,v){
+  var r=DB.firingRuns.find(function(x){return x.id===rid;});if(!r)return;
+  var c=(r.corrections||[]).find(function(x){return x.id===cid;});if(!c)return;
+  c.reason=String(v||'').trim();r.updatedAt=new Date().toISOString();save();
+}
+// Резултат по бройка — в плана, след „Заредено“.
+function _plResultHtml(run,p){
+  if(!_runOn(run))return '';
+  var m=(run.plan.members||[]).find(function(x){return x.id===p.id;})||{};
+  return '<div class="pl-res" style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;"><span style="font-size:13px;color:var(--tx2);">Резултат</span>'
+    +'<select data-f="result" onchange="setPlanResult(\''+p.id+'\',this.value)" style="width:auto;padding:7px 10px;font-size:14px;"><option value="">—</option>'+RUN_RESULTS.map(function(x){return '<option'+(m.result===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select>'
+    +'<input type="text" placeholder="бележка" value="'+_kEsc(m.resultNote||'')+'" onchange="setPlanResultNote(\''+p.id+'\',this.value)" style="flex:1;min-width:120px;padding:7px 10px;font-size:14px;"></div>';
+}
+function setPlanResult(id,v){
+  var run=_plRun();if(!run)return;
+  var m=run.plan.members.find(function(x){return x.id===id;});if(!m)return;
+  var old=m.result||'';if(old===(v||''))return;
+  if(old)_runLog(run,_plMemberLabel(m)+': резултат',old,v||'');
+  if(v)m.result=v;else delete m.result;
+  _plTouch(run);
+  // „Счупено“ предлага изход за изделието — не го слага само.
+  if(v==='Счупено'){
+    if(m.ref&&m.ref.kind==='piece'&&m.ref.idx==null){
+      var p=DB.pieces.find(function(x){return x.id===m.ref.id;});
+      if(p&&!isTerminalStage(p.stage)&&confirm('Да отбележа ли „'+(p.name||'')+'“ като Счупено?\n\nДобавя се стъпка „Етап: Счупено“ в процеса му.')){
+        ensurePieceEvents(p);
+        p.events.push({id:uid(),type:'stage',date:run.endedAt||_todayISO(),note:'При изпичане „'+_runLabel(run)+'“',photos:[],data:{stageValue:'broken'}});
+        p.updatedAt=new Date().toISOString();recomputePieceStage(p);save();toast('Отбелязано като Счупено');
+      }
+    } else toast('За бройка от серия: отдели я от серията, за да я отбележиш като счупена.');
+  }
+  renderPlan();
+}
+function setPlanResultNote(id,v){
+  var run=_plRun();if(!run)return;
+  var m=run.plan.members.find(function(x){return x.id===id;});if(!m)return;
+  v=String(v||'').trim();if(v)m.resultNote=v;else delete m.resultNote;_plTouch(run);
+}
+function _plConeHtml(run,L){
+  if(!_runOn(run))return '';
+  return '<div class="pl-cone" style="display:flex;gap:8px;align-items:flex-end;margin-top:10px;">'
+    +'<div class="f" style="flex:1;margin:0;"><label>Конус на нивото</label><input type="text" value="'+_kEsc(L.cone||'')+'" placeholder="напр. 06" onchange="setPlanCone(\''+L.id+'\',\'cone\',this.value)"></div>'
+    +'<div class="f" style="flex:1;margin:0;"><label>Как падна</label><select onchange="setPlanCone(\''+L.id+'\',\'coneResult\',this.value)"><option value="">—</option>'+CONE_RESULTS.map(function(x){return '<option'+(L.coneResult===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div></div>';
+}
+function setPlanCone(lid,f,v){
+  var run=_plRun();if(!run)return;var L=_plLevel(run,lid);if(!L)return;
+  v=String(v||'').trim();if(v)L[f]=v;else delete L[f];_plTouch(run);
+}
+function _plAfterPhotosHtml(run,L){
+  if(!_runOn(run))return '';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;">'
+    +(L.photosAfter||[]).map(function(pid){return '<div style="position:relative;"><img data-ph="'+pid+'" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--bg2);display:block;"><button type="button" onclick="planDelPhoto(\''+L.id+'\',\''+pid+'\')" aria-label="Махни снимката" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:12px;border:none;background:var(--surf);color:var(--accent);cursor:pointer;font-size:14px;line-height:1;">×</button></div>';}).join('')
+    +'<button type="button" class="fchip" onclick="planAddPhoto(\''+L.id+'\',true)">+ Снимка след</button></div>';
+}
+// Повторение: пещта, нивата, плочите, подпорите, местата и изделията — без
+// резултатите, конусите, бележките, снимките и дневника.
+function refireRun(id){
+  var o=DB.firingRuns.find(function(x){return x.id===id;});if(!o)return;
+  var r=JSON.parse(JSON.stringify(o)),map={};
+  r.id=uid();r.refireOf=o.id;r.state='planned';r.date=_todayISO();
+  ['loadedAt','endedAt','corrections','notes','photos','peakTemp','holdMin','cones'].forEach(function(k){delete r[k];});
+  r.name=(o.name||_runLabel(o))+' — повторение';
+  r.createdAt=r.updatedAt=new Date().toISOString();
+  ((r.config&&r.config.levels)||[]).forEach(function(L){var n=uid();map[L.id]=n;L.id=n;L.photos=[];delete L.photosAfter;delete L.cone;delete L.coneResult;delete L.note;});
+  ((r.plan&&r.plan.members)||[]).forEach(function(m){m.id=uid();m.level=m.level?map[m.level]||null:null;delete m.result;delete m.resultNote;});
+  DB.firingRuns.push(r);save();renderFiringRuns();openRunDet(r.id);
+  toast('Повторение — ново планирано изпичане');
+}
+
 // ══ ПЛАН НА ПЕЩТА (v1.33.0) ═════════════════════════════════
 // Степен „Нива“: пещ, нива с плоча и подпори, изделия по нива, „Предложи нива“,
 // изглед отстрани с мерките, снимки на нивата. Без координати.
@@ -9669,6 +9907,7 @@ function _plMemberHtml(run,st,p,note){
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;">'
       +inp('h','в')+(rect?inp('w','ш')+inp('depth','д'):inp('d','Ø'))+inp('s','подложка')
     +'</div>'
+    +_plResultHtml(run,p)
     +(note?'<div class="pl-note" style="font-size:12.5px;color:var(--tx3);margin-top:3px;">'+_kEsc(_plMsg(note))+'</div>':'')
     +issues.map(function(x){return '<div class="pl-iss" style="font-size:12.5px;margin-top:3px;color:'+(x.sev==='err'?'var(--err)':'var(--warn)')+';">'+(x.sev==='err'?'✗ ':'⚠ ')+_kEsc(_plMsg(x.msg))+'</div>';}).join('')
     +'</div>';
@@ -9710,9 +9949,11 @@ function _plLevelHtml(run,st,M,i){
     +roomLine
     +_plTopHtml(run,st,L,i)
     +(ps.length?ps.map(function(p){return _plMemberHtml(run,st,p,'');}).join(''):'<div style="font-size:13px;color:var(--tx3);font-style:italic;padding:6px 0;">Празно ниво.</div>')
+    +_plConeHtml(run,L)
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;">'
       +(L.photos||[]).map(function(pid){return '<div style="position:relative;"><img data-ph="'+pid+'" alt="" style="width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--bg2);display:block;"><button type="button" onclick="planDelPhoto(\''+L.id+'\',\''+pid+'\')" aria-label="Махни снимката" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:12px;border:none;background:var(--surf);color:var(--accent);cursor:pointer;font-size:14px;line-height:1;">×</button></div>';}).join('')
-      +'<button type="button" class="fchip" onclick="planAddPhoto(\''+L.id+'\')">+ Снимка</button>'
+      +'<button type="button" class="fchip" onclick="planAddPhoto(\''+L.id+'\')">+ Снимка'+(_runOn(run)?' при зареждане':'')+'</button>'
+    +'</div>'+_plAfterPhotosHtml(run,L)+'<div>'
     +'</div>'
     +'</div>';
 }
@@ -10128,7 +10369,7 @@ function delPlanLevel(id){
   run.config.levels=run.config.levels.filter(function(x){return x.id!==id;});
   var top=run.config.levels[run.config.levels.length-1];if(top)delete top.postH;
   run.plan.members.forEach(function(m){if(m.level===id)m.level=null;});
-  (L.photos||[]).forEach(function(pid){_phDel(pid);});
+  (L.photos||[]).concat(L.photosAfter||[]).forEach(function(pid){_phDel(pid);});
   plSug=null;_plTouch(run);renderPlan();
 }
 function setPlanLevel(id,f,v){
@@ -10141,14 +10382,17 @@ function setPlanLevel(id,f,v){
 function setPlanMember(id,f,v){
   var run=_plRun();if(!run)return;
   var m=run.plan.members.find(function(x){return x.id===id;});if(!m)return;
-  if(f==='level'){if(m.level!==(v||null)){delete m.x;delete m.y;}m.level=v||null;}
+  if(f==='level'){if(m.level!==(v||null)){_runLog(run,_plMemberLabel(m)+': ниво',_plLevelName(run,m.level),_plLevelName(run,v||null));delete m.x;delete m.y;}m.level=v||null;}
   else if(f==='x'||f==='y'||f==='rot'){var q=_plN(v);if(q==null)delete m[f];else m[f]=f==='rot'?((q%360)+360)%360:q;} // v1.34.0
   else{var n=_numOrNullPos(v);if(n==null)delete m[f];else m[f]=n;if(f!=='s')m.src='plan';}
   plSug=null;_plTouch(run);renderPlan();
 }
 function removePlanMember(id){
   var run=_plRun();if(!run)return;
+  var _m=run.plan.members.find(function(x){return x.id===id;});
+  if(_m)_runLog(run,_plMemberLabel(_m),'в изпичането','извадено');
   run.plan.members=run.plan.members.filter(function(x){return x.id!==id;});
+  _runSync(run);
   plSug=null;_plTouch(run);renderPlan();
 }
 
@@ -10250,7 +10494,10 @@ function confirmPlanAdd(){
       run.plan.members.push(m);n++;
     });
   });
+  if(_runOn(run))_runLog(run,'Добавени изделия','',n+' бр.');
+  _runSync(run);
   plSel={};plSug=null;_plTouch(run);closeMo('mo-plan-add');renderPlan();
+  if(plRunReturn){plRunReturn=false;openRunDet(run.id);}
   toast(n+(n===1?' изделие добавено':' изделия добавени'));
 }
 
@@ -10292,7 +10539,8 @@ function _plFillPhotos(){
     _phGet(id).then(function(b){if(b&&b instanceof Blob){_phUrls[id]=URL.createObjectURL(b);img.src=_phUrls[id];}});
   });
 }
-function planAddPhoto(levelId){plPhotoLevel=levelId;var i=document.getElementById('pl-photo-in');if(i){i.value='';i.click();}}
+var plPhotoAfter=false;
+function planAddPhoto(levelId,after){plPhotoLevel=levelId;plPhotoAfter=!!after;var i=document.getElementById('pl-photo-in');if(i){i.value='';i.click();}}
 function _phShrink(file){
   return new Promise(function(res){
     var img=new Image(),u=URL.createObjectURL(file);
@@ -10317,7 +10565,8 @@ function planPhotoPicked(inp){
       if(!ok){toast('⚠ Снимката не се записа');return false;}
       var run=_plRun();if(!run)return false;
       var L=run.config.levels.find(function(x){return x.id===lid;});if(!L){_phDel(id);return false;}
-      L.photos=(L.photos||[]).concat([id]);_plTouch(run);renderPlan();return true;
+      if(plPhotoAfter)L.photosAfter=(L.photosAfter||[]).concat([id]);else L.photos=(L.photos||[]).concat([id]);
+      plPhotoAfter=false;_plTouch(run);renderPlan();return true;
     });
   });
 }
@@ -10326,11 +10575,12 @@ function planDelPhoto(levelId,pid){
   var L=run.config.levels.find(function(x){return x.id===levelId;});if(!L)return;
   if(!confirm('Махни снимката?'))return;
   L.photos=(L.photos||[]).filter(function(x){return x!==pid;});
+  if(L.photosAfter)L.photosAfter=L.photosAfter.filter(function(x){return x!==pid;});
   _phDel(pid);_plTouch(run);renderPlan();
 }
 // Архивът: снимките на плановете като data URL в раздел planPhotos.
 function _plPhotoIds(db){
-  var ids=[];((db||DB).firingRuns||[]).forEach(function(r){((r.config&&r.config.levels)||[]).forEach(function(L){(L.photos||[]).forEach(function(id){ids.push(id);});});});
+  var ids=[];((db||DB).firingRuns||[]).forEach(function(r){((r.config&&r.config.levels)||[]).forEach(function(L){(L.photos||[]).concat(L.photosAfter||[]).forEach(function(id){ids.push(id);});});});
   return ids;
 }
 function _plPhotosForBackup(){
@@ -10369,7 +10619,7 @@ function renderFiringRuns(){
     var load=[];
     if(np)load.push(np+(np===1?' изделие':' изделия'));
     if(nt)load.push(nt+(nt===1?' тест':' теста'));
-    var sub=[r.date,firingMethodLabel(r.method),r.peakTemp?r.peakTemp+'°C':'',load.join(' · ')].filter(Boolean).join(' · ');
+    var sub=[_runState(r)!=='completed'?RUN_STATES[_runState(r)]:'',r.date,firingMethodLabel(r.method),r.peakTemp?r.peakTemp+'°C':'',load.join(' · ')].filter(Boolean).join(' · ');
     return '<div class="li" onclick="openRunDet(\''+r.id+'\')">'
       +'<div class="li-ic">'+(r.photos&&r.photos[0]?'<img src="'+r.photos[0]+'" alt="" style="width:100%;height:100%;object-fit:cover;">':'<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;">'+firingMethodIcon(r.method)+'</div>')+'</div>'
       +'<div class="li-body"><div class="li-t">'+_runLabel(r)+'</div><div class="li-s">'+sub+'</div></div>'
