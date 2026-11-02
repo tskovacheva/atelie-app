@@ -978,6 +978,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .un-prev{font-size:13px;color:var(--tx2);line-height:1.55;margin:4px 0 8px;}
 .un-run{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;margin:6px 0;}
 .un-warn{font-size:12.5px;color:var(--warn);background:var(--warnbg);border-radius:10px;padding:8px 10px;margin:6px 0;line-height:1.45;}
+/* v1.44.0: групи в бройките */
+.pd-unit{position:relative;}
+.pd-unit .g{position:absolute;left:6px;right:6px;bottom:3px;height:3px;border-radius:2px;opacity:.8;}
+.se-grp{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--tx2);margin:-2px 0 6px;}
+.se-grp .rd-link{font-size:12.5px;}
+.un-stop{color:var(--err,#a84a3c);background:var(--errbg);}
 </style>
 </head>
 <body>
@@ -2845,7 +2851,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.43.0';
+const APP_VERSION = 'v1.44.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -6875,7 +6881,7 @@ function _renderSeriesDet(se){
     var selSet={};_seSel.u.forEach(function(u){selSet[u]=1;});
     grid=_seSelBar(se,info)+'<div class="pd-units'+(info.length>12?' many':'')+'">'+info.map(function(x){
       var m=x.m;
-      return '<button type="button" class="pd-unit'+(m?(isTerminalStage(x.stage)?' out':' split'):'')+(selSet[x.no]?' sel':'')+'" data-u="'+x.no+'" data-st="'+x.st+'" aria-pressed="'+!!selSet[x.no]+'" onclick="seUnitTap('+x.no+')">/'+x.no+'<span class="s">'+_pdE(x.label)+'</span></button>';
+      return '<button type="button" class="pd-unit'+(m?(isTerminalStage(x.stage)?' out':' split'):'')+(selSet[x.no]?' sel':'')+'" data-u="'+x.no+'" data-st="'+x.st+'" aria-pressed="'+!!selSet[x.no]+'"'+(x.grp?' title="'+_pdE(x.grp)+'"':'')+' onclick="seUnitTap('+x.no+')">/'+x.no+'<span class="s">'+_pdE(x.label)+'</span>'+(x.grp?'<span class="g" style="background:'+_seGrpColor(x.m.id)+'"></span>':'')+'</button>';
     }).join('')+'</div>';
   }
   var list=members.length?members.map(function(m){
@@ -6925,7 +6931,7 @@ function _seUnitInfo(se){
     var m=by[u]||null,stage=normalizeStageValue((m?m.stage:se.stage)||'wet'),rn=runs['u'+u]||(m?runs['p'+m.id]:null)||null;
     var st=m&&m.archivedAt?'arch':isTerminalStage(stage)?stage:rn&&rn.st==='loaded'?'loaded':rn&&rn.st==='planned'?'planned':m?'split':'free';
     var label=st==='arch'?'в архива':st==='loaded'?'в пещта':st==='planned'?'в план':m?(stageLabel(stage)):stageLabel(stage);
-    out.push({no:u,m:m,stage:stage,st:st,run:rn,label:label});
+    out.push({no:u,m:m,stage:stage,st:st,run:rn,label:label,grp:m&&(m.units||[]).length>1?(m.name||''):''});
   }
   return out;
 }
@@ -6948,29 +6954,123 @@ function _seSelBar(se,info){
     +'<button type="button" class="fchip" onclick="sePickRange()">Избери</button>'
     +(info.some(function(x){return !x.m;})?'<button type="button" class="fchip" onclick="sePickFree()">Неотделени</button>':'')
     +(sel.length?'<button type="button" class="fchip" onclick="sePickClear()">Изчисти</button>':'')+'</div>';
-  if(!sel.length)return h+'<div class="se-hint">Докосни номер, за да го избереш.</div>';
-  var S=info.filter(function(x){return sel.indexOf(x.no)>=0;}),free=S.filter(function(x){return !x.m;}),mem=_seSelMembers(S);
-  var arch=mem.filter(function(m){return m.archivedAt;}),act=mem.filter(function(m){return !m.archivedAt;});
-  h+='<div class="se-act"><div class="se-act-t">Избрани '+S.length+': '+_pdE(_unitsLabel(sel))+'</div><div class="se-act-b">'
+  if(!sel.length)return h+'<div class="se-hint">Докосни номер, за да го избереш. Номер от група се избира сам — групата се разделя само ако го поискаш.</div>';
+  var S=info.filter(function(x){return sel.indexOf(x.no)>=0;}),free=S.filter(function(x){return !x.m;}),G=_seSelGroups(S);
+  var arch=G.filter(function(g){return g.m.archivedAt;}),act=G.filter(function(g){return !g.m.archivedAt;});
+  var part=act.filter(function(g){return !g.whole;}),multi=act.filter(function(g){return g.m.units.length>1;});
+  var live=free.length||act.length;
+  h+='<div class="se-act"><div class="se-act-t">Избрани '+S.length+': '+_pdE(_unitsLabel(sel))+'</div>'
+    +(G.length?'<div class="se-grp">'+G.map(function(g){return '<span>'+_pdE(_unitsLabel(g.sel))+' от „'+_pdE(g.m.name||'')+'“ '+_pdE(_unitsLabel(g.m.units))+(g.whole?' · цялата':'')
+      +(!g.whole?' <button type="button" class="rd-link" onclick="sePickGroup(\''+g.m.id+'\')">Цялата група</button>':'')+'</span>';}).join('')+'</div>':'')
+    +'<div class="se-act-b">'
     +(free.length?'<button type="button" class="btn bg" id="se-a-split" onclick="openSplitMo(_seSel.u)">Отдели</button>':'')
-    +(free.length||act.length?'<button type="button" class="btn bg" id="se-a-stage" onclick="openUnitsMo(\'stage\')">Промени етап</button>':'')
-    +(free.length||act.length?'<button type="button" class="btn bg" id="se-a-broken" onclick="openUnitsMo(\'broken\')">Счупено</button>':'')
-    +(free.length||act.length?'<button type="button" class="btn bg" id="se-a-arch" onclick="openUnitsMo(\'archive\')">Архивирай</button>':'')
+    +(multi.length?'<button type="button" class="btn bg" id="se-a-divide" onclick="openUnitsMo(\'divide\')">Раздели групата</button>':'')
+    +(live?'<button type="button" class="btn bg" id="se-a-stage" onclick="openUnitsMo(\'stage\')">Промени етап</button>':'')
+    +(live?'<button type="button" class="btn bg" id="se-a-broken" onclick="openUnitsMo(\'broken\')">Счупено</button>':'')
+    +(live?'<button type="button" class="btn bg" id="se-a-arch" onclick="openUnitsMo(\'archive\')">Архивирай</button>':'')
     +(arch.length?'<button type="button" class="btn bg" id="se-a-restore" onclick="seUnitsRestore()">Върни от архива</button>':'')
-    +(free.length||act.length?'<button type="button" class="btn bg" id="se-a-plan" onclick="seUnitsToPlan()">Добави към изпичане</button>':'')
-    +(mem.length===1?'<button type="button" class="btn bg" id="se-a-open" onclick="openPieceDet(\''+mem[0].id+'\')">Отвори „'+_pdE(mem[0].name||pieceCode(mem[0]))+'“</button>':'')
+    +(live?'<button type="button" class="btn bg" id="se-a-plan" onclick="seUnitsToPlan()">Добави към изпичане</button>':'')
+    +(G.length===1?'<button type="button" class="btn bg" id="se-a-open" onclick="openPieceDet(\''+G[0].m.id+'\')">Отвори „'+_pdE(G[0].m.name||pieceCode(G[0].m))+'“</button>':'')
     +'</div></div>';
   return h;
 }
+// групите, до които стига изборът: кои номера от всяка и дали е цялата
+function _seSelGroups(S){
+  var by={},out=[];
+  S.forEach(function(x){if(!x.m)return;var g=by[x.m.id];if(!g){g=by[x.m.id]={m:x.m,sel:[]};out.push(g);}g.sel.push(x.no);});
+  out.forEach(function(g){g.whole=g.sel.length===(g.m.units||[]).length;});
+  return out;
+}
+
+// ══ v1.44.0: РАЗДЕЛЯНЕ НА ОТДЕЛЕНА ГРУПА ПО НОМЕРА ══
+// Групата /1–15 е един запис. Избраните номера стават нови записи в серията; групата
+// остава със своите номера и история — нищо в нея не се пренаписва, само намалява.
+// Новият запис наследява полетата, снимките и собствените стъпки на групата (копия,
+// отбелязани copiedFrom); общите стъпки на серията стигат до него по номерата, както
+// досега. Изпичане със стъпка от плана: копира се само ако номерата са в този план, а
+// записите в плана за тези номера минават към новия запис — номерът, резултатът и
+// бележката им остават. Ако нещо не може да се отнесе към точен номер — отказ.
+function _grpCheck(g,S){
+  if(!g||!g.seriesId)return 'не е част от серия';
+  var U=(Array.isArray(g.units)?g.units:[]).map(Number);
+  if(!U.length)return '„'+(g.name||'')+'“ няма номера на бройките (стар запис) — не може да се каже кои физически бройки се отделят';
+  if(g.archivedAt)return '„'+(g.name||'')+'“ е в архива — първо я върни';
+  var bad=S.filter(function(u){return U.indexOf(u)<0;});if(bad.length)return _unitsLabel(bad)+' не са в „'+(g.name||'')+'“';
+  var amb=(DB.firingRuns||[]).filter(function(r){return _rnPlanMembers(r).some(function(m){return m.ref&&m.ref.kind==='piece'&&m.ref.id===g.id&&m.ref.unit==null;});});
+  if(amb.length)return 'изпичането „'+_runLabel(amb[0])+'“ държи „'+(g.name||'')+'“ без номера на бройките — резултатите не могат да се отнесат към точни номера';
+  return '';
+}
+// какво се случва с изпичанията — за прегледа
+function _grpRuns(g,S){
+  var out=[];
+  (DB.firingRuns||[]).forEach(function(r){
+    var pm=_rnPlanMembers(r).filter(function(m){return m.ref&&m.ref.kind==='piece'&&m.ref.id===g.id&&S.indexOf(Number(m.ref.unit))>=0;});
+    var step=(g.events||[]).some(function(e){return e&&e.type==='firing'&&e.data&&e.data.firingRunId===r.id;});
+    if(pm.length||(step&&!_rnPlanMembers(r).some(function(m){return m.ref&&m.ref.id===g.id;})))out.push({run:r,st:_runState(r),pm:pm,res:pm.filter(function(m){return m.result;})});
+  });
+  return out;
+}
+// parts: масив от масиви с номера — всеки става нов запис
+function _grpSplit(g,parts){
+  var all=[];parts.forEach(function(p){all=all.concat(p);});
+  var se=findSeries(g.seriesId),now=new Date().toISOString(),U=g.units.map(Number);
+  var max=0;_seriesMembers(g.seriesId).forEach(function(m){var k=parseInt(m.seriesNo,10);if(!isNaN(k)&&k>max)max=k;});
+  var made=[];
+  parts.forEach(function(S){
+    var n=JSON.parse(JSON.stringify(g));
+    ['id','events','archivedAt','code','createdAt','updatedAt','splitFrom'].forEach(function(k){delete n[k];});
+    n.id=uid();n.units=S.slice().sort(function(a,b){return a-b;});n.qty=S.length;n.seriesNo=++max;
+    n.name=(g.name||(se&&se.name)||'')+' '+_unitsLabel(n.units);
+    n.splitFrom={piece:g.id,units:n.units.slice(),at:now};
+    n.photos=Array.isArray(g.photos)?g.photos.slice():[];
+    n.events=[];
+    (g.events||[]).forEach(function(e){
+      if(!e)return;var d=e.data||{};
+      if(Array.isArray(d.units)&&!d.units.map(Number).some(function(u){return S.indexOf(u)>=0;}))return;
+      if(e.type==='firing'&&d.firingRunId){
+        var r=DB.firingRuns.find(function(x){return x.id===d.firingRunId;});
+        var mine=r?_rnPlanMembers(r).filter(function(m){return m.ref&&m.ref.kind==='piece'&&m.ref.id===g.id;}):[];
+        if(mine.length&&!mine.some(function(m){return S.indexOf(Number(m.ref.unit))>=0;}))return; // този план не е за тези номера
+      }
+      var c=JSON.parse(JSON.stringify(e));c.id=uid();c.copiedFrom={piece:g.id,event:e.id};
+      if(Array.isArray(d.units))c.data.units=d.units.map(Number).filter(function(u){return S.indexOf(u)>=0;});
+      n.events.push(c);
+    });
+    n.createdAt=now;n.updatedAt=now;
+    DB.pieces.unshift(n);made.push(n);
+  });
+  // плановете: записите за тези номера — към новия запис (номер, резултат, бележка, снимки остават)
+  (DB.firingRuns||[]).forEach(function(r){
+    var ch=false;
+    _rnPlanMembers(r).forEach(function(m){
+      if(!(m.ref&&m.ref.kind==='piece'&&m.ref.id===g.id))return;var u=Number(m.ref.unit);
+      var to=made.find(function(n){return n.units.indexOf(u)>=0;});if(to){m.ref.id=to.id;ch=true;}
+    });
+    if(ch)r.updatedAt=now;
+  });
+  g.units=U.filter(function(u){return all.indexOf(u)<0;});g.qty=g.units.length;g.updatedAt=now;
+  made.forEach(recomputePieceStage);
+  if(se)se.updatedAt=now;
+  return made;
+}
+// всичко или нищо: при грешка данните се връщат както бяха
+function _atomic(fn){
+  var snap=JSON.stringify({p:DB.pieces,s:DB.series,r:DB.firingRuns});
+  try{return fn();}catch(e){var o=JSON.parse(snap);DB.pieces=o.p;DB.series=o.s;DB.firingRuns=o.r;console.error(e);toast('Нищо не е променено — грешка при записа');return null;}
+}
 function _seSelMembers(S){var seen={},out=[];S.forEach(function(x){if(x.m&&!seen[x.m.id]){seen[x.m.id]=1;out.push(x.m);}});return out;}
+function _seGrpColor(id){var h=0;String(id).split('').forEach(function(c){h=(h*31+c.charCodeAt(0))%360;});return 'hsl('+h+',45%,55%)';}
 function _seRedraw(){var se=findSeries(curSeries);if(se)_renderSeriesDet(se);}
 // номер от отделено парче с няколко бройки избира и останалите му — парчето е едно
 function seUnitTap(u){
-  var se=findSeries(curSeries);if(!se)return;
-  var x=_seUnitInfo(se).find(function(y){return y.no===u;});if(!x)return;
-  var grp=x.m?(x.m.units||[]).map(Number):[u],on=_seSel.u.indexOf(u)>=0;
-  _seSel.u=_seSel.u.filter(function(v){return grp.indexOf(v)<0;});
-  if(!on)_seSel.u=_seSel.u.concat(grp);
+  // v1.44.0: точно този номер — и при отделена група (цялата група — с „Цялата група“)
+  if(!findSeries(curSeries))return;
+  var i=_seSel.u.indexOf(u);if(i>=0)_seSel.u.splice(i,1);else _seSel.u.push(u);
+  _seSel.u.sort(function(a,b){return a-b;});_seRedraw();
+}
+function sePickGroup(pid){
+  var m=DB.pieces.find(function(x){return x.id===pid;});if(!m)return;
+  (m.units||[]).map(Number).forEach(function(v){if(_seSel.u.indexOf(v)<0)_seSel.u.push(v);});
   _seSel.u.sort(function(a,b){return a-b;});_seRedraw();
 }
 function _seParseNos(txt){
@@ -6984,7 +7084,7 @@ function sePickRange(){
   var se=findSeries(curSeries);if(!se)return;var el=document.getElementById('se-pick-in');
   var want=_seParseNos(el&&el.value),info=_seUnitInfo(se),have={};info.forEach(function(x){have[x.no]=x;});
   var bad=want.filter(function(u){return !have[u];});
-  var add=[];want.forEach(function(u){var x=have[u];if(!x)return;(x.m?(x.m.units||[]).map(Number):[u]).forEach(function(v){if(add.indexOf(v)<0)add.push(v);});});
+  var add=[];want.forEach(function(u){if(have[u]&&add.indexOf(u)<0)add.push(u);}); // v1.44.0: само въведените номера
   if(!add.length){toast(bad.length?'Няма бройки с тези номера':'Въведи номера, напр. 1-15, 20');return;}
   add.forEach(function(v){if(_seSel.u.indexOf(v)<0)_seSel.u.push(v);});_seSel.u.sort(function(a,b){return a-b;});
   _seRedraw();if(bad.length)toast('Няма '+_unitsLabel(bad)+' в серията');
@@ -7005,72 +7105,101 @@ function openUnitsMo(kind){
   var se=findSeries(curSeries);if(!se||!_seSel.u.length)return;
   var info=_seUnitInfo(se),S=info.filter(function(x){return _seSel.u.indexOf(x.no)>=0&&!(x.m&&x.m.archivedAt);});
   if(!S.length){toast('Избраните вече са в архива');return;}
+  if(kind==='divide'&&!_seSelGroups(S).some(function(g){return g.m.units.length>1;})){toast('Избери номера от група');return;}
   _unAct={kind:kind,sid:se.id,u:S.map(function(x){return x.no;})};
-  var free=S.filter(function(x){return !x.m;}),mem=_seSelMembers(S);
-  document.getElementById('un-t').textContent=kind==='archive'?'Архивирай бройки':kind==='broken'?'Счупено':'Промени етап';
+  var free=S.filter(function(x){return !x.m;}),G=_seSelGroups(S),part=G.filter(function(g){return !g.whole||kind==='divide';});
+  document.getElementById('un-t').textContent=kind==='divide'?'Раздели групата':kind==='archive'?'Архивирай бройки':kind==='broken'?'Счупено':'Промени етап';
   var st=document.getElementById('un-stage');
-  st.innerHTML=(kind==='archive'?'<option value="">— без промяна на етапа —</option>':'')+'<optgroup label="Етап">'+STAGES.map(function(x){return '<option value="'+x.v+'">'+_pdE(x.l)+'</option>';}).join('')+'</optgroup><optgroup label="Изход">'+OUTCOMES.map(function(x){return '<option value="'+x.v+'">'+_pdE(x.l)+'</option>';}).join('')+'</optgroup>';
-  st.value=kind==='broken'?'broken':kind==='archive'?'':normalizeStageValue(se.stage||'wet');
+  st.innerHTML=(kind==='archive'||kind==='divide'?'<option value="">— без промяна на етапа —</option>':'')+'<optgroup label="Етап">'+STAGES.map(function(x){return '<option value="'+x.v+'">'+_pdE(x.l)+'</option>';}).join('')+'</optgroup><optgroup label="Изход">'+OUTCOMES.map(function(x){return '<option value="'+x.v+'">'+_pdE(x.l)+'</option>';}).join('')+'</optgroup>';
+  st.value=kind==='broken'?'broken':(kind==='archive'||kind==='divide')?'':normalizeStageValue(se.stage||'wet');
   document.getElementById('un-date').value=_todayISO();
   document.getElementById('un-note').value='';
   var ar=document.getElementById('un-arch');ar.checked=kind==='archive';ar.disabled=kind==='archive';
-  document.getElementById('un-mode-w').style.display=free.length>1?'':'none';
+  var many=free.length+part.reduce(function(n,g){return n+g.sel.length;},0);
+  document.getElementById('un-mode-w').style.display=many>1?'':'none';
   document.getElementById('un-mode').value=kind==='stage'?'group':'each';
   document.getElementById('un-name').value=(se.name||'')+' '+_unitsLabel(free.map(function(x){return x.no;}));
   _unPreview();
   openMo('mo-units');
-}
-function _unPreview(){
+}function _unPreview(){
   var A=_unAct,se=A&&findSeries(A.sid);if(!se)return;
-  var info=_seUnitInfo(se),S=info.filter(function(x){return A.u.indexOf(x.no)>=0;}),free=S.filter(function(x){return !x.m;}),mem=_seSelMembers(S);
+  var info=_seUnitInfo(se),S=info.filter(function(x){return A.u.indexOf(x.no)>=0;}),free=S.filter(function(x){return !x.m;}),G=_seSelGroups(S);
   var mode=document.getElementById('un-mode').value,stv=document.getElementById('un-stage').value,arch=document.getElementById('un-arch').checked;
+  var div=A.kind==='divide',dv=G.filter(function(g){return !g.whole||(div&&g.m.units.length>1);}),whole=G.filter(function(g){return g.whole&&!(div&&g.m.units.length>1);});
   document.getElementById('un-name-w').style.display=free.length>1&&mode==='group'?'':'none';
-  var L=[];
+  var L=[],stop=[];
   if(free.length)L.push(free.length===1?'Бройка /'+free[0].no+' се отделя като свой запис (номерът остава).':mode==='group'?'Бройките '+_unitsLabel(free.map(function(x){return x.no;}))+' се отделят като една група.':'Бройките '+_unitsLabel(free.map(function(x){return x.no;}))+' се отделят като '+free.length+' отделни записа.');
-  if(mem.length)L.push('Отделени: '+mem.map(function(m){return (m.name||'')+' '+_unitsLabel(m.units);}).join('; ')+'.');
+  dv.forEach(function(g){
+    var sel=g.sel.slice(),U=g.m.units.map(Number);if(g.whole&&div)sel=sel.slice(1); // цялата на отделни: първият номер остава в записа
+    var why=_grpCheck(g.m,sel);if(why){stop.push(why);return;}
+    var rest=U.filter(function(u){return sel.indexOf(u)<0;});
+    L.push('Разделяне на „'+(g.m.name||'')+'“ '+_unitsLabel(U)+': '+(sel.length===1||mode!=='group'?_unitsLabel(sel)+' — '+(sel.length===1?'нов запис':sel.length+' нови записа'):_unitsLabel(sel)+' — един нов запис')+'; в групата остават '+_unitsLabel(rest)+' ('+rest.length+' бр.) със своята история.');
+    _grpRuns(g.m,sel).forEach(function(x){L.push('Изпичане „'+_runLabel(x.run)+'“ ('+(RUN_STATES[x.st]||x.st)+'): '+(x.pm.length?_unitsLabel(x.pm.map(function(m){return Number(m.ref.unit);}))+' остават в него с номера'+(x.res.length?' и резултата си':'')+', вече под новия запис':'стъпката се копира — изпичането не се променя')+'.');});
+  });
+  if(dv.length&&!stop.length)L.push('Наследява се: материали, глазура, размери, снимки и стъпките на групата (като копия); общите стъпки на серията — по номерата. Нищо не се измисля за отделната бройка.');
+  if(whole.length)L.push('Отделени: '+whole.map(function(g){return (g.m.name||'')+' '+_unitsLabel(g.m.units);}).join('; ')+'.');
   if(stv)L.push('Стъпка „Етап: '+stageLabel(stv)+'“ с дата '+(document.getElementById('un-date').value||'—')+'.');
   if(arch)L.push('След това се архивират — остават в серията и в архива, с номерата си.');
   var R=_seRunNotes(S),h='<div class="un-prev">'+L.map(function(x){return '<div>• '+_pdE(x)+'</div>';}).join('')+'</div>';
-  R.planned.forEach(function(p){h+='<label class="un-run"><input type="checkbox" id="un-rm-'+p.run.id+'" checked> Извади '+_pdE(_unitsLabel(p.u))+' от плана на „'+_pdE(_runLabel(p.run))+'“ (още не е заредено)</label>';});
-  R.fixed.forEach(function(x){h+='<div class="un-warn">/'+x.no+' е в '+(x.run.st==='loaded'?'зареденото':'приключилото')+' изпичане „'+_pdE(_runLabel(x.run.run))+'“ — изпичането не се променя. '+(x.run.st==='loaded'?'Резултатът ѝ се отбелязва там след изваждане.':'Резултатът ѝ е в изпичането; стъпката тук се добавя отделно.')+'</div>';});
+  stop.forEach(function(x){h+='<div class="un-warn un-stop">Не може: '+_pdE(x)+'. Нищо няма да се промени.</div>';});
+  R.planned.forEach(function(p){if(!stv&&!arch)return;h+='<label class="un-run"><input type="checkbox" id="un-rm-'+p.run.id+'" checked> Извади '+_pdE(_unitsLabel(p.u))+' от плана на „'+_pdE(_runLabel(p.run))+'“ (още не е заредено)</label>';});
+  R.fixed.forEach(function(x){if(!stv&&!arch)return;h+='<div class="un-warn">/'+x.no+' е в '+(x.run.st==='loaded'?'зареденото':'приключилото')+' изпичане „'+_pdE(_runLabel(x.run.run))+'“ — изпичането не се променя. '+(x.run.st==='loaded'?'Резултатът ѝ се отбелязва там след изваждане.':'Резултатът ѝ е в изпичането; стъпката тук се добавя отделно.')+'</div>';});
   document.getElementById('un-prev').innerHTML=h;
-}
-function saveUnits(){
+  var ok=document.getElementById('un-ok');if(ok)ok.disabled=!!stop.length;
+}function saveUnits(){
   var A=_unAct,se=A&&findSeries(A.sid);if(!se)return;
   var info=_seUnitInfo(se),S=info.filter(function(x){return A.u.indexOf(x.no)>=0&&!(x.m&&x.m.archivedAt);});
   if(!S.length){closeMo('mo-units');return;}
   var stv=document.getElementById('un-stage').value,date=document.getElementById('un-date').value,note=document.getElementById('un-note').value.trim(),arch=document.getElementById('un-arch').checked,mode=document.getElementById('un-mode').value;
-  if(!stv&&!arch){toast('Избери етап');focusEl('un-stage');return;}
+  var div=A.kind==='divide';
+  if(!div&&!stv&&!arch){toast('Избери етап');focusEl('un-stage');return;}
   if(stv&&date&&!vDate(date)){toast(t('msg.nevalidna-data'));focusEl('un-date');return;}
   if(stv&&!date){toast('Въведи дата');focusEl('un-date');return;}
-  var gname=document.getElementById('un-name').value.trim();
-  // 1. планове, които още не са заредени: само отметнатите
+  var gname=document.getElementById('un-name').value.trim(),G=_seSelGroups(S);
+  // проверката е преди всяка промяна — при отказ нищо не се пипа
+  for(var i=0;i<G.length;i++){var g=G[i];if(g.whole&&!(div&&g.m.units.length>1))continue;var sel=g.whole?g.sel.slice(1):g.sel,why=_grpCheck(g.m,sel);if(why){toast('Не може: '+why);_unPreview();return;}}
   var R=_seRunNotes(S);
-  R.planned.forEach(function(p){
-    var cb=document.getElementById('un-rm-'+p.run.id);if(!cb||!cb.checked)return;
-    var run=p.run,memIds={};S.forEach(function(x){if(x.m&&p.u.indexOf(x.no)>=0)memIds[x.m.id]=1;});
-    run.plan.members=run.plan.members.filter(function(pm){var f=pm.ref||{};
-      return !((f.kind==='series'&&f.id===se.id&&f.unit!=null&&p.u.indexOf(Number(f.unit))>=0)||(f.kind==='piece'&&memIds[f.id]));});
-    _runSync(run);run.updatedAt=new Date().toISOString();
+  var res=_atomic(function(){
+    // 1. планове, които още не са заредени: само отметнатите
+    R.planned.forEach(function(p){
+      var cb=document.getElementById('un-rm-'+p.run.id);if(!cb||!cb.checked)return;
+      var run=p.run;
+      run.plan.members=run.plan.members.filter(function(pm){var f=pm.ref||{};
+        if(f.kind==='series')return !(f.id===se.id&&f.unit!=null&&p.u.indexOf(Number(f.unit))>=0);
+        if(f.kind==='piece'){var m=DB.pieces.find(function(x){return x.id===f.id;});if(!m||m.seriesId!==se.id)return true;
+          return f.unit!=null?p.u.indexOf(Number(f.unit))<0:!(m.units||[]).map(Number).some(function(u){return p.u.indexOf(u)>=0;});}
+        return true;});
+      run.updatedAt=new Date().toISOString();
+    });
+    // 2. групи: целите остават същите записи; от частично избраните — разделяне
+    var targets=[];
+    G.forEach(function(g){
+      if(g.whole&&!(div&&g.m.units.length>1)){targets.push(g.m);return;}
+      var sel=g.whole?g.sel.slice(1):g.sel,parts=(sel.length===1||mode!=='group')?sel.map(function(u){return [u];}):[sel];
+      var made=_grpSplit(g.m,parts);targets=targets.concat(made);
+      if(g.whole)targets.push(g.m); // цялата на отделни: първият номер остава в стария запис
+    });
+    // 3. неотделените — отделят се (група или поотделно)
+    var free=S.filter(function(x){return !x.m;}).map(function(x){return x.no;});
+    if(free.length===1||(free.length&&mode!=='group'))free.forEach(function(u){targets.push(_splitPieceFrom(se,[u],(se.name||'')+' /'+u,1));});
+    else if(free.length)targets.push(_splitPieceFrom(se,free,gname||((se.name||'')+' '+_unitsLabel(free)),free.length));
+    R.planned.forEach(function(p){var cb=document.getElementById('un-rm-'+p.run.id);if(cb&&cb.checked)_runSync(p.run);});
+    // 4. етап като стъпка от процеса, с действителната дата; архив
+    var now=new Date().toISOString();
+    targets.forEach(function(p){
+      if(stv){ensurePieceEvents(p);p.events.push({id:uid(),type:'stage',date:date,note:note,photos:[],data:{stageValue:stv}});recomputePieceStage(p);}
+      if(arch)p.archivedAt=now;
+      p.updatedAt=now;
+    });
+    se.updatedAt=now;
+    return targets;
   });
-  // 2. неотделените — отделят се (група или поотделно); отделените остават същите записи
-  var targets=_seSelMembers(S),free=S.filter(function(x){return !x.m;}).map(function(x){return x.no;});
-  if(free.length===1||(free.length&&mode!=='group'))free.forEach(function(u){targets.push(_splitPieceFrom(se,[u],(se.name||'')+' /'+u,1));});
-  else if(free.length)targets.push(_splitPieceFrom(se,free,gname||((se.name||'')+' '+_unitsLabel(free)),free.length));
-  // 3. етап като стъпка от процеса, с действителната дата
-  var now=new Date().toISOString();
-  targets.forEach(function(p){
-    if(stv){ensurePieceEvents(p);p.events.push({id:uid(),type:'stage',date:date,note:note,photos:[],data:{stageValue:stv}});recomputePieceStage(p);}
-    if(arch)p.archivedAt=now;
-    p.updatedAt=now;
-  });
-  se.updatedAt=now;
+  if(!res)return;
   save();closeMo('mo-units');_seSel.u=[];renderPieces();openSeriesDet(se.id);
-  toast((stv?stageLabel(stv):'Архивирано')+' · '+_unitsLabel(S.map(function(x){return x.no;})));
-}
-function seUnitsRestore(){
+  toast((div&&!stv&&!arch?'Разделено':stv?stageLabel(stv):'Архивирано')+' · '+_unitsLabel(S.map(function(x){return x.no;})));
+}function seUnitsRestore(){
   var se=findSeries(curSeries);if(!se)return;
-  var S=_seUnitInfo(se).filter(function(x){return _seSel.u.indexOf(x.no)>=0;}),ms=_seSelMembers(S).filter(function(m){return m.archivedAt;});
+  var S=_seUnitInfo(se).filter(function(x){return _seSel.u.indexOf(x.no)>=0;}),ms=_seSelMembers(S).filter(function(m){return m.archivedAt;}); // архивът е по запис — връща се целият
   if(!ms.length)return;
   if(!confirm('Върни от архива?\n\n'+ms.map(function(m){return '• '+(m.name||'')+' '+_unitsLabel(m.units);}).join('\n')+'\n\nНомерата, етапите и стъпките им остават същите.'))return;
   var now=new Date().toISOString();ms.forEach(function(m){delete m.archivedAt;m.updatedAt=now;});
@@ -7081,6 +7210,8 @@ function seUnitsToPlan(){
   var se=findSeries(curSeries);if(!se)return;
   var S=_seUnitInfo(se).filter(function(x){return _seSel.u.indexOf(x.no)>=0&&!(x.m&&x.m.archivedAt)&&!isTerminalStage(x.stage);});
   if(!S.length){toast('Няма избрани бройки за изпичане');return;}
+  var _pg=_seSelGroups(S).filter(function(g){return !g.whole;});
+  if(_pg.length){toast('Част от група: първо „Раздели групата“ ('+_unitsLabel(_pg[0].sel)+' от „'+(_pg[0].m.name||'')+'“)');return;}
   _pdPlanFor={kind:'units',id:se.id,units:S.filter(function(x){return !x.m;}).map(function(x){return x.no;}),pieces:_seSelMembers(S).map(function(m){return m.id;})};
   var runs=DB.firingRuns.filter(function(r){if(r.archivedAt)return false;var s=_runState(r);return s==='planned'||s==='loaded';}).sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
   var html=runs.map(function(r){var n=_seUnitsPlanRefs(r).n,inPlan=!n;
@@ -12093,6 +12224,15 @@ function setPlanResult(id,v){
   if(v==='Счупено'){
     if(m.ref&&m.ref.kind==='piece'&&m.ref.idx==null){
       var p=DB.pieces.find(function(x){return x.id===m.ref.id;});
+      // v1.44.0: бройка с номер от група — отделя се само тя (записът в плана минава към нея)
+      if(p&&m.ref.unit!=null&&(p.units||[]).length>1&&p.seriesId&&!isTerminalStage(p.stage)&&!_grpCheck(p,[Number(m.ref.unit)])){
+        var _u=Number(m.ref.unit);
+        if(confirm('Бройка /'+_u+' от „'+(p.name||'')+'“ е счупена.\n\nДа я отделя ли от групата със стъпка „Етап: Счупено“? Останалите '+(p.units.length-1)+' бр. не се променят.')){
+          var _nu=_atomic(function(){return _grpSplit(p,[[_u]])[0];});
+          if(_nu){ensurePieceEvents(_nu);_nu.events.push({id:uid(),type:'stage',date:run.endedAt||_todayISO(),note:'При изпичане „'+_runLabel(run)+'“',photos:[],data:{stageValue:'broken'}});_nu.updatedAt=new Date().toISOString();recomputePieceStage(_nu);save();renderPieces();toast('/'+_u+' е отделена като счупена');}
+        }
+        renderPlan();return;
+      }
       if(p&&!isTerminalStage(p.stage)&&confirm('Да отбележа ли „'+(p.name||'')+'“ като Счупено?\n\nДобавя се стъпка „Етап: Счупено“ в процеса му.')){
         ensurePieceEvents(p);
         p.events.push({id:uid(),type:'stage',date:run.endedAt||_todayISO(),note:'При изпичане „'+_runLabel(run)+'“',photos:[],data:{stageValue:'broken'}});
@@ -12113,6 +12253,12 @@ function _brokenSeriesUnit(run,m){
   var brk=function(p){ensurePieceEvents(p);p.events.push({id:uid(),type:'stage',date:when,note:note,photos:[],data:{stageValue:'broken'}});p.updatedAt=new Date().toISOString();recomputePieceStage(p);};
   if(mem){
     if(isTerminalStage(mem.stage))return;
+    // v1.44.0: бройка от група — отделя се само тя; останалите не се чупят
+    if((mem.units||[]).length>1&&!_grpCheck(mem,[u])){
+      if(!confirm('Бройка /'+u+' от „'+(mem.name||'')+'“ е счупена.\n\nДа я отделя ли от групата със стъпка „Етап: Счупено“? Останалите '+(mem.units.length-1)+' бр. не се променят.'))return;
+      var nu=_atomic(function(){return _grpSplit(mem,[[u]])[0];});if(!nu)return;
+      brk(nu);save();renderPieces();toast('/'+u+' е отделена като счупена');return;
+    }
     if(!confirm('Да отбележа ли „'+(mem.name||'')+'“ като Счупено?\n\nДобавя се стъпка „Етап: Счупено“ в процеса му.'))return;
     brk(mem);save();toast('Отбелязано като Счупено');return;
   }
