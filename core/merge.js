@@ -17,8 +17,9 @@
 // Ново поле във формуляр → добавя се тук, иначе не може да бъде изчистено.
 export const _EDIT_OWNS={
   // v1.31.1: size, startMass, wall, base, categories — основните характеристики.
-  piece:['id','name','photos','type','clay','technique','recipe','material','bisqueTemp','glazeTemp','date','stage','notes','dimensions','weight','events','updatedAt','size','startMass','wall','base','categories'],
-  series:['id','name','photos','type','clay','technique','recipe','material','bisqueTemp','glazeTemp','date','stage','notes','dimensions','weight','events','updatedAt','count','size','startMass','wall','base','categories'],
+  // v1.45.0: clayEst — прогнозата за глина (отделно от startMass — реалното).
+  piece:['id','name','photos','type','clay','technique','recipe','material','bisqueTemp','glazeTemp','date','stage','notes','dimensions','weight','events','updatedAt','size','startMass','wall','base','categories','clayEst'],
+  series:['id','name','photos','type','clay','technique','recipe','material','bisqueTemp','glazeTemp','date','stage','notes','dimensions','weight','events','updatedAt','count','size','startMass','wall','base','categories','clayEst'],
   recipe:['id','name','updatedAt','temp','notes','glazeType','cone','recommendedFiringProfileId','fav','photo','ingredients'],
   test:['id','kind','updatedAt','recipeId','materialId','firingProfileId','clay','date','temp','hold','flow','surf','def','rat','notes','glazeLayers','photos','firingRunId','bodyRef','body'],
   testBody:['plasticity','plasticityNote','shrMarked','shrDry','shrFired','poroDry','poroWet','color','deformation','sound','limePopping','limeNote','longTermDate','longTerm'],
