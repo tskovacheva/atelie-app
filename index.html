@@ -591,6 +591,18 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   #det-mat.split .rd-top{padding-top:22px;}
   #det-mat.split > *{max-width:900px;}
 }
+/* v1.40.3: документиране по бройки (всяко изпичане), подготовка без пещ */
+.rn-rrow textarea{width:100%;margin-top:8px;font-size:14px;font-family:inherit;line-height:1.45;padding:8px 10px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--surface);color:var(--text);resize:vertical;}
+.rn-mph .rn-phadd{width:64px;height:64px;}
+.rn-prep{font-size:12.5px;color:var(--tx2);margin-top:6px;}
+.rn-mph{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;}
+.rn-mph span{position:relative;display:inline-block;}
+.rn-mph img{width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block;}
+.rn-mph span button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);background:var(--accent);color:#fff;font-size:13px;line-height:1;padding:0;cursor:pointer;}
+.rn-rrow.flash{outline:2px solid var(--primary);outline-offset:4px;border-radius:8px;}
+.rn-prow{padding:10px 0;border-bottom:1px solid var(--bdr);}
+.rn-prow .nm{font-size:14px;margin-bottom:6px;}.rn-prow .nm small{color:var(--tx3);font-size:12px;}
+.rn-prow .rn-fr{display:flex;gap:8px;flex-wrap:wrap;}.rn-prow .rn-fr .f{flex:1;min-width:130px;}
 /* v1.40.1: навигация — видим е само горният детайл; на широк екран той застава до списъка */
 .det.nav-under{visibility:hidden;}
 .det.nav-panel{box-shadow:-6px 0 20px rgba(0,0,0,.06);border-left:1px solid var(--bdr);}
@@ -1245,6 +1257,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <span>Изделия в това изпичане <span id="drn-pieces-count" style="color:var(--tx3);font-weight:400;"></span></span>
         <button onclick="openRunAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
       </div><div id="drn-pieces"></div></div>
+      <div id="drn-prep"></div>
     </div>
     <div class="rn-pane" data-pane="res">
       <div id="drn-res-lock"></div>
@@ -1531,6 +1544,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="rd-acts">
       <button type="button" class="rd-btn" onclick="editTest()" data-t="ui.redaktiray">Редактирай</button>
       <button type="button" class="rd-btn" onclick="cmpSimilar()">Сравни с подобни</button>
+      <button type="button" class="rd-btn" id="dtest-newver" onclick="newVersionFromTest()">Нова версия на рецептата</button>
       <button type="button" class="rd-btn" onclick="dupTest()" data-t="ui.dubliray">Дублирай</button>
     </div>
   </div>
@@ -1933,7 +1947,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="pi-tab" data-tab="fire">
       <!-- ── Common conditions ── -->
       <div class="f"><label data-t="ui.profil-izpichane">Профил изпичане</label><select id="ti-fp"><option value="">—</option></select></div>
-      <div class="f"><label data-t="ui.izpichane">Изпичане</label><select id="ti-run"><option value="" data-t="opt.samostoyatelno">— самостоятелно —</option></select></div>
+      <div class="f"><label data-t="ui.izpichane">Изпичане</label><select id="ti-run" onchange="testRunPick()"><option value="" data-t="opt.samostoyatelno">— самостоятелно —</option></select></div>
       <div class="f"><label data-t="ui.data">Дата</label><input type="date" id="ti-date"></div>
       <div class="f"><label data-t="ui.temperatura-c">Температура (°C)</label><input type="number" id="ti-temp" data-tp="ph.napr-950" placeholder="напр. 950"></div>
       <div class="f"><label data-t="ui.zadrazhka-min">Задръжка (мин)</label><input type="number" id="ti-hold"></div>
@@ -2202,7 +2216,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
              method / temperature / atmosphere and these fields hide — exactly the
              single-owner rule the stage got in v1.9.0. -->
         <div class="f"><label data-t="ui.izpichane">Изпичане</label>
-          <select id="ev-firing-run" onchange="onEvFiringRunChange()"><option value="" data-t="opt.samostoyatelno">— самостоятелно —</option></select>
+          <select id="ev-firing-run" onchange="onEvFiringRunChange()"><option value="">— самостоятелна стъпка —</option></select>
+          <div id="ev-firing-new-hint" style="display:none;font-size:12px;color:var(--tx2);margin-top:5px;line-height:1.5;">Създава се изпичане с тези данни; резултатът, обвиването и снимките на изделието се водят в него. Ако изпичането вече е записано — избери го от списъка.</div>
+          <div id="ev-firing-linked" style="display:none;font-size:12px;color:var(--tx2);margin-top:6px;line-height:1.5;">Резултатът, обвиването и снимките на изделието се водят в изпичането. <button type="button" class="rd-link" onclick="evOpenRunResult()">Отвори резултата</button></div>
           <div id="ev-firing-run-hint" style="display:none;font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;" data-t="ui.metodat-temperaturata-i-atmosferat">Методът, температурата и атмосферата идват от изпичането.</div>
         </div>
         <div id="ev-firing-own">
@@ -2251,6 +2267,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <!-- v1.11.0: wrapping is per piece, not per firing — bare and saggared
              come out of the same pit unrecognisable. It's a choice, not an
              observation, so it earns a field rather than a note. -->
+        <div id="ev-firing-perpiece">
         <div class="f"><label data-t="ui.obvivane">Обвиване</label>
           <select id="ev-firing-wrapping">
             <option value="">—</option>
@@ -2266,6 +2283,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="f"><label data-t="ui.rezultat">Резултат</label>
           <textarea id="ev-firing-result" rows="2" data-tp="ph.kakav-efekt-se-poluchi" placeholder="какъв ефект се получи"></textarea>
         </div>
+        </div><!-- /ev-firing-perpiece -->
       </div>
 
       <!-- Decoration-specific -->
@@ -2518,10 +2536,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:8px;" data-t="ui.kakvo-stana-v-deystvitelnost">🔥 КАКВО СТАНА В ДЕЙСТВИТЕЛНОСТ</div>
           <div style="display:flex;gap:9px;">
-            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;" data-t="ui.pikova-temp-c">Пикова темп. (°C)</label><input type="number" id="rn-peak" data-tp="ph.napr-1240" placeholder="напр. 1240"></div>
-            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;" data-t="ui.zadrazhka-min">Задръжка (мин)</label><input type="number" id="rn-hold" data-tp="ph.napr-20" placeholder="напр. 20"></div>
+            <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;" id="rn-peak-l">Пикова темп. (°C)</label><input type="number" id="rn-peak" placeholder="напр. 1240"></div>
+            <div class="f" id="rn-hold-wrap" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;" data-t="ui.zadrazhka-min">Задръжка (мин)</label><input type="number" id="rn-hold" data-tp="ph.napr-20" placeholder="напр. 20"></div>
           </div>
-          <div class="f" style="margin-bottom:0;"><label style="font-size:10px;" data-t="ui.konusi">Конуси</label><input type="text" id="rn-cones" data-tp="ph.napr-6-padnal-7-naveden" placeholder="напр. 6 паднал, 7 наведен"></div>
+          <div class="f" id="rn-cones-wrap" style="margin-bottom:0;"><label style="font-size:10px;" data-t="ui.konusi">Конуси</label><input type="text" id="rn-cones" data-tp="ph.napr-6-padnal-7-naveden" placeholder="напр. 6 паднал, 7 наведен"></div>
         </div>
 
         <!-- Non-electric only -->
@@ -2541,6 +2559,22 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <datalist id="rn-add-list"></datalist>
           </div>
           <div class="f"><label data-t="ui.vremetraene-chasove">Времетраене (часове)</label><input type="number" id="rn-duration" step="0.5" data-tp="ph.napr-6" placeholder="напр. 6"></div>
+          <!-- v1.40.3 (A4): полета на метода -->
+          <div class="rn-mf" data-m="raku">
+            <div class="f"><label>Среда за редукция</label><input type="text" id="rn-raku-medium" placeholder="стърготини, вестници, слама"></div>
+            <div class="f"><label>Време в редукция (мин)</label><input type="text" inputmode="decimal" id="rn-raku-min" placeholder="напр. 15"></div>
+            <div class="f"><label>Охлаждане</label><input type="text" id="rn-raku-quench" placeholder="вода, въздух, постепенно"></div>
+          </div>
+          <div class="rn-mf" data-m="obvara">
+            <div class="f"><label>Състав на разтвора</label><textarea id="rn-obv-mix" rows="2" placeholder="напр. 1 кг брашно, 1 ч.л. мая, 10 л вода, 3 дни"></textarea></div>
+            <div class="f"><label>Потапяне</label><input type="text" id="rn-obv-dip" placeholder="напр. 3 сек, двукратно, при ~900°C"></div>
+            <div class="f"><label>Последваща обработка</label><input type="text" id="rn-obv-after" placeholder="напр. вода веднага, изсушаване"></div>
+          </div>
+          <div class="rn-mf" data-m="sagar">
+            <div class="f"><label>Съдържание на сагара (общо)</label><textarea id="rn-sag-contents" rows="2" placeholder="стърготини, мед, сол, кори, стоманена вата…"></textarea></div>
+            <div class="f"><label>Обвиване</label><input type="text" id="rn-sag-wrap" placeholder="фолио, глинена обвивка, без"></div>
+          </div>
+          <div style="font-size:12.5px;color:var(--tx3);line-height:1.5;margin-bottom:10px;">Обвиването и съдържанието за всяко изделие се записват в изпичането, раздел „Зареждане“.</div>
         </div>
 
         <div class="f"><label data-t="ui.belezhki">Бележки</label><textarea id="rn-notes" rows="2" data-tp="ph.kak-mina-problemi-nablyudeniya" placeholder="как мина, проблеми, наблюдения"></textarea></div>
@@ -2711,7 +2745,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.40.2';
+const APP_VERSION = 'v1.40.4';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -4134,7 +4168,7 @@ function openEventMo(type,editId){
     _populateFiringProfilePicker(fd.profileId||'');
     onFiringMethodChange();
     // v1.11.0: run link + wrapping
-    _populateEvFiringRunPicker(fd.firingRunId||'');
+    _populateEvFiringRunPicker(fd.firingRunId||'',!ev);
     var _wr=document.getElementById('ev-firing-wrapping');
     if(_wr)_wr.value=fd.wrapping||'';
     onEvFiringRunChange();
@@ -4147,17 +4181,29 @@ function openEventMo(type,editId){
 // When firing method changes — show/hide profile selector (only for electric)
 // v1.11.0: linking a firing event to a run
 function onEvFiringRunChange(){
-  var v=document.getElementById('ev-firing-run').value;
+  var v=document.getElementById('ev-firing-run').value,linked=!!v&&v!=='__new';
   var own=document.getElementById('ev-firing-own');
   var hint=document.getElementById('ev-firing-run-hint');
-  if(own)own.style.display=v?'none':'';
-  if(hint)hint.style.display=v?'block':'none';
+  if(own)own.style.display=linked?'none':'';
+  if(hint)hint.style.display=linked?'block':'none';
+  // v1.40.3 (A3): свързана стъпка — резултатът е в изпичането (един запис, не два).
+  var pp=document.getElementById('ev-firing-perpiece');if(pp)pp.style.display=linked?'none':'';
+  var lk=document.getElementById('ev-firing-linked');if(lk)lk.style.display=linked?'':'none';
+  var nh=document.getElementById('ev-firing-new-hint');if(nh)nh.style.display=v==='__new'?'':'none';
 }
-function _populateEvFiringRunPicker(cur){
+function evOpenRunResult(){
+  var v=document.getElementById('ev-firing-run').value;if(!v||v==='__new')return;
+  var s=_evSubject();var rec=s&&s.obj;
+  closeMoAsk('mo-event');if(document.getElementById('mo-event').classList.contains('on'))return;
+  openRunResult(v,rec?rec.id:'');
+}
+// v1.40.3: нова стъпка „изпичане“ предлага общо изпичане (ново или вече записано).
+function _populateEvFiringRunPicker(cur,isNew){
   var sel=document.getElementById('ev-firing-run');if(!sel)return;
   var runs=DB.firingRuns.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-  sel.innerHTML='<option value="">— самостоятелно —</option>'
-    +runs.map(function(r){return '<option value="'+r.id+'">'+_runLabel(r)+'</option>';}).join('');
+  sel.innerHTML='<option value="">— самостоятелна стъпка (без общо изпичане) —</option><option value="__new">+ Ново изпичане от тази стъпка</option>'
+    +runs.map(function(r){return '<option value="'+r.id+'">'+_kEsc(_runLabel(r))+'</option>';}).join('');
+  if(!cur&&isNew)cur='__new';
   sel.value=cur||'';
 }
 // When an event points at a run, the run answers for it. One owner at a time.
@@ -4326,7 +4372,12 @@ function saveEvent(){
     // the event stores none of them. Unlinked events behave exactly as before.
     var _runEl=document.getElementById('ev-firing-run');
     var _runId=_runEl?_runEl.value:'';
-    if(_runId){
+    if(_runId==='__new'){
+      // v1.40.3 (A3): изпичането става общият запис; бройката носи обвиването и резултата.
+      var nr=_evNewRun(_subj,ev);if(!nr)return;
+      ev.data={firingRunId:nr.run.id};if(nr.units)ev.data.units=nr.units;
+      if(!ev.date)ev.date=nr.run.date;
+    } else if(_runId){
       ev.data.firingRunId=_runId;
       delete ev.data.method;delete ev.data.atmosphere;delete ev.data.firingPurpose;
       delete ev.data.temp;delete ev.data.duration;delete ev.data.profileId;
@@ -4351,15 +4402,22 @@ function saveEvent(){
         if(fpid)ev.data.profileId=fpid;
       }
     }
+    if(_runId!=='__new'){
     var _wrEl=document.getElementById('ev-firing-wrapping');
     if(_wrEl&&_wrEl.value)ev.data.wrapping=_wrEl.value;else delete ev.data.wrapping;
     var fdet=document.getElementById('ev-firing-details').value;
     if(fdet)ev.data.details=fdet;
     var fres=document.getElementById('ev-firing-result').value;
     if(fres)ev.data.result=fres;
+    }
   }
 
   _normalizeEvent(ev);
+  // v1.40.4: едно изпичане — една стъпка в записа.
+  if(curEventType==='firing'&&ev.data&&ev.data.firingRunId&&(piece.events||[]).some(function(x){return x&&x.id!==ev.id&&x.type==='firing'&&x.data&&x.data.firingRunId===ev.data.firingRunId;})){
+    toast('Записът вече е в това изпичане');return;
+  }
+  if(curEventType==='firing'&&!curEventEditId){var _rn=ev.data&&ev.data.firingRunId?DB.firingRuns.find(function(x){return x.id===ev.data.firingRunId;}):null;_stageAnchorBefore(piece,ev,_rn?_runLabel(_rn):'');}
 
   // Insert or update
   if(curEventEditId){
@@ -4380,6 +4438,32 @@ function saveEvent(){
   toast(curEventEditId?'Обновено':'Добавено!');
   curEventType=null;
   curEventEditId=null;
+}
+
+// v1.40.3 (A3): „+ Ново изпичане от тази стъпка“ — изпичане с данните от формуляра и
+// бройките на записа (серия — неотделените); обвиване, подробности и резултат отиват
+// в бройките. Изпичането е приключено на датата на стъпката.
+function _evNewRun(subj,ev){
+  var g=function(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';};
+  var method=g('ev-firing-method'),atm=g('ev-firing-atmosphere'),purp=g('ev-firing-purpose');
+  if(!method){toast(t('msg.izberi-metod'));return null;}
+  if(!atm){toast(t('msg.izberi-atmosfera'));return null;}
+  if(!purp){toast(t('msg.izberi-tip-izpichane'));return null;}
+  var rec=subj.obj,isSer=subj.kind==='series',date=ev.date||_todayISO(),refs=[],units=null,q=parseInt(rec.qty,10);
+  if(isSer){units=_seriesFreeUnits(rec,_seriesMembers(rec.id));if(!units.length){for(var i=1;i<=_seriesTotal(rec);i++)units.push(i);}units.forEach(function(u){refs.push({kind:'series',id:rec.id,unit:u});});}
+  else if(Array.isArray(rec.units)&&rec.units.length)rec.units.forEach(function(u){refs.push({kind:'piece',id:rec.id,unit:u});});
+  else if(!isNaN(q)&&q>1){for(var j=1;j<=q;j++)refs.push({kind:'piece',id:rec.id,idx:j});}
+  else refs.push({kind:'piece',id:rec.id});
+  var members=_plMembersFrom({kind:isSer?'series':'piece',rec:rec,refs:refs,qty:refs.length,code:isSer?(rec.code||''):pieceCode(rec),size:_kilnSize(rec)});
+  var wr=g('ev-firing-wrapping'),det=g('ev-firing-details'),res=g('ev-firing-result');
+  members.forEach(function(m){if(wr)m.wrap=wr;if(det)m.prep=det;if(res)m.resultNote=res;});
+  var now=new Date().toISOString();
+  var run={id:uid(),name:'',date:date,method:method,atmosphere:atm,purpose:purp,state:'completed',endedAt:date,plan:{members:members},photos:[],createdAt:now,updatedAt:now};
+  var tp=parseFloat(g('ev-firing-temp'));if(!isNaN(tp))run.peakTemp=tp;
+  var du=parseFloat(g('ev-firing-duration'));if(!isNaN(du))run.duration=du;
+  if(method==='electric'){var fp=g('ev-firing-profile-id');if(fp)run.firingProfileId=fp;}
+  DB.firingRuns.push(run);
+  return {run:run,units:units};
 }
 
 // Delete event from current piece
@@ -4778,6 +4862,23 @@ function _firingStageValue(ev){
   if(purpose==='bisque')return 'bisque';
   if(purpose==='glaze'||purpose==='single-fire'||purpose==='alternative')return 'fired';
   return null; // untyped firing — don't move the stage
+}
+// v1.40.4: добавяне на по-старо изпичане към запис, чийто етап е зададен без
+// датирана стъпка (от формуляра). Щом процесът стане собственик на етапа, по-старото
+// изпичане би го върнало назад (напр. „Готово“ → „Изпечено“). Затова текущият етап
+// първо се записва като стъпка — само ако е по-напред или е изход.
+function _stageAnchorBefore(rec,ev,why){
+  if(!rec||!rec.stage||!ev)return false;
+  var fv=_firingStageValue(ev);if(!fv)return false;
+  var src=(typeof _effectiveEvents==='function')?_effectiveEvents(rec):(rec.events||[]);
+  var dated=src.some(function(e){return e&&e!==ev&&e.date&&((e.type==='stage'&&e.data&&e.data.stageValue)||(e.type==='firing'&&_firingStageValue(e)));});
+  if(dated)return false; // процесът вече държи етапа — решава датата
+  var cur=normalizeStageValue(rec.stage);
+  if(!(isTerminalStage(cur)||resolveStageIdx(cur)>resolveStageIdx(fv)))return false;
+  var d=_todayISO();if(ev.date&&ev.date>d)d=ev.date;
+  if(!Array.isArray(rec.events))rec.events=[];
+  rec.events.push({id:uid(),type:'stage',date:d,note:'Етапът към момента — запазен при добавяне на по-старо изпичане'+(why?' („'+why+'“)':''),photos:[],data:{stageValue:cur}});
+  return true;
 }
 function recomputePieceStage(piece){
   if(!piece||!Array.isArray(piece.events))return;
@@ -6258,6 +6359,7 @@ function openTestDet(id){
   document.getElementById('dtest-tags').innerHTML='<span class="ts-kind '+(body?'body':'glaze')+'">'+TEST_IC[body?'body':'glaze']+(body?'Тест на маса':'Глазурен тест')+'</span>'
     +(rec&&_recVersionLabel(rec)?' <span class="rc-ver'+(old?' old':'')+'">'+_recVersionLabel(rec)+(old?' · по-стара':' · сегашна')+'</span>':'');
   document.getElementById('dtest-t').textContent=_tTitle(t);
+  var _nvb=document.getElementById('dtest-newver');if(_nvb)_nvb.style.display=rec?'':'none';
   document.getElementById('dtest-m').textContent=[body?'':(t.clay?'на '+clayName(t.clay):''),t.temp?t.temp+'°C'+(t.hold?' · задръжка '+t.hold+' мин':''):'',t.date].filter(Boolean).join(' · ');
   var b=t.body||{},ms=_tMeas(b);
   document.getElementById('dtest-tiles').innerHTML=body
@@ -6518,7 +6620,9 @@ function _pdTimeline(o){
   return {n:tl.events.length,body:body+'<button type="button" class="pd-add" onclick="showEventTypePopup()">+ Добави стъпка от процеса</button>'};
 }
 function _pdMaterials(o,kind){
-  var rows=[dr('Глина',clayName(o.clay)),dr('Техника',o.technique)];
+  // v1.40.4: глината/масата е връзка, когато е материал.
+  var _cm=o.clay?DB.materials.find(function(x){return x&&x.id===o.clay;}):null;
+  var rows=[dr('Глина',_cm?'<button type="button" class="rd-link" onclick="openMatDet(\''+_cm.id+'\')">'+_pdE(_cm.name)+'</button>':_pdE(clayName(o.clay))),dr('Техника',o.technique)];
   if(o.bisqueTemp)rows.push(dr('Бисквит',o.bisqueTemp+'°C'));
   var g=o.glazeTemp||o.temp;if(g)rows.push(dr('Глазурно',g+'°C'));
   var rec=o.recipe?DB.recipes.find(function(x){return x&&x.id===o.recipe;}):null;
@@ -6546,7 +6650,8 @@ function _pdFirings(o,kind){
     var run=e.data&&e.data.firingRunId?DB.firingRuns.find(function(r){return r.id===e.data.firingRunId;}):null;
     if(run)seen[run.id]=1;
     var st=run?_runState(run):'';
-    rows.push('<div class="pd-li"'+(run?' onclick="openRunDet(\''+run.id+'\')"':'')+'><div class="b"><div class="t">'+_pdE(run?_runLabel(run):eventLabel(e))+(e._fromSeries?' <span class="pd-chip cat" style="font-size:11.5px;padding:1px 7px">от серията</span>':'')+'</div><div class="s">'+_pdE([e.date,run&&st!=='completed'?RUN_STATES[st]:''].filter(Boolean).join(' · '))+'</div></div>'+(run?'<div class="li-r">›</div>':'')+'</div>');
+    var _rr=run?_rnResFor(run,o):'';
+    rows.push('<div class="pd-li"'+(run?' onclick="openRunResult(\''+run.id+'\',\''+o.id+'\')"':'')+'><div class="b"><div class="t">'+_pdE(run?_runLabel(run):eventLabel(e))+(e._fromSeries?' <span class="pd-chip cat" style="font-size:11.5px;padding:1px 7px">от серията</span>':'')+'</div><div class="s">'+_pdE([e.date,run&&st!=='completed'?RUN_STATES[st]:'',_rr].filter(Boolean).join(' · '))+'</div></div>'+(run?'<div class="li-r">›</div>':'')+'</div>');
   });
   DB.firingRuns.forEach(function(r){
     if(seen[r.id]||!r.plan||!Array.isArray(r.plan.members))return;
@@ -7249,7 +7354,9 @@ function openMatDet(id){
   else if(st==='low')w.push(['w','Под прага'+(recs.length?' — използва се в '+recs.length+(recs.length===1?' рецепта':' рецепти'):'')+'.']);
   var miss=_mtMissing(m);if(miss.length)w.push(['i','Непълни данни: '+miss.join(', ')+'. <button type="button" class="rd-link" onclick="editMat()">Допълни</button>']);
   document.getElementById('dmat-warns').innerHTML=w.length?'<div class="md-warns">'+w.map(function(x){return '<div class="'+x[0]+'">'+x[1]+'</div>';}).join('')+'</div>':'';
-  document.getElementById('dmat-acts').innerHTML=m.cat==='raw'?'<button type="button" class="rd-btn" onclick="openRawEventMo()">+ Стъпка</button>':'';
+  document.getElementById('dmat-acts').innerHTML=m.cat==='raw'?'<button type="button" class="rd-btn" onclick="openRawEventMo()">+ Стъпка</button>'
+    // v1.40.4: от маса/глина — направо тест на маса или изделие с нея
+    :(m.cat==='mass'||m.cat==='clays')?'<button type="button" class="rd-btn" onclick="newBodyTestFromMat()">+ Тест на маса</button><button type="button" class="rd-btn" onclick="newPieceFromMat()">+ Изделие</button>':'';
   // в рецепти
   _mdShow('dmat-recipes-row',m.cat!=='mass');
   document.getElementById('dmat-recipes-n').textContent=recs.length?recs.length+(recs.length===1?' рецепта':' рецепти'):'няма';
@@ -8495,21 +8602,14 @@ function saveTest(){
   var _kind=document.getElementById('ti-kind')?document.getElementById('ti-kind').value:'glaze';
   var _isBody=(_kind==='body');
   const dateVal=document.getElementById('ti-date').value;
-  if(!dateVal||!vDate(dateVal)){toast(t('msg.datata-e-zadalzhitelna'));focusEl('ti-date');return;}
+  if(!dateVal||!vDate(dateVal)){toast(window.t('msg.datata-e-zadalzhitelna'));focusEl('ti-date');return;}
   const tempVal=document.getElementById('ti-temp').value;
   // Body tests may have no firing at all (a plasticity test is just a bent coil),
   // so temperature and hold are optional there.
-  if(_isBody){
-    if(tempVal!==''&&!vPosNum(tempVal,'Температура')){focusEl('ti-temp');return;}
-  } else {
-    if(!vPosNum(tempVal,'Температура')){focusEl('ti-temp');return;}
-  }
+  // Температура и задръжка не са задължителни (и досега не бяха) — въведени се проверяват.
+  if(!vPosNum(tempVal,'Температура')){focusEl('ti-temp');return;}
   const holdVal=document.getElementById('ti-hold').value;
-  if(_isBody){
-    if(holdVal!==''&&!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
-  } else {
-    if(!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
-  }
+  if(!vPosNum(holdVal,'Задръжка')){focusEl('ti-hold');return;}
   const layersEl=document.getElementById('ti-layers');
   var _tGlzVal=document.getElementById('ti-rec').value;
   var _tRecId='',_tMatId='';
@@ -9999,6 +10099,24 @@ function newTestFromRecipe(){
   var k=document.getElementById('ti-kind');if(k&&k.value!=='glaze'){k.value='glaze';onTestKindChange();}
   _prefillGlz('ti-rec','mo-test',rid);
 }
+// v1.40.4: от маса/глина — формулярът над детайла, със същата маса избрана.
+function newBodyTestFromMat(){
+  var mid=curMat;editId=null;openTestMo(null);
+  var k=document.getElementById('ti-kind');if(k){k.value='body';onTestKindChange();}
+  var b=document.getElementById('ti-body-ref');if(b)b.value='mat:'+mid;
+  _moSnap['mo-test']=_moSnapshot('mo-test');
+}
+function newPieceFromMat(){
+  var m=DB.materials.find(function(x){return x.id===curMat;});editId=null;editKind='piece';openPieceMo(null);
+  var c=document.getElementById('pi-clay');
+  if(c&&m){var o=[].slice.call(c.options).find(function(x){return x.value===m.id||x.value===m.name;});if(o)c.value=o.value;}
+  _moSnap['mo-piece']=_moSnapshot('mo-piece');
+}
+// v1.40.4: от глазурен тест — нова версия на рецептата му (над теста).
+function newVersionFromTest(){
+  var tst=DB.tests.find(function(x){return x.id===curTest;});if(!tst||!tst.recipeId)return;
+  curRec=tst.recipeId;newRecipeVersion();
+}
 function newPieceFromRecipe(){
   var rid=curRec;editId=null;editKind='piece';
   openPieceMo(null);
@@ -10060,9 +10178,18 @@ function onRunMethodChange(){
   var m=document.getElementById('rn-method').value;
   var alt=document.getElementById('rn-alt-wrap');
   if(alt)alt.style.display=_runIsAlt(m)?'block':'none';
-  var pw=document.getElementById('rn-profile-wrap');
-  if(pw)pw.style.display=(m==='electric'||m==='gas'||!m)?'':'none';
+  var pw=document.getElementById('rn-profile-wrap'),ps=document.getElementById('rn-profile');
+  if(pw)pw.style.display=(m==='electric'||m==='gas'||!m||(ps&&ps.value))?'':'none';
+  // v1.40.3 (A4): без пещ — няма задръжка и конуси; температурата е „измерена, ако има“.
+  var kiln=!m||!!_RN_KILN_METHODS[m];
+  ['rn-hold-wrap','rn-cones-wrap'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display=kiln||(document.getElementById(id.replace('-wrap','')).value)?'':'none';});
+  var pl=document.getElementById('rn-peak-l');if(pl)pl.textContent=kiln?'Пикова темп. (°C)':'Измерена темп. (°C), ако има';var pk=document.getElementById('rn-peak');if(pk)pk.placeholder=kiln?'напр. 1240':'ако е измерена';
+  document.querySelectorAll('#mo-run .rn-mf').forEach(function(e){e.style.display=e.getAttribute('data-m')===m?'':'none';});
+  var pu=document.getElementById('rn-purpose');
+  if(pu&&!pu.value&&['pit','barrel','raku','sagar','sawdust','obvara'].indexOf(m)>=0)pu.value='alternative';
 }
+var _RN_ALT_F={rakuMedium:'rn-raku-medium',rakuMin:'rn-raku-min',rakuQuench:'rn-raku-quench',obvMix:'rn-obv-mix',obvDip:'rn-obv-dip',obvAfter:'rn-obv-after',sagContents:'rn-sag-contents',sagWrap:'rn-sag-wrap'};
+var _RN_ALT_OF={raku:['rakuMedium','rakuMin','rakuQuench'],obvara:['obvMix','obvDip','obvAfter'],sagar:['sagContents','sagWrap']};
 
 // Additives are either a material from stock ('mat:<id>') or free text.
 // Same shape as decoration materials — _resolveMaterialRef already reads both.
@@ -10180,7 +10307,7 @@ function _drnAttached(ps,wrapL){
         else if(x.piece.seriesId){var _q=parseInt(x.piece.qty,10);bits.unshift(((isNaN(_q)||_q<1)?1:_q)+' бр.');}
         return '<div class="li" style="padding:8px 0;">'
           +'<div class="li-ic" style="width:34px;height:34px;" onclick="'+_open+'(\''+x.piece.id+'\')">'+(getLatestPhoto(x.piece)?'<img src="'+getLatestPhoto(x.piece)+'" style="width:100%;height:100%;object-fit:cover;" alt="">':K(16))+'</div>'
-          +'<div class="li-body" onclick="'+_open+'(\''+x.piece.id+'\')" style="cursor:pointer;"><div class="li-t" style="font-size:13px;">'+x.piece.name+'</div>'
+          +'<div class="li-body" onclick="'+_open+'(\''+x.piece.id+'\')" style="cursor:pointer;"><div class="li-t" style="font-size:13px;">'+_kEsc(x.piece.name||'')+(function(){var c=x.isSeries?(x.piece.code||''):pieceCode(x.piece);return c?' <span style="color:var(--tx3);font-size:12px">'+_kEsc(c)+'</span>':'';})()+'</div>'
           +(bits.length?'<div class="li-s" style="font-size:11px;">'+bits.join(' · ')+'</div>':'')+'</div>'
           +'<button type="button" onclick="event.stopPropagation();detachPieceFromRun(\''+x.piece.id+'\',\''+x.ev.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:15px;padding:4px 6px;">×</button>'
           +'</div>';
@@ -10209,14 +10336,15 @@ function openRunDet(id){
     dr('Метод',firingMethodLabel(r.method)),
     dr('Тип',purL[r.purpose]||''),
     dr('Атмосфера',atmL[r.atmosphere]||''),
-    dr('Профил (планирано)',fp?fp.name:(r.firingProfileId?'Изтрит профил':'')),
+    dr('Профил (планирано)',fp?'<button type="button" class="rd-link" onclick="openFPDet(\''+fp.id+'\')">'+_kEsc(fp.name)+'</button>':(r.firingProfileId?'Изтрит профил':'')),
     dr('Пещ',(function(){if(!r.kilnId)return '';loadKilns();var k=KILNS.find(function(x){return x.id===r.kilnId;});return k?k.name:'';})()),
     dr('Пикова температура',r.peakTemp!=null?r.peakTemp+'°C':''),
     dr('Задръжка',r.holdMin!=null?r.holdMin+' мин':''),
     dr('Конуси',r.cones)
   ].join('');
   var altRow=document.getElementById('drn-alt-row');
-  if(_runIsAlt(r.method)&&(r.fuel||(r.additives&&r.additives.length)||r.duration!=null)){
+  var _A=r.alt||{};
+  if(_runIsAlt(r.method)&&(r.fuel||(r.additives&&r.additives.length)||r.duration!=null||Object.keys(_A).length)){
     altRow.style.display='';
     var adds=(r.additives||[]).map(function(a){
       return (a.indexOf('mat:')===0||a.indexOf('rec:')===0)?_resolveMaterialRef(a):a;
@@ -10224,7 +10352,10 @@ function openRunDet(id){
     document.getElementById('drn-alt').innerHTML=[
       dr('Гориво',r.fuel),
       dr('Добавки',adds),
-      dr('Времетраене',r.duration!=null?r.duration+' ч':'')
+      dr('Времетраене',r.duration!=null?r.duration+' ч':''),
+      dr('Среда за редукция',_kEsc(_A.rakuMedium||'')),dr('Време в редукция',_A.rakuMin!=null?_A.rakuMin+' мин':''),dr('Охлаждане',_kEsc(_A.rakuQuench||'')),
+      dr('Състав на разтвора',_kEsc(_A.obvMix||'')),dr('Потапяне',_kEsc(_A.obvDip||'')),dr('Последваща обработка',_kEsc(_A.obvAfter||'')),
+      dr('Съдържание на сагара',_kEsc(_A.sagContents||'')),dr('Обвиване',_kEsc(_A.sagWrap||''))
     ].join('');
   } else altRow.style.display='none';
   // Derived: pieces whose firing event points here
@@ -10251,8 +10382,8 @@ function openRunDet(id){
     var lv=Object.keys(x.lv);
     var open=rec?(x.ref.kind==='series'?'openSeriesDet':'openPieceDet')+'(\''+rec.id+'\')':'';
     return '<div class="li drn-planned" style="padding:8px 0;">'
-      +'<div class="li-body"'+(open?' onclick="'+open+'" style="cursor:pointer;"':'')+'><div class="li-t" style="font-size:14px;">'+_kEsc(rec?rec.name:x.name)+'</div>'
-      +'<div class="li-s" style="font-size:12px;"><span style="color:var(--primary);font-weight:500;">Планирано</span> · '+x.n+' бр.'+(lv.length?' · ниво '+lv.join(', '):' · без ниво')+'</div></div></div>';
+      +'<div class="li-body"'+(open?' onclick="'+open+'" style="cursor:pointer;"':'')+'><div class="li-t" style="font-size:14px;">'+_kEsc(rec?rec.name:x.name)+(function(){var c=rec?(x.ref.kind==='series'?(rec.code||''):pieceCode(rec)):'';return c?' <span style="color:var(--tx3);font-size:12px">'+_kEsc(c)+'</span>':'';})()+'</div>'
+      +'<div class="li-s" style="font-size:12px;"><span style="color:var(--primary);font-weight:500;">Планирано</span> · '+x.n+' бр.'+(lv.length?' · ниво '+lv.join(', '):(_rnKilnMethod(r)?' · без ниво':''))+'</div></div></div>';
   }).join('');
   document.getElementById('drn-pieces').innerHTML=(ps.length||_pl.length)?_drnAttached(ps,wrapL)+_plRows:'<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:6px 0;line-height:1.5;">Няма закачени изделия. Добави ги в плана на пещта или с „+ Добави“ горе.</div>';
   var ts=_runTests(id);
@@ -10279,7 +10410,7 @@ function openRunDet(id){
   document.getElementById('drn-todo').innerHTML=_rnTodoHtml(r);
   document.getElementById('drn-pick').innerHTML=_rnPickHtml(r);
   document.getElementById('drn-pva').innerHTML=_rnPvaHtml(r);
-  _rnLoadExtra(r);_rnResExtra(r);_rnTabsDraw();
+  _rnLoadExtra(r);_rnResExtra(r);_rnPrepDraw(r);_rnTabsDraw();
   // На широк екран: детайлът стои вдясно от списъка.
   var _d=document.getElementById('det-run'),_sp=window.innerWidth>=1100&&cur==='fp'&&fpTab==='runs';
   _d.classList.toggle('split',_sp);document.getElementById('sc-fp').classList.toggle('split',_sp);
@@ -10297,7 +10428,86 @@ var RN={st:'all',q:'',kiln:'',sort:'date'};
 function _rnSave(){try{localStorage.setItem('glina.runs',JSON.stringify({st:RN.st,kiln:RN.kiln,sort:RN.sort}));}catch(e){}}
 var _RN_KILN_METHODS={electric:1,gas:1,wood:1,soda:1,salt:1};
 function _rnKilnMethod(r){return !r.method||!!_RN_KILN_METHODS[r.method];}
-function _rnMembers(r){return (r&&r.plan&&Array.isArray(r.plan.members))?r.plan.members:[];}
+function _rnPlanMembers(r){return (r&&r.plan&&Array.isArray(r.plan.members))?r.plan.members:[];}
+// v1.40.3 (A1): бройките за документиране — от плана, плюс закачените със стъпка
+// (стари изпичания без план). Закачените се показват с устойчиво id и стават
+// записи в плана чак при първото въвеждане (_rnDocEnsure) — само гледането не пише.
+// Старите полета на стъпката (обвиване, подробности, резултат) се четат оттам.
+function _rnMembers(r){
+  var M=_rnPlanMembers(r);if(!r)return M;
+  var have={};M.forEach(function(m){if(m&&m.ref)have[_plRefKey(m.ref)]=1;});
+  var out=M.slice();
+  _runPieces(r.id).forEach(function(x){
+    var rec=x.piece,kind=x.isSeries?'series':'piece',d=(x.ev&&x.ev.data)||{},refs=[],q=parseInt(rec.qty,10);
+    if(kind==='series'){var us=Array.isArray(d.units)&&d.units.length?d.units:null;if(!us){us=[];for(var i=1;i<=_seriesTotal(rec);i++)us.push(i);}us.forEach(function(u){refs.push({kind:'series',id:rec.id,unit:Number(u)});});}
+    else if(Array.isArray(rec.units)&&rec.units.length)rec.units.forEach(function(u){refs.push({kind:'piece',id:rec.id,unit:Number(u)});});
+    else if(!isNaN(q)&&q>1){for(var j=1;j<=q;j++)refs.push({kind:'piece',id:rec.id,idx:j});}
+    else refs.push({kind:'piece',id:rec.id});
+    refs.forEach(function(ref){
+      if(have[_plRefKey(ref)])return;
+      var m={id:'x-'+_plRefKey(ref).replace(/:/g,'-'),ref:ref,name:rec.name||'',code:kind==='series'?(rec.code?rec.code+'/'+ref.unit:''):pieceCode(rec),
+        unitLabel:ref.unit!=null&&kind==='series'?' /'+ref.unit:(ref.idx?' ('+ref.idx+' от '+q+')':''),level:null,_synth:1};
+      if(d.wrapping)m.wrap=d.wrapping;if(d.details)m.prep=d.details;if(d.result)m.resultNote=d.result;
+      out.push(m);
+    });
+  });
+  return out;
+}
+// Записва показаните „закачени“ бройки в плана — веднъж, преди първата промяна.
+function _rnDocEnsure(run){
+  if(!run)return;
+  var syn=_rnMembers(run).filter(function(m){return m._synth;});if(!syn.length)return;
+  if(!run.plan||typeof run.plan!=='object')run.plan={members:[]};
+  if(!Array.isArray(run.plan.members))run.plan.members=[];
+  syn.forEach(function(m){var c=JSON.parse(JSON.stringify(m));delete c._synth;run.plan.members.push(c);});
+}
+// Резултатите по бройки се пишат, щом изделията са в изпичането — и при старите без състояние.
+function _rnDocOn(r){return _runOn(r)||(!!r&&!r.state&&_runState(r)==='completed');}
+var RN_WRAP={bare:'голо',foil:'фолио',saggar:'сагар',clay:'глинена обвивка',other:'друго'};
+function _rnMemById(run,mid){_rnDocEnsure(run);return _rnPlanMembers(run).find(function(x){return x.id===mid;})||null;}
+// Полетата на бройката: обвиване, подготовка (добавки, съдържание на сагара), бележка.
+function rnMemSet(mid,f,v){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var m=_rnMemById(r,mid);if(!m)return;
+  v=String(v==null?'':v).trim();
+  if(f==='resultNote'){curPlanRun=r.id;setPlanResultNote(mid,v);_rnRefresh();return;}
+  if(['wrap','prep'].indexOf(f)<0)return;
+  var old=m[f]||'';if(old===v)return;
+  if(v)m[f]=v;else delete m[f];
+  if(_runOn(r))_runLog(r,_plMemberLabel(m)+': '+(f==='wrap'?'обвиване':'подготовка'),RN_WRAP[old]||old,RN_WRAP[v]||v);
+  r.updatedAt=new Date().toISOString();save();_rnRefresh();
+}
+var _rnMphMid=null;
+function rnMemPhPick(mid){_rnMphMid=mid;var i=document.getElementById('drn-mph-in');if(i)i.click();}
+function rnMemPh(inp){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var mid=_rnMphMid,files=Array.from(inp.files||[]);inp.value='';
+  var m=_rnMemById(r,mid);if(!m)return;
+  var sink=[];sink.push=function(x){var mm=_rnMemById(r,mid);if(!mm)return 0;mm.photos=(mm.photos||[]).concat([x]);r.updatedAt=new Date().toISOString();save();_rnRefresh();return 0;};
+  setTimeout(function(){files.forEach(function(f){var mm=_rnMemById(r,mid);if(mm&&(mm.photos||[]).length<4)resizeAndAdd(f,sink,4,'drn-ph-none');else toast('Максимум 4 снимки на бройка');});},50);
+}
+function rnMemPhDel(mid,i){
+  var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
+  var m=_rnMemById(r,mid);if(!m||!m.photos)return;
+  if(!confirm('Да махна ли снимката?'))return;
+  m.photos.splice(i,1);if(!m.photos.length)delete m.photos;r.updatedAt=new Date().toISOString();save();_rnRefresh();
+}
+// Резултатът на бройка от историята на изделието: изпичането, раздел „Резултати“, на нея.
+function openRunResult(runId,recId){
+  openRunDet(runId);rnTab('res');
+  setTimeout(function(){var e=document.querySelector('#drn-mres [data-mref="'+recId+'"]');if(e){e.scrollIntoView({block:'center'});e.classList.add('flash');setTimeout(function(){e.classList.remove('flash');},1600);}},60);
+}
+// Кратко за резултата на запис в изпичане — за историята на изделието/серията.
+function _rnResFor(run,o){
+  var ids={};ids[o.id]=1;var units=null;
+  if(o.seriesId&&Array.isArray(o.units)&&o.units.length){units={};o.units.forEach(function(u){units[Number(u)]=1;});}
+  var M=_rnMembers(run).filter(function(m){if(!m.ref)return false;if(m.ref.id===o.id)return true;return units&&m.ref.kind==='series'&&m.ref.id===o.seriesId&&units[Number(m.ref.unit)];});
+  if(!M.length)return '';
+  var c={};M.forEach(function(m){if(m.result)c[m.result]=(c[m.result]||0)+1;});
+  var parts=Object.keys(c).map(function(k){return M.length>1?k+' '+c[k]:k;});
+  var note=M.map(function(m){return m.resultNote;}).filter(Boolean)[0],ph=M.reduce(function(n,m){return n+((m.photos||[]).length);},0);
+  return [parts.join(', '),note?'„'+note+'“':'',ph?ph+' сн.':''].filter(Boolean).join(' · ');
+}
 function _rnLevels(r){return (r&&r.config&&Array.isArray(r.config.levels))?r.config.levels:[];}
 function _rnKiln(r){return r&&r.kilnId?KILNS.find(function(k){return k&&k.id===r.kilnId;})||null:null;}
 function _rnProfile(r){return r&&r.firingProfileId?DB.firingProfiles.find(function(x){return x.id===r.firingProfileId;})||null:null;}
@@ -10344,14 +10554,15 @@ function _rnTodoHtml(r){
 // ── регистър ──
 function _rnPlanPill(r){
   var M=_rnMembers(r),np=_runPieces(r.id).length;
-  if(!_plHas(r))return np?'<span class="rn-pill">'+np+(np===1?' изделие':' изделия')+(M.length?'':' · без план')+'</span>':'<span class="rn-pill'+(_runState(r)==='planned'?' w':'')+'">няма изделия</span>';
+  if(!_rnKilnMethod(r)){var nb=M.length;return nb?'<span class="rn-pill">'+nb+' бр.</span>':'<span class="rn-pill'+(_runState(r)==='planned'?' w':'')+'">няма изделия</span>';}
+  if(!_plHas(r))return np?'<span class="rn-pill">'+np+(np===1?' изделие':' изделия')+(_rnPlanMembers(r).length?'':' · без план')+'</span>':'<span class="rn-pill'+(_runState(r)==='planned'?' w':'')+'">няма изделия</span>';
   var L=_rnLevels(r).length,bad='';
   if(r.kilnId){try{var ps=_plState(r);bad=ps.errs?' · ✗ '+ps.errs:ps.loose.length?' · '+ps.loose.length+' без ниво':ps.warns?' · ⚠ '+ps.warns:' · ✓';}catch(e){}}
   return '<span class="rn-pill'+(/✗|без ниво/.test(bad)?' w':'')+'">план: '+L+(L===1?' ниво':' нива')+' · '+M.length+' бр.'+bad+'</span>';
 }
 function _rnCard(r){
   var st=_runState(r),k=_rnKiln(r),fp=_rnProfile(r),M=_rnMembers(r),t=_rnTodo(r);
-  var done=M.filter(function(m){return m.result;}).length,on=_runOn(r)&&M.length;
+  var done=M.filter(function(m){return m.result;}).length,on=_rnDocOn(r)&&M.length;
   var docs=(st==='completed'||st==='interrupted')&&t.att.length;
   return '<div class="rn-c'+(curRun===r.id&&document.getElementById('det-run').classList.contains('split')?' sel':'')+'" role="button" tabindex="0" onclick="openRunDet(\''+r.id+'\')">'
     +'<div class="rn-c1"><div style="min-width:0"><div class="rn-nm">'+_kEsc(_runLabel(r))+'</div>'
@@ -10411,7 +10622,7 @@ function _rnTabsDraw(){
   var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
   var tab=rnTabSel||_rnDefTab(r),M=_rnMembers(r),k=_rnKiln(r),fp=_rnProfile(r);
   var nres=M.filter(function(m){return !m.result;}).length,np=M.length||_runPieces(r.id).reduce(function(n,x){return n+_runRowQty(x);},0);
-  var sub={prep:(k||!_rnKilnMethod(r))&&(fp||r.method!=='electric')?'✓':'за попълване',load:np+' бр.',res:!_runOn(r)&&_runState(r)==='planned'?'след зареждане':nres?nres+' без резултат':'✓'};
+  var sub={prep:(k||!_rnKilnMethod(r))&&(fp||r.method!=='electric')?'✓':'за попълване',load:np+' бр.',res:!_rnDocOn(r)&&_runState(r)==='planned'?'след зареждане':nres?nres+' без резултат':'✓'};
   document.getElementById('drn-tabs').innerHTML=[['prep','Подготовка'],['load','Зареждане'],['res','Резултати']].map(function(x){
     return '<button type="button" role="tab" aria-selected="'+(tab===x[0])+'" class="'+(tab===x[0]?'on':'')+'" data-tab="'+x[0]+'" onclick="rnTab(\''+x[0]+'\')">'+x[1]+'<small>'+sub[x[0]]+'</small></button>';}).join('');
   document.querySelectorAll('#det-run .rn-pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-pane')===tab);});
@@ -10439,6 +10650,23 @@ function _rnPvaHtml(r){
     +'<tr><td>Конуси</td><td>—</td><td>'+_kEsc(r.cones||'—')+'</td></tr></table>'
     +'<div style="font-size:12.5px;color:var(--tx3);margin-top:4px;">Реалното се записва в „Резултати“.</div></div>';
 }
+// v1.40.3 (A2): трап, варел, раку, обвара, сагар… — няма нива, рафтове и подпори.
+// Вместо плана: бройките и подготовката им (обвиване, добавки, съдържание на сагара).
+function _rnPrepDraw(r){
+  var kilnM=_rnKilnMethod(r),sec=document.getElementById('drn-plan-sec'),box=document.getElementById('drn-prep');
+  if(sec)sec.style.display=kilnM?'':'none';
+  if(!box)return;
+  if(kilnM){box.innerHTML='';return;}
+  var M=_rnMembers(r);
+  box.innerHTML='<div class="ds"><div class="ds-t">Подготовка по бройки <span style="color:var(--tx3);font-weight:400">'+M.length+' бр.</span></div>'
+    +(M.length?M.map(function(m){
+      return '<div class="rn-prow" data-mid="'+_kEsc(m.id)+'"><div class="nm">'+_kEsc(_plMemberLabel(m))+(m.code?' <small>'+_kEsc(m.code)+'</small>':'')+'</div>'
+        +'<div class="rn-fr"><div class="f" style="margin:0"><label>Обвиване</label><select data-f="wrap" onchange="rnMemSet(\''+m.id+'\',\'wrap\',this.value)"><option value="">—</option>'
+        +Object.keys(RN_WRAP).map(function(k){return '<option value="'+k+'"'+(m.wrap===k?' selected':'')+'>'+RN_WRAP[k]+'</option>';}).join('')
+        +(m.wrap&&!RN_WRAP[m.wrap]?'<option selected>'+_kEsc(m.wrap)+'</option>':'')+'</select></div>'
+        +'<div class="f" style="margin:0;flex:2"><label>Добавки / съдържание на сагара</label><input type="text" data-f="prep" value="'+_kEsc(m.prep||'')+'" placeholder="мед, сол, бананови кори, стоманена вата…" onchange="rnMemSet(\''+m.id+'\',\'prep\',this.value)"></div></div></div>';
+    }).join(''):'<div style="font-size:13px;color:var(--tx3);font-style:italic;">Добави изделия — после тук се записва как е подготвено всяко.</div>')+'</div>';
+}
 function _rnLoadExtra(r){
   var side=document.getElementById('drn-side'),w=document.getElementById('drn-warns');
   side.innerHTML='';w.innerHTML='';
@@ -10452,31 +10680,36 @@ function _rnLoadExtra(r){
     Object.keys(st.chk.byL).forEach(function(id){st.chk.byL[id].forEach(function(x){msgs.push([x.sev==='err'?'e':'w',_plLevelName(r,id)+': '+x.msg]);});});
     var byId={};st.r.pieces.forEach(function(p){byId[p.id]=p;});
     Object.keys(st.chk.byP).forEach(function(id){st.chk.byP[id].forEach(function(x){msgs.push([x.sev==='err'?'e':'w',(byId[id]?_plMemberLabel(byId[id])+': ':'')+x.msg]);});});
-    if(st.loose.length)msgs.push(['w','Без ниво: '+st.loose.map(_plMemberLabel).join(', ')]);
+    if(st.loose.length)msgs.push(['w','Без ниво: '+st.loose.map(_plMemberLabelC).join(', ')]);
     w.innerHTML='<div class="rn-warns">'+(msgs.length?msgs.slice(0,8).map(function(m){return '<div class="'+m[0]+'">'+(m[0]==='e'?'✗ ':'⚠ ')+_kEsc(_plMsg(m[1]))+'</div>';}).join('')+(msgs.length>8?'<div class="w">и още '+(msgs.length-8)+' — в плана</div>':''):'<div class="o">✓ Всичко е на ниво и се събира.</div>')+'</div>';
   }catch(e){}
 }
 function _rnResExtra(r){
-  var st=_runState(r),on=_runOn(r),M=_rnMembers(r),L=_rnLevels(r),kilnM=_rnKilnMethod(r);
+  var st=_runState(r),on=_rnDocOn(r),M=_rnMembers(r),L=_rnLevels(r),kilnM=_rnKilnMethod(r);
   var g=function(id){return document.getElementById(id);};
   g('drn-res-lock').innerHTML=(!on&&st==='planned')?'<div class="rn-lock">Резултатите по изделия се записват след „Заредено“. Сега изпичането е план — изделията още не са в пещта.</div>':'';
   g('drn-km-box').innerHTML=on&&M.length?'<div class="rn-card" style="margin-bottom:16px"><div style="font-size:16px;font-weight:500;margin-bottom:4px;">До пещта</div><div style="font-size:13px;color:var(--tx2);margin-bottom:10px;line-height:1.5;">Една бройка на екран, големи бутони. Записва в резултата и бележката на бройката в плана.</div><button type="button" class="rn-main" id="drn-km-btn" onclick="rnKm()">Запиши резултатите една по една</button></div>':'';
   var num=function(f,lab,v){return '<div class="f" style="margin:0"><label>'+lab+'</label><input type="text" inputmode="decimal" data-f="'+f+'" value="'+(v==null?'':_kEsc(v))+'" onchange="rnSetField(\''+f+'\',this.value)"></div>';};
   g('drn-real').innerHTML=(st==='planned'&&!(!r.state))?'':'<div class="ds"><div class="ds-t">Реални параметри</div><div class="rn-fr">'
     +(kilnM?num('peakTemp','Пик, °C',r.peakTemp)+num('holdMin','Задръжка, мин',r.holdMin)+'<div class="f" style="margin:0"><label>Конуси</label><input type="text" data-f="cones" value="'+_kEsc(r.cones||'')+'" onchange="rnSetField(\'cones\',this.value)"></div>'
-      :num('duration','Времетраене, ч',r.duration))+'</div></div>';
+      :num('duration','Времетраене, ч',r.duration)+num('peakTemp','Измерена темп., °C (ако има)',r.peakTemp))+'</div></div>';
   g('drn-cones').innerHTML=on&&kilnM&&L.length?'<div class="ds"><div class="ds-t">Конуси по нива</div>'+L.map(function(Lv,i){
     return '<div class="rn-cone"><b>Ниво '+(i+1)+'</b><input type="text" placeholder="конус, напр. 06" value="'+_kEsc(Lv.cone||'')+'" onchange="rnCone(\''+Lv.id+'\',\'cone\',this.value)"><div class="rn-res">'+CONE_RESULTS.map(function(x){return '<button type="button" class="'+(Lv.coneResult===x?'on':'')+'" onclick="rnCone(\''+Lv.id+'\',\'coneResult\',\''+(Lv.coneResult===x?'':x)+'\')">'+x+'</button>';}).join('')+'</div></div>';}).join('')+'</div>':'';
   g('drn-mres').innerHTML=on&&M.length?'<div class="ds"><div class="ds-t">Резултати по бройки <span style="color:var(--tx3);font-weight:400">'+M.filter(function(m){return m.result;}).length+' от '+M.length+'</span></div>'+_rnOrder(r).map(function(m){
-    return '<div class="rn-rrow"><div class="top"><span class="nm">'+_kEsc(_plMemberLabel(m))+'</span><span class="lv">'+_kEsc(_plLevelName(r,m.level))+'</span></div><div class="rn-res">'
+    var prep=[m.wrap?'обвиване: '+(RN_WRAP[m.wrap]||m.wrap):'',m.prep||''].filter(Boolean).join(' · ');
+    return '<div class="rn-rrow" data-mid="'+_kEsc(m.id)+'" data-mref="'+_kEsc(m.ref?m.ref.id:'')+'"><div class="top"><span class="nm">'+_kEsc(_plMemberLabel(m))+'</span><span class="lv">'+_kEsc(kilnM?_plLevelName(r,m.level):(m.code||''))+'</span></div><div class="rn-res">'
       +RUN_RESULTS.map(function(x){return '<button type="button" class="'+(m.result===x?'on'+(x!=='Добре'?' bad':''):'')+'" onclick="rnRes(\''+m.id+'\',\''+(m.result===x?'':x)+'\')">'+x+'</button>';}).join('')+'</div>'
-      +(m.result&&m.result!=='Добре'||m.resultNote?'<input type="text" placeholder="бележка — какво точно, къде" value="'+_kEsc(m.resultNote||'')+'" onchange="rnNote(\''+m.id+'\',this.value)">':'')+'</div>';}).join('')+'</div>':'';
+      +(!kilnM&&prep?'<div class="rn-prep">'+_kEsc(prep)+'</div>':'')
+      +'<textarea rows="2" data-f="resultNote" placeholder="'+(kilnM?'бележка — какво точно, къде':'цветове, следи, повърхност, ефекти')+'" onchange="rnMemSet(\''+m.id+'\',\'resultNote\',this.value)">'+_kEsc(m.resultNote||'')+'</textarea>'
+      +'<div class="rn-mph">'+(m.photos||[]).map(function(src,i){return '<span><img src="'+src+'" alt="" onclick="openLb(_rnMemPhotos(\''+m.id+'\'),'+i+')"><button type="button" aria-label="Махни" onclick="rnMemPhDel(\''+m.id+'\','+i+')">×</button></span>';}).join('')
+      +((m.photos||[]).length<4?'<button type="button" class="rn-phadd" onclick="rnMemPhPick(\''+m.id+'\')">+ снимка</button>':'')+'</div></div>';}).join('')+'<input type="file" id="drn-mph-in" accept="image/*" multiple style="display:none" onchange="rnMemPh(this)"></div>':'';
   g('drn-lvph').innerHTML=on&&L.length?L.map(function(Lv,i){
     return '<div style="font-size:13px;color:var(--tx2);margin-top:6px;">Ниво '+(i+1)+((Lv.photos||[]).length?' · '+Lv.photos.length+' преди':'')+'</div><div class="rn-phs">'+(Lv.photosAfter||[]).map(function(pid){return '<img data-ph="'+pid+'" alt="">';}).join('')+'<button type="button" class="add" onclick="rnLevelPhoto(\''+Lv.id+'\')">+ снимка след</button></div>';}).join(''):'';
   document.querySelectorAll('#drn-lvph img[data-ph]').forEach(function(img){var id=img.getAttribute('data-ph');if(_phUrls[id]){img.src=_phUrls[id];return;}_phGet(id).then(function(b){if(b&&b instanceof Blob){_phUrls[id]=URL.createObjectURL(b);img.src=_phUrls[id];}});});
   g('drn-notes').innerHTML='<textarea id="drn-notes-in" rows="3" placeholder="какво се случи, какво да се промени следващия път" onchange="rnSetField(\'notes\',this.value)" style="width:100%;">'+_kEsc(r.notes||'')+'</textarea>';
 }
 // Ред на бройките: по нива (отдолу нагоре), после без ниво — както в плана.
+function _rnMemPhotos(mid){var r=DB.firingRuns.find(function(x){return x.id===curRun;});var m=r&&_rnMembers(r).find(function(x){return x.id===mid;});return (m&&m.photos)||[];}
 function _rnOrder(r){
   var L=_rnLevels(r),idx={};L.forEach(function(x,i){idx[x.id]=i;});
   return _rnMembers(r).map(function(m,i){return {m:m,i:i};}).sort(function(a,b){var la=a.m.level in idx?idx[a.m.level]:99,lb=b.m.level in idx?idx[b.m.level]:99;return la-lb||a.i-b.i;}).map(function(x){return x.m;});
@@ -10590,6 +10823,7 @@ function openRunMo(id){
   _s('rn-peak',r&&r.peakTemp);
   _s('rn-hold',r&&r.holdMin);
   _s('rn-cones',r&&r.cones);
+  Object.keys(_RN_ALT_F).forEach(function(k){_s(_RN_ALT_F[k],r&&r.alt&&r.alt[k]);});
   _s('rn-fuel',r&&r.fuel);
   _s('rn-duration',r&&r.duration);
   _s('rn-notes',r&&r.notes);
@@ -10631,6 +10865,9 @@ function saveRun(){
   var peak=_n('rn-peak');if(peak!=null)r.peakTemp=peak;
   var hold=_n('rn-hold');if(hold!=null)r.holdMin=hold;
   var cones=_v('rn-cones');if(cones)r.cones=cones;
+  // v1.40.3: полетата на метода — само за избрания метод.
+  var _A={};(_RN_ALT_OF[method]||[]).forEach(function(k){var v=_v(_RN_ALT_F[k]);if(!v)return;if(k==='rakuMin'){var n=parseFloat(v.replace(',','.'));if(!isNaN(n))_A[k]=n;}else _A[k]=v;});
+  r.alt=Object.keys(_A).length?_A:undefined;
   if(_runIsAlt(method)){
     var fuel=_v('rn-fuel');if(fuel)r.fuel=fuel;
     if(runAdditives.length)r.additives=runAdditives.slice();
@@ -10722,7 +10959,7 @@ function _runAttachPlan(piece,run){
 function openRunAttach(){
   if(!curRun)return;
   var _r=DB.firingRuns.find(function(x){return x.id===curRun;});
-  if(_r&&(_runState(_r)==='planned'||_r.state==='loaded')){loadKilns();curPlanRun=_r.id;plRunReturn=true;openPlanAdd();return;}
+  if(_r&&(_runState(_r)==='planned'||_r.state==='loaded'||!_rnKilnMethod(_r))){loadKilns();curPlanRun=_r.id;plRunReturn=true;openPlanAdd();return;}
   runAttachSel={};
   var srch=document.getElementById('ra-srch');if(srch)srch.value='';
   _renderRunAttachList();
@@ -10814,16 +11051,19 @@ function detachPieceFromRun(pieceId,evId){
   var ev=p.events.find(function(e){return e.id===evId;});
   var run=DB.firingRuns.find(function(x){return x.id===curRun;});
   if(ev)_detachEventFromRun(ev,run);
+  if(run&&!_rnKilnMethod(run)&&run.plan&&Array.isArray(run.plan.members))run.plan.members=run.plan.members.filter(function(m){return !(m.ref&&m.ref.id===pieceId);});
   p.updatedAt=new Date().toISOString();
   recomputePieceStage(p);
   if(_se)_seriesMembers(p.id).forEach(recomputePieceStage);
   save();openRunDet(curRun);toast(t('msg.izvadeno'));
 }
 function detachTestFromRun(testId){
-  var t=DB.tests.find(function(x){return x.id===testId;});
-  if(!t)return;
-  delete t.firingRunId;
-  t.updatedAt=new Date().toISOString();
+  // v1.40.4: с потвърждение; и „t“ вече не закрива функцията за преводи (беше грешка).
+  var tst=DB.tests.find(function(x){return x.id===testId;});
+  if(!tst)return;
+  if(!confirm('Да извадя ли теста от това изпичане?\n\nТестът остава; само връзката с изпичането се маха.'))return;
+  delete tst.firingRunId;
+  tst.updatedAt=new Date().toISOString();
   save();openRunDet(curRun);toast(t('msg.izvadeno'));
 }
 
@@ -10867,13 +11107,30 @@ function _updateRunTestCount(){
   var b=document.getElementById('rt-confirm');
   if(b){b.textContent=n?('Добави '+n):'Добави';b.disabled=!n;b.style.opacity=n?'':'.5';}
 }
+// v1.40.4: тест в изпичане взема празните си полета от изпичането (дата, профил,
+// пикова температура, задръжка) — не се пишат два пъти. Попълненото не се пипа.
+function _testFromRun(tst,run){
+  if(!tst||!run)return;
+  if(!tst.date&&run.date)tst.date=run.date;
+  if(!tst.firingProfileId&&run.firingProfileId)tst.firingProfileId=run.firingProfileId;
+  if((tst.temp==null||tst.temp==='')&&run.peakTemp!=null)tst.temp=String(run.peakTemp);
+  if((tst.hold==null||tst.hold==='')&&run.holdMin!=null)tst.hold=String(run.holdMin);
+}
+function testRunPick(){
+  var v=(document.getElementById('ti-run')||{}).value;var run=v?DB.firingRuns.find(function(x){return x.id===v;}):null;if(!run)return;
+  var f=function(id,val){var e=document.getElementById(id);if(e&&!String(e.value).trim()&&val!=null&&val!=='')e.value=val;};
+  // датата по подразбиране (днес, при нов тест) не е въведена от теб — сменя се с датата на изпичането
+  var dEl=document.getElementById('ti-date');if(dEl&&!editId&&dEl.value===new Date().toISOString().split('T')[0]&&run.date)dEl.value=run.date;
+  f('ti-date',run.date);f('ti-temp',run.peakTemp);f('ti-hold',run.holdMin);f('ti-fp',run.firingProfileId);
+}
 function confirmRunTestAttach(){
   var ids=Object.keys(runTestSel);
   if(!ids.length)return;
+  var _run=DB.firingRuns.find(function(x){return x.id===curRun;});
   ids.forEach(function(id){
     var t=DB.tests.find(function(x){return x.id===id;});
     if(!t)return;
-    t.firingRunId=curRun;
+    t.firingRunId=curRun;_testFromRun(t,_run);
     t.updatedAt=new Date().toISOString();
   });
   save();closeMo('mo-run-tests');openRunDet(curRun);
@@ -11059,7 +11316,8 @@ function _todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMon
 function _runState(r){
   if(r&&r.state&&RUN_STATES[r.state])return r.state;
   // План отпреди v1.35.0 (без състояние), за който още нищо не е закачено — план.
-  if(r&&r.plan&&Array.isArray(r.plan.members)&&r.plan.members.length&&!_runPieces(r.id).length)return 'planned';
+  // (v1.40.3: само при пещ — изпичане без пещ без състояние е минало, не план)
+  if(r&&r.plan&&Array.isArray(r.plan.members)&&r.plan.members.length&&!_runPieces(r.id).length&&_rnKilnMethod(r))return 'planned';
   return 'completed';
 }
 // Зареденото, приключеното и прекъснатото — тогава планът е факт и промените се пишат.
@@ -11073,8 +11331,8 @@ function _runRec(ref){return !ref?null:ref.kind==='series'?findSeries(ref.id):DB
 // Стъпките на изпичането според плана: една на изделие, една на серия (с бройките).
 // Идемпотентно: създава липсващите, обновява бройките, маха тези от плана, чиито
 // изделия вече ги няма в него. Чужди стъпки (закачени на ръка) не се пипат.
-function _runSync(run){
-  if(!_runOn(run))return;
+function _runSync(run,force){
+  if(!force&&!_runOn(run))return;
   var want={};
   ((run.plan&&run.plan.members)||[]).forEach(function(m){
     if(!m.ref)return;var k=m.ref.kind+':'+m.ref.id;
@@ -11091,7 +11349,7 @@ function _runSync(run){
       if(plan.kind==='adopt'){
         ev=plan.ev;ev.data.firingRunId=run.id;ev.data.adoptedByPlan=true;
         delete ev.data.method;delete ev.data.atmosphere;delete ev.data.firingPurpose;delete ev.data.temp;delete ev.data.duration;delete ev.data.profileId;
-      } else {ev={id:uid(),type:'firing',date:run.date,note:'',photos:[],data:{firingRunId:run.id,fromPlan:true}};rec.events.push(ev);}
+      } else {ev={id:uid(),type:'firing',date:run.endedAt||run.date,note:'',photos:[],data:{firingRunId:run.id,fromPlan:true}};_stageAnchorBefore(rec,ev,_runLabel(run));rec.events.push(ev);}
     }
     if(w.ref.kind==='series'&&w.units.length)ev.data.units=w.units.sort(function(a,b){return a-b;});
     rec.updatedAt=new Date().toISOString();touched.push(rec);
@@ -11137,7 +11395,7 @@ function setRunState(id,to){
   if(to==='loaded'&&from==='planned'){
     var n=((run.plan&&run.plan.members)||[]).length;
     if(!n){toast('Планът е празен — добави изделия');return;}
-    var loose=run.plan.members.filter(function(m){return !m.level;}).length;
+    var loose=_rnKilnMethod(run)?run.plan.members.filter(function(m){return !m.level;}).length:0;
     if(!confirm('Заредено — потвърди?\n\n'+n+(n===1?' изделие':' изделия')+' от плана получават стъпка „изпичане“ в процеса си.'+(loose?' '+loose+' от тях са без ниво.':'')+'\nЕтапът се мести чак при „Приключено“.'))return;
     run.state='loaded';run.loadedAt=new Date().toISOString();
     _runSync(run);
@@ -11166,6 +11424,8 @@ function _openRunEnd(run,to){
   document.getElementById('re-msg').textContent=to==='completed'
     ?'Етапът на изделията се мести с тази дата и стъпката „изпичане“ в процеса им я получава. По подразбиране е датата на изпичането'+(run.date?' ('+run.date+')':'')+' — смени я, ако си изваждала по-късно.'
     :'Етапът на изделията не се мести. Резултатите и бележките могат да се запишат.';
+  // v1.40.4: празно изпичане — да не се приключи по погрешка.
+  if(!_rnMembers(run).length&&!_runTests(run.id).length)document.getElementById('re-msg').textContent+=' Внимание: в това изпичане няма изделия и тестове.';
   openMo('mo-run-end');
 }
 function confirmRunEnd(){
@@ -11202,9 +11462,9 @@ function _runStateHtml(r){
     +'</div>';
 }
 function _runResultsHtml(r){
-  var M=(r.plan&&r.plan.members)||[];
+  var M=_rnMembers(r);
   var h='';
-  if(M.length&&_runOn(r)){
+  if(M.length&&_rnDocOn(r)&&_rnKilnMethod(r)&&_plHas(r)){
     var c={};M.forEach(function(m){var k=m.result||'';c[k]=(c[k]||0)+1;});
     var parts=RUN_RESULTS.filter(function(x){return c[x];}).map(function(x){return x+' '+c[x];});
     if(c[''])parts.push('без резултат '+c['']);
@@ -11237,7 +11497,7 @@ function _plResultHtml(run,p){
     +'<input type="text" placeholder="бележка" value="'+_kEsc(m.resultNote||'')+'" onchange="setPlanResultNote(\''+p.id+'\',this.value)" style="flex:1;min-width:120px;padding:7px 10px;font-size:14px;"></div>';
 }
 function setPlanResult(id,v){
-  var run=_plRun();if(!run)return;
+  var run=_plRun();if(!run)return;_rnDocEnsure(run);
   var m=run.plan.members.find(function(x){return x.id===id;});if(!m)return;
   var old=m.result||'';if(old===(v||''))return;
   if(old)_runLog(run,_plMemberLabel(m)+': резултат',old,v||'');
@@ -11275,7 +11535,7 @@ function _brokenSeriesUnit(run,m){
   brk(p);save();renderPieces();toast('Бройка /'+u+' е отделена като счупена');
 }
 function setPlanResultNote(id,v){
-  var run=_plRun();if(!run)return;
+  var run=_plRun();if(!run)return;_rnDocEnsure(run);
   var m=run.plan.members.find(function(x){return x.id===id;});if(!m)return;
   v=String(v||'').trim();if(v)m.resultNote=v;else delete m.resultNote;_plTouch(run);
 }
@@ -11365,6 +11625,8 @@ function planRefreshSizes(){
   plSug=null;_plTouch(run);renderPlan();toast(list.length+(list.length===1?' размер обновен':' размера обновени'));
 }
 function _plMemberLabel(m){return (m.name||'Изделие')+(m.unitLabel||'');}
+// v1.40.4: в списъци с еднакви имена — и кодът.
+function _plMemberLabelC(m){return _plMemberLabel(m)+(m.code?' · '+m.code:'');}
 function _plSetup(run){return KilnPlan._planSetup(_plKiln(run));}
 function _plGeo(run){return KilnPlan._planRun(run);}
 
@@ -12027,9 +12289,10 @@ function planPostConfirm(){
 // ── Избор на изделия ──
 function _plRefKey(r){return r.kind+':'+r.id+':'+(r.unit||r.idx||'');}
 function _plCandidates(run){
-  var inPlan={};((run.plan&&run.plan.members)||[]).forEach(function(m){if(m.ref)inPlan[_plRefKey(m.ref)]=1;});
+  // Пещ: закачените със стъпка може да се добавят в плана (както досега). Без пещ: те вече са бройки.
+  var inPlan={};(_rnKilnMethod(run)?_rnPlanMembers(run):_rnMembers(run)).forEach(function(m){if(m.ref)inPlan[_plRefKey(m.ref)]=1;});
   var attached={};_runPieces(run.id).forEach(function(x){attached[x.piece.id]=1;});
-  var want=run.purpose==='bisque'?['wet','leather-hard','bone-dry','greenware']:run.purpose==='glaze'?['bisque','glazed']:[];
+  var want=run.purpose==='bisque'?['wet','leather-hard','bone-dry','greenware']:run.purpose==='glaze'?['bisque','glazed']:(run.purpose==='alternative'||!_rnKilnMethod(run))?['bone-dry','bisque','glazed']:[];
   var out=[];
   var add=function(rec,kind,units,qty){
     var refs=[];
@@ -12099,12 +12362,15 @@ function _renderPlanAdd(){
 }
 function togglePlanAdd(key){if(plSel[key])delete plSel[key];else plSel[key]=1;_renderPlanAdd();}
 function confirmPlanAdd(){
-  var run=_plRun();if(!run)return;_plEnsure(run);
+  var run=_plRun();if(!run)return;
   var items=_plCandidates(run).filter(function(x){return plSel[x.key];}),n=0;
+  // v1.40.3: без пещ — само списък с бройки, без нива и рафтове.
+  if(_rnKilnMethod(run))_plEnsure(run);else{_rnDocEnsure(run);if(!run.plan||typeof run.plan!=='object')run.plan={members:[]};if(!Array.isArray(run.plan.members))run.plan.members=[];}
   items.forEach(function(x){_plMembersFrom(x).forEach(function(m){run.plan.members.push(m);n++;});});
   if(_runOn(run))_runLog(run,'Добавени изделия','',n+' бр.');
-  _runSync(run);
-  plSel={};plSug=null;_plTouch(run);closeMo('mo-plan-add');renderPlan();
+  // без пещ: добавеното в минало изпичане получава стъпка веднага (при пещ — както досега)
+  _runSync(run,!_rnKilnMethod(run)&&_rnDocOn(run));
+  plSel={};plSug=null;_plTouch(run);closeMo('mo-plan-add');if(document.getElementById('det-plan').classList.contains('on'))renderPlan();
   if(plRunReturn){plRunReturn=false;openRunDet(run.id);}
   toast(n+(n===1?' изделие добавено':' изделия добавени'));
 }
@@ -12303,6 +12569,13 @@ function openFPDet(id){
   } else {
     _ftRow.style.display='none';
   }
+  // v1.40.4: изпичанията по този профил
+  var _fnRow=document.getElementById('dfp-runs-row');
+  if(!_fnRow){_fnRow=document.createElement('div');_fnRow.id='dfp-runs-row';_fnRow.className='ds';_fnRow.innerHTML='<div class="ds-t">Изпичания с този профил</div><div id="dfp-runs-val"></div>';document.getElementById('dfp-notes').parentNode.parentNode.appendChild(_fnRow);}
+  var _relRuns=DB.firingRuns.filter(function(r){return r&&r.firingProfileId===id;}).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
+  _fnRow.style.display=_relRuns.length?'':'none';
+  document.getElementById('dfp-runs-val').innerHTML=_relRuns.map(function(r){var st=_runState(r);
+    return '<div class="li" style="padding:10px 0;border-bottom:1px solid var(--bdr)" onclick="openRunDet(\''+r.id+'\')"><div class="li-body"><div class="li-t" style="font-size:14px">'+_kEsc(_runLabel(r))+'</div><div class="li-s">'+_kEsc([r.date,RUN_STATES[st],r.peakTemp!=null?r.peakTemp+'°C':''].filter(Boolean).join(' · '))+'</div></div><div class="li-r">›</div></div>';}).join('');
   // Related recipes (recommended)
   var _frRow=document.getElementById('dfp-recipes-row');
   if(!_frRow){
