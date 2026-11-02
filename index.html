@@ -160,11 +160,16 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
    широк екран и като лист на телефон. Ширините на списъка следват контейнера, не
    прозореца, затова таблицата не излиза извън екрана и до панела с филтри. */
 .pcl{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:0 14px;}
-@media(min-width:960px){.pcl{grid-template-columns:240px minmax(0,1fr);align-items:start;padding:0 18px;}
-  .pc-side{position:sticky;top:76px;max-height:calc(100dvh - 160px);overflow:auto;}
-  .pc-fbtn,.pc-side .pc-side-x,.pc-side .pc-show{display:none!important;}}
-@media(max-width:959px){.pc-side{display:none;}
-  .pc-side.on{display:block;position:fixed;inset:0;z-index:120;background:var(--bg);overflow:auto;padding:18px 16px 0;}}
+/* v1.41.0: един модел за филтрите във всички каталози — бутон „Филтри (n)“, активни
+   чипове, „Изчисти“. Телефон: лист през целия екран („назад“ го затваря). Широк
+   екран: карта над списъка — списъкът и детайлът до него остават на място. */
+@media(min-width:960px){.pcl{padding:0 18px;}}
+.pc-side,.rc-side{display:none;}
+@media(max-width:959px){
+  .pc-side.on,.rc-side.on{display:block;position:fixed;inset:0;z-index:120;background:var(--bg);overflow:auto;padding:18px 16px 0;border-radius:0;box-shadow:none;margin:0;}}
+@media(min-width:960px){
+  .pc-side.on,.rc-side.on{display:block;position:static;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;margin:0 0 10px;max-height:none;}
+  .pc-side .pc-fbar,.rc-side .pc-fbar{position:static;}}
 .pc-main{min-width:0;container-type:inline-size;}
 .pc-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 0 4px;}
 .pc-tools .srch{flex:1 1 200px;min-width:0;width:auto;}
@@ -183,6 +188,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .pc-side-top h2{font-size:20px;font-weight:400;}
 .pc-fbar{display:flex;gap:8px;margin-top:18px;position:sticky;bottom:0;background:var(--bg);padding:10px 0;}
 .pc-fbar .btn{flex:1;}
+@media(min-width:960px){.pc-fbar{justify-content:flex-end;background:none;}.pc-fbar .btn{flex:0 0 auto;width:auto;padding:10px 22px;margin:0;}}
 /* етап и смесен етап */
 .pc-st{display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center;}
 .stage-badge.sb-mix{background:var(--warnbg);color:var(--warn);}
@@ -397,8 +403,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .rc-q{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;}
 .rc-q::-webkit-scrollbar{display:none;}
 .rc-q .fchip{font-size:12px;padding:7px 12px;}
-.rc-side{display:none;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;}
-.rc-side.on{display:block;}
+.rc-side{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;}
 #rc-filter-toggle{display:inline-block!important;}
 .rc-side h3{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:14px 0 6px;}
 .rc-side .fchips{padding:0;}
@@ -928,6 +933,15 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .pi-tabs button .m{font-size:12px;opacity:.8;margin-left:3px;}
 .pi-tab{display:none;}
 .pi-tab.on{display:block;}
+.pi-tabs.t3{grid-template-columns:repeat(3,1fr);}.pi-tabs.t2{grid-template-columns:repeat(2,1fr);}
+.ev-sh{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--bdr);}
+.lib-back{display:block;background:none;border:none;padding:0 0 4px;font-family:inherit;font-size:13px;color:var(--tx2);cursor:pointer;min-height:32px;}
+/* v1.41.0: на широк екран формулярите са в средата, до ~720 px; телефонът — както досега */
+@media(min-width:900px){
+  .mo{align-items:center;justify-content:center;}
+  .mo-sh{max-width:720px;border-radius:20px;max-height:88vh;}
+  .mo-h{display:none;}
+}
 .pi-foot{position:sticky;bottom:0;background:var(--surface);display:flex;gap:10px;padding:10px 0 4px;margin-top:12px;border-top:1px solid var(--bdr);z-index:5;}
 .pi-foot .btn{margin-top:0;flex:1;}
 </style>
@@ -958,13 +972,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <div id="main">
 
 <!-- ИЗДЕЛИЯ -->
-<div class="sc on" id="sc-pieces">
+<div class="sc" id="sc-pieces">
   <div class="ph">
     <div class="ph-left"><div class="pt" data-t="ui.izdeliya">Изделия</div><div class="ps" id="cnt-pieces"></div></div>
     <div class="ph-right" style="display:flex;gap:8px;">
-      <div class="ic-btn" onclick="show('home')" id="home-btn" title="Моето ателие" aria-label="Моето ателие">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>
-      </div>
+      
       <div class="ic-btn" onclick="openNotif()" id="notif-btn">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </div>
@@ -972,7 +984,6 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
   <!-- v1.36.0: каталогът — филтри отстрани (на телефон като лист), галерия или списък -->
   <div class="pcl">
-    <aside class="pc-side" id="pc-side"></aside>
     <div class="pc-main">
       <div class="pc-tools">
         <input class="srch" type="search" id="pc-search" placeholder="Търси по име, код, глина, техника…" oninput="debounce(renderPieces,'pc-search',200)">
@@ -980,6 +991,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <button type="button" class="pc-fbtn" id="pc-filter-toggle" onclick="togglePcFilters()">Филтри<span id="pc-filter-badge"></span></button>
         <select class="pc-sort" id="pc-sort" aria-label="Подреди" onchange="setPcSort(this.value)"><option value="upd">Последна промяна</option><option value="date">Най-нови</option><option value="name">Име А–Я</option></select>
       </div>
+      <aside class="pc-side" id="pc-side"></aside>
       <div class="pc-active" id="pc-active"></div>
       <div id="pieces-grid" class="pcg"></div>
       <div id="pc-more"></div>
@@ -987,12 +999,11 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
-<!-- v1.36.0: Моето ателие — обзор, изведен от данните; не е начален екран -->
-<div class="sc" id="sc-home">
+<!-- v1.36.0: Моето ателие — обзор, изведен от данните. v1.41.0: начален екран -->
+<div class="sc on" id="sc-home">
   <div class="ph">
     <div class="ph-left"><div class="pt">Моето ателие</div><div class="ps" id="cnt-home"></div></div>
-    <div class="ph-right"><div class="ic-btn" onclick="show('pieces')" title="Изделия" aria-label="Към изделията"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div></div>
-  </div>
+      </div>
   <div class="hm" id="home-body"></div>
 </div>
 
@@ -1070,7 +1081,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <!-- БИБЛИОТЕКА -->
 <div class="sc" id="sc-lib">
   <div class="ph">
-    <div class="ph-left"><div class="pt" data-t="ui.biblioteka">Библиотека</div><div class="ps" id="lib-count" data-t="ui.spravochni-materiali">справочни материали</div></div>
+    <div class="ph-left"><button type="button" class="lib-back" onclick="show('home')" aria-label="Към Ателие">‹ Ателие</button><div class="pt" data-t="ui.biblioteka">Библиотека</div><div class="ps" id="lib-count" data-t="ui.spravochni-materiali">справочни материали</div></div>
     <div class="ph-right" style="display:flex;gap:8px;align-items:center;">
       <button class="ic-btn" id="lib-restore-btn" onclick="restoreGuides()" title="Върни липсващи наръчници" style="display:none;font-size:15px;line-height:1;">⟳</button>
       <button class="ic-btn" onclick="openLibAdd()" style="font-size:22px;line-height:1;">+</button>
@@ -1332,7 +1343,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 </div><!-- /main -->
 
 <nav id="nav">
-  <button class="nb on" onclick="show('pieces')" id="nb-pieces">
+  <!-- v1.41.0: „Ателие“ е началото; „Библиотека“ се отваря от него -->
+  <button class="nb on" onclick="show('home')" id="nb-home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>
+    <span>Ателие</span><div class="nb-dot"></div>
+  </button>
+  <button class="nb" onclick="show('pieces')" id="nb-pieces">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18"/><path d="M5 10c0 5 3 8 7 8s7-3 7-8"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>
     <span data-t="ui.izdeliya">Изделия</span><div class="nb-dot"></div>
   </button>
@@ -1351,10 +1367,6 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <button class="nb" onclick="show('tests')" id="nb-tests">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-5-5z"/><path d="M9 3v5h10M9 13h6M9 17h4"/></svg>
     <span data-t="ui.testove">Тестове</span><div class="nb-dot"></div>
-  </button>
-  <button class="nb" onclick="show('lib')" id="nb-lib">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-    <span data-t="ui.biblioteka">Библиотека</span><div class="nb-dot"></div>
   </button>
 </nav>
 </div>
@@ -2215,6 +2227,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <!-- v1.11.0: link to a real firing. When set, the run is the truth for
              method / temperature / atmosphere and these fields hide — exactly the
              single-owner rule the stage got in v1.9.0. -->
+        <div class="ev-sh">Общо изпичане</div>
         <div class="f"><label data-t="ui.izpichane">Изпичане</label>
           <select id="ev-firing-run" onchange="onEvFiringRunChange()"><option value="">— самостоятелна стъпка —</option></select>
           <div id="ev-firing-new-hint" style="display:none;font-size:12px;color:var(--tx2);margin-top:5px;line-height:1.5;">Създава се изпичане с тези данни; резултатът, обвиването и снимките на изделието се водят в него. Ако изпичането вече е записано — избери го от списъка.</div>
@@ -2222,6 +2235,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <div id="ev-firing-run-hint" style="display:none;font-size:11px;color:var(--tx3);font-style:italic;margin-top:5px;line-height:1.5;" data-t="ui.metodat-temperaturata-i-atmosferat">Методът, температурата и атмосферата идват от изпичането.</div>
         </div>
         <div id="ev-firing-own">
+        <div class="ev-sh">Метод и параметри</div>
         <div class="f"><label data-t="ui.metod-2">Метод *</label>
           <select id="ev-firing-method" onchange="onFiringMethodChange()">
             <option value="" data-t="opt.izberi">— избери —</option>
@@ -2268,6 +2282,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
              come out of the same pit unrecognisable. It's a choice, not an
              observation, so it earns a field rather than a note. -->
         <div id="ev-firing-perpiece">
+        <div class="ev-sh">За това изделие</div>
         <div class="f"><label data-t="ui.obvivane">Обвиване</label>
           <select id="ev-firing-wrapping">
             <option value="">—</option>
@@ -2500,6 +2515,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="mo-h"></div>
       <div class="mo-hdr"><div class="mo-t" id="mo-run-t">Ново изпичане</div><button class="mo-x" onclick="closeMoAsk('mo-run')">×</button></div>
       <div class="mo-b">
+        <!-- v1.41.0: три раздела — превключването само показва/скрива; въведеното остава -->
+        <div class="pi-tabs t3" role="tablist"><button type="button" role="tab" data-tab="basic" class="on" onclick="moTab('mo-run','basic')">Основни</button><button type="button" role="tab" data-tab="real" onclick="moTab('mo-run','real')">Реално и метод</button><button type="button" role="tab" data-tab="more" onclick="moTab('mo-run','more')">Бележки и снимки</button></div>
+        <div class="pi-tab on" data-tab="basic">
         <div class="f"><label data-t="ui.ime-po-zhelanie">Име (по желание)</label><input type="text" id="rn-name" data-tp="ph.napr-trapno-3-yuli" placeholder="напр. Трапно #3 — юли"></div>
         <div class="f"><label data-t="ui.data-2">Дата *</label><input type="date" id="rn-date"></div>
         <div class="f"><label data-t="ui.metod-2">Метод *</label>
@@ -2532,6 +2550,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <select id="rn-profile"><option value="" data-t="opt.bez-profil">— без профил —</option></select>
         </div>
 
+        </div>
+        <div class="pi-tab" data-tab="real">
         <!-- What actually happened -->
         <div style="background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:8px;" data-t="ui.kakvo-stana-v-deystvitelnost">🔥 КАКВО СТАНА В ДЕЙСТВИТЕЛНОСТ</div>
@@ -2577,6 +2597,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <div style="font-size:12.5px;color:var(--tx3);line-height:1.5;margin-bottom:10px;">Обвиването и съдържанието за всяко изделие се записват в изпичането, раздел „Зареждане“.</div>
         </div>
 
+        </div>
+        <div class="pi-tab" data-tab="more">
         <div class="f"><label data-t="ui.belezhki">Бележки</label><textarea id="rn-notes" rows="2" data-tp="ph.kak-mina-problemi-nablyudeniya" placeholder="как мина, проблеми, наблюдения"></textarea></div>
         <div class="f"><label data-t="ui.snimki">Снимки</label>
           <div id="rn-prev" class="ph-prev"></div>
@@ -2584,8 +2606,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <button type="button" class="btn bg" onclick="document.getElementById('rn-ph').click()" data-t="ui.dobavi-snimki">📷 Добави снимки</button>
         </div>
 
-        <button class="btn bp" onclick="saveRun()" data-t="ui.zapazi">Запази</button>
-        <button class="btn bg" onclick="closeMoAsk('mo-run')" data-t="ui.otkazhi">Откажи</button>
+        </div>
+        <div class="pi-foot"><button class="btn bg" onclick="closeMoAsk('mo-run')" data-t="ui.otkazhi">Откажи</button><button class="btn bp" onclick="saveRun()" data-t="ui.zapazi">Запази</button></div>
       </div>
     </div>
   </div>
@@ -2598,6 +2620,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="mo-h"></div>
       <div class="mo-hdr"><div class="mo-t" id="mo-mass-t">Нова маса</div><button class="mo-x" onclick="closeMoAsk('mo-mass')">×</button></div>
       <div class="mo-b">
+        <div class="ev-sh" style="margin-top:0">Маса</div>
         <div class="f"><label data-t="ui.ime">Име *</label><input type="text" id="ms-name" data-tp="ph.napr-diva-glina-kefaloniya-t2" placeholder="напр. Дива глина Кефалония T2"></div>
 
         <!-- Състав -->
@@ -2745,7 +2768,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.40.4';
+const APP_VERSION = 'v1.41.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -3414,7 +3437,7 @@ function stageLabel(v){
 // v1.20.0 (А7 фаза 2): `series` — партида изделия с общ процес. Изделието получава
 // `seriesId`; списъкът с членове е изведен, не съхранен.
 const DB={pieces:[],recipes:[],materials:[],tests:[],firingProfiles:[],firingRuns:[],series:[]};
-let cur='pieces',editId=null,curRec=null,curPiece=null,curTest=null,curMat=null;
+let cur='home',editId=null,curRec=null,curPiece=null,curTest=null,curMat=null;
 // v1.20.0: коя серия е отворена, и какво редактира mo-piece — изделие или серия.
 let curSeries=null,editKind='piece';
 // v1.4.6: Nested-add state — when set, a save handler should call this instead of normal close.
@@ -3548,7 +3571,7 @@ function vDate(val){
   if(!val)return true;
   return !isNaN(Date.parse(val));
 }
-function focusEl(id){try{var el=document.getElementById(id);if(el){var tp=el.closest&&el.closest('.pi-tab');if(tp&&!tp.classList.contains('on')){if(el.closest('#mo-recipe'))recTab(tp.getAttribute('data-tab'));else if(el.closest('#mo-mat'))matTabF(tp.getAttribute('data-tab'));else if(el.closest('#mo-test'))testTabF(tp.getAttribute('data-tab'));else piTab(tp.getAttribute('data-tab'));}el.focus();}}catch(e){}}
+function focusEl(id){try{var el=document.getElementById(id);if(el){var tp=el.closest&&el.closest('.pi-tab');if(tp&&!tp.classList.contains('on')){if(el.closest('#mo-recipe'))recTab(tp.getAttribute('data-tab'));else if(el.closest('#mo-mat'))matTabF(tp.getAttribute('data-tab'));else if(el.closest('#mo-test'))testTabF(tp.getAttribute('data-tab'));else if(el.closest('#mo-run'))moTab('mo-run',tp.getAttribute('data-tab'));else if(el.closest('#mo-fp'))moTab('mo-fp',tp.getAttribute('data-tab'));else piTab(tp.getAttribute('data-tab'));}el.focus();}}catch(e){}}
 // v1.35.1: разделите на формуляра за изделие. Скриват и показват — полетата и
 // въведеното остават, затова записът взема всичко, видимо или не.
 function piTab(k){
@@ -5780,7 +5803,8 @@ function show(n){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('sc-'+n).classList.add('on');
   // v1.36.0: „Моето ателие“ няма свой бутон долу — стои под „Изделия“.
-  var _nb=document.getElementById('nb-'+(n==='home'?'pieces':n));if(_nb)_nb.classList.add('on');
+  // v1.41.0: „Библиотека“ живее в „Ателие“ — там е и маркерът в лентата.
+  var _nb=document.getElementById('nb-'+(n==='lib'?'home':n));if(_nb)_nb.classList.add('on');
   document.getElementById('fab').style.display=(n==='lib'||n==='home')?'none':'flex';
   render(n);
   var sv=_scrollPos[n];if(sv){var mx=document.getElementById('main');if(mx)setTimeout(function(){mx.scrollTop=sv;},0);}
@@ -6075,10 +6099,17 @@ function resetPcFilters(){
   _pcSave();renderPieces();
 }
 // На телефон филтрите са лист над списъка; назад го затваря.
-function togglePcFilters(){
-  var el=document.getElementById('pc-side');if(!el)return;
-  if(el.classList.contains('on')){closeDet('pc-side');return;}
-  el.classList.add('on');_pushOverlay('det','pc-side');
+function togglePcFilters(){var el=document.getElementById('pc-side');_fltOpen('pc-side',!(el&&el.classList.contains('on')));}
+// v1.41.0: отваряне/затваряне на панела с филтри — еднакво за всички каталози.
+// На телефон панелът е лист и е стъпка в историята; на широк екран — карта.
+var _FLT_FLAG={'rc-side':function(v){RC.side=v;},'mt-side':function(v){MT.side=v;},'ts-side':function(v){TS.side=v;},'pc-side':function(){}};
+function _fltOpen(id,on){
+  var el=document.getElementById(id);if(!el)return;
+  var inStack=_overlayStack.some(function(e){return e.id===id;});
+  if(on){el.classList.add('on');if(window.innerWidth<960&&!inStack)_pushOverlay('det',id);}
+  else if(inStack)closeDet(id);
+  else el.classList.remove('on');
+  if(_FLT_FLAG[id])_FLT_FLAG[id](!!on);
 }
 function _updatePcFilterBadge(){var b=document.getElementById('pc-filter-badge'),n=_pcActive().length;if(b)b.textContent=n?' ('+n+')':'';}
 
@@ -6130,7 +6161,9 @@ function renderHome(){
     +'<button type="button" onclick="homeGo(function(){editId=null;editKind=\'piece\';openPieceMo();})">+ Ново изделие<span>или серия</span></button>'
     +'<button type="button" onclick="homeNewRun()">+ Изпичане<span>ново изпичане и план</span></button>'
     +'<button type="button" onclick="homeSearch()">Търси<span>по име или код</span></button>'
-    +'<button type="button" onclick="show(\'fp\')">Изпичания<span>пещи и профили</span></button></div></div>';
+    +'<button type="button" onclick="show(\'fp\')">Изпичания<span>пещи и профили</span></button>'
+    // v1.41.0: библиотеката и архивът — оттук (вече не са в лентата)
+    +'<button type="button" id="hm-lib" onclick="show(\'lib\')">Библиотека<span>наръчници · архив и бекъп</span></button></div></div>';
   h+='<div class="hm-box"><h2>В работа</h2><div class="hm-pipe">'+work.map(function(s){return '<button type="button" onclick="homeStage(\''+s+'\')"><div class="n">'+(by[s]||0)+'</div><div class="l">'+_pdE(stageLabel(s))+'</div></button>';}).join('')+'</div></div>';
   h+='<div class="hm-box"><h2>Планирани изпичания</h2>'+(runs.length?runs.map(function(r){
     var k=r.kilnId?KILNS.find(function(z){return z&&z.id===r.kilnId;}):null,L=((r.config&&r.config.levels)||[]).length,n=((r.plan&&r.plan.members)||[]).length;
@@ -6274,7 +6307,7 @@ function _tsSideHtml(q){
   var keys=[],clays=[],temps=[];DB.tests.forEach(function(t){var k=_tKey(t);if(keys.indexOf(k)<0)keys.push(k);var c=testKind(t)==='body'?'(маса)':(t.clay||'');if(c&&clays.indexOf(c)<0)clays.push(c);var tp=String(t.temp||'');if(tp&&temps.indexOf(tp)<0)temps.push(tp);});
   temps.sort(function(a,b){return parseFloat(a)-parseFloat(b);});
   var surfs=[];DB.tests.forEach(function(t){if(t.surf&&surfs.indexOf(t.surf)<0)surfs.push(t.surf);});
-  return '<div class="pc-side-top"><h2 style="font-size:20px;font-weight:400">Филтри</h2></div>'
+  return '<div class="pc-side-top"><h2 style="font-size:20px;font-weight:400">Филтри</h2><button type="button" class="btn bg pc-side-x" style="width:auto;padding:8px 14px;margin:0" onclick="toggleTestFilters()">Готово</button></div>'
     +'<h3>Рецепта / глазура / маса</h3><div class="fchips">'+keys.map(function(k){var t=DB.tests.find(function(x){return _tKey(x)===k;});return chipA('recs',k,_tTitle(t),function(x){return _tKey(x)===k;});}).join('')+'</div>'
     +(clays.length?'<h3>Глина / основа</h3><div class="fchips">'+clays.map(function(c){return chipA('clays',c,c==='(маса)'?'тест на маса':c,function(x){return (testKind(x)==='body'?'(маса)':(x.clay||''))===c;});}).join('')+'</div>':'')
     +(temps.length?'<h3>Температура</h3><div class="fchips">'+temps.map(function(v){return chipA('temps',v,v+'°C',function(x){return String(x.temp||'')===v;});}).join('')+'</div>':'')
@@ -6314,7 +6347,7 @@ function renderTests(){
   var so2=document.getElementById('ts-sort');if(so2)so2.value=so;
   var bd=document.getElementById('ts-filter-badge');if(bd)bd.textContent=ac.length?' ('+ac.length+')':'';
   var cb=document.getElementById('ts-cmp-btn');if(cb){cb.classList.toggle('on',TS.cmp);cb.textContent=TS.cmp?'✓ Избор за сравнение':'Сравни';}
-  var side=document.getElementById('ts-side');if(side){side.innerHTML=_tsSideHtml(q);side.classList.toggle('on',TS.side);}
+  var side=document.getElementById('ts-side');if(side){side.innerHTML=_tsSideHtml(q);side.classList.toggle('on',TS.side&&(window.innerWidth>=960||_overlayStack.some(function(e){return e.id==='ts-side';})));}
   var act=document.getElementById('ts-active');if(act)act.innerHTML=ac.length?ac.map(function(x){return '<button type="button" class="pc-achip" onclick="tsUnset(\''+x[0]+'\','+JSON.stringify(x[1]).replace(/"/g,'&quot;')+')">'+_pdE(x[2])+' ✕</button>';}).join('')+'<button type="button" class="pc-achip clr" onclick="resetTestFilters()">изчисти</button>':'';
   var hint=document.getElementById('ts-cmp-hint');if(hint)hint.style.display=TS.cmp?'':'none';
   var l=document.getElementById('tests-list');
@@ -6333,7 +6366,7 @@ function tsTog(k,v){var a=TS[k],i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push
 function tsSet(k,v){var f=activeFilters.test||{};if(k==='def'){f.nodef=false;f.hasdef=false;}if(k==='rat')f.hiscore=false;TS[k]=TS[k]===v?'':v;renderTests();}
 function tsUnset(k,v){var f=activeFilters.test||{};if(k==='f'){f[v]=false;}else if(k==='def'){TS.def='';f.nodef=false;f.hasdef=false;}else if(k==='rat'){TS.rat='';f.hiscore=false;}else if(k==='photo')TS.photo='';else TS[k]=TS[k].filter(function(x){return x!==v;});renderTests();}
 function resetTestFilters(){activeFilters.test={};TS.recs=[];TS.clays=[];TS.temps=[];TS.surf=[];TS.def='';TS.rat='';TS.photo='';var si=document.getElementById('test-search');if(si)si.value='';renderTests();}
-function toggleTestFilters(){TS.side=!TS.side;var e=document.getElementById('ts-side');if(e)e.classList.toggle('on',TS.side);}
+function toggleTestFilters(){_fltOpen('ts-side',!TS.side);}
 function toggleTestCmp(){TS.cmp=!TS.cmp;if(!TS.cmp)TS.picked=[];var d=document.getElementById('det-test');if(TS.cmp&&d.classList.contains('on')&&d.classList.contains('split'))closeDet('det-test');renderTests();}
 function tsTap(id){
   if(TS.cmp){var i=_tsPick(id);if(i>=0)TS.picked.splice(i,1);else if(TS.picked.length<4)TS.picked.push(id);else toast('Най-много 4 теста');renderTests();return;}
@@ -6453,6 +6486,13 @@ function cmpSimilar(){
   var k=key(t),sim=DB.tests.filter(function(x){return x.id!==t.id&&key(x)===k;}).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));}).slice(0,3);
   if(!sim.length){toast('Няма други тестове със същата рецепта, глазура или маса');return;}
   TS.picked=[t.id].concat(sim.map(function(x){return x.id;}));TS.cmp=true;renderTests();openTestCmp();
+}
+// v1.41.0: раздели в произволен формуляр (изпичане, профил) — същото поведение.
+function moTab(moId,k){
+  var mo=document.getElementById(moId);if(!mo)return;
+  mo.querySelectorAll('.pi-tabs button').forEach(function(b){var on=b.getAttribute('data-tab')===k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  mo.querySelectorAll('.pi-tab').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-tab')===k);});
+  var sh=mo.querySelector('.mo-sh');if(sh)sh.scrollTop=0;
 }
 function testTabF(k){
   var mo=document.getElementById('mo-test');if(!mo)return;
@@ -7082,7 +7122,7 @@ function rcUnset(k,v){
   _rcSave();renderRecipes();
 }
 function resetRecFilters(){activeFilters.rec={};showFavOnly=false;RC.types=[];RC.cones=[];RC.tests='';RC.ing=[];var si=document.getElementById('rec-search');if(si)si.value='';_rcSave();renderRecipes();}
-function toggleRecFilters(){RC.side=!RC.side;var el=document.getElementById('rc-side');if(el)el.classList.toggle('on',RC.side);}
+function toggleRecFilters(){_fltOpen('rc-side',!RC.side);}
 // ── детайл ──
 var RD_OPEN={tests:true,notes:true,ver:false,pcs:false};
 function rdSec(k){RD_OPEN[k]=!RD_OPEN[k];_rdSecsDraw();}
@@ -7256,7 +7296,7 @@ function _mtSideHtml(q){
   var f=activeFilters.mat||{},sf=MT.stock||(f.lowstock?'low':'');
   var cnt=function(skip,fn){return DB.materials.filter(function(m){return _mtMatch(m,q,skip)&&fn(m);}).length;};
   var chip=function(on,label,click,n,id){return '<button type="button" class="fchip'+(on?' on':'')+'"'+(id?' id="'+id+'"':'')+' onclick="'+click+'">'+label+(n!=null?' <span class="n">'+n+'</span>':'')+'</button>';};
-  return '<div class="pc-side-top"><h2 style="font-size:20px;font-weight:400">Филтри</h2></div>'
+  return '<div class="pc-side-top"><h2 style="font-size:20px;font-weight:400">Филтри</h2><button type="button" class="btn bg pc-side-x" style="width:auto;padding:8px 14px;margin:0" onclick="toggleMatFilters()">Готово</button></div>'
     +'<h3>Наличност</h3><div class="fchips">'+[['low','Ниско или 0'],['ok','Достатъчно'],['none','Без количество']].map(function(x){return chip(sf===x[0],x[1],'mtSet(\'stock\',\''+x[0]+'\')',cnt('stock',function(m){var s=_mtStock(m);return x[0]==='low'?(s==='low'||s==='zero'):x[0]==='none'?(s==='none'&&m.cat!=='mass'):s===x[0];}),x[0]==='low'?'fc-mat-lowstock':'');}).join('')+'</div>'
     +'<h3>Рецепти</h3><div class="fchips">'+chip(MT.inrec==='yes','Използван в рецепти','mtSet(\'inrec\',\'yes\')',cnt('inrec',function(m){return _mtRecipes(m).length>0;}))+chip(MT.inrec==='no','Не е в рецепти','mtSet(\'inrec\',\'no\')',cnt('inrec',function(m){return !_mtRecipes(m).length;}))+'</div>'
     +'<h3>Данни</h3><div class="fchips">'+chip(MT.chem,'С химичен анализ','mtFlag(\'chem\')',cnt('chem',function(m){return !!(m.chem&&Object.keys(m.chem).length);}))+chip(MT.cost,'С цена','mtFlag(\'cost\')',cnt('cost',function(m){return m.cost!=null;}))+'</div>'
@@ -7314,7 +7354,7 @@ function mtSet(k,v){if(k==='stock'&&activeFilters.mat)activeFilters.mat.lowstock
 function mtFlag(k){MT[k]=!MT[k];_mtSave();renderMaterials();}
 function mtUnset(k){if(k==='stock'){MT.stock='';if(activeFilters.mat)activeFilters.mat.lowstock=false;}else if(k==='inrec')MT.inrec='';else MT[k]=false;_mtSave();renderMaterials();}
 function resetMatFilters(){MT.stock='';MT.inrec='';MT.chem=false;MT.cost=false;activeFilters.mat={};var si=document.getElementById('mat-search');if(si)si.value='';_mtSave();renderMaterials();}
-function toggleMatFilters(){MT.side=!MT.side;var e=document.getElementById('mt-side');if(e)e.classList.toggle('on',MT.side);}
+function toggleMatFilters(){_fltOpen('mt-side',!MT.side);}
 // ── детайл ──
 var MD_OPEN={rec:true,props:true,mass:true,geo:true,proc:true,notes:true,chem:false,inmass:false,pcs:false,tests:false};
 function mdSec(k){MD_OPEN[k]=!MD_OPEN[k];_mdSecsDraw();}
@@ -8905,6 +8945,9 @@ function delMat(){
 var PH_MAX_BYTES=10*1024*1024; // 10 MB input (ще се компресира)
 var PH_MAX_DIM=800;
 var PH_QUALITY=0.75;
+// v1.41.0: снимките на тестовете се гледат отблизо (пинхоли, кристали, течене) —
+// до 1600 px, качество 0,82 (~250–450 KB). Останалите — както досега. Старите не се пипат.
+var PH_DIM_BY={'ti-prev':1600},PH_Q_BY={'ti-prev':0.82};
 function resizeAndAdd(file,arr,maxItems,prevId,attempt){
   if(arr.length>=maxItems){toast('Максимум '+maxItems+' снимки');return;}
   if(file.size>PH_MAX_BYTES){toast(t('msg.snimkata-e-tvarde-golyama-nad-10-m'));return;}
@@ -8917,7 +8960,7 @@ function resizeAndAdd(file,arr,maxItems,prevId,attempt){
     img.onload=function(){
       try{
         var w=img.width,h=img.height;
-        var scale=Math.min(1,PH_MAX_DIM/Math.max(w,h));
+        var scale=Math.min(1,(PH_DIM_BY[prevId]||PH_MAX_DIM)/Math.max(w,h));
         var canvas=document.createElement('canvas');
         canvas.width=Math.round(w*scale);
         canvas.height=Math.round(h*scale);
@@ -8925,7 +8968,7 @@ function resizeAndAdd(file,arr,maxItems,prevId,attempt){
         ctx.fillStyle='#ffffff';
         ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        var compressed=canvas.toDataURL('image/jpeg',PH_QUALITY);
+        var compressed=canvas.toDataURL('image/jpeg',PH_Q_BY[prevId]||PH_QUALITY);
         arr.push(compressed);
         renderPrev(prevId,arr);
       } catch(err){
@@ -9239,6 +9282,7 @@ function closeDet(id, _keepHistory){
 // v1.4.4: Helper for opening detail views with history support
 // v1.37.0: детайлът на изпичане вдясно от списъка (широк екран) — списъкът се разширява обратно.
 function _onOverlayClosed(id){
+  if(_FLT_FLAG[id])_FLT_FLAG[id](false);
   if(id==='det-test'){var ft=document.getElementById('sc-tests');if(ft&&ft.classList.contains('split')){ft.classList.remove('split');document.getElementById('det-test').classList.remove('split');if(typeof renderTests==='function')renderTests();}}
   if(id==='det-mat'){var fm=document.getElementById('sc-materials');if(fm&&fm.classList.contains('split')){fm.classList.remove('split');document.getElementById('det-mat').classList.remove('split');if(typeof renderMaterials==='function')renderMaterials();}}
   if(id==='det-recipe'){var fr=document.getElementById('sc-recipes');if(fr&&fr.classList.contains('split')){fr.classList.remove('split');document.getElementById('det-recipe').classList.remove('split');if(typeof renderRecipes==='function')renderRecipes();}}
@@ -9814,12 +9858,12 @@ function cleanupMigrationBackups(){
 }
 
 // Recompress a single base64 data URL to PH_MAX_DIM × JPEG PH_QUALITY
-function _recompressDataUrl(dataUrl,callback){
+function _recompressDataUrl(dataUrl,callback,dim,q){
   if(typeof dataUrl!=='string'||dataUrl.indexOf('data:')!==0){callback(null);return;}
   var img=new Image();
   img.onload=function(){
     var w=img.width,h=img.height;
-    var scale=Math.min(1,PH_MAX_DIM/Math.max(w,h));
+    var scale=Math.min(1,(dim||PH_MAX_DIM)/Math.max(w,h));
     var canvas=document.createElement('canvas');
     canvas.width=Math.round(w*scale);
     canvas.height=Math.round(h*scale);
@@ -9828,7 +9872,7 @@ function _recompressDataUrl(dataUrl,callback){
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(img,0,0,canvas.width,canvas.height);
     try{
-      var compressed=canvas.toDataURL('image/jpeg',PH_QUALITY);
+      var compressed=canvas.toDataURL('image/jpeg',q||PH_QUALITY);
       callback(compressed);
     }catch(e){callback(null);}
   };
@@ -9882,7 +9926,7 @@ function recompressOldPhotos(){
   if(Array.isArray(DB.tests)){
     DB.tests.forEach(function(t){
       if(Array.isArray(t.photos)){
-        t.photos.forEach(function(_,i){slots.push({arr:t.photos,idx:i});});
+        t.photos.forEach(function(_,i){slots.push({arr:t.photos,idx:i,dim:1600,q:0.82,min:600*1024});});
       }
     });
   }
@@ -9890,7 +9934,7 @@ function recompressOldPhotos(){
   // Filter to slots that are oversized
   var workQueue=slots.filter(function(s){
     var dataUrl=s.arr?s.arr[s.idx]:s.obj[s.key];
-    return typeof dataUrl==='string'&&dataUrl.indexOf('data:')===0&&_imgBytesFromDataUrl(dataUrl)>200*1024;
+    return typeof dataUrl==='string'&&dataUrl.indexOf('data:')===0&&_imgBytesFromDataUrl(dataUrl)>(s.min||200*1024);
   });
   if(workQueue.length===0){toast(t('msg.nyama-snimki-za-kompresiya'));return;}
 
@@ -9927,7 +9971,7 @@ function recompressOldPhotos(){
         body.innerHTML='<div style="text-align:center;padding:20px;"><div style="font-size:14px;color:var(--text);margin-bottom:10px;">Компресия в процес…</div><div style="font-size:24px;color:var(--primary);font-weight:600;">'+(processed+failed)+' / '+workQueue.length+'</div></div>';
       }
       setTimeout(processNext,30); // small yield for UI
-    });
+    },s.dim,s.q);
   }
 
   processNext();
@@ -10837,7 +10881,7 @@ function openRunMo(id){
       +DB.firingProfiles.map(function(f){return '<option value="'+f.id+'">'+f.name+'</option>';}).join('');
     ps.value=(r&&r.firingProfileId)||'';
   }
-  onRunMethodChange();
+  onRunMethodChange();moTab('mo-run','basic');
   _renderRunAdditives();_populateRunAdditivePicker();_refreshRunDatalists();
   renderPrev('rn-prev',rnPh);
   openMo('mo-run');
@@ -12691,7 +12735,7 @@ function openFPMo(fp){
   var loaded=fp?_fpRamps(fp):[];
   fpRampsEdit=loaded.length?loaded.map(function(s){return {rate:s.rate,to:s.to,hold:s.hold};}):[{rate:null,to:null,hold:null}];
   _renderFpRamps();
-  openMo('mo-fp');
+  moTab('mo-fp','basic');openMo('mo-fp');
 }
 
 function saveFP(){
@@ -12906,7 +12950,7 @@ Promise.all([bootStorage(),_modulesReady]).then(function(r){
   }catch(e){console.error('[identity]',e);}
   _dropOldSnapshots();
   applyDict();
-  render('pieces');
+  render('pieces');show('home');
   updateStorageLabel();
   // v1.27.1: _checkDataShrink() вече се вика от load(), преди първия запис.
   // v1.28.0: нечетими отделни записи — казваме, но работим с останалите.
@@ -13418,6 +13462,8 @@ if (navigator.serviceWorker) {
     <div class="mo-hdr"><div class="mo-t" id="mo-fp-t">Нов профил</div>
       <button class="mo-x" onclick="closeMoAsk('mo-fp')">×</button></div>
     <div class="mo-b">
+      <div class="pi-tabs t2" role="tablist"><button type="button" role="tab" data-tab="basic" class="on" onclick="moTab('mo-fp','basic')">Основни</button><button type="button" role="tab" data-tab="ramps" onclick="moTab('mo-fp','ramps')">Сегменти и крива</button></div>
+      <div class="pi-tab on" data-tab="basic">
       <div class="f"><label>Наименование *</label>
         <input type="text" id="fp-name" placeholder="напр. Глазурно 1240°C"></div>
       <div class="f"><label>Вид</label>
@@ -13427,6 +13473,10 @@ if (navigator.serviceWorker) {
           <option value="other">Друго</option>
         </select>
       </div>
+      <div class="f"><label>Бележки</label>
+        <textarea id="fp-notes" placeholder="наблюдения..."></textarea></div>
+      </div>
+      <div class="pi-tab" data-tab="ramps">
       <!-- v1.16.0: arbitrary ramp segments -->
       <div class="f"><label>Сегменти на изпичане</label>
         <div style="font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:8px;">Всеки сегмент: скорост на качване (°C/ч), докъде (°C), и задръжка (мин) на върха му.</div>
@@ -13434,10 +13484,8 @@ if (navigator.serviceWorker) {
         <button type="button" class="btn bg btn-sm" onclick="addFpRamp()" style="width:100%;padding:9px;margin-top:2px;">+ Сегмент</button>
       </div>
       <div id="fp-curve-wrap" style="margin:6px 0 14px;"></div>
-      <div class="f"><label>Бележки</label>
-        <textarea id="fp-notes" placeholder="наблюдения..."></textarea></div>
-      <button class="btn bp" onclick="saveFP()">Запази</button>
-      <button class="btn bg" onclick="closeMoAsk('mo-fp')">Откажи</button>
+      </div>
+      <div class="pi-foot"><button class="btn bg" onclick="closeMoAsk('mo-fp')">Откажи</button><button class="btn bp" onclick="saveFP()">Запази</button></div>
     </div>
   </div>
 </div>
