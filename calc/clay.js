@@ -55,14 +55,34 @@ export function _shrinkBack(L, s) {
   if (s.fire != null && s.dry != null) o.dry = L / (1 - s.fire / 100);
   return o;
 }
-// Множителят „от етапа на измерване към пластично“: размер, измерен при stage,
-// по колко се умножава, за да стане размерът при изработване.
+// v1.45.1: липсваща съставка не е нула. Ако е известно само сушенето или само
+// изпичането, другата влиза като граници (CLAY_DEF.dry / .fire) и резултатът е
+// диапазон, обозначен като ориентировъчен. → [sLo, sHi] (по-малко / повече свиване)
+// или null, ако нищо не липсва (или е известно само общото).
+export function _shrinkFill(s) {
+  if (!s || s.err || (s.from !== 'dry' && s.from !== 'fire')) return null;
+  var miss = s.from === 'dry' ? 'fire' : 'dry', R = CLAY_DEF[miss];
+  return R.map(function (x) { var o = { dry: s.dry, fire: s.fire }; o[miss] = x; var c = _shrinkCombine(o); c.assumed = miss; return c; });
+}
+// Множителят „от етапа на измерване към пластично“: размер, измерен при stage, по
+// колко се умножава, за да стане размерът при изработване. v1.45.1: връща
+// {f:[lo,hi], exact, missing} — exact само когато нужните съставки са измерени;
+// иначе липсващата влиза като граници. null — нищо не е известно за свиването.
 export function _toWetFactor(stage, s) {
-  if (!stage || stage === 'wet' || stage === 'leather-hard') return 1;
+  if (!stage || stage === 'wet' || stage === 'leather-hard') return { f: [1, 1], exact: true };
   if (!s || s.err) return null;
-  var d = s.dry != null ? s.dry / 100 : null;
-  if (stage === 'bone-dry' || stage === 'bisque') return d != null ? 1 / (1 - d) : (s.from === 'total' ? null : 1);
-  return 1 / s.k;
+  var inv = function (d, f) { return 1 / ((1 - d / 100) * (1 - f / 100)); };
+  var DR = CLAY_DEF.dry, FR = CLAY_DEF.fire, BQ = CLAY_DEF.bisque;
+  if (stage === 'bone-dry' || stage === 'bisque') {
+    // бисквит: сухият размер плюс малко свиване при бисквитното изпичане (до BQ %, не повече от измереното изпичане)
+    var bq = stage === 'bisque' ? (s.fire != null ? Math.min(BQ, s.fire) : BQ) : 0;
+    if (s.dry != null) return { f: [inv(s.dry, 0), inv(s.dry, bq)], exact: !bq, missing: bq ? 'bisque' : null };
+    if (s.from === 'total') return { f: [inv(Math.min(DR[0], s.total), 0), inv(Math.min(DR[1], s.total), bq)], exact: false, missing: 'split' };
+    return { f: [inv(DR[0], 0), inv(DR[1], bq)], exact: false, missing: 'dry' };
+  }
+  if (s.from === 'parts' || s.from === 'total') return { f: [1 / s.k, 1 / s.k], exact: true };
+  if (s.from === 'dry') return { f: [inv(s.dry, FR[0]), inv(s.dry, FR[1])], exact: false, missing: 'fire' };
+  return { f: [inv(DR[0], s.fire), inv(DR[1], s.fire)], exact: false, missing: 'dry' };
 }
 
 // Формите. vol(dims) в см³; dims: {h, w, depth} в см, {t, b} в см.
@@ -99,7 +119,7 @@ export function _clayVol(shape, d) {
 
 // Оценка. o: {shape, h, w, depth, wall, base, dens, at, shrink, count, manual}
 // → {lo, hi, mid, per:{lo,hi}, total:{lo,hi}|null, vol:[lo,hi], assume:[], measured:{…}} или {err}.
-export const CLAY_DEF = { wall: [5, 8], slab: [7, 10], baseAdd: 2, dens: [1.8, 2.0], loss: [5, 20], shrinkTotal: [10, 14] };
+export const CLAY_DEF = { wall: [5, 8], slab: [7, 10], baseAdd: 2, dens: [1.8, 2.0], loss: [5, 20], shrinkTotal: [10, 14], dry: [4, 8], fire: [4, 8], bisque: 2 };
 function r10(n) { return Math.round(n / 10) * 10; }
 export function _clayEstimate(o) {
   o = o || {};
@@ -129,14 +149,19 @@ export function _clayEstimate(o) {
   if (base == null && B) A.push('Дъно — не е въведено; допуснато ' + B.join('–') + ' мм (стената + ' + CLAY_DEF.baseAdd + ' мм).');
   if (o.shape === 'slab' && base != null && wall == null) { W = [base, base]; A.pop(); }
   // етап на размерите → пластични размери
-  var sc = [1, 1], s = o.shrink && !o.shrink.err ? o.shrink : null;
+  var sc = [1, 1], s = o.shrink && !o.shrink.err ? o.shrink : null, shrApprox = false;
   if (o.at && o.at !== 'wet' && o.at !== 'leather-hard') {
-    var f = s ? _toWetFactor(o.at, s) : null;
-    if (f) { sc = [f, f]; A.push('Размерите са при „' + (o.atLabel || o.at) + '“ — увеличени ×' + f.toFixed(3) + ' до размера при изработване (свиване ' + s.total.toFixed(1).replace('.', ',') + ' %).'); }
-    else {
+    var f = s ? _toWetFactor(o.at, s) : null, AL = '„' + (o.atLabel || o.at) + '“', F3 = function (x) { return x.toFixed(3); };
+    if (f) {
+      sc = f.f; shrApprox = !f.exact;
+      var MS = { dry: 'Свиването при сушене не е измерено — допуснато ' + CLAY_DEF.dry.join('–') + ' %', fire: 'Свиването при изпичане не е измерено — допуснато ' + CLAY_DEF.fire.join('–') + ' %',
+        split: 'Известно е само общото свиване (' + (s.total != null ? s.total.toFixed(1).replace('.', ',') : '') + ' %) — делът на сушенето е допуснат ' + CLAY_DEF.dry.join('–') + ' %', bisque: 'Свиване при бисквит — допуснато до ' + CLAY_DEF.bisque + ' % след сушенето' };
+      if (f.exact) A.push('Размерите са при ' + AL + ' — увеличени ×' + F3(sc[0]) + ' до размера при изработване (измерено свиване).');
+      else A.push('Размерите са при ' + AL + ' — увеличени ×' + F3(sc[0]) + '–' + F3(sc[1]) + ' до размера при изработване. ' + (MS[f.missing] || '') + (f.missing === 'bisque' ? '' : (o.at === 'bisque' ? '; ' + MS.bisque.toLowerCase() : '')) + ' — ориентировъчно.');
+    } else {
       var T = CLAY_DEF.shrinkTotal, dry = o.at === 'bone-dry' || o.at === 'bisque';
       var lo = dry ? 1 / (1 - T[0] / 200) : 1 / (1 - T[0] / 100), hi = dry ? 1 / (1 - T[1] / 200) : 1 / (1 - T[1] / 100);
-      sc = [lo, hi]; A.push((s ? 'Известно е само общото свиване, а размерите са при „' + (o.atLabel || o.at) + '“ — допуснато общо ' : 'Свиването не е известно — допуснато общо ') + T.join('–') + ' %' + (dry ? ' (около половината — при сушене)' : '') + '.');
+      sc = [lo, hi]; shrApprox = true; A.push('Свиването не е известно — допуснато общо ' + T.join('–') + ' %' + (dry ? ' (около половината — при сушене)' : '') + ' — ориентировъчно.');
     }
   }
   var D = dens != null ? [dens, dens] : CLAY_DEF.dens;
@@ -150,7 +175,7 @@ export function _clayEstimate(o) {
   var lo = r10(V[0] * D[0] * (1 + Ls[0] / 100)), hi = r10(V[1] * D[1] * (1 + Ls[1] / 100));
   if (hi < lo) { var x = lo; lo = hi; hi = x; }
   lo = Math.max(10, lo); hi = Math.max(lo, hi);
-  return { lo: lo, hi: hi, mid: r10((lo + hi) / 2), per: { lo: lo, hi: hi }, total: count > 1 ? { lo: lo * count, hi: hi * count } : null, count: count, vol: [Math.round(V[0]), Math.round(V[1])], assume: A };
+  return { lo: lo, hi: hi, mid: r10((lo + hi) / 2), shrinkApprox: shrApprox, per: { lo: lo, hi: hi }, total: count > 1 ? { lo: lo * count, hi: hi * count } : null, count: count, vol: [Math.round(V[0]), Math.round(V[1])], assume: A };
 }
 
 // Реално количество срещу прогнозата: разлика в г и % спрямо средата, в диапазона ли е.
