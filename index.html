@@ -2404,17 +2404,16 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
-<!-- MODAL: Присъедини изделия към изпичане (v1.12.0) -->
-<div class="mo" id="mo-run-attach" onclick="closeBg(event,'mo-run-attach')">
+<!-- v1.40.2: „Приключено“ / „Прекъснато“ — с дата; по подразбиране датата на изпичането -->
+<div class="mo" id="mo-run-end" onclick="closeBg(event,'mo-run-end')">
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t" data-t="ui.dobavi-izdeliya">Добави изделия</div><button class="mo-x" onclick="closeMoAsk('mo-run-attach')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t" id="re-t">Приключено</div><button class="mo-x" onclick="closeMoAsk('mo-run-end')">×</button></div>
       <div class="mo-b">
-        <input type="search" id="ra-srch" data-tp="ph.tarsi-izdelie" placeholder="Търси изделие…" oninput="_renderRunAttachList()" style="width:100%;padding:9px 12px;margin-bottom:8px;border:1.5px solid var(--bdr2);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;">
-        <div id="ra-list" style="max-height:52vh;overflow-y:auto;"></div>
-        <button class="btn bp" id="ra-confirm" onclick="confirmRunAttach()" style="margin-top:14px;opacity:.5;" disabled data-t="ui.dobavi-2">Добави</button>
-        <button class="btn bg" onclick="closeMoAsk('mo-run-attach')" data-t="ui.otkazhi">Откажи</button>
+        <div class="f"><label id="re-l">Дата на изваждане</label><input type="date" id="re-date"></div>
+        <div id="re-msg" style="font-size:13px;color:var(--tx2);line-height:1.5;"></div>
+        <div class="btn-row"><button class="btn bg" onclick="closeMoAsk('mo-run-end')">Откажи</button><button class="btn bp" id="re-ok" onclick="confirmRunEnd()">Потвърди</button></div>
       </div>
     </div>
   </div>
@@ -2712,7 +2711,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.40.1';
+const APP_VERSION = 'v1.40.2';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -6756,14 +6755,18 @@ function saveSplit(){
   if(n>rem){toast('Остават само '+rem+' неразграничени');focusEl('sp-count');return;}
   var name=document.getElementById('sp-name').value.trim();
   if(!name){toast(t('msg.vavedi-naimenovanie'));focusEl('sp-name');return;}
-  var max=0;
-  _seriesMembers(se.id).forEach(function(m){
-    var k=parseInt(m.seriesNo,10);if(!isNaN(k)&&k>max)max=k;
-  });
   // Самоличността се наследява от серията. Процесът НЕ се копира — той се сливa
   // при четене, за да остане един собственик на общите стъпки.
   // v1.31.0: номерата на бройките — най-ниските неотделени.
   var _units=_allocUnits(se,_seriesMembers(se.id),n)||[];
+  _splitPieceFrom(se,_units,name,n);
+  save();closeMo('mo-split');renderPieces();openSeriesDet(curSeries);
+  toast(n>1?(n+' парчета са отделени'):'Отделено');
+}
+// v1.40.2: отделяне на парче от серия — общо за „Отдели“ и за счупена бройка.
+function _splitPieceFrom(se,_units,name,n){
+  var max=0;
+  _seriesMembers(se.id).forEach(function(m){var k=parseInt(m.seriesNo,10);if(!isNaN(k)&&k>max)max=k;});
   var p={
     id:uid(),name:name,photos:[],units:_units,
     type:se.type||'',clay:se.clay||'',technique:se.technique||'',
@@ -6780,8 +6783,7 @@ function saveSplit(){
   ['size','startMass','wall','base','categories'].forEach(function(k){if(se[k]!=null)p[k]=JSON.parse(JSON.stringify(se[k]));});
   DB.pieces.unshift(p);
   recomputePieceStage(p);
-  save();closeMo('mo-split');renderPieces();openSeriesDet(curSeries);
-  toast(n>1?(n+' парчета са отделени'):'Отделено');
+  return p;
 }
 // Връщане на парче в партидата не се прави — отделянето отразява решение, вече
 // взето върху глината.
@@ -8787,6 +8789,9 @@ function delMat(){
   if(linkedClay)   lines.push('• '+linkedClay+' записа го ползват като глина');
   if(linkedGlaze)  lines.push('• '+linkedGlaze+' записа го ползват като готова глазура');
   if(linkedMass)   lines.push('• '+linkedMass+' маси го съдържат като съставка');
+  // v1.40.2: и тестовете — като готова глазура или като маса на тест на маса.
+  var linkedTests=DB.tests.filter(function(t){return t&&(t.materialId===curMat||t.bodyRef==='mat:'+curMat);}).length;
+  if(linkedTests)  lines.push('• '+linkedTests+(linkedTests===1?' тест го ползва':' теста го ползват')+' (глазура или маса) — ще покажат „Изтрит“');
   if(lines.length){
     msg += '\n\nВнимание: свързани записи, които ще останат без него:\n'+lines.join('\n');
     msg += '\n\n(Те НЕ се изтриват — само материалът.)';
@@ -11137,12 +11142,8 @@ function setRunState(id,to){
     run.state='loaded';run.loadedAt=new Date().toISOString();
     _runSync(run);
   } else if(to==='completed'||to==='interrupted'){
-    var end=_todayISO();if(run.date&&run.date>end)end=run.date;
-    if(!confirm(to==='completed'?'Приключено?\n\nЕтапът на изделията се мести с дата '+end+'.':'Прекъснато?\n\nЕтапът на изделията не се мести. Резултатите и бележките могат да се запишат.'))return;
-    if(from==='planned'){run.state='loaded';run.loadedAt=new Date().toISOString();_runSync(run);}
-    run.state=to;run.endedAt=end;
-    DB.pieces.concat(DB.series||[]).forEach(function(rec){(rec&&rec.events||[]).forEach(function(e){if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.fromPlan)e.date=end;});});
-    _runRestage(run);
+    // v1.40.2: датата се избира (по подразбиране — на изпичането), не е „днес“ мълчаливо.
+    _openRunEnd(run,to);return;
   } else if(to==='loaded'&&(from==='completed'||from==='interrupted')){
     if(!confirm('Отвори отново?\n\nИзпичането става „Заредено“ — етапът на изделията се връща, докато не го приключиш пак.'))return;
     run.state='loaded';delete run.endedAt;_runRestage(run);
@@ -11150,6 +11151,36 @@ function setRunState(id,to){
     if(!confirm('Върни в план?\n\nСтъпките, които „Заредено“ създаде в изделията, се махат. Резултатите в плана остават.'))return;
     run.state='planned';delete run.loadedAt;_runUnload(run);
   } else return;
+  run.updatedAt=new Date().toISOString();
+  save();renderFiringRuns();openRunDet(run.id);
+  toast(RUN_STATES[run.state]);
+}
+var _runEndReq=null;
+function _runEndMax(run){var t=_todayISO();return run.date&&run.date>t?run.date:t;}
+function _openRunEnd(run,to){
+  _runEndReq={id:run.id,to:to};
+  var t=_todayISO(),def=run.date?(run.date<=t?run.date:run.date):t;
+  document.getElementById('re-t').textContent=to==='completed'?'Приключено':'Прекъснато';
+  document.getElementById('re-l').textContent=to==='completed'?'Дата на изваждане':'Дата на прекъсването';
+  var d=document.getElementById('re-date');d.value=def;d.min=run.date||'';d.max=_runEndMax(run);
+  document.getElementById('re-msg').textContent=to==='completed'
+    ?'Етапът на изделията се мести с тази дата и стъпката „изпичане“ в процеса им я получава. По подразбиране е датата на изпичането'+(run.date?' ('+run.date+')':'')+' — смени я, ако си изваждала по-късно.'
+    :'Етапът на изделията не се мести. Резултатите и бележките могат да се запишат.';
+  openMo('mo-run-end');
+}
+function confirmRunEnd(){
+  var q=_runEndReq;if(!q)return;
+  var run=DB.firingRuns.find(function(x){return x.id===q.id;});if(!run){closeMo('mo-run-end');return;}
+  var v=document.getElementById('re-date').value;
+  if(!v||!vDate(v)){toast('Въведи дата');focusEl('re-date');return;}
+  if(run.date&&v<run.date){toast('Датата е преди изпичането ('+run.date+')');focusEl('re-date');return;}
+  if(v>_runEndMax(run)){toast('Датата е в бъдещето');focusEl('re-date');return;}
+  _runEndReq=null;closeMo('mo-run-end');
+  var from=_runState(run),to=q.to,end=v;
+  if(from==='planned'){run.state='loaded';run.loadedAt=new Date().toISOString();_runSync(run);}
+  run.state=to;run.endedAt=end;
+  DB.pieces.concat(DB.series||[]).forEach(function(rec){(rec&&rec.events||[]).forEach(function(e){if(e&&e.type==='firing'&&e.data&&e.data.firingRunId===run.id&&e.data.fromPlan)e.date=end;});});
+  _runRestage(run);
   run.updatedAt=new Date().toISOString();
   save();renderFiringRuns();openRunDet(run.id);
   toast(RUN_STATES[run.state]);
@@ -11221,9 +11252,27 @@ function setPlanResult(id,v){
         p.events.push({id:uid(),type:'stage',date:run.endedAt||_todayISO(),note:'При изпичане „'+_runLabel(run)+'“',photos:[],data:{stageValue:'broken'}});
         p.updatedAt=new Date().toISOString();recomputePieceStage(p);save();toast('Отбелязано като Счупено');
       }
-    } else toast('За бройка от серия: отдели я от серията, за да я отбележиш като счупена.');
+    } else if(m.ref&&m.ref.kind==='series'&&m.ref.unit!=null)_brokenSeriesUnit(run,m);
+    else toast('За бройка от изделие с няколко парчета: отдели я, за да я отбележиш като счупена.');
   }
   renderPlan();
+}
+// v1.40.2: счупена бройка от серия — предлага да я отдели като парче със стъпка
+// „Счупено“ (номерът на бройката се пази). Така не влиза в следващото изпичане и
+// добивът на серията е точен. Ако бройката вече е отделена — както при изделие.
+function _brokenSeriesUnit(run,m){
+  var se=findSeries(m.ref.id);if(!se)return;
+  var u=Number(m.ref.unit),when=run.endedAt||_todayISO(),note='При изпичане „'+_runLabel(run)+'“';
+  var mem=_seriesMembers(se.id).find(function(p){return (p.units||[]).map(Number).indexOf(u)>=0;});
+  var brk=function(p){ensurePieceEvents(p);p.events.push({id:uid(),type:'stage',date:when,note:note,photos:[],data:{stageValue:'broken'}});p.updatedAt=new Date().toISOString();recomputePieceStage(p);};
+  if(mem){
+    if(isTerminalStage(mem.stage))return;
+    if(!confirm('Да отбележа ли „'+(mem.name||'')+'“ като Счупено?\n\nДобавя се стъпка „Етап: Счупено“ в процеса му.'))return;
+    brk(mem);save();toast('Отбелязано като Счупено');return;
+  }
+  if(!confirm('Бройка /'+u+' от „'+(se.name||'')+'“ е счупена.\n\nДа я отделя ли от серията като парче със стъпка „Етап: Счупено“? Така няма да влезе в следващото изпичане и добивът на серията ще е точен.'))return;
+  var p=_splitPieceFrom(se,[u],(se.name||'')+' /'+u,1);
+  brk(p);save();renderPieces();toast('Бройка /'+u+' е отделена като счупена');
 }
 function setPlanResultNote(id,v){
   var run=_plRun();if(!run)return;
