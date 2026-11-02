@@ -944,6 +944,20 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 }
 .pi-foot{position:sticky;bottom:0;background:var(--surface);display:flex;gap:10px;padding:10px 0 4px;margin-top:12px;border-top:1px solid var(--bdr);z-index:5;}
 .pi-foot .btn{margin-top:0;flex:1;}
+/* v1.42.0: архив, чернови, стари имена на глини */
+.arc-bar{display:flex;justify-content:flex-end;margin:0 0 8px;}
+.arc-bar:empty{display:none;}
+.arc-lnk{background:none;border:none;color:var(--tx2);font:inherit;font-size:12px;cursor:pointer;padding:6px 2px;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;}
+.arc-hd{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border-radius:12px;background:var(--warnbg);color:var(--warn);font-size:13px;}
+.arc-hd span{flex:1;min-width:160px;color:var(--tx2);font-size:12px;}
+.arc-hd .btn{width:auto;margin:0;padding:6px 12px;}
+.arc-ban{margin:0 0 12px;padding:9px 12px;border-radius:10px;background:var(--warnbg);color:var(--warn);font-size:13px;line-height:1.45;}
+.dr-ban{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 14px;padding:10px 12px;border-radius:12px;background:var(--warnbg);color:var(--warn);font-size:13px;}
+.dr-ban span{flex:1;min-width:160px;color:var(--tx2);font-size:12px;}
+.dr-ban>div{display:flex;gap:8px;}
+.dr-ban .btn,.dr-li .btn{width:auto;margin:0;padding:7px 12px;}
+.dr-li{display:flex;align-items:center;gap:8px;cursor:default;}
+.cl-lnk{font-size:12px;margin-left:6px;}
 </style>
 </head>
 <body>
@@ -1286,7 +1300,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
     <div class="btn-row">
       <button class="btn bg" onclick="openRunMo(curRun)" data-t="ui.redaktiray">Редактирай</button>
-      <button class="btn bd" onclick="deleteRun()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" data-arc-res onclick="restoreRec('run')" style="display:none">Върни от архива</button>
+      <button class="btn bd" onclick="deleteRun()" data-arc-del>Архивирай</button>
     </div>
   </div>
 </div>
@@ -1336,7 +1351,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="btn-row">
       <button class="btn bg" onclick="editFP()" data-t="ui.redaktiray">Редактирай</button>
       <button class="btn bg" onclick="dupFP()" data-t="ui.dubliray">Дублирай</button>
-      <button class="btn bd" onclick="delFP()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" data-arc-res onclick="restoreRec('fp')" style="display:none">Върни от архива</button>
+      <button class="btn bd" onclick="delFP()" data-arc-del>Архивирай</button>
     </div>
   </div>
 </div>
@@ -1533,7 +1549,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="btn-row" style="margin-top:18px;">
       <button class="btn bg" onclick="editRecipe()" data-t="ui.redaktiray">Редактирай</button>
       <button class="btn bg" onclick="dupRecipe()" data-t="ui.dubliray">Дублирай</button>
-      <button class="btn bd" onclick="delRecipe()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" data-arc-res onclick="restoreRec('rec')" style="display:none">Върни от архива</button>
+      <button class="btn bd" onclick="delRecipe()" data-arc-del>Архивирай</button>
     </div>
   </div>
 </div>
@@ -1567,7 +1584,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div class="ds"><div class="ds-t" data-t="ui.izvodi">Изводи</div><div id="dtest-notes" class="rd-notes"></div><div id="dtest-upd" class="rd-upd"></div></div>
     <div class="ds"><div class="ds-t">Връзки</div><div id="dtest-links"></div></div>
     <div class="btn-row" style="margin-top:18px;">
-      <button class="btn bd" onclick="delTest()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" data-arc-res onclick="restoreRec('test')" style="display:none">Върни от архива</button>
+      <button class="btn bd" onclick="delTest()" data-arc-del>Архивирай</button>
     </div>
   </div>
 </div>
@@ -1611,7 +1629,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     <div id="dmat-mkmass-row" style="display:none;margin-top:14px"><div id="dmat-mkmass-val"></div></div>
     <div class="btn-row" style="margin-top:18px;">
       <button class="btn bg" onclick="editMat()" data-t="ui.redaktiray">Редактирай</button>
-      <button class="btn bd" onclick="delMat()" data-t="ui.iztriy">Изтрий</button>
+      <button class="btn bg" data-arc-res onclick="restoreRec('mat')" style="display:none">Върни от архива</button>
+      <button class="btn bd" onclick="delMat()" data-arc-del>Архивирай</button>
     </div>
   </div>
 </div>
@@ -2438,6 +2457,21 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 </div>
 
 <!-- v1.40.2: „Приключено“ / „Прекъснато“ — с дата; по подразбиране датата на изпичането -->
+<!-- v1.42.0: доброволно свързване на старо име на глина с материал -->
+<div class="mo" id="mo-claylink" onclick="closeBg(event,'mo-claylink')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t">Свържи старо име</div><button class="mo-x" onclick="closeMoAsk('mo-claylink')">×</button></div>
+      <div class="mo-b">
+        <div id="cl-txt" style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:12px;"></div>
+        <div class="f"><label>Материал</label><select id="cl-mat"></select></div>
+        <div class="f"><label>Кои записи</label><select id="cl-scope"></select></div>
+        <div class="btn-row"><button class="btn bg" onclick="closeMoAsk('mo-claylink')">Откажи</button><button class="btn bp" id="cl-ok" onclick="clayLinkSave()">Свържи</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="mo" id="mo-run-end" onclick="closeBg(event,'mo-run-end')">
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
@@ -2768,7 +2802,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.41.0';
+const APP_VERSION = 'v1.42.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -4223,9 +4257,9 @@ function evOpenRunResult(){
 // v1.40.3: нова стъпка „изпичане“ предлага общо изпичане (ново или вече записано).
 function _populateEvFiringRunPicker(cur,isNew){
   var sel=document.getElementById('ev-firing-run');if(!sel)return;
-  var runs=DB.firingRuns.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  var runs=DB.firingRuns.filter(function(r){return _arcVis(r,cur);}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
   sel.innerHTML='<option value="">— самостоятелна стъпка (без общо изпичане) —</option><option value="__new">+ Ново изпичане от тази стъпка</option>'
-    +runs.map(function(r){return '<option value="'+r.id+'">'+_kEsc(_runLabel(r))+'</option>';}).join('');
+    +runs.map(function(r){return '<option value="'+r.id+'">'+_kEsc(_runLabel(r)+_arcSfx(r))+'</option>';}).join('');
   if(!cur&&isNew)cur='__new';
   sel.value=cur||'';
 }
@@ -4282,15 +4316,15 @@ function _populateDecMaterialPicker(technique){
   if(!sel)return;
   if(technique==='glaze'){
     // Grouped: recipes + glaze materials (rec:/mat: prefix)
-    var recOpts=DB.recipes.map(function(r){return '<option value="rec:'+r.id+'">'+r.name+'</option>';}).join('');
-    var glzMats=DB.materials.filter(function(m){return m.cat==='glaze';});
+    var recOpts=DB.recipes.filter(function(r){return !r.archivedAt;}).map(function(r){return '<option value="rec:'+r.id+'">'+r.name+'</option>';}).join('');
+    var glzMats=DB.materials.filter(function(m){return m.cat==='glaze'&&!m.archivedAt;});
     var matOpts=glzMats.map(function(m){return '<option value="mat:'+m.id+'">'+m.name+'</option>';}).join('');
     sel.innerHTML='<option value="">— избери —</option>'
       +(recOpts?'<optgroup label="Рецепти">'+recOpts+'</optgroup>':'')
       +(matOpts?'<optgroup label="Готови глазури">'+matOpts+'</optgroup>':'');
   } else {
     var cats=_decMaterialCats(technique);
-    var mats=DB.materials.filter(function(m){return cats.indexOf(m.cat)>=0;});
+    var mats=DB.materials.filter(function(m){return cats.indexOf(m.cat)>=0&&!m.archivedAt;});
     // Sort alphabetically
     mats.sort(function(a,b){return (a.name||'').localeCompare(b.name||'','bg');});
     sel.innerHTML='<option value="">— избери —</option>'
@@ -4522,7 +4556,7 @@ function _populateMassCompPicker(){
   Object.keys(groups).forEach(function(cat){
     var items=DB.materials.filter(function(m){
       if(m.cat!==cat)return false;
-      if(m.wishlist)return false;
+      if(m.wishlist||m.archivedAt)return false;
       var ref='mat:'+m.id;
       if(massComps.some(function(c){return c.ref===ref;}))return false;   // already added
       if(curMassEditId){
@@ -4536,7 +4570,7 @@ function _populateMassCompPicker(){
       +items.map(function(m){return '<option value="mat:'+m.id+'">'+m.name+'</option>';}).join('')
       +'</optgroup>';
   });
-  var recs=DB.recipes.filter(function(r){return !massComps.some(function(c){return c.ref==='rec:'+r.id;});});
+  var recs=DB.recipes.filter(function(r){return !r.archivedAt&&!massComps.some(function(c){return c.ref==='rec:'+r.id;});});
   if(recs.length){
     html+='<optgroup label="Рецепти">'
       +recs.map(function(r){return '<option value="rec:'+r.id+'">'+r.name+'</option>';}).join('')
@@ -5774,8 +5808,8 @@ function fActive(ns,key){return !!(activeFilters[ns]&&activeFilters[ns][key]);}
 // ─────────────────────────────────────────────────────────────
 // ══ NOTIFICATIONS ══
 function getLowStock(){
-  return DB.materials.filter(m=>m.alertAt&&m.stock!=null&&parseFloat(m.stock)<=parseFloat(m.alertAt)&&parseFloat(m.stock)>0)
-    .concat(DB.materials.filter(m=>m.stock!=null&&parseFloat(m.stock)===0));
+  return DB.materials.filter(m=>!m.archivedAt&&m.alertAt&&m.stock!=null&&parseFloat(m.stock)<=parseFloat(m.alertAt)&&parseFloat(m.stock)>0)
+    .concat(DB.materials.filter(m=>!m.archivedAt&&m.stock!=null&&parseFloat(m.stock)===0));
 }
 function updateNotifBadge(){
   const low=getLowStock();
@@ -6115,7 +6149,7 @@ function _updatePcFilterBadge(){var b=document.getElementById('pc-filter-badge')
 
 // v1.36.0: МОЕТО АТЕЛИЕ — обзор, изведен от данните. Отделен екран (бутонът с
 // къщичка в „Изделия“), не начален.
-function _homeActiveRuns(){return (DB.firingRuns||[]).filter(function(r){var s=_runState(r);return s==='planned'||s==='loaded';});}
+function _homeActiveRuns(){return (DB.firingRuns||[]).filter(function(r){if(r.archivedAt)return false;var s=_runState(r);return s==='planned'||s==='loaded';});}
 // Колко бройки на всеки запис вече са в активен план (планиран или зареден).
 function _homePlanned(){
   var n={};
@@ -6177,6 +6211,7 @@ function renderHome(){
     var ser=!!findSeries(p.id)&&!p.seriesId;
     return _homeLi(_pcOpen(p,ser),_pcImg(p),p.name||'—',[ser?(p.code||''):pieceCode(p),ser&&_seriesStageSummary(p).mixed?'смесен етап':stageLabel(p.stage||'wet'),_pcDate(p.updatedAt||p.date)].filter(Boolean).join(' · '));
   }).join(''):'<div class="hm-empty">Още няма изделия.</div>')+'</div>';
+  h=_drHomeHtml()+h; // v1.42.0
   body.innerHTML=h;
 }
 
@@ -6278,10 +6313,11 @@ function _tMeas(b){
 function _tF(n){return n==null?'':(Math.round(n*10)/10).toFixed(1).replace('.',',');}
 function _tsMatch(t,q,skip){
   var f=activeFilters.test||{};
+  if(!_arcOk('test',t))return false; // v1.42.0
   if(f.glaze&&testKind(t)!=='glaze')return false;
   if(f.body&&testKind(t)!=='body')return false;
   if(skip!=='recs'&&TS.recs.length&&TS.recs.indexOf(_tKey(t))<0)return false;
-  if(skip!=='clays'&&TS.clays.length&&TS.clays.indexOf(testKind(t)==='body'?'(маса)':(t.clay||''))<0)return false;
+  if(skip!=='clays'&&TS.clays.length&&TS.clays.indexOf(testKind(t)==='body'?'(маса)':clayName(t.clay||''))<0)return false;
   if(skip!=='temps'&&TS.temps.length&&TS.temps.indexOf(String(t.temp||''))<0)return false;
   if(skip!=='surf'&&TS.surf.length&&TS.surf.indexOf(t.surf||'')<0)return false;
   var def=TS.def||(f.nodef?'none':f.hasdef?'has':'');
@@ -6304,12 +6340,12 @@ function _tsSideHtml(q){
   var cnt=function(skip,fn){return DB.tests.filter(function(t){return _tsMatch(t,q,skip)&&fn(t);}).length;};
   var chipA=function(k,v,label,fn){var on=TS[k].indexOf(v)>=0;return '<button type="button" class="fchip'+(on?' on':'')+'" onclick="tsTog(\''+k+'\','+JSON.stringify(v).replace(/"/g,'&quot;')+')">'+_pdE(label)+' <span class="n">'+cnt(k,fn)+'</span></button>';};
   var chipS=function(k,v,label,fn){return '<button type="button" class="fchip'+(TS[k]===v?' on':'')+'" onclick="tsSet(\''+k+'\',\''+v+'\')">'+label+' <span class="n">'+cnt(k,fn)+'</span></button>';};
-  var keys=[],clays=[],temps=[];DB.tests.forEach(function(t){var k=_tKey(t);if(keys.indexOf(k)<0)keys.push(k);var c=testKind(t)==='body'?'(маса)':(t.clay||'');if(c&&clays.indexOf(c)<0)clays.push(c);var tp=String(t.temp||'');if(tp&&temps.indexOf(tp)<0)temps.push(tp);});
+  var keys=[],clays=[],temps=[];DB.tests.forEach(function(t){if(!_arcOk('test',t))return;var k=_tKey(t);if(keys.indexOf(k)<0)keys.push(k);var c=testKind(t)==='body'?'(маса)':clayName(t.clay||'');if(c&&clays.indexOf(c)<0)clays.push(c);var tp=String(t.temp||'');if(tp&&temps.indexOf(tp)<0)temps.push(tp);});
   temps.sort(function(a,b){return parseFloat(a)-parseFloat(b);});
   var surfs=[];DB.tests.forEach(function(t){if(t.surf&&surfs.indexOf(t.surf)<0)surfs.push(t.surf);});
   return '<div class="pc-side-top"><h2 style="font-size:20px;font-weight:400">Филтри</h2><button type="button" class="btn bg pc-side-x" style="width:auto;padding:8px 14px;margin:0" onclick="toggleTestFilters()">Готово</button></div>'
     +'<h3>Рецепта / глазура / маса</h3><div class="fchips">'+keys.map(function(k){var t=DB.tests.find(function(x){return _tKey(x)===k;});return chipA('recs',k,_tTitle(t),function(x){return _tKey(x)===k;});}).join('')+'</div>'
-    +(clays.length?'<h3>Глина / основа</h3><div class="fchips">'+clays.map(function(c){return chipA('clays',c,c==='(маса)'?'тест на маса':c,function(x){return (testKind(x)==='body'?'(маса)':(x.clay||''))===c;});}).join('')+'</div>':'')
+    +(clays.length?'<h3>Глина / основа</h3><div class="fchips">'+clays.map(function(c){return chipA('clays',c,c==='(маса)'?'тест на маса':c,function(x){return (testKind(x)==='body'?'(маса)':clayName(x.clay||''))===c;});}).join('')+'</div>':'')
     +(temps.length?'<h3>Температура</h3><div class="fchips">'+temps.map(function(v){return chipA('temps',v,v+'°C',function(x){return String(x.temp||'')===v;});}).join('')+'</div>':'')
     +(surfs.length?'<h3>Повърхност</h3><div class="fchips">'+surfs.map(function(v){return chipA('surf',v,v,function(x){return x.surf===v;});}).join('')+'</div>':'')
     +'<h3>Дефекти</h3><div class="fchips">'+chipS('def','none','Без дефекти (Няма)',function(x){return x.def==='Няма';})+chipS('def','has','С дефекти',_tDefBad)+chipS('def','unk','Не са отбелязани',function(x){return testKind(x)==='glaze'&&!x.def;})+'</div>'
@@ -6339,8 +6375,9 @@ function renderTests(){
   else if(so==='temp')items.sort(function(a,b){return (parseFloat(a.temp)||9999)-(parseFloat(b.temp)||9999);});
   else items.sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
   var ac=_tsActive(),hasQ=!!q||ac.length>0;
-  document.getElementById('cnt-tests').textContent=(hasQ?items.length+' от ':'')+DB.tests.length+' теста';
-  var kc={'':DB.tests.length,glaze:DB.tests.filter(function(t){return testKind(t)==='glaze';}).length,body:DB.tests.filter(function(t){return testKind(t)==='body';}).length};
+  var _at=DB.tests.filter(function(t){return _arcOk('test',t);});
+  document.getElementById('cnt-tests').textContent=(hasQ?items.length+' от ':'')+_at.length+' теста';
+  var kc={'':_at.length,glaze:_at.filter(function(t){return testKind(t)==='glaze';}).length,body:_at.filter(function(t){return testKind(t)==='body';}).length};
   var kk=f.glaze?'glaze':f.body?'body':'';
   document.getElementById('ts-kinds').innerHTML=[['','Всички'],['glaze','Глазурни'],['body','На маси']].map(function(x){return '<button type="button" class="fchip'+(kk===x[0]?' on':'')+'"'+(x[0]?' id="fc-test-'+x[0]+'"':'')+' onclick="tsKind(\''+x[0]+'\')">'+(x[0]?'<span class="tk '+x[0]+'">'+TEST_IC[x[0]]+'</span>':'')+x[1]+' <span class="n">'+kc[x[0]]+'</span></button>';}).join('');
   ['gal','list'].forEach(function(v){var b=document.getElementById('ts-v-'+v);if(b)b.classList.toggle('on',TS.view===v);});
@@ -6350,7 +6387,7 @@ function renderTests(){
   var side=document.getElementById('ts-side');if(side){side.innerHTML=_tsSideHtml(q);side.classList.toggle('on',TS.side&&(window.innerWidth>=960||_overlayStack.some(function(e){return e.id==='ts-side';})));}
   var act=document.getElementById('ts-active');if(act)act.innerHTML=ac.length?ac.map(function(x){return '<button type="button" class="pc-achip" onclick="tsUnset(\''+x[0]+'\','+JSON.stringify(x[1]).replace(/"/g,'&quot;')+')">'+_pdE(x[2])+' ✕</button>';}).join('')+'<button type="button" class="pc-achip clr" onclick="resetTestFilters()">изчисти</button>':'';
   var hint=document.getElementById('ts-cmp-hint');if(hint)hint.style.display=TS.cmp?'':'none';
-  var l=document.getElementById('tests-list');
+  var l=document.getElementById('tests-list');_arcBar('test',l);
   if(!items.length){l.className='';l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">'+(hasQ?'Няма резултати':'Няма тестове')+'</div><div class="empty-s">'+(hasQ?'Промени търсенето или филтрите':'Натисни + за да добавиш')+'</div></div>';}
   else{l.className=TS.view==='list'?'rc-list':'ts-gal';l.innerHTML=items.map(TS.view==='list'?_tsRow:_tsCard).join('');}
   _tsBar();
@@ -6405,7 +6442,7 @@ function openTestDet(id){
   document.getElementById('dtest-warns').innerHTML=notes.length?'<div class="md-warns">'+notes.join('')+'</div>':'';
   // изпичане и основа
   document.getElementById('dtest-params').innerHTML=_kv(body?[['Маса',t.bodyRef?_resolveMaterialRef(t.bodyRef):''],['Профил',fp?fp.name:(t.firingProfileId?'Изтрит профил':'')],['Изпичане',run?_runLabel(run):''],['Температура',t.temp?t.temp+'°C':''],['Задръжка',t.hold?t.hold+' мин':''],['Дата',t.date]]
-    :[['Глазура',rec?_recDisplayName(rec):(t.recipeId?'Изтрита рецепта':(mat?mat.name+' (готова)':(t.materialId?'Изтрита глазура':'')))],['Глина',t.clay?clayName(t.clay):''],['Профил',fp?fp.name:(t.firingProfileId?'Изтрит профил':'')],['Изпичане',run?_runLabel(run):''],['Температура',t.temp?t.temp+'°C':''],['Задръжка',t.hold?t.hold+' мин':''],['Дата',t.date]]);
+    :[['Глазура',rec?_recDisplayName(rec):(t.recipeId?'Изтрита рецепта':(mat?mat.name+' (готова)':(t.materialId?'Изтрита глазура':'')))],(t.clay?['Глина',_clayMat(t.clay)?'<button type="button" class="rd-link" onclick="openMatDet(\''+_clayMat(t.clay).id+'\')">'+_pdE(_clayMat(t.clay).name)+'</button>':_clayLegacyHtml(t.clay,'test',t.id),1]:['Глина','']),['Профил',fp?fp.name:(t.firingProfileId?'Изтрит профил':'')],['Изпичане',run?_runLabel(run):''],['Температура',t.temp?t.temp+'°C':''],['Задръжка',t.hold?t.hold+' мин':''],['Дата',t.date]]);
   // резултат на масата
   _mdShow('dtest-body-row',body);
   if(body){var sh=ms.sh||{};
@@ -6661,8 +6698,8 @@ function _pdTimeline(o){
 }
 function _pdMaterials(o,kind){
   // v1.40.4: глината/масата е връзка, когато е материал.
-  var _cm=o.clay?DB.materials.find(function(x){return x&&x.id===o.clay;}):null;
-  var rows=[dr('Глина',_cm?'<button type="button" class="rd-link" onclick="openMatDet(\''+_cm.id+'\')">'+_pdE(_cm.name)+'</button>':_pdE(clayName(o.clay))),dr('Техника',o.technique)];
+  var _cm=_clayMat(o.clay); // v1.42.0: и старите записи по име
+  var rows=[dr('Глина',_cm?'<button type="button" class="rd-link" onclick="openMatDet(\''+_cm.id+'\')">'+_pdE(_cm.name)+'</button>':_clayLegacyHtml(o.clay,kind==='series'?'series':'piece',o.id)),dr('Техника',o.technique)];
   if(o.bisqueTemp)rows.push(dr('Бисквит',o.bisqueTemp+'°C'));
   var g=o.glazeTemp||o.temp;if(g)rows.push(dr('Глазурно',g+'°C'));
   var rec=o.recipe?DB.recipes.find(function(x){return x&&x.id===o.recipe;}):null;
@@ -6825,7 +6862,7 @@ var _pdPlanFor=null;
 function openPdPlan(kind,purpose){
   var o=kind==='series'?findSeries(curSeries):DB.pieces.find(function(x){return x.id===curPiece;});if(!o)return;
   _pdPlanFor={kind:kind,id:o.id};
-  var runs=DB.firingRuns.filter(function(r){var s=_runState(r);return s==='planned'||s==='loaded';})
+  var runs=DB.firingRuns.filter(function(r){if(r.archivedAt)return false;var s=_runState(r);return s==='planned'||s==='loaded';})
     .sort(function(a,b){return (purpose&&b.purpose===purpose?1:0)-(purpose&&a.purpose===purpose?1:0)||String(a.date||'').localeCompare(String(b.date||''));});
   var key=kind+':'+o.id;
   var html=runs.map(function(r){
@@ -7025,7 +7062,8 @@ function _recBand(r){var t=parseFloat(r.temp);if(!t)return '';return t<1200?'lt1
 function _rcTypes(){var f=activeFilters.rec||{},t=RC.types.slice();['ash','matte','gloss'].forEach(function(k){if(f[k]&&t.indexOf(k)<0)t.push(k);});return t;}
 function _rcMatch(r,q,skip){
   var f=activeFilters.rec||{};
-  if(!f.allver&&!_recIsLatest(r))return false;
+  if(!_arcOk('rec',r))return false; // v1.42.0
+  if(!f.allver&&ARCV.rec!=='arch'&&!_rcIsHead(r))return false;
   if(f.fav&&!r.fav)return false;
   var bands=['lt1200','1200','gt1240'].filter(function(k){return f[k];});
   if(skip!=='temp'&&bands.length&&bands.indexOf(_recBand(r))<0)return false;
@@ -7050,7 +7088,7 @@ function _rcActive(){
   return a;
 }
 function _rcSideHtml(q){
-  var f=activeFilters.rec||{},vis=DB.recipes.filter(function(r){return f.allver||_recIsLatest(r);});
+  var f=activeFilters.rec||{},vis=DB.recipes.filter(function(r){return _arcOk('rec',r)&&(f.allver||ARCV.rec==='arch'||_rcIsHead(r));});
   var cnt=function(skip,fn){var n=0;vis.forEach(function(r){if(_rcMatch(r,q,skip)&&fn(r))n++;});return n;};
   var chip=function(on,label,click,n,id){return '<button type="button" class="fchip'+(on?' on':'')+'"'+(id?' id="'+id+'"':'')+' onclick="'+click+'">'+_pdE(label)+(n!=null?' <span class="n">'+n+'</span>':'')+'</button>';};
   var ty=_rcTypes(),ingN={};vis.forEach(function(r){(r.ingredients||[]).forEach(function(i){if(i.name)ingN[i.name]=(ingN[i.name]||0)+1;});});
@@ -7092,7 +7130,7 @@ function renderRecipes(){
   else if(so==='temp')items.sort(function(a,b){return (parseFloat(a.temp)||9999)-(parseFloat(b.temp)||9999)||a.name.localeCompare(b.name,'bg');});
   else items.sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);});
   var ac=_rcActive(),hasQ=!!q||ac.length>0;
-  var total=DB.recipes.filter(function(r){return _recIsLatest(r);}).length;
+  var total=DB.recipes.filter(function(r){return _arcOk('rec',r)&&(ARCV.rec==='arch'||_rcIsHead(r));}).length;
   document.getElementById('cnt-recipes').textContent=hasQ?items.length+' от '+total+' рецепти':items.length+' рецепти';
   var fb=document.getElementById('fav-filter-btn');if(fb){fb.style.color=f.fav?'var(--acc)':'var(--tx3)';fb.textContent=f.fav?'♥':'♡';}
   ['cards','list'].forEach(function(v){var b=document.getElementById('rc-v-'+v);if(b)b.classList.toggle('on',RC.view===v);});
@@ -7103,7 +7141,7 @@ function renderRecipes(){
   var side=document.getElementById('rc-side');if(side){side.innerHTML=_rcSideHtml(q);side.classList.toggle('on',RC.side);}
   var act=document.getElementById('rc-active');
   if(act)act.innerHTML=ac.length?ac.map(function(x){return '<button type="button" class="pc-achip" onclick="rcUnset(\''+x[0]+'\','+JSON.stringify(x[1]).replace(/"/g,'&quot;')+')">'+_pdE(x[2])+' ✕</button>';}).join('')+'<button type="button" class="pc-achip clr" onclick="resetRecFilters()">изчисти</button>':'';
-  var l=document.getElementById('recipes-list');
+  var l=document.getElementById('recipes-list');_arcBar('rec',l);
   if(!items.length){l.className='';l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">'+(hasQ?'Няма резултати':'Няма рецепти')+'</div></div>';return;}
   l.className=RC.view==='list'?'rc-list':'rc-cards';
   l.innerHTML=items.map(RC.view==='list'?_rcRow:_rcCard).join('');
@@ -7281,6 +7319,7 @@ function _mtIcon(m){return m.photo?'<span class="md-ic sm"><img src="'+m.photo+'
 function _mtChip(m){var s=_mtStock(m);if(m.cat==='mass')return '';return s==='none'?'<span class="stock-chip mt-none">без количество</span>':'<span class="stock-chip'+(s==='ok'?'':' sc-low')+(s==='zero'?' mt-zero':'')+'">'+_mtF(m.stock)+' г</span>';}
 function _mtMatch(m,q,skip){
   var g=matTab||'all';
+  if(!_arcOk('mat',m))return false; // v1.42.0
   if(skip!=='grp'){if(g==='wish'){if(m.wishlist!==true)return false;}else if(g!=='all'&&(m.cat!==g||m.wishlist===true))return false;}
   var st=_mtStock(m),f=activeFilters.mat||{};
   var sf=MT.stock||(f.lowstock?'low':'');
@@ -7333,16 +7372,17 @@ function renderMaterials(){
   else if(so==='upd')list.sort(function(a,b){return String(b.updatedAt||'').localeCompare(String(a.updatedAt||''));});
   else if(so==='rec')list.sort(function(a,b){return _mtRecipes(b).length-_mtRecipes(a).length||a.name.localeCompare(b.name,'bg');});
   else list.sort(function(a,b){return a.name.localeCompare(b.name,'bg');});
-  var gc={all:DB.materials.length,wish:DB.materials.filter(function(m){return m.wishlist===true;}).length};MAT_CATS.forEach(function(c){gc[c[0]]=DB.materials.filter(function(m){return m.cat===c[0]&&m.wishlist!==true;}).length;});
+  var _am=DB.materials.filter(function(m){return _arcOk('mat',m);});
+  var gc={all:_am.length,wish:_am.filter(function(m){return m.wishlist===true;}).length};MAT_CATS.forEach(function(c){gc[c[0]]=_am.filter(function(m){return m.cat===c[0]&&m.wishlist!==true;}).length;});
   var low=getLowStock().length,ac=_mtActive();
-  document.getElementById('cnt-mats').textContent=(q||ac.length||g!=='all'?list.length+' от ':'')+DB.materials.length+' материала'+(low?' · '+low+' за зареждане':'');
+  document.getElementById('cnt-mats').textContent=(q||ac.length||g!=='all'?list.length+' от ':'')+_am.length+' материала'+(low&&ARCV.mat!=='arch'?' · '+low+' за зареждане':'');
   document.getElementById('mat-tabs').innerHTML=[['all','Всички']].concat(MAT_CATS.map(function(c){return [c[0],c[1]];})).concat([['wish','Wishlist']]).map(function(x){return gc[x[0]]||g===x[0]?'<button type="button" class="fchip tb'+(g===x[0]?' on':'')+'" id="mbtab-'+x[0]+'" onclick="switchMat(\''+x[0]+'\')">'+x[1]+' <span class="n">'+gc[x[0]]+'</span></button>':'';}).join('');
   ['list','cards','stock'].forEach(function(v){var b=document.getElementById('mt-v-'+v);if(b){b.classList.toggle('on',MT.view===v);if(v==='stock')b.textContent='Наличности'+(low?' · '+low:'');}});
   var so2=document.getElementById('mt-sort');if(so2)so2.value=so;
   var bd=document.getElementById('mt-filter-badge');if(bd)bd.textContent=ac.length?' ('+ac.length+')':'';
   var side=document.getElementById('mt-side');if(side){side.innerHTML=_mtSideHtml(q);side.classList.toggle('on',MT.side);}
   var act=document.getElementById('mt-active');if(act)act.innerHTML=ac.length?ac.map(function(x){return '<button type="button" class="pc-achip" onclick="mtUnset(\''+x[0]+'\')">'+_pdE(x[1])+' ✕</button>';}).join('')+'<button type="button" class="pc-achip clr" onclick="resetMatFilters()">изчисти</button>':'';
-  var el=document.getElementById('mat-list');
+  var el=document.getElementById('mat-list');_arcBar('mat',el);
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-k">∅</div><div class="empty-t">'+(q||ac.length?'Няма резултати':g==='wish'?'Wishlist е празен':'Няма добавени')+'</div></div>';return;}
   if(MT.view==='stock'){el.innerHTML=_mtStockList(list);return;}
   var groups=g==='all'&&so==='name'?MAT_CATS.map(function(c){return [c[0],c[1],list.filter(function(m){return m.cat===c[0]&&m.wishlist!==true;})];}).concat([['wish','Wishlist',list.filter(function(m){return m.wishlist===true;})]]).filter(function(x){return x[2].length;}):[[null,null,list]];
@@ -7714,12 +7754,87 @@ function openPieceMo(p){
 function _buildPiClayDropdown(p){
   const cs=document.getElementById('pi-clay');
   if(!cs)return;
-  var _matClays=DB.materials.filter(function(m){return m.cat==='clays'||m.cat==='mass';});
-  var _matClayNames=_matClays.map(function(m){return m.name;});
-  var _extraClays=CLAY_NAMES.filter(function(n){return _matClayNames.indexOf(n)<0;});
-  cs.innerHTML='<option value="">—</option>'+_extraClays.map(function(n){return '<option '+(p&&p.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
-    _matClays.map(function(m){return '<option value="'+m.id+'" '+(p&&p.clay===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
+  cs.innerHTML=_clayOpts(p&&p.clay,'id'); // v1.42.0: общият избор
   if(p&&p.clay)cs.value=p.clay;
+}
+// ══ v1.42.0: един избор на глина/маса — изделия, серии и тестове ══
+// Източникът са материалите „Глини“ и „Маси“. Старите свободни имена остават в група
+// „Стари имена“ — само за показване и избор; нищо не се преименува и не се слива само.
+// Запис, който сочи по име към съществуващ материал, си пази името (стойността не се
+// сменя при редакция) — в списъка се вижда като самия материал, без повторение.
+function _clayKey(v){return String(v==null?'':v).trim().toLowerCase();}
+function _clayMats(){return DB.materials.filter(function(m){return m&&(m.cat==='clays'||m.cat==='mass');});}
+// материалът зад стойност: по id, а за старите записи — по същото име
+function _clayMat(v){
+  if(!v)return null;var ms=_clayMats(),k=_clayKey(v);
+  var byName=ms.filter(function(m){return _clayKey(m.name)===k;}).sort(function(a,b){return (!!a.wishlist-!!b.wishlist)||(!!a.archivedAt-!!b.archivedAt);});
+  return DB.materials.find(function(m){return m&&m.id===v;})||byName[0]||null;
+}
+function _clayIsLegacy(v){return !!v&&!_clayMat(v);}
+function _clayUses(name){
+  var k=_clayKey(name),a=[];
+  DB.pieces.concat(DB.series||[]).forEach(function(p){if(p&&p.clay&&_clayKey(p.clay)===k&&!_clayMat(p.clay))a.push(p);});
+  DB.tests.forEach(function(t){if(t&&testKind(t)!=='body'&&t.clay&&_clayKey(t.clay)===k&&!_clayMat(t.clay))a.push(t);});
+  return a;
+}
+// стари имена: употребените в записи + вградените, ако няма материал със същото (или по-дълго) име
+function _clayLegacyNames(cur){
+  var mk=_clayMats().map(function(m){return _clayKey(m.name);}),seen={},out=[];
+  var add=function(v,builtin){var k=_clayKey(v);if(!k||seen[k]||_clayMat(v))return;
+    if(builtin&&mk.some(function(x){return x.indexOf(k)===0;}))return;seen[k]=1;out.push(String(v));};
+  if(cur)add(cur);
+  DB.pieces.concat(DB.series||[]).forEach(function(p){if(p&&p.clay)add(p.clay);});
+  DB.tests.forEach(function(t){if(t&&testKind(t)!=='body'&&t.clay)add(t.clay);});
+  CLAY_NAMES.forEach(function(n){add(n,true);});
+  return out.sort(function(a,b){return a.localeCompare(b,'bg');});
+}
+// mode 'id' — стойността е id на материала (изделия, серии, основа на глазурен тест);
+// mode 'ref' — 'mat:'+id (тест на маса). Архивираните — само ако записът вече сочи към тях.
+function _clayOpts(cur,mode){
+  cur=cur||'';
+  var cm=mode==='ref'?(cur.indexOf('mat:')===0?DB.materials.find(function(m){return m&&m.id===cur.slice(4);}):null):_clayMat(cur);
+  var val=function(m){return mode==='ref'?'mat:'+m.id:(cm&&cm.id===m.id?cur:m.id);};
+  var o=function(v,l){return '<option value="'+_pdE(v)+'"'+(v===cur?' selected':'')+'>'+_pdE(l)+'</option>';};
+  var h='<option value="">—</option>',seen={};
+  [['clays','Глини'],['mass','Маси']].forEach(function(g){
+    var ms=_clayMats().filter(function(m){return m.cat===g[0]&&(!m.archivedAt||(cm&&cm.id===m.id));})
+      .sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'bg');});
+    if(ms.length)h+='<optgroup label="'+g[1]+'">'+ms.map(function(m){var l=m.name+(m.wishlist?' · wishlist':'');if(seen[_clayKey(l)])l+=' · '+(m.brand||m.id);seen[_clayKey(l)]=1;return o(val(m),l+_arcSfx(m));}).join('')+'</optgroup>';
+  });
+  if(mode!=='ref'){
+    var L=_clayLegacyNames(cur);
+    if(L.length)h+='<optgroup label="Стари имена (без материал)">'+L.map(function(n){return o(n,n);}).join('')+'</optgroup>';
+  }else if(cur&&!cm)h+=o(cur,clayName(cur.replace(/^mat:/,''))); // непознат ref — да не се загуби
+  return h;
+}
+function _clayLegacyHtml(v,kind,id){if(!v)return '';return _pdE(v)+' <button type="button" class="rd-link cl-lnk" onclick="openClayLink('+_pdE(JSON.stringify(String(v)))+',\''+kind+'\',\''+id+'\')">Свържи с материал</button>';}
+// доброволно свързване на старо име с материал (или създаване на материал от него)
+var _clLink=null;
+function openClayLink(name,kind,id){
+  if(!name)return;var uses=_clayUses(name);_clLink={name:name,kind:kind,id:id};
+  document.getElementById('cl-txt').textContent='„'+name+'“ е старо име без материал. Можеш да го свържеш с материал — записите ще показват него. Нищо не се свързва само.';
+  var ms=_clayMats().filter(function(m){return !m.archivedAt;}).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'bg');});
+  document.getElementById('cl-mat').innerHTML='<option value="__new">+ Създай материал „'+_pdE(name)+'“</option>'
+    +ms.map(function(m){return '<option value="'+m.id+'">'+_pdE(m.name)+'</option>';}).join('');
+  var sc=document.getElementById('cl-scope');
+  sc.innerHTML='<option value="one">Само този запис</option>'+(uses.length>1?'<option value="all">Всички '+uses.length+' записа с това име</option>':'');
+  sc.value='one';
+  openMo('mo-claylink');
+}
+function clayLinkSave(){
+  var L=_clLink;if(!L)return;
+  var mv=document.getElementById('cl-mat').value,scope=document.getElementById('cl-scope').value;
+  var recs=scope==='all'?_clayUses(L.name):[(L.kind==='test'?DB.tests.find(function(x){return x.id===L.id;}):(L.kind==='series'?findSeries(L.id):DB.pieces.find(function(x){return x.id===L.id;})))].filter(Boolean);
+  if(!recs.length){closeMo('mo-claylink');return;}
+  var m=mv==='__new'?null:DB.materials.find(function(x){return x.id===mv;});
+  var tn=m?m.name:L.name;
+  if(!confirm((m?'Свържи с материала „'+tn+'“':'Създай материал „'+tn+'“ (Глини) и свържи с него')+'?\n\n'+(recs.length===1?'1 запис':recs.length+' записа')+' ще сочат към материала вместо към старото име. Другите записи с „'+L.name+'“ не се пипат.'))return;
+  var now=new Date().toISOString();
+  if(!m){m={id:uid(),name:L.name,cat:'clays',wishlist:false,updatedAt:now,createdAt:now,stock:null,alertAt:null,notes:'',photo:null};DB.materials.push(m);}
+  recs.forEach(function(r){r.clay=m.id;r.updatedAt=now;});
+  save();_clLink=null;closeMo('mo-claylink');
+  if(L.kind==='test')openTestDet(L.id);else if(L.kind==='series')openSeriesDet(L.id);else openPieceDet(L.id);
+  toast(recs.length===1?'Свързано':'Свързани '+recs.length+' записа');
 }
 var _glzDropdownData={};
 function buildGlzDropdown(selectId,query){
@@ -7729,10 +7844,10 @@ function buildGlzDropdown(selectId,query){
     if(!q)return items;
     return items.filter(function(x){return (x[nameKey||'name']||'').toLowerCase().indexOf(q)>=0;});
   };
-  var recs=filt(data.recipes);
-  var mats=filt(data.mats);
-  var recOpts=recs.map(function(r){return '<option value="rec:'+r.id+'" '+(data.curRec===r.id?'selected':'')+'>'+_pdE(_recDisplayName(r))+'</option>';}).join('');
-  var matOpts=mats.map(function(m){return '<option value="mat:'+m.id+'" '+(data.curMat===m.id?'selected':'')+'>'+m.name+'</option>';}).join('');
+  var recs=filt(data.recipes).filter(function(r){return _arcVis(r,data.curRec);}); // v1.42.0
+  var mats=filt(data.mats).filter(function(m){return _arcVis(m,data.curMat);});
+  var recOpts=recs.map(function(r){return '<option value="rec:'+r.id+'" '+(data.curRec===r.id?'selected':'')+'>'+_pdE(_recDisplayName(r)+_arcSfx(r))+'</option>';}).join('');
+  var matOpts=mats.map(function(m){return '<option value="mat:'+m.id+'" '+(data.curMat===m.id?'selected':'')+'>'+m.name+_arcSfx(m)+'</option>';}).join('');
   var sel=document.getElementById(selectId);if(!sel)return;
   sel.innerHTML='<option value="">— без глазура —</option>'
     +(recOpts?'<optgroup label="Рецепти ('+recs.length+')">'+recOpts+'</optgroup>':'')
@@ -8170,7 +8285,7 @@ function openRecipeMo(r){
     b.style.borderColor=active?'var(--acc)':'var(--bdr2)';
   });
   var _riFP=document.getElementById('ri-fp');
-  if(_riFP){_riFP.innerHTML='<option value="">—</option>'+DB.firingProfiles.map(function(fp){return '<option value="'+fp.id+'"'+(r&&r.recommendedFiringProfileId===fp.id?' selected':'')+'>'+fp.name+'</option>';}).join('');if(r&&r.recommendedFiringProfileId)_riFP.value=r.recommendedFiringProfileId;}
+  if(_riFP){_riFP.innerHTML='<option value="">—</option>'+DB.firingProfiles.filter(function(fp){return _arcVis(fp,r&&r.recommendedFiringProfileId);}).map(function(fp){return '<option value="'+fp.id+'"'+(r&&r.recommendedFiringProfileId===fp.id?' selected':'')+'>'+fp.name+_arcSfx(fp)+'</option>';}).join('');if(r&&r.recommendedFiringProfileId)_riFP.value=r.recommendedFiringProfileId;}
   _riBad={};var _e3=document.getElementById('ri-ing-err');if(_e3)_e3.textContent='';recTab('basic');
   renderPrev('ri-prev',rPh);renderIngRows();openMo('mo-recipe');
 }
@@ -8189,7 +8304,7 @@ function showIngSearch(){
   var res=document.getElementById('ri-ing-results');
   if(!res)return;
   if(!q){res.style.display='none';return;}
-  var matches=DB.materials.filter(function(m){return m.name.toLowerCase().includes(q);}).slice(0,8);
+  var matches=DB.materials.filter(function(m){return !m.archivedAt&&m.name.toLowerCase().includes(q);}).slice(0,8);
   res.style.display='block';
   var html='';
   matches.forEach(function(m,i){
@@ -8246,8 +8361,8 @@ function renderIngRows(){
   const searchEl = document.getElementById('ri-ing-search');
   const q = searchEl ? searchEl.value.toLowerCase() : '';
   const have = q
-    ? DB.materials.filter(function(m){ return m.name.toLowerCase().includes(q); })
-    : DB.materials;
+    ? DB.materials.filter(function(m){ return !m.archivedAt&&m.name.toLowerCase().includes(q); })
+    : DB.materials.filter(function(m){ return !m.archivedAt; });
   // v1.38.0: по-едри редове; непълният ред се отбелязва при запис (_riBad).
   document.getElementById('ri-ings').innerHTML=recIngs.map(function(ing,i){
     var opts=have.map(function(m){return '<option value="'+m.id+'" '+(ing.matId===m.id?'selected':'')+'>'+_pdE(m.name)+'</option>';}).join('');
@@ -8296,6 +8411,8 @@ function _recLatestInLineage(lineageId){
   var v=_recVersionsOf(lineageId);
   return v.length?v[v.length-1]:null;
 }
+// v1.42.0: в активния списък родът се показва с най-новата неархивирана версия
+function _rcIsHead(r){var v=_recVersionsOf(_recLineage(r)).filter(function(x){return !x.archivedAt;});return !v.length||v[v.length-1].id===r.id;}
 function _recIsLatest(r){
   if(!r)return true;
   var latest=_recLatestInLineage(_recLineage(r));
@@ -8505,15 +8622,17 @@ function dupRecipe(){
   toast(t('msg.dublirano'));
 }
 function delRecipe(){
+  if(archiveRec('rec'))return; // v1.42.0
   var linkedTests  = DB.tests.filter(function(t){return t.recipeId===curRec;}).length;
   var linkedPieces = DB.pieces.concat(DB.series||[]).filter(function(p){return p.recipe===curRec;}).length;
-  var msg = 'Изтрий рецептата?';
+  var _r0=_arcCur('rec'),msg = 'Изтрий „'+_recDisplayName(_r0)+'“ завинаги?';
   if(linkedTests||linkedPieces){
     msg += '\n\nВнимание: свързани записи, които ще останат без рецепта:';
     if(linkedTests)  msg += '\n• '+linkedTests+' теста';
     if(linkedPieces) msg += '\n• '+linkedPieces+' изделия';
     msg += '\n(Те НЕ се изтриват — само рецептата.)';
   }
+  msg += '\n\nТова не може да се върне.';
   if(!confirm(msg))return;
   DB.recipes=DB.recipes.filter(function(r){return r.id!==curRec;});
   save();closeDet('det-recipe');renderRecipes();toast(t('msg.iztrito'));
@@ -8560,16 +8679,7 @@ function _populateTestBodyPicker(t){
   var sel=document.getElementById('ti-body-ref');
   if(!sel)return;
   var cur=(t&&t.bodyRef)||'';
-  var groups=[['mass','Маси'],['clays','Глини']];
-  var html='<option value="">—</option>';
-  groups.forEach(function(g){
-    var items=DB.materials.filter(function(m){return m.cat===g[0]&&!m.wishlist;});
-    if(!items.length)return;
-    html+='<optgroup label="'+g[1]+'">'
-      +items.map(function(m){var v='mat:'+m.id;return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+m.name+'</option>';}).join('')
-      +'</optgroup>';
-  });
-  sel.innerHTML=html;
+  sel.innerHTML=_clayOpts(cur,'ref'); // v1.42.0: общият избор
   if(cur)sel.value=cur;
 }
 
@@ -8585,9 +8695,9 @@ function openTestMo(t){
   // v1.11.0: optional link to the firing this test came out of
   var _trEl=document.getElementById('ti-run');
   if(_trEl){
-    var _runs=DB.firingRuns.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+    var _runs=DB.firingRuns.filter(function(r){return _arcVis(r,t&&t.firingRunId);}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     _trEl.innerHTML='<option value="">— самостоятелно —</option>'
-      +_runs.map(function(r){return '<option value="'+r.id+'">'+_runLabel(r)+'</option>';}).join('');
+      +_runs.map(function(r){return '<option value="'+r.id+'">'+_runLabel(r)+_arcSfx(r)+'</option>';}).join('');
     _trEl.value=(t&&t.firingRunId)||'';
   }
   var _b=(t&&t.body)||{};
@@ -8618,7 +8728,7 @@ function openTestMo(t){
   const layEl=document.getElementById('ti-layers');
   if(layEl)layEl.value=t?.glazeLayers||'';
   var _tiFP=document.getElementById('ti-fp');
-  if(_tiFP){_tiFP.innerHTML='<option value="">—</option>'+DB.firingProfiles.map(function(fp){return '<option value="'+fp.id+'"'+(t&&t.firingProfileId===fp.id?' selected':'')+'>'+fp.name+'</option>';}).join('');if(t&&t.firingProfileId)_tiFP.value=t.firingProfileId;}
+  if(_tiFP){_tiFP.innerHTML='<option value="">—</option>'+DB.firingProfiles.filter(function(fp){return _arcVis(fp,t&&t.firingProfileId);}).map(function(fp){return '<option value="'+fp.id+'"'+(t&&t.firingProfileId===fp.id?' selected':'')+'>'+fp.name+_arcSfx(fp)+'</option>';}).join('');if(t&&t.firingProfileId)_tiFP.value=t.firingProfileId;}
   const rs=document.getElementById('ti-rec');
   _glzDropdownData['ti-rec']={
     recipes:DB.recipes.slice(),
@@ -8629,11 +8739,7 @@ function openTestMo(t){
   var _tSrch=document.getElementById('ti-rec-srch');if(_tSrch)_tSrch.value='';
   buildGlzDropdown('ti-rec','');
   const cs=document.getElementById('ti-clay');
-  var _tMatClays=DB.materials.filter(function(m){return m.cat==='clays'||m.cat==='mass';});
-  var _tMatClayNames=_tMatClays.map(function(m){return m.name;});
-  var _tExtraClays=CLAY_NAMES.filter(function(n){return _tMatClayNames.indexOf(n)<0;});
-  cs.innerHTML='<option value="">—</option>'+_tExtraClays.map(function(n){return '<option '+(t&&t.clay===n?'selected':'')+'>'+n+'</option>';}).join('')+
-    _tMatClays.map(function(m){return '<option '+(t&&t.clay===m.name?'selected':'')+'>'+m.name+'</option>';}).join('');
+  cs.innerHTML=_clayOpts(t&&t.clay,'id'); // v1.42.0: същият избор като при изделията
   if(t?.clay)cs.value=t.clay;
   renderPrev('ti-prev',tPh);openMo('mo-test');
 }
@@ -8721,7 +8827,11 @@ function dupTest(){
   toast(t('msg.dublirano'));
 }
 function delTest(){
-  if(!confirm('Изтрий теста?'))return;
+  if(archiveRec('test'))return; // v1.42.0
+  var _t0=_arcCur('test'),_lk=[];
+  if(_t0&&_t0.firingRunId)_lk.push('• изпичането ще го загуби от списъка си');
+  if(_t0&&Array.isArray(_t0.pieces)&&_t0.pieces.length)_lk.push('• '+_t0.pieces.length+' изделия ще загубят връзката');
+  if(!confirm('Изтрий „'+_tTitle(_t0)+'“ завинаги?'+(_lk.length?'\n\nВнимание:\n'+_lk.join('\n'):'')+'\n\nТова не може да се върне.'))return;
   // TODO (future inventory ledger): consider whether to reverse stock deduction
   //   when a test is deleted. For now stock is NOT restored automatically.
   DB.tests=DB.tests.filter(function(t){return t.id!==curTest;});
@@ -8910,6 +9020,7 @@ function saveMat(){
 }
 function editMat(){var _m=DB.materials.find(m=>m.id===curMat);if(_m&&_m.cat==='mass'){openMassMo(_m);}else{openMatMo(_m);}}
 function delMat(){
+  if(archiveRec('mat'))return; // v1.42.0
   // v1.23.1: предупреждението броеше само рецептите. Материалът обаче се ползва и
   // като глина, и като готова глазура на изделие или серия, и като съставка на
   // маса — изтриване на глина под двайсет изделия минаваше без нито дума.
@@ -8917,25 +9028,26 @@ function delMat(){
     return r.ingredients&&r.ingredients.some(function(i){return i.matId===curMat;});
   }).length;
   var _all=DB.pieces.concat(DB.series||[]);
-  var linkedClay  = _all.filter(function(p){return p&&p.clay===curMat;}).length;
+  var linkedClay  = _all.filter(function(p){return p&&p.clay&&(_clayMat(p.clay)||{}).id===curMat;}).length; // v1.42.0: и по име
   var linkedGlaze = _all.filter(function(p){return p&&p.material===curMat;}).length;
   var linkedMass  = DB.materials.filter(function(m){
     var cs=(m&&m.blend&&Array.isArray(m.blend.components))?m.blend.components:[];
     return m&&m.id!==curMat&&cs.some(function(c){return c&&c.ref==='mat:'+curMat;});
   }).length;
-  var msg = 'Изтрий материала?';
+  var msg = 'Изтрий „'+(_arcCur('mat')||{}).name+'“ завинаги?';
   var lines=[];
   if(linkedRecipes)lines.push('• '+linkedRecipes+' рецепти го съдържат — съставките им ще покажат „(Изтрит материал)"');
   if(linkedClay)   lines.push('• '+linkedClay+' записа го ползват като глина');
   if(linkedGlaze)  lines.push('• '+linkedGlaze+' записа го ползват като готова глазура');
   if(linkedMass)   lines.push('• '+linkedMass+' маси го съдържат като съставка');
   // v1.40.2: и тестовете — като готова глазура или като маса на тест на маса.
-  var linkedTests=DB.tests.filter(function(t){return t&&(t.materialId===curMat||t.bodyRef==='mat:'+curMat);}).length;
-  if(linkedTests)  lines.push('• '+linkedTests+(linkedTests===1?' тест го ползва':' теста го ползват')+' (глазура или маса) — ще покажат „Изтрит“');
+  var linkedTests=DB.tests.filter(function(t){return t&&(t.materialId===curMat||t.bodyRef==='mat:'+curMat||(testKind(t)!=='body'&&t.clay&&(_clayMat(t.clay)||{}).id===curMat));}).length;
+  if(linkedTests)  lines.push('• '+linkedTests+(linkedTests===1?' тест го ползва':' теста го ползват')+' (глазура, глина или маса) — ще покажат „Изтрит“');
   if(lines.length){
     msg += '\n\nВнимание: свързани записи, които ще останат без него:\n'+lines.join('\n');
     msg += '\n\n(Те НЕ се изтриват — само материалът.)';
   }
+  msg += '\n\nТова не може да се върне.';
   if(!confirm(msg))return;
   DB.materials=DB.materials.filter(function(m){return m.id!==curMat;});
   save();closeDet('det-mat');renderMaterials();toast(t('msg.iztrito'));
@@ -9051,6 +9163,7 @@ function renderPrev(id,arr){
       +'<button onclick="event.stopPropagation();removePh(\''+id+'\','+i+')" type="button" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;border:2px solid var(--surface);font-size:14px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);">×</button>'
       +'</div>';
   }).join('');
+  _drSoon(); // v1.42.0: снимка добавена/махната
 }
 
 // ══ MODAL HELPERS ══
@@ -9235,16 +9348,169 @@ function closeMoAsk(id){
   _navNoRefresh=true;closeMo(id);_navNoRefresh=false;
 }
 
+
+// ══ v1.42.0: ЧЕРНОВИ — незапазените формуляри оцеляват след презареждане ══
+// Черновата живее в localStorage под свой ключ (glina.draft.*), отделно от данните.
+// Пише се само докато формулярът има промени; изчиства се при всяко затваряне от
+// приложението (запис, потвърден отказ, затваряне без промени). Презареждане или
+// затворен раздел не минават оттам — тогава остава и се предлага при следващото
+// отваряне на същия формуляр (и на началния екран). Нищо не се записва в данните,
+// докато не се натисне „Запази“. Снимките влизат само ако черновата остава малка.
+var _DR_PFX='glina.draft.',_DR_MAX=600000,_DR_KEEP=8;
+var _DR={
+  'mo-piece':{label:function(d){return d.kind==='series'?'Серия':'Изделие';},name:'pi-name',view:'pieces',
+    t:function(){return {id:editId||'',kind:editKind==='series'?'series':'piece'};},
+    rec:function(d){return d.kind==='series'?findSeries(d.id):DB.pieces.find(function(x){return x.id===d.id;});},
+    st:function(){return {ph:pPh,cats:piCats};},put:function(x){if(x.ph)pPh=x.ph.slice();piCats=(x.cats||[]).slice();renderPrev('pi-prev',pPh);renderPiCats();},
+    open:function(d,r){editId=d.id||null;editKind=d.kind==='series'?'series':'piece';if(d.kind==='series')curSeries=d.id;else if(d.id)curPiece=d.id;openPieceMo(r||undefined);}},
+  'mo-recipe':{label:function(){return 'Рецепта';},name:'ri-name',view:'recipes',
+    t:function(){return {id:editId||''};},rec:function(d){return DB.recipes.find(function(x){return x.id===d.id;});},
+    st:function(){return {ph:rPh,ings:recIngs,vb:_recVersionBaseId||null};},
+    put:function(x){if(x.ph)rPh=x.ph.slice();recIngs=JSON.parse(JSON.stringify(x.ings||[]));if(x.vb)_recVersionBaseId=x.vb;renderPrev('ri-prev',rPh);renderIngRows();},
+    open:function(d,r){editId=d.id||null;if(d.id)curRec=d.id;openRecipeMo(r||undefined);}},
+  'mo-test':{label:function(){return 'Тест';},name:'ti-rec ti-body-ref',view:'tests',
+    t:function(){return {id:editId||''};},rec:function(d){return DB.tests.find(function(x){return x.id===d.id;});},
+    st:function(){return {ph:tPh};},put:function(x){if(x.ph)tPh=x.ph.slice();onTestKindChange();renderPrev('ti-prev',tPh);try{_calcShrink();_calcPoro();}catch(e){}},
+    open:function(d,r){editId=d.id||null;if(d.id)curTest=d.id;openTestMo(r||undefined);}},
+  'mo-mat':{label:function(){return 'Материал';},name:'mi-name',view:'materials',
+    t:function(){return {id:editId||''};},rec:function(d){return DB.materials.find(function(x){return x.id===d.id;});},
+    st:function(){return {ph:mPh};},put:function(x){if(x.ph)mPh=x.ph.slice();toggleMatFields();renderPrev('mi-prev',mPh);},
+    open:function(d,r){openMatMo(r||null);}},
+  'mo-mass':{label:function(){return 'Маса';},name:'ms-name',view:'materials',
+    t:function(){return {id:curMassEditId||''};},rec:function(d){return DB.materials.find(function(x){return x.id===d.id;});},
+    st:function(){return {ph:msPh,comps:massComps};},put:function(x){if(x.ph)msPh=x.ph.slice();massComps=JSON.parse(JSON.stringify(x.comps||[]));_renderMassComps();renderPrev('ms-prev',msPh);},
+    open:function(d,r){openMassMo(r||null);}},
+  'mo-run':{label:function(){return 'Изпичане';},name:'rn-name',view:'fp',
+    t:function(){return {id:editId||''};},rec:function(d){return DB.firingRuns.find(function(x){return x.id===d.id;});},
+    st:function(){return {ph:rnPh,add:runAdditives};},put:function(x){if(x.ph)rnPh=x.ph.slice();runAdditives=(x.add||[]).slice();onRunMethodChange();_renderRunAdditives();renderPrev('rn-prev',rnPh);},
+    open:function(d){editId=d.id||null;openRunMo(d.id||null);}},
+  'mo-fp':{label:function(){return 'Профил';},name:'fp-name',view:'fp',
+    t:function(){return {id:editId||''};},rec:function(d){return DB.firingProfiles.find(function(x){return x.id===d.id;});},
+    st:function(){return {ramps:fpRampsEdit};},put:function(x){fpRampsEdit=JSON.parse(JSON.stringify(x.ramps||[]));_renderFpRamps();},
+    open:function(d,r){openFPMo(r||null);}}
+};
+var _drT={},_drBase={},_drPend={},_drTimer=null;
+function _drKey(mo,t){return _DR_PFX+mo+'.'+(t.kind||'')+'.'+(t.id||'new');}
+function _drSig(o){return JSON.stringify(o,function(k,v){return typeof v==='string'&&v.length>200?'#'+v.length:v;});}
+function _drFields(mo){
+  var el=document.getElementById(mo),f={};if(!el)return f;
+  el.querySelectorAll('input[id],select[id],textarea[id]').forEach(function(x){
+    if(x.type==='file'||/-srch$/.test(x.id)||x.id==='pi-cat-new')return;
+    f[x.id]=(x.type==='checkbox'||x.type==='radio')?(x.checked?1:0):x.value;
+  });
+  return f;
+}
+function _drSetFields(mo,f){
+  var el=document.getElementById(mo);if(!el)return;
+  Object.keys(f||{}).forEach(function(id){var x=document.getElementById(id);if(!x||!el.contains(x))return;
+    if(x.type==='checkbox'||x.type==='radio')x.checked=!!f[id];else x.value=f[id];});
+}
+function _drList(){
+  var a=[];
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(_DR_PFX)===0){try{var d=JSON.parse(localStorage.getItem(k));if(d&&_DR[d.mo])a.push(d);}catch(e){}}}}catch(e){}
+  return a.sort(function(x,y){return String(y.at).localeCompare(String(x.at));});
+}
+function _drGet(key){try{var d=JSON.parse(localStorage.getItem(key)||'null');return d&&_DR[d.mo]?d:null;}catch(e){return null;}}
+function _drDel(key){try{localStorage.removeItem(key);}catch(e){}}
+// записва черновата на отворения формуляр (или я маха, ако няма промени)
+function _drSave(mo){
+  var c=_DR[mo],T=_drT[mo];if(!c||!T||_drPend[mo])return;
+  var el=document.getElementById(mo);if(!el||!el.classList.contains('on'))return;
+  var st=c.st(),dirty=_moIsDirty(mo)||_drSig(st)!==_drBase[mo];
+  if(!dirty){_drDel(T.key);return;}
+  var nm='';c.name.split(' ').forEach(function(id){var x=document.getElementById(id);if(nm||!x||!x.value)return;nm=x.tagName==='SELECT'?((x.selectedOptions[0]||{}).text||''):x.value;});
+  var d={v:1,mo:mo,id:T.id,kind:T.kind,base:T.base,at:new Date().toISOString(),name:String(nm).trim().slice(0,80),f:_drFields(mo),x:st};
+  var j=JSON.stringify(d),idb=false;try{idb=localStorage.getItem('atelie_idb_active')==='1';}catch(e){}
+  // снимките са тежки: влизат само ако данните не са в localStorage и черновата е малка
+  if(!idb||j.length>_DR_MAX){if(st.ph){d.x=Object.assign({},st,{ph:null});d.phOut=st.ph.length;}j=JSON.stringify(d);}
+  try{localStorage.setItem(T.key,j);}catch(e){
+    if(st.ph&&!d.phOut){d.x=Object.assign({},st,{ph:null});d.phOut=st.ph.length;try{localStorage.setItem(T.key,JSON.stringify(d));}catch(e2){}}
+  }
+  var L=_drList();L.slice(_DR_KEEP).forEach(function(o){_drDel(_drKey(o.mo,o));});
+}
+function _drSoon(){clearTimeout(_drTimer);_drTimer=setTimeout(_drFlush,500);}
+function _drFlush(){clearTimeout(_drTimer);Object.keys(_drT).forEach(_drSave);}
+// при отваряне: отпечатък на началото и предложение, ако има стара чернова
+function _drOpened(mo){
+  var c=_DR[mo];if(!c)return;
+  var t=c.t(),r=t.id?c.rec(t):null;
+  _drT[mo]={id:t.id,kind:t.kind||'',base:r?(r.updatedAt||''):'',key:_drKey(mo,t)};
+  _drBase[mo]=_drSig(c.st());
+  var d=_drGet(_drT[mo].key);_drBan(mo,d);
+}
+function _drBan(mo,d){
+  var el=document.getElementById(mo);if(!el)return;
+  var b=el.querySelector('.dr-ban');
+  if(!d){if(b)b.remove();delete _drPend[mo];return;}
+  _drPend[mo]=1;
+  var mb=el.querySelector('.mo-b');if(!mb)return;
+  if(!b){b=document.createElement('div');b.className='dr-ban';mb.insertBefore(b,mb.firstChild);}
+  var c=_DR[mo],r=d.id?c.rec(d):null,gone=!!d.id&&!r;
+  var when=new Date(d.at),ws=isNaN(when)?'':when.toLocaleString('bg-BG',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  b.innerHTML='<b>Незапазена чернова</b><span>'+_pdE(ws)+(d.name?' · „'+_pdE(d.name)+'“':'')
+    +(gone?' · записът вече не съществува':(r&&(r.updatedAt||'')!==(d.base||'')?' · записът е запазван след нея':''))
+    +(d.phOut?' · без снимките ('+d.phOut+')':'')+'</span>'
+    +'<div>'+(gone?'':'<button type="button" class="btn bp" id="dr-yes" onclick="draftRestore(\''+mo+'\')">Възстанови</button>')
+    +'<button type="button" class="btn bg" id="dr-no" onclick="draftDiscard(\''+mo+'\')">Изхвърли</button></div>';
+}
+function draftRestore(mo){
+  var T=_drT[mo],c=_DR[mo];if(!T||!c)return;
+  var d=_drGet(T.key);if(!d){_drBan(mo,null);return;}
+  var r=d.id?c.rec(d):null;
+  if(d.id&&!r){toast('Записът вече не съществува');return;}
+  if(r&&(r.updatedAt||'')!==(d.base||'')&&!confirm('Записът е запазен след тази чернова.\n\nАко я възстановиш, формулярът ще покаже черновата вместо по-новите данни. Нищо не се записва, докато не натиснеш „Запази“.\n\nВъзстанови ли?'))return;
+  _drSetFields(mo,d.f);
+  try{c.put(d.x||{});}catch(e){console.warn('draft put',e);}
+  _drSetFields(mo,d.f); // куките по-горе могат да пренаредят полетата — второ минаване
+  T.base=d.base||T.base; // предупреждението вече е дадено
+  _drBan(mo,null);_drSave(mo);toast('Черновата е възстановена');
+}
+function draftDiscard(mo){
+  var T=_drT[mo];if(!T)return;
+  if(!confirm('Изхвърли черновата?\n\nВъведеното в нея ще се загуби.'))return;
+  _drDel(T.key);_drBan(mo,null);toast('Черновата е изхвърлена');
+}
+// затваряне от приложението — черновата вече не трябва (освен ако не е решено за нея)
+function _drClosed(mo){
+  var T=_drT[mo];if(!T)return;
+  if(!_drPend[mo])_drDel(T.key);
+  delete _drT[mo];delete _drBase[mo];delete _drPend[mo];
+  var b=document.querySelector('#'+mo+' .dr-ban');if(b)b.remove();
+}
+// начален екран: черновите след презареждане
+function _drHomeHtml(){
+  var L=_drList().filter(function(d){return !_drT[d.mo];});if(!L.length)return '';
+  return '<div class="hm-box" id="hm-drafts" style="grid-column:1/-1"><h2>Незапазени чернови</h2>'+L.map(function(d){
+    var c=_DR[d.mo],k=_drKey(d.mo,d).replace(/'/g,"\\'"),ws=new Date(d.at);ws=isNaN(ws)?'':ws.toLocaleString('bg-BG',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    return '<div class="hm-li dr-li"><div style="min-width:0;flex:1"><div class="t">'+_pdE(c.label(d)+(d.id?' · редакция':' · нов')+(d.name?' — '+d.name:''))+'</div><div class="s">'+_pdE(ws)+'</div></div>'
+      +'<button type="button" class="btn bp" onclick="draftOpen(\''+k+'\')">Отвори</button><button type="button" class="btn bg" onclick="draftDrop(\''+k+'\')">Изхвърли</button></div>';
+  }).join('')+'</div>';
+}
+function draftOpen(key){
+  var d=_drGet(key);if(!d){renderHome();return;}
+  var c=_DR[d.mo],r=d.id?c.rec(d):null;
+  if(d.id&&!r){if(confirm('Записът на тази чернова вече не съществува.\n\nИзхвърли черновата?')){_drDel(key);renderHome();}return;}
+  show(c.view);c.open(d,r);
+  setTimeout(function(){if(_drT[d.mo]&&_drT[d.mo].key===key)draftRestore(d.mo);},30);
+}
+function draftDrop(key){if(!confirm('Изхвърли черновата?\n\nВъведеното в нея ще се загуби.'))return;_drDel(key);renderHome();}
+document.addEventListener('input',function(e){if(e.target&&e.target.closest&&e.target.closest('.mo.on'))_drSoon();},true);
+document.addEventListener('change',function(e){if(e.target&&e.target.closest&&e.target.closest('.mo.on'))_drSoon();},true);
+document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('.mo.on'))_drSoon();},true);
+window.addEventListener('pagehide',_drFlush);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')_drFlush();});
 function openMo(id){
   document.getElementById(id).classList.add('on');
   _moSnap[id]=_moSnapshot(id);
   _pushOverlay('modal', id);
+  if(_DR[id])setTimeout(function(){if(document.getElementById(id).classList.contains('on'))_drOpened(id);},0); // v1.42.0: след предварителното попълване
 }
 function closeMo(id){
   // v1.10.0: leaving the recipe modal cancels any pending manual version branch
   if(id==='mo-recipe')_recVersionBaseId=null;
   document.getElementById(id).classList.remove('on');
   delete _moSnap[id];
+  _drClosed(id); // v1.42.0
   // v1.4.6: If closing a nested-add target (without saving), clear callback
   if (_nestedAddCallback && (id === 'mo-mat' || id === 'mo-recipe')) {
     _nestedAddCallback = null;
@@ -9316,7 +9582,7 @@ window.addEventListener('popstate', function(e){
   }
   _overlayStack.pop();
   if (top.kind === 'modal') {
-    var mel=document.getElementById(top.id);if(mel)mel.classList.remove('on');delete _moSnap[top.id];
+    var mel=document.getElementById(top.id);if(mel)mel.classList.remove('on');delete _moSnap[top.id];_drClosed(top.id);
     if(top.id==='mo-recipe')_recVersionBaseId=null;
     _navLayer();
     return;
@@ -10208,7 +10474,7 @@ function _updateFPCount(){
     var nk=KILNS.length;
     el.textContent=nk+' '+(nk===1?'пещ':'пещи');
   } else if(fpTab==='profiles'){
-    var n=DB.firingProfiles.length;
+    var n=DB.firingProfiles.filter(function(x){return _arcOk('fp',x);}).length;
     el.textContent=n+' '+(n===1?'профил':'профила');
   } else {
     var m=DB.firingRuns.length;
@@ -10254,7 +10520,7 @@ function _populateRunAdditivePicker(){
   var html='<option value="">— от материалите —</option>';
   cats.forEach(function(g){
     var items=DB.materials.filter(function(m){
-      return m.cat===g[0]&&!m.wishlist&&runAdditives.indexOf('mat:'+m.id)<0;
+      return m.cat===g[0]&&!m.wishlist&&!m.archivedAt&&runAdditives.indexOf('mat:'+m.id)<0;
     });
     if(!items.length)return;
     html+='<optgroup label="'+g[1]+'">'
@@ -10625,9 +10891,11 @@ function renderFiringRuns(){
     return;
   }
   var c={all:0,planned:0,loaded:0,completed:0,interrupted:0,todo:0};
-  DB.firingRuns.forEach(function(r){var s=_runState(r);c.all++;c[s]++;if((s==='completed'||s==='interrupted')&&_rnTodo(r).att.length)c.todo++;});
+  _arcBar('run',l);
+  DB.firingRuns.forEach(function(r){if(!_arcOk('run',r))return;var s=_runState(r);c.all++;c[s]++;if((s==='completed'||s==='interrupted')&&_rnTodo(r).att.length)c.todo++;});
   var q=(RN.q||'').trim().toLowerCase();
   var list=DB.firingRuns.filter(function(r){
+    if(!_arcOk('run',r))return false; // v1.42.0
     var s=_runState(r);
     if(RN.st==='todo'){if(!((s==='completed'||s==='interrupted')&&_rnTodo(r).att.length))return false;}
     else if(RN.st!=='all'&&s!==RN.st)return false;
@@ -10801,7 +11069,7 @@ function rnPickProfile(){
   var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
   document.getElementById('rnp-t').textContent='Температурен профил';
   document.getElementById('rnp-body').innerHTML='<div style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:8px;">Програмата на пещта — планираното. Реалното се записва в резултатите.</div>'
-    +(DB.firingProfiles.length?DB.firingProfiles.map(function(fp){var rr=_fpRamps(fp);
+    +(DB.firingProfiles.length?DB.firingProfiles.filter(function(fp){return _arcVis(fp,r.firingProfileId);}).map(function(fp){var rr=_fpRamps(fp);
       return '<div class="rn-pick'+(r.firingProfileId===fp.id?' sel':'')+'" style="display:block"><div style="display:flex;gap:8px;align-items:flex-start"><span class="b" style="flex:1"><span class="t">'+_kEsc(fp.name)+(r.firingProfileId===fp.id?' ✓':'')+'</span><span class="s">'+_kEsc([fpTypeLabel(fp.type),_fpPeak(fp)!=null?'пик '+_fpPeak(fp)+'°C':''].filter(Boolean).join(' · '))+'</span>'
         +'<span class="s">'+_kEsc(rr.map(function(x){return (x.rate!=null?x.rate+'°/ч':'')+(x.to!=null?' до '+x.to+'°':'')+(x.hold!=null?' · '+x.hold+' мин':'');}).join(' → '))+'</span></span>'
         +'<button type="button" class="fchip" style="min-height:40px" onclick="rnSetProfile(\''+fp.id+'\')">'+(r.firingProfileId===fp.id?'Избран':'Избери')+'</button></div>'
@@ -10878,7 +11146,7 @@ function openRunMo(id){
   var ps=document.getElementById('rn-profile');
   if(ps){
     ps.innerHTML='<option value="">— без профил —</option>'
-      +DB.firingProfiles.map(function(f){return '<option value="'+f.id+'">'+f.name+'</option>';}).join('');
+      +DB.firingProfiles.filter(function(f){return _arcVis(f,r&&r.firingProfileId);}).map(function(f){return '<option value="'+f.id+'">'+f.name+_arcSfx(f)+'</option>';}).join('');
     ps.value=(r&&r.firingProfileId)||'';
   }
   onRunMethodChange();moTab('mo-run','basic');
@@ -10955,10 +11223,12 @@ function _detachEventFromRun(ev,run){
 
 function deleteRun(){
   if(!curRun)return;
+  if(archiveRec('run'))return; // v1.42.0
   var linked=_runPieces(curRun).length+_runTests(curRun).length;
   var msg=linked>0
     ? 'Изтрий това изпичане?\n\n'+linked+' '+(linked===1?'запис сочи':'записа сочат')+' към него. Те няма да се изтрият — стъпките ще запазят метода, температурата и атмосферата на изпичането и ще станат самостоятелни.'
     : 'Изтрий това изпичане?';
+  msg=msg.replace('Изтрий това изпичане?','Изтрий това изпичане завинаги?')+'\n\nТова не може да се върне.';
   if(!confirm(msg))return;
   var id=curRun;
   var run=DB.firingRuns.find(function(x){return x.id===id;});
@@ -11121,7 +11391,7 @@ function openRunTestAttach(){
 }
 function _renderRunTestList(){
   var l=document.getElementById('rt-list');if(!l)return;
-  var items=DB.tests.filter(function(t){return t.firingRunId!==curRun;});
+  var items=DB.tests.filter(function(t){return t.firingRunId!==curRun&&!t.archivedAt;});
   if(!items.length){
     l.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px;font-style:italic;">Всички тестове вече са в това изпичане.</div>';
     _updateRunTestCount();return;
@@ -12528,10 +12798,10 @@ function firingMethodIcon(m){
 
 function renderFiringProfiles(){
   var l=document.getElementById('fp-list');if(!l)return;
-  var items=DB.firingProfiles;
+  var items=DB.firingProfiles.filter(function(x){return _arcOk('fp',x);});_arcBar('fp',l);
   // v1.11.0.1: the count belongs to whichever tab is showing — _updateFPCount owns it.
   _updateFPCount();
-  if(!items.length){l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">Няма профили</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
+  if(!items.length){l.innerHTML='<div class="empty"><div class="empty-k">К</div><div class="empty-t">'+(ARCV.fp==='arch'?'Архивът е празен':'Няма профили')+'</div><div class="empty-s">Натисни + за да добавиш</div></div>';return;}
   l.innerHTML=items.map(function(fp){
     // v1.16.0: peak and last hold come from the ramp array (legacy shape migrated
     // on read by _fpRamps / _fpPeak).
@@ -12781,13 +13051,82 @@ function dupFP(){
 }
 
 function delFP(){
+  if(archiveRec('fp'))return; // v1.42.0
   var lt=DB.tests.filter(function(t){return t.firingProfileId===curFP;}).length;
   var lr=DB.recipes.filter(function(r){return r.recommendedFiringProfileId===curFP;}).length;
-  var msg='Изтрий профила?';
-  if(lt||lr){msg+='\n\nВнимание:';if(lt)msg+='\n• '+lt+' теста';if(lr)msg+='\n• '+lr+' рецепти';msg+='\n(Те НЕ се изтриват — само профилът.)';}
+  var lrn=DB.firingRuns.filter(function(r){return r.firingProfileId===curFP;}).length;
+  var msg='Изтрий „'+(_arcCur('fp')||{}).name+'“ завинаги?';
+  if(lt||lr||lrn){msg+='\n\nВнимание:';if(lt)msg+='\n• '+lt+' теста';if(lr)msg+='\n• '+lr+' рецепти';if(lrn)msg+='\n• '+lrn+' изпичания';msg+='\n(Те НЕ се изтриват — само профилът.)';}
+  msg+='\n\nТова не може да се върне.';
   if(!confirm(msg))return;
   DB.firingProfiles=DB.firingProfiles.filter(function(x){return x.id!==curFP;});
   save();closeDet('det-fp');renderFiringProfiles();toast(t('msg.iztrito'));
+}
+
+// ══ v1.42.0: АРХИВ — един модел за материали, рецепти, тестове, изпичания и профили ══
+// Както при изделията: „Архивирай“ само слага archivedAt. Записът изчезва от активните
+// списъци и от изборите в нови записи, но всичко, което сочи към него, си остава.
+// Окончателното изтриване е само от архива — с изброяване на зависимостите.
+var ARCV={rec:'active',mat:'active',test:'active',run:'active',fp:'active'};
+var _ARC={
+  mat:{list:'materials',det:'det-mat',cur:function(){return curMat;},open:function(id){openMatDet(id);},re:function(){renderMaterials();},what:'материала',
+    keep:'рецептите, изделията, масите и тестовете продължават да го показват',nm:function(r){return r.name;}},
+  rec:{list:'recipes',det:'det-recipe',cur:function(){return curRec;},open:function(id){openRecipeDet(id);},re:function(){renderRecipes();},what:'рецептата',
+    keep:'тестовете и изделията остават свързани с нея',nm:function(r){return _recDisplayName(r);}},
+  test:{list:'tests',det:'det-test',cur:function(){return curTest;},open:function(id){openTestDet(id);},re:function(){renderTests();},what:'теста',
+    keep:'връзките с рецепта, изделия и изпичане се пазят',nm:function(r){return _tTitle(r);}},
+  run:{list:'firingRuns',det:'det-run',cur:function(){return curRun;},open:function(id){openRunDet(id);},re:function(){renderFiringRuns();},what:'изпичането',
+    keep:'изделията и тестовете пазят стъпките и историята си от него',nm:function(r){return _runLabel(r);}},
+  fp:{list:'firingProfiles',det:'det-fp',cur:function(){return curFP;},open:function(id){openFPDet(id);},re:function(){renderFiringProfiles();},what:'профила',
+    keep:'тестовете, рецептите и изпичанията продължават да го показват',nm:function(r){return r.name;}}
+};
+function _arcOk(k,x){return !!x&&(ARCV[k]==='arch')===!!x.archivedAt;}
+// за изборите: архивираните се скриват, освен ако записът вече сочи към тях
+function _arcVis(x,curId){return !!x&&(!x.archivedAt||(curId!=null&&x.id===curId));}
+function _arcSfx(x){return x&&x.archivedAt?' (в архива)':'';}
+function _arcN(k){return (DB[_ARC[k].list]||[]).filter(function(x){return x&&x.archivedAt;}).length;}
+function _arcCur(k){var c=_ARC[k],id=c.cur();return (DB[c.list]||[]).find(function(x){return x&&x.id===id;})||null;}
+function arcView(k,v){ARCV[k]=v==='arch'?'arch':'active';_ARC[k].re();var sc=document.querySelector('.sc');if(sc)sc.scrollTop=0;}
+// лента над списъка: „Архив (n)“ в активния изглед, заглавие „Архив“ в архивния
+function _arcBar(k,listEl){
+  if(!listEl||!listEl.parentNode)return;
+  var id='arcbar-'+k,b=document.getElementById(id);
+  if(!b){b=document.createElement('div');b.id=id;b.className='arc-bar';listEl.parentNode.insertBefore(b,listEl);}
+  var n=_arcN(k);
+  if(ARCV[k]==='arch')b.innerHTML='<div class="arc-hd"><b>Архив</b><span>'+n+' '+(n===1?'запис':'записа')+' · скрити от списъците, връзките им са запазени</span><button type="button" class="btn bg" onclick="arcView(\''+k+'\',\'active\')">← Активни</button></div>';
+  else b.innerHTML=n?'<button type="button" class="arc-lnk" id="arc-'+k+'" onclick="arcView(\''+k+'\',\'arch\')">Архив ('+n+')</button>':'';
+}
+// детайл: банер и бутони според състоянието
+function _arcDet(k,id){
+  var c=_ARC[k],r=(DB[c.list]||[]).find(function(x){return x&&x.id===id;}),d=document.getElementById(c.det);if(!r||!d)return;
+  var body=d.querySelector('.det-body'),ban=d.querySelector('.arc-ban');
+  if(r.archivedAt){
+    if(!ban&&body){ban=document.createElement('div');ban.className='arc-ban';body.insertBefore(ban,body.firstChild);}
+    if(ban){ban.style.display='';ban.textContent='В архива от '+String(r.archivedAt).slice(0,10)+' — скрит от списъците; връзките са запазени.';}
+  }else if(ban)ban.style.display='none';
+  var del=d.querySelector('[data-arc-del]');if(del)del.textContent=r.archivedAt?'Изтрий завинаги':'Архивирай';
+  var res=d.querySelector('[data-arc-res]');if(res)res.style.display=r.archivedAt?'':'none';
+}
+['openRecipeDet:rec','openMatDet:mat','openTestDet:test','openRunDet:run','openFPDet:fp'].forEach(function(x){
+  var n=x.split(':')[0],k=x.split(':')[1],o=window[n];
+  window[n]=function(id){var r=o.apply(this,arguments);_arcDet(k,id);return r;};
+});
+// Първото натискане архивира. Връща true, ако записът не е бил в архива (т.е. не трие).
+function archiveRec(k){
+  var c=_ARC[k],r=_arcCur(k);if(!r)return true;if(r.archivedAt)return false;
+  if(!confirm('Архивирай '+c.what+' „'+c.nm(r)+'“?\n\nСкрива се от списъците и от изборите в нови записи. Нищо не се изтрива — '+c.keep+'.\n\nВръща се от „Архив“ в списъка.'))return true;
+  var now=new Date().toISOString();r.archivedAt=now;r.updatedAt=now;
+  if(k==='rec'){
+    var others=_recVersionsOf(_recLineage(r)).filter(function(x){return x.id!==r.id&&!x.archivedAt;});
+    if(others.length&&confirm('Рецептата има още '+others.length+(others.length===1?' версия':' версии')+'. Да се архивират ли и '+(others.length===1?'тя':'те')+'?\n\nOK — и другите версии. Отказ — само тази.'))
+      others.forEach(function(x){x.archivedAt=now;x.updatedAt=now;});
+  }
+  save();closeDet(c.det);c.re();toast('Архивирано');return true;
+}
+function restoreRec(k){
+  var c=_ARC[k],r=_arcCur(k);if(!r||!r.archivedAt)return;
+  delete r.archivedAt;r.updatedAt=new Date().toISOString();
+  save();c.re();c.open(r.id);toast('Върнато от архива');
 }
 // ════════════════════════════════════════════════════════════
 
