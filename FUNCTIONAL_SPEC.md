@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.35.2 · `atelie-v98`
+**Version:** v1.40.0 · `atelie-v103`
 **Last revised:** October 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -205,6 +205,18 @@ changes only after success; on failure (or broken storage) the form stays open w
 an error inside it and nothing is changed.
 
 ### Kiln plan (v1.33.0)
+
+**v1.40.1.** Navigation: every link to a related record opens it on top of the current one; only the top detail is visible (on ≥1100px it takes the right panel next to the list when a two-panel detail is under it); browser Back, the gesture and the in-app back button close one step and show the previous detail with its record and scroll position. Picking a record in a list replaces the chain (one step). Changing screen closes all open details. Forms open over the detail and return to it after saving; an unsaved form asks on every Back and on ×/Откажи/tap outside, and the browser warns before closing the page. „+ Тест“ and „+ Изделие“ from a recipe preselect that exact version; glaze lists show recipes with their version.
+
+**v1.40.0.** Tests: gallery (default, uncropped photos, „без снимка“) or compact list; kind chips; filters recipe/glaze/mass, clay, temperature, surface, defects (Няма / with a defect / not recorded), rating, photo; sort newest / rating / recipe / temperature; on ≥1100px the test opens beside the list. Detail: large photo with thumbnails, kind and recipe-version tag (current / older, with a note), result tiles, missing data listed; body section from `_shrinkPcts` / `_poroPct` with zero/impossible measurements explained; links to the exact recipe version, ready glaze, mass, profile, run, pieces with that recipe. „Сравни“: 2–4 tests, view only, differences highlighted, „Само разликите“, common fields for mixed kinds, groups of two on a phone; „Сравни с подобни“ picks tests of the same recipe (any version), glaze or mass. An empty field is „не е отбелязано“, never „Няма“; „Без дефекти“ means `def === 'Няма'`. Editor in four tabs; measurements accept a comma and must be numbers ≥ 0; a select value outside the list is kept on edit.
+
+**v1.39.0.** Materials: groups (categories + Wishlist) as chips with counts; views List (default, grouped by category), Cards, Stock (empty/zero/low first, threshold mark; masses and Wishlist out); filters stock (low or 0 / enough / not entered), in recipes, chemical analysis, cost; sort name / low stock / changed / recipe count; on ≥1100px the material opens beside the list. Detail: category, stock against the threshold, warnings (empty vs 0 kept apart), „В рецепти“ by share, characteristics by category, mass composition, raw origin and process biography, notes, chemistry, masses, pieces (clay or ready glaze), tests. „Промени количеството“ edits only `stock` and `alertAt`. Editor in four tabs; food safety shown as Да / Не / Не е посочено (stored `yes`/`no`/empty unchanged); chemistry values must be 0–100 (comma or point), an invalid one stops the save with an error on the field.
+
+**v1.38.0.** Recipes: catalog as cards or list, filters (type, temperature band, cone, with/without tests, contains ingredient, favourites, all versions), active chips, sort (changed / name / temperature); on ≥1100px the recipe opens beside the list. Detail: composition always shown with batch grams (% of the batch, existing calculator); sum ≠ 100% shows a warning and the real total, nothing is normalized; sections Тестове / Бележки / Версии (with the composition change against the previous version) / Изделия. „Приготви“: full-screen weighing list, ticks are not stored. Editor in three tabs; a partly filled ingredient row is an error on that row (a fully empty row is ignored). Versions and the guard for linked tests unchanged.
+
+**v1.37.0.** Firings: registry with state chips (+ „За документиране“), search, kiln filter, sort; groups Предстоящи / Заредени / Минали; on ≥1100px the run opens beside the list. Run detail: state path and actions, „Какво остава“ (attention / optional, by method — no cones for pit/barrel etc.; advice only), tabs Подготовка / Зареждане / Резултати; kiln and profile chosen in a sheet; load tab shows the plan's own side view and checks. „До пещта“: one plan member per screen (series units by number), skip, back, clear, optional auto-advance with „Отмени“; writes `result`/`resultNote` through the existing functions. Piece photo shown whole (contain on a blurred fill).
+
+**v1.36.0.** Catalog: gallery/list, multi-value filters (kind, stage, category, clay, technique, glaze/photo, archive), active chips, sort; a series is one record that expands to its parts; view and filters kept (`glina.catalog`). Detail photo capped, beside the header on wide screens, with arrows and a large view. „Моето ателие“ (`#sc-home`): quick actions, units by stage, planned/loaded runs, bone-dry/glazed not yet in an active plan, recently changed.
 
 **v1.35.2.** The new-version notice is a bar (`#upd-bar`) with „Обнови“ (reload; asks first if an open form has unsaved changes) and „По-късно“ (hide for this session).
 
