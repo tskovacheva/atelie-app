@@ -984,6 +984,25 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .se-grp{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--tx2);margin:-2px 0 6px;}
 .se-grp .rd-link{font-size:12.5px;}
 .un-stop{color:var(--err,#a84a3c);background:var(--errbg);}
+/* v1.45.0: калкулатор глина и свиване */
+.cl-row{display:flex;gap:9px;}.cl-row>.f{flex:1;min-width:0;}
+.cl-out{background:var(--bg2);border-radius:12px;padding:12px 14px;margin:6px 0 12px;font-size:13px;line-height:1.5;}
+.cl-out:empty{display:none;}
+.cl-big{font-size:20px;font-weight:600;color:var(--primary);}
+.cl-big small{font-size:12px;font-weight:400;color:var(--tx2);}
+.cl-tot{font-size:14px;margin-top:2px;}
+.cl-sub{font-size:12px;color:var(--tx3);margin-top:4px;}
+.cl-as{margin:8px 0 0;padding-left:18px;font-size:12px;color:var(--tx2);}
+.cl-cmp{margin-top:8px;font-size:13px;}.cl-cmp.out{color:var(--warn);}
+.cl-hint{color:var(--tx3);font-style:italic;}
+.cl-note{font-size:12px;color:var(--tx2);line-height:1.5;margin:-2px 0 10px;}
+.cl-m,.cl-c,.cl-g{display:inline-block;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:1px 6px;margin-right:4px;font-weight:600;}
+.cl-m{background:var(--primary-soft);color:var(--primary);}.cl-c{background:var(--bg);color:var(--tx2);border:1px solid var(--bdr);}.cl-g{background:var(--warnbg);color:var(--warn);}
+.cl-w{color:var(--warn);font-weight:500;}
+.cl-tab{width:100%;border-collapse:collapse;font-size:13px;}.cl-tab th,.cl-tab td{padding:5px 4px;text-align:left;border-bottom:1px solid var(--bdr);}
+.cl-tab tr.in td{color:var(--tx2);}.cl-tab tr.calc td{font-weight:600;color:var(--primary);}
+.cl-est{font-size:13px;line-height:1.45;margin:0 0 8px;}.cl-est:empty{display:none;}.cl-est .k{font-size:11px;color:var(--tx3);}.cl-est .s{font-size:12px;color:var(--tx2);}
+#pi-calc{margin:0 0 12px;}
 </style>
 </head>
 <body>
@@ -1148,6 +1167,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div style="margin:12px 16px 16px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
     <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;" data-t="ui.instrumenti">Инструменти</div>
     <button onclick="openSgCalc()" class="btn bg btn-sm" style="width:100%;padding:10px;" data-t="ui.kalkulator-za-platnost-sg">🧪 Калкулатор за плътност (SG)</button>
+    <button onclick="openClayCalc()" class="btn bg btn-sm" id="lib-clay-calc" style="width:100%;padding:10px;margin-top:8px;">⚖️ Количество глина и свиване</button>
   </div>
   <div style="padding-top:4px;" id="lib-list"></div>
 </div>
@@ -1796,9 +1816,12 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
               <div class="f" style="flex:1"><label>Дъно, мм</label><input type="text" inputmode="decimal" id="pi-base" placeholder="напр. 8"></div>
             </div>
             <div style="display:flex;gap:9px;align-items:flex-end;">
-              <div class="f" style="flex:1"><label id="pi-start-mass-l">Начално количество глина, г</label><input type="text" inputmode="decimal" id="pi-start-mass" placeholder="напр. 450"></div>
+              <div class="f" style="flex:1"><label id="pi-start-mass-l">Начално количество глина, г</label><input type="text" inputmode="decimal" id="pi-start-mass" placeholder="напр. 450" oninput="_piEstDraw()"></div>
               <div class="f" style="flex:1"><label data-t="ui.teglo-g">Тегло (г)</label><input type="number" id="pi-weight" data-tp="ph.napr-640" placeholder="напр. 640"></div>
             </div>
+            <!-- v1.45.0: прогнозата е отделно от реалното начално количество и от теглото -->
+            <div id="pi-est" class="cl-est"></div>
+            <button type="button" class="rd-btn" id="pi-calc" onclick="openClayCalc('piece')">⚖️ Калкулатор: глина и свиване</button>
             <!-- v1.13.0: свободното описание остава, както е било. -->
             <div class="f"><label>Размери — описание</label><input type="text" id="pi-dimensions" data-tp="ph.napr-v18-12" placeholder="напр. в18 × ⌀12" oninput="_piDimFillHint()"></div>
           </div>
@@ -2550,6 +2573,48 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   </div>
 </div>
 
+<!-- v1.45.0: калкулатор — количество глина и свиване (фаза 3) -->
+<div class="mo" id="mo-clay" onclick="closeBg(event,'mo-clay')">
+  <div class="mo-sh">
+    <div class="mo-c" onclick="event.stopPropagation()">
+      <div class="mo-h"></div>
+      <div class="mo-hdr"><div class="mo-t">Глина и свиване</div><button class="mo-x" onclick="closeMo('mo-clay')">×</button></div>
+      <div class="mo-b">
+        <div class="pi-tabs t2" role="tablist"><button type="button" role="tab" data-tab="qty" class="on" onclick="moTab('mo-clay','qty')">Количество глина</button><button type="button" role="tab" data-tab="shr" onclick="moTab('mo-clay','shr')">Свиване</button></div>
+        <div class="pi-tab on" data-tab="qty">
+          <div class="f"><label>Форма</label><select id="cl-shape" onchange="clCalc()"></select></div>
+          <div class="cl-row"><div class="f"><label>Височина, см</label><input type="text" inputmode="decimal" id="cl-h" oninput="clCalc()"></div>
+            <div class="f"><label>Ширина / Ø, см</label><input type="text" inputmode="decimal" id="cl-w" oninput="clCalc()"></div>
+            <div class="f" id="cl-d-w"><label>Дълбочина, см</label><input type="text" inputmode="decimal" id="cl-d" oninput="clCalc()"></div></div>
+          <div class="cl-row"><div class="f"><label>Стена, мм</label><input type="text" inputmode="decimal" id="cl-wall" placeholder="по избор" oninput="clCalc()"></div>
+            <div class="f"><label>Дъно, мм</label><input type="text" inputmode="decimal" id="cl-base" placeholder="по избор" oninput="clCalc()"></div></div>
+          <div class="cl-row"><div class="f"><label>Размерите са</label><select id="cl-at" onchange="clCalc()"><option value="wet">при изработване</option><option value="bone-dry">сухо</option><option value="fired">изпечено (желано)</option></select></div>
+            <div class="f"><label>Плътност, г/см³</label><input type="text" inputmode="decimal" id="cl-dens" placeholder="1,8–2,0" oninput="clCalc()"></div></div>
+          <div class="f" id="cl-man-w"><label>Количество на бройка, г</label><input type="text" inputmode="decimal" id="cl-manual" placeholder="претеглено или по опит" oninput="clCalc()"></div>
+          <div class="cl-row"><div class="f"><label>Брой бройки</label><input type="text" inputmode="numeric" id="cl-count" value="1" oninput="clCalc()"></div>
+            <div class="f"><label>Реално използвано, г <small>(на бройка)</small></label><input type="text" inputmode="decimal" id="cl-real" placeholder="по избор" oninput="clCalc()"></div></div>
+          <div id="cl-qty-out" class="cl-out"></div>
+          <button type="button" class="btn bp" id="cl-apply-est" onclick="clApplyEst()" style="display:none">Запази прогнозата в изделието</button>
+        </div>
+        <div class="pi-tab" data-tab="shr">
+          <div class="f"><label>Глина / маса</label><select id="cl-mass" onchange="clMassChange()"></select></div>
+          <div class="f"><label>Свиване от</label><select id="cl-src" onchange="clSrcChange()"></select></div>
+          <div class="cl-row"><div class="f"><label>Сушене, %</label><input type="text" inputmode="decimal" id="cl-dry" oninput="clManual()"></div>
+            <div class="f"><label>Изпичане, %</label><input type="text" inputmode="decimal" id="cl-fire" oninput="clManual()"></div>
+            <div class="f"><label>или общо, %</label><input type="text" inputmode="decimal" id="cl-total" oninput="clManual()"></div></div>
+          <div id="cl-src-note" class="cl-note"></div>
+          <div class="f"><label>Посока</label><select id="cl-dir" onchange="clCalc()"><option value="fwd">Имам размера при изработване → краен</option><option value="back">Искам краен размер → колко да изработя</option></select></div>
+          <div class="cl-row"><div class="f"><label id="cl-sh-l">Височина, см</label><input type="text" inputmode="decimal" id="cl-sh" oninput="clCalc()"></div>
+            <div class="f"><label>Ширина / Ø, см</label><input type="text" inputmode="decimal" id="cl-sw" oninput="clCalc()"></div>
+            <div class="f"><label>Дълбочина, см</label><input type="text" inputmode="decimal" id="cl-sd" oninput="clCalc()"></div></div>
+          <div id="cl-shr-out" class="cl-out"></div>
+          <button type="button" class="btn bp" id="cl-apply-size" onclick="clApplySize()" style="display:none">Приложи размерите при изработване в изделието</button>
+        </div>
+        <button class="btn bg" onclick="closeMo('mo-clay')" style="margin-top:14px;">Затвори</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- MODAL: SG калкулатор (v1.14.0) -->
 <div class="mo" id="mo-sg" onclick="closeBg(event,'mo-sg')">
   <div class="mo-sh">
@@ -2851,7 +2916,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.44.0';
+const APP_VERSION = 'v1.45.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -7365,7 +7430,7 @@ function _splitPieceFrom(se,_units,name,n){
   if(se.dimensions)p.dimensions=se.dimensions;
   if(se.weight!=null&&se.weight!=='')p.weight=se.weight;
   // v1.31.1: характеристиките на партидата важат и за отделената част.
-  ['size','startMass','wall','base','categories'].forEach(function(k){if(se[k]!=null)p[k]=JSON.parse(JSON.stringify(se[k]));});
+  ['size','startMass','wall','base','categories','clayEst'].forEach(function(k){if(se[k]!=null)p[k]=JSON.parse(JSON.stringify(se[k]));});
   DB.pieces.unshift(p);
   recomputePieceStage(p);
   return p;
@@ -8095,6 +8160,7 @@ function openPieceMo(p){
   document.getElementById('pi-start-mass').value=(p&&p.startMass!=null)?String(p.startMass).replace('.',','):'';
   document.getElementById('pi-start-mass-l').textContent=_isSeries?'Начално количество глина, г — на бройка':'Начално количество глина, г';
   piCats=_catsNorm(p&&Array.isArray(p.categories)?p.categories:[]);
+  piClayEst=p&&p.clayEst?JSON.parse(JSON.stringify(p.clayEst)):null;_piEstDraw(); // v1.45.0
   renderPiCats();
   _piDimFillHint();
   document.getElementById('pi-date').value=p?.date||new Date().toISOString().split('T')[0];
@@ -8290,6 +8356,7 @@ function savePiece(){
   if(_sm!=null)p.startMass=_sm;
   var _cats=_catsNorm(piCats);
   if(_cats.length)p.categories=_cats;
+  if(piClayEst)p.clayEst=piClayEst; // v1.45.0: прогнозата — само ако е запазена изрично
   // v1.20.0 (А7 фаза 2): броят решава дали това е изделие или серия. Едно поле,
   // един поток — няма втори бутон „добави серия".
   var _cntEl=document.getElementById('pi-count');
@@ -8483,7 +8550,11 @@ function _traitRows(p){
     rows.push(dr('Размери',lbl+(note?' ('+note+')':'')));
   }
   if(p.dimensions)rows.push(dr(lbl?'Размери — описание':'Размери',p.dimensions+' см'));
-  if(p.startMass!=null)rows.push(dr(p.count!=null?'Начална глина (бройка)':'Начална глина',p.startMass+' г'));
+  if(p.clayEst&&p.clayEst.lo!=null){ // v1.45.0: прогнозата — до реалното, не вместо него
+    var _n=p.count!=null?_seriesTotal(p):1,_e=p.clayEst;
+    rows.push(dr(_n>1?'Прогноза глина (бройка)':'Прогноза глина',_clRange(_e.lo,_e.hi)+(_e.manual?' (ръчно)':'')+(_n>1?' · общо за '+_n+': '+_clRange(_e.lo*_n,_e.hi*_n):'')));
+  }
+  if(p.startMass!=null)rows.push(dr(p.count!=null?'Начална глина (бройка)':'Начална глина',p.startMass+' г'+(function(){var c=p.clayEst&&_clayCompare(p.clayEst,p.startMass);return c?' · '+_clCmpText(c):'';})()));
   if(p.weight!=null&&p.weight!=='')rows.push(dr('Тегло',p.weight+' г'));
   if(p.wall!=null||p.base!=null)rows.push(dr('Стена / дъно',(p.wall!=null?p.wall:'—')+' / '+(p.base!=null?p.base:'—')+' мм'));
   if(Array.isArray(p.categories)&&p.categories.length)rows.push(dr('Категории',p.categories.join(', ')));
@@ -9723,7 +9794,7 @@ window.addEventListener('beforeunload',function(e){
 var _moSnap={};
 // Пикери и справки, не формуляри — там няма работа за губене, а изборът се прави
 // пак с два тапа.
-var _MO_NO_GUARD={'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1,'mo-rn-pick':1};
+var _MO_NO_GUARD={'mo-clay':1,'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1,'mo-rn-pick':1};
 
 function _moSnapshot(id){
   var el=document.getElementById(id);if(!el)return '';
@@ -9764,7 +9835,7 @@ var _DR={
   'mo-piece':{label:function(d){return d.kind==='series'?'Серия':'Изделие';},name:'pi-name',view:'pieces',
     t:function(){return {id:editId||'',kind:editKind==='series'?'series':'piece'};},
     rec:function(d){return d.kind==='series'?findSeries(d.id):DB.pieces.find(function(x){return x.id===d.id;});},
-    st:function(){return {ph:pPh,cats:piCats};},put:function(x){if(x.ph)pPh=x.ph.slice();piCats=(x.cats||[]).slice();renderPrev('pi-prev',pPh);renderPiCats();},
+    st:function(){return {ph:pPh,cats:piCats,est:piClayEst};},put:function(x){if(x.ph)pPh=x.ph.slice();piCats=(x.cats||[]).slice();if('est' in x)piClayEst=x.est;renderPrev('pi-prev',pPh);renderPiCats();_piEstDraw();},
     open:function(d,r){editId=d.id||null;editKind=d.kind==='series'?'series':'piece';if(d.kind==='series')curSeries=d.id;else if(d.id)curPiece=d.id;openPieceMo(r||undefined);}},
   'mo-recipe':{label:function(){return 'Рецепта';},name:'ri-name',view:'recipes',
     t:function(){return {id:editId||''};},rec:function(d){return DB.recipes.find(function(x){return x.id===d.id;});},
@@ -10315,6 +10386,140 @@ function _findMigrationBackups(){
 }
 
 // Open analysis modal and populate
+
+// ══ v1.45.0: КАЛКУЛАТОР — КОЛИЧЕСТВО ГЛИНА И СВИВАНЕ (фаза 3) ══
+// Сметките са в calc/clay.js. Тук — само полетата. Нищо не се записва в изделие без
+// изричен бутон; въведеното, измереното и изчисленото се различават в изхода.
+var piClayEst=null,_CL={ctx:null};
+function _clG(n){n=Math.round(n);return n>=1000?String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '):String(n);}
+function _clRange(lo,hi){var kg=Math.max(lo,hi)>=10000,f=function(n){return kg?_clN(n/1000,1):_clG(n);},u=kg?' кг':' г';return lo===hi?f(lo)+u:f(lo)+'–'+f(hi)+u;}
+function _clN(n,d){return (Math.round(n*Math.pow(10,d||1))/Math.pow(10,d||1)).toString().replace('.',',');}
+function _clCmpText(c){return (c.diff>=0?'+':'')+_clG(c.diff)+' г ('+(c.pct>=0?'+':'')+String(c.pct).replace('.',',')+' %) спрямо средата на прогнозата'+(c.inRange?', в диапазона':', извън диапазона');}
+function _piEstDraw(){
+  var el=document.getElementById('pi-est');if(!el)return;
+  var e=piClayEst;if(!e){el.innerHTML='';return;}
+  var sm=(document.getElementById('pi-start-mass')||{}).value,c=_clayCompare(e,sm);
+  el.innerHTML='<span class="k">Прогноза</span> '+_pdE(_clRange(e.lo,e.hi))+(e.manual?' (ръчно)':'')+(e.shape&&CLAY_SHAPES[e.shape]&&!e.manual?' · '+_pdE(CLAY_SHAPES[e.shape].l.split(' — ')[0]):'')
+    +(c?'<div class="s">Реално '+_pdE(sm)+' г: '+_pdE(_clCmpText(c))+'</div>':'<div class="s">Реалното количество се пише в „Начално количество глина“.</div>')
+    +' <button type="button" class="rd-link" onclick="piClayEst=null;_piEstDraw()">Махни прогнозата</button>';
+}
+function _clV(id){return (document.getElementById(id)||{value:''}).value;}
+function _clSet(id,v){var e=document.getElementById(id);if(e)e.value=v==null?'':String(v).replace('.',',');}
+// масата за свиването: глини и маси; тестовете на маса с измерено свиване
+function _clBodyTests(mid){
+  return DB.tests.filter(function(t){return t&&!t.archivedAt&&testKind(t)==='body'&&t.bodyRef==='mat:'+mid&&_shrinkPcts(t.body);})
+    .sort(function(a,b){return (parseFloat(a.temp)||0)-(parseFloat(b.temp)||0)||String(b.date||'').localeCompare(String(a.date||''));});
+}
+function openClayCalc(ctx){
+  _CL={ctx:ctx==='piece'?'piece':null};
+  var sh=document.getElementById('cl-shape');
+  sh.innerHTML=Object.keys(CLAY_SHAPES).map(function(k){return '<option value="'+k+'">'+_pdE(CLAY_SHAPES[k].l)+'</option>';}).join('');
+  var ms=DB.materials.filter(function(m){return m&&!m.archivedAt&&(m.cat==='clays'||m.cat==='mass');}).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'bg');});
+  document.getElementById('cl-mass').innerHTML='<option value="">— без маса —</option>'+ms.map(function(m){var n=_clBodyTests(m.id).length;return '<option value="'+m.id+'">'+_pdE(m.name)+(n?' · '+n+(n===1?' тест':' теста'):'')+'</option>';}).join('');
+  ['cl-h','cl-w','cl-d','cl-wall','cl-base','cl-dens','cl-manual','cl-real','cl-dry','cl-fire','cl-total','cl-sh','cl-sw','cl-sd'].forEach(function(id){_clSet(id,'');});
+  _clSet('cl-count',1);document.getElementById('cl-at').value='wet';document.getElementById('cl-dir').value='fwd';sh.value='cyl';
+  if(_CL.ctx){
+    // от формуляра: предложение, нищо не се записва обратно без бутон
+    var g=function(id){return (document.getElementById(id)||{value:''}).value;};
+    _clSet('cl-h',g('pi-h'));_clSet('cl-w',g('pi-w'));_clSet('cl-d',g('pi-depth'));_clSet('cl-wall',g('pi-wall'));_clSet('cl-base',g('pi-base'));_clSet('cl-real',g('pi-start-mass'));
+    _clSet('cl-sh',g('pi-h'));_clSet('cl-sw',g('pi-w'));_clSet('cl-sd',g('pi-depth'));
+    if(g('pi-depth'))sh.value='box';
+    if(piClayEst&&piClayEst.shape&&CLAY_SHAPES[piClayEst.shape])sh.value=piClayEst.shape;
+    if(piClayEst&&piClayEst.manual)_clSet('cl-manual',piClayEst.lo);
+    var at=g('pi-size-at');document.getElementById('cl-at').value=!at||at==='wet'||at==='leather-hard'?'wet':(at==='bone-dry'||at==='bisque')?'bone-dry':'fired';
+    var n=parseInt(g('pi-count'),10);_clSet('cl-count',editKind==='series'&&n>1?n:(n>1?n:1));
+    var cm=_clayMat(g('pi-clay'));if(cm&&!cm.archivedAt)document.getElementById('cl-mass').value=cm.id;
+  }
+  document.getElementById('cl-apply-est').style.display=_CL.ctx?'':'none';
+  document.getElementById('cl-apply-size').style.display=_CL.ctx?'':'none';
+  clMassChange(true);
+  moTab('mo-clay','qty');openMo('mo-clay');
+}
+function clMassChange(first){
+  var mid=_clV('cl-mass'),ts=mid?_clBodyTests(mid):[],m=mid?DB.materials.find(function(x){return x.id===mid;}):null;
+  var spec=m&&m.shrink?_dec(String(m.shrink).replace('%','').split(/[–-]/)[0]):null;
+  var temps={};ts.forEach(function(t){temps[String(t.temp||'?')]=1;});
+  document.getElementById('cl-src').innerHTML='<option value="">Ръчно въведено</option>'
+    +ts.map(function(t){var p=_shrinkPcts(t.body);return '<option value="t:'+t.id+'">Тест '+_pdE(t.date||'')+' · '+(t.temp?_pdE(t.temp)+' °C':'без температура')+' · общо '+(p.total!=null?_clN(p.total):'—')+' %</option>';}).join('')
+    +(spec!=null&&!isNaN(spec)?'<option value="m:'+m.id+'">Данни на производителя: '+_pdE(m.shrink)+' (непроверено)</option>':'');
+  // предлага се само ако няма избор между температури
+  var one=ts.length&&Object.keys(temps).length===1?ts[ts.length-1]:null;
+  document.getElementById('cl-src').value=one?'t:'+one.id:'';
+  if(one||!first)clSrcChange();else clCalc();
+  if(ts.length&&!one)document.getElementById('cl-src-note').innerHTML='<b class="cl-w">Тестове при различни температури ('+_pdE(Object.keys(temps).join(', '))+' °C)</b> — избери кой, стойностите не се смесват.';
+}
+function clSrcChange(){
+  var v=_clV('cl-src');
+  if(v.indexOf('t:')===0){var t=DB.tests.find(function(x){return x.id===v.slice(2);}),p=t&&_shrinkPcts(t.body);
+    if(p){_clSet('cl-dry',p.wetDry!=null?_clN(p.wetDry):'');_clSet('cl-fire',p.dryFired!=null?_clN(p.dryFired):'');_clSet('cl-total',p.dryFired==null&&p.wetDry==null&&p.total!=null?_clN(p.total):'');}}
+  else if(v.indexOf('m:')===0){var m=DB.materials.find(function(x){return x.id===v.slice(2);}),n=m&&_dec(String(m.shrink).replace('%','').split(/[–-]/)[0]);
+    _clSet('cl-dry','');_clSet('cl-fire','');_clSet('cl-total',n!=null&&!isNaN(n)?_clN(n):'');}
+  clCalc();
+}
+function clManual(){var s=document.getElementById('cl-src');if(s.value)s.value='';clCalc();}
+function _clShrink(){return _shrinkCombine({dry:_clV('cl-dry'),fire:_clV('cl-fire'),total:_clV('cl-total')});}
+function _clSrcNote(s){
+  var v=_clV('cl-src');
+  if(!s)return 'Няма свиване — въведи процент или избери тест на масата.';
+  if(s.err)return '<b class="cl-w">Невалидно: '+_pdE(s.err)+'.</b>';
+  var tot='Общо '+_clN(s.total)+' %'+(s.from==='parts'?' = 1 − (1 − '+_clN(s.dry)+' %)·(1 − '+_clN(s.fire)+' %) — процентите не се събират':'')+(s.from==='dry'?' — само сушене':s.from==='fire'?' — само изпичане':'')+'.';
+  if(v.indexOf('t:')===0){var t=DB.tests.find(function(x){return x.id===v.slice(2);});return '<span class="cl-m">Измерено</span> — тест на маса от '+_pdE(t.date||'—')+(t.temp?' при '+_pdE(t.temp)+' °C':'')+'. '+tot;}
+  if(v.indexOf('m:')===0)return '<span class="cl-g">Ориентировъчно</span> — по данни на производителя, не е проверено свойство на масата. '+tot;
+  return '<span class="cl-g">Ориентировъчно</span> — въведено ръчно, без измерване. '+tot;
+}
+function _clEst(){
+  var sh=_clV('cl-shape'),at=_clV('cl-at'),s=_clShrink();
+  return _clayEstimate({shape:sh,h:_clV('cl-h'),w:_clV('cl-w'),depth:_clV('cl-d'),wall:_clV('cl-wall'),base:_clV('cl-base'),dens:_clV('cl-dens'),at:at,atLabel:at==='bone-dry'?'сухо':'изпечено',shrink:s&&!s.err?s:null,count:_clV('cl-count'),manual:_clV('cl-manual')});
+}
+var _CL_ERR={'липсва':'Попълни ','размер':'Невалиден размер','стена':'Стената е извън 1–60 мм','дъно':'Дъното е извън 1–60 мм','плътност':'Плътността е извън 1,2–2,6 г/см³','брой бройки':'Броят е цяло число от 1 нагоре','количество':'Въведи количество в грамове','геометрия':'Размерите не стигат за стените и дъното — провери ги'};
+function clCalc(){
+  var sh=_clV('cl-shape'),S=CLAY_SHAPES[sh]||{need:[]},man=sh==='manual';
+  document.getElementById('cl-d-w').style.display=man||S.need.indexOf('depth')>=0||sh==='slab'?'':'none';
+  document.getElementById('cl-man-w').style.display=man?'':'none';
+  ['cl-h','cl-w','cl-wall','cl-base','cl-at','cl-dens'].forEach(function(id){var w=document.getElementById(id).closest('.f');if(w)w.style.opacity=man?'.45':'';});
+  var e=_clEst(),o=document.getElementById('cl-qty-out'),L={h:'височина',w:'ширина / Ø',depth:'дълбочина'};
+  _CL.est=e&&!e.err?e:null;
+  if(!e||e.err){o.innerHTML='<div class="cl-hint">'+_pdE(e&&e.err?(e.err==='липсва'?_CL_ERR['липсва']+e.miss.map(function(k){return L[k];}).join(', '):(_CL_ERR[e.err]||e.err)):'')+'.</div>';}
+  else{
+    var c=_clayCompare(e,_clV('cl-real'));
+    o.innerHTML='<div class="cl-big"><span class="cl-c">Изчислено</span> '+_pdE(_clRange(e.lo,e.hi))+(e.count>1?' <small>на бройка</small>':'')+'</div>'
+      +(e.total?'<div class="cl-tot">Общо за '+e.count+' бр.: <b>'+_pdE(_clRange(e.total.lo,e.total.hi))+'</b></div>':'')
+      +(e.vol?'<div class="cl-sub">Обем глина '+_clG(e.vol[0])+(e.vol[1]!==e.vol[0]?'–'+_clG(e.vol[1]):'')+' см³</div>':'')
+      +(c?'<div class="cl-cmp'+(c.inRange?'':' out')+'"><span class="cl-m">Реално</span> '+_pdE(_clV('cl-real'))+' г: '+_pdE(_clCmpText(c))+'</div>':'')
+      +'<ul class="cl-as">'+e.assume.map(function(x){return '<li>'+_pdE(x)+'</li>';}).join('')+'</ul>';
+  }
+  // свиване
+  var s=_clShrink(),dir=_clV('cl-dir'),so=document.getElementById('cl-shr-out');
+  document.getElementById('cl-src-note').innerHTML=_clSrcNote(s);
+  document.getElementById('cl-sh-l').textContent=dir==='back'?'Желана височина, см':'Височина, см';
+  _CL.back=null;
+  if(!s||s.err){so.innerHTML='';return;}
+  var dims=[['в','cl-sh'],['Ø / ш','cl-sw'],['д','cl-sd']].map(function(x){var v=_dec(_clV(x[1]));return [x[0],v!=null&&!isNaN(v)&&v>0?(dir==='back'?_shrinkBack(v,s):_shrinkForward(v,s)):null,v];});
+  if(dims.some(function(x){return x[2]!=null&&(isNaN(x[2])||x[2]<=0);})){so.innerHTML='<div class="cl-hint">Невалиден размер.</div>';return;}
+  var used=dims.filter(function(x){return x[1];});
+  if(!used.length){so.innerHTML='<div class="cl-hint">Въведи поне един размер.</div>';return;}
+  var row=function(l,k,cls){return '<tr class="'+cls+'"><th>'+l+'</th>'+used.map(function(x){return '<td>'+(x[1][k]!=null?_clN(x[1][k],1)+' см':'—')+'</td>';}).join('')+'</tr>';};
+  so.innerHTML='<table class="cl-tab"><tr><th></th>'+used.map(function(x){return '<th>'+x[0]+'</th>';}).join('')+'</tr>'
+    +row('При изработване','wet',dir==='back'?'calc':'in')+(used.some(function(x){return x[1].dry!=null;})?row('Сухо','dry','calc'):'')+row('Изпечено','fired',dir==='back'?'in':'calc')+'</table>'
+    +'<div class="cl-sub"><span class="cl-c">Изчислено</span> — '+(dir==='back'?'от желания краен размер':'от размера при изработване')+'.</div>';
+  if(dir==='back'){_CL.back={};dims.forEach(function(x,i){if(x[1])_CL.back[['h','w','depth'][i]]=Math.round(x[1].wet*10)/10;});}
+}
+// само с изричен бутон; при попълнено поле — пита
+function clApplyEst(){
+  var e=_CL.est;if(!e){toast('Няма изчислена прогноза');return;}
+  var sh=_clV('cl-shape');
+  piClayEst={lo:e.per.lo,hi:e.per.hi,shape:sh,manual:!!e.manual,at:_todayISO()};
+  var w=_dec(_clV('cl-wall')),b=_dec(_clV('cl-base'));
+  _piEstDraw();closeMo('mo-clay');toast('Прогнозата е във формуляра — записва се с „Запази“');
+}
+function clApplySize(){
+  var B=_CL.back;if(!B||!Object.keys(B).length){toast('Избери „Искам краен размер“ и въведи размер');return;}
+  var map={h:'pi-h',w:'pi-w',depth:'pi-depth'},has=Object.keys(B).filter(function(k){return document.getElementById(map[k]).value;});
+  if(has.length&&!confirm('Във формуляра вече има размери ('+has.map(function(k){return document.getElementById(map[k]).value;}).join(' × ')+' см).\n\nДа ги заменя ли с размерите при изработване ('+Object.keys(B).map(function(k){return String(B[k]).replace('.',',');}).join(' × ')+' см)?'))return;
+  Object.keys(B).forEach(function(k){_clSet(map[k],B[k]);});
+  document.getElementById('pi-size-at').value='wet';
+  closeMo('mo-clay');toast('Размерите при изработване са във формуляра');
+}
 // ── SG калкулатор (v1.14.0) ──────────────────────────────────
 // SG = weight of a volume of glaze / weight of the same volume of water.
 // Since 1 ml water = 1 g, SG = weight(g) / volume(ml). No stored state — the
