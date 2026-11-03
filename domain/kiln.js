@@ -43,15 +43,17 @@ export function _kilnNew(presetKey, newId) {
 
 function f(n) { return String(n).replace('.', ','); }
 // „Ø51 × 38 см · 79 л · 3,6 kW“
+// v1.48+: английските мерни единици, когато интерфейсът е на английски
+function en() { return typeof globalThis !== 'undefined' && globalThis.LANG === 'en'; }
 export function _kilnSummary(k) {
   if (!k) return '';
   var dims = k.shape === 'rect'
     ? (k.w != null && k.depth != null ? f(k.w) + ' × ' + f(k.depth) : '')
     : (k.d != null ? 'Ø' + f(k.d) : '');
-  if (k.h != null) dims = (dims ? dims + ' × ' : 'в') + f(k.h);
+  if (k.h != null) dims = (dims ? dims + ' × ' : (en() ? 'h' : 'в')) + f(k.h);
   var out = [];
-  if (dims) out.push(dims + ' см');
-  if (k.volume != null) out.push(f(k.volume) + ' л');
+  if (dims) out.push(dims + (en() ? ' cm' : ' см'));
+  if (k.volume != null) out.push(f(k.volume) + (en() ? ' L' : ' л'));
   if (k.power != null) out.push(f(k.power) + ' kW');
   return out.join(' · ');
 }
@@ -60,7 +62,7 @@ export function _kilnSummary(k) {
 export function _shelvesSummary(k) {
   return ((k && k.shelves) || []).map(function (s) {
     var size = s.shape === 'rect' ? f(s.w || 0) + '×' + f(s.depth || 0) : 'Ø' + f(s.d || 0);
-    return (s.qty ? s.qty + '× ' : '') + (s.name || size) + (s.t != null ? ' (' + f(s.t) + ' см)' : '');
+    return (s.qty ? s.qty + '× ' : '') + (s.name || size) + (s.t != null ? ' (' + f(s.t) + (en() ? ' cm)' : ' см)') : '');
   }).join(', ');
 }
 

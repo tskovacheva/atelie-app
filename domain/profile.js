@@ -48,7 +48,8 @@ export function _fpDuration(fp){
 export function _fmtDuration(mins){
   if(mins==null)return '';
   var h=Math.floor(mins/60), m=Math.round(mins%60);
-  if(h&&m)return h+' ч '+m+' мин';
-  if(h)return h+' ч';
-  return m+' мин';
+  var en=typeof globalThis!=='undefined'&&globalThis.LANG==='en',H=en?' h':' ч',M=en?' min':' мин'; // v1.49.0
+  if(h&&m)return h+H+' '+m+M;
+  if(h)return h+H;
+  return m+M;
 }
