@@ -2691,7 +2691,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div class="mo-sh">
     <div class="mo-c" onclick="event.stopPropagation()">
       <div class="mo-h"></div>
-      <div class="mo-hdr"><div class="mo-t" id="mo-rcompat-t">Съвместимост на зареждането</div><button class="mo-x" onclick="closeMo('mo-rcompat')">×</button></div>
+      <div class="mo-hdr"><div class="mo-t" id="rpc-t">Съвместимост на зареждането</div><button class="mo-x" onclick="closeMo('mo-rcompat')">×</button></div>
       <div class="mo-b"><div id="rpc-body"></div></div>
     </div>
   </div>
@@ -3010,7 +3010,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.46.2';
+const APP_VERSION = 'v1.46.3';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -10727,17 +10727,19 @@ function _runClayGroups(r){
   return order;
 }
 function _rnMode(r){return r.purpose==='bisque'?'bisque':'glaze';}
-function _rnCompat(r){
+function _rnCompat(r,ran){
   var fp=_rnProfile(r),pk=fp?_fpPeak(fp):null,mode=_rnMode(r),G=_runClayGroups(r);
-  var peak=pk!=null?pk:(r.peakTemp!=null?r.peakTemp:null),src=pk!=null?'profile':(r.peakTemp!=null?'run':null);
-  return _loadCompat({mode:mode,single:r.purpose==='single-fire',kiln:_rnKilnMethod(r),peak:peak,peakSrc:src,ramps:fp?_fpRamps(fp):[],
+  var peak=pk!=null?pk:(r.peakTemp!=null?r.peakTemp:null),src=pk!=null?'profile':(r.peakTemp!=null?'run':null),ramps=fp?_fpRamps(fp):[];
+  // v1.46.3: същата проверка по потвърдената стартирана програма (снимката ѝ), ако е подадена
+  if(ran){peak=_rpRanPeak(ran);src=peak!=null?'ran':null;ramps=Array.isArray(ran.ramps)?ran.ramps:[];}
+  return _loadCompat({mode:mode,single:r.purpose==='single-fire',kiln:_rnKilnMethod(r),peak:peak,peakSrc:src,ramps:ramps,
     clays:G.map(function(g){var m=g.mat;return {key:g.key,name:g.name,units:g.units,matId:m?m.id:null,text:m?(mode==='bisque'?m.fireBisqueTemp:(m.fireGlazeTemp||m.fireTemp)):null,meta:m&&m.fireMeta?m.fireMeta[mode]:null,carb:m?_matCarb(m):null};})});
 }
-function _rnCompatHtml(r){
-  var C=_rnCompat(r),fp=_rnProfile(r),mode=_rnMode(r);
-  var pk='Пик: '+(C.peak!=null?C.peak+' °C '+(C.peakSrc==='profile'?'по профил „'+_pdE(fp.name)+'“ (зададен)':'въведен, не е от профил'):'—')+(r.peakTemp!=null&&C.peakSrc==='profile'?' · отбелязан: '+r.peakTemp+' °C':'')+(r.cones?' · конуси: '+_pdE(r.cones):'')
+function _rnCompatHtml(r,ran){
+  var C=_rnCompat(r,ran),fp=ran?null:_rnProfile(r),mode=_rnMode(r);
+  var pk='Пик: '+(C.peak!=null?C.peak+' °C '+(C.peakSrc==='ran'?'по стартираната програма'+(ran.name?' „'+_pdE(ran.name)+'“':'')+' (потвърдена)':C.peakSrc==='profile'?'по профил „'+_pdE(fp.name)+'“ (зададен)':'въведен, не е от профил'):'—')+(r.peakTemp!=null&&C.peakSrc==='profile'?' · отбелязан: '+r.peakTemp+' °C':'')+(r.cones?' · конуси: '+_pdE(r.cones):'')
     +' · режим: '+(r.purpose==='single-fire'?'еднократно (по данните за окончателно — само ориентир)':mode==='bisque'?'бисквит':'окончателно')+(r.purpose?'':' (видът изпичане не е избран)');
-  var hold=null;if(fp){var rr=_fpRamps(fp);for(var i=rr.length-1;i>=0;i--){if(rr[i].hold!=null){hold=rr[i].hold;break;}}}
+  var hold=null,hsrc=ran?(Array.isArray(ran.ramps)?{ramps:ran.ramps}:null):fp;if(hsrc){var rr=_fpRamps(hsrc);for(var i=rr.length-1;i>=0;i--){if(rr[i].hold!=null){hold=rr[i].hold;break;}}}
   var rows=C.rows.map(function(x){var g=C.rows.indexOf(x),m=x.matId?DB.materials.find(function(z){return z.id===x.matId;}):null;
     var det=x.res==='conflict'&&x.diff!=null?Math.abs(x.diff)+' °C '+(x.diff<0?'под':'над')+' '+(x.range.t!=null?'препоръката':'диапазона'):x.edge?'на '+(x.edge==='lo'?'долната':'горната')+' граница':x.exact&&(x.res==='ok'||x.res==='unconf'||x.res==='orient')?'съвпада с единичната препоръка':x.why||'';
     var carb=m?_matCarb(m):null;
@@ -10751,7 +10753,7 @@ function _rnCompatHtml(r){
   var ia=C.interAll&&!C.interAll.none?'Ако се включат и непотвърдените: '+(C.interAll.lo===C.interAll.hi?C.interAll.lo:C.interAll.lo+'–'+C.interAll.hi)+' °C':C.interAll&&C.interAll.none?'С непотвърдените общ диапазон няма: „'+C.interAll.a.name+'“ (от '+(C.interAll.a.range.t!=null?C.interAll.a.range.t:C.interAll.a.range.lo)+' °C) срещу „'+C.interAll.b.name+'“ (до '+(C.interAll.b.range.t!=null?C.interAll.b.range.t:C.interAll.b.range.hi)+' °C). Средна температура не се предлага.':'';
   return '<div class="ds" id="lc"><div class="ds-t">Съвместимост на зареждането</div><div class="lc-v '+C.verdict.code+'">'+_pdE(C.verdict.text)+'</div><div class="lc-pk">'+pk+'</div>'
     +(C.rows.length&&C.verdict.code!=='alt'?'<div class="lc-i">'+_pdE(it)+(ia?'<br>'+_pdE(ia):'')+'</div>':'')
-    +rows+(C.rows.length&&C.verdict.code!=='alt'?'<div class="mf-n">Еднакъв пик не е еднаква топлинна работа'+(hold!=null?' — профилът задържа '+hold+' min':'')+'. Скорости, задръжка и охлаждане се проверяват само при документирани ограничения на масата. Нищо не се променя в материалите.</div>':'')+'</div>';
+    +rows+(C.rows.length&&C.verdict.code!=='alt'?'<div class="mf-n">Еднакъв пик не е еднаква топлинна работа'+(hold!=null?(ran?' — програмата задържа ':' — профилът задържа ')+hold+' min':'')+'. Скорости, задръжка и охлаждане се проверяват само при документирани ограничения на масата. Нищо не се променя в материалите.</div>':'')+'</div>';
 }
 function _rnFireHtml(r){
   var fp=_rnProfile(r),pk=fp?_fpPeak(fp):null,st=_runState(r),peak=(st==='completed'||st==='interrupted')&&r.peakTemp!=null?r.peakTemp:(pk!=null?pk:r.peakTemp);
@@ -10829,7 +10831,7 @@ function _rnProgHtml(r){
     :'<div class="rp-line"><span class="l">Без температурен профил</span> '+_pdE(type)+'</div>';
   var ranH='';
   if(st!=='planned'&&kiln){
-    ranH='<div class="rp-line"><span class="l">Стартирана програма</span> '+(ran?_pdE(_rpRanText(ran,fp))+(ran.note?' <small>'+_pdE(ran.note)+'</small>':'')+(Array.isArray(ran.ramps)&&ran.ramps.length&&ran.as!=='planned'?' <button type="button" class="rd-link" onclick="rnProgView(\'ran\')">Сегменти</button>':''):'<span class="rp-un">не е потвърдена</span>')
+    ranH='<div class="rp-line"><span class="l">Стартирана програма</span> '+(ran?_pdE(_rpRanText(ran,fp))+(ran.note?' <small>'+_pdE(ran.note)+'</small>':'')+(Array.isArray(ran.ramps)&&ran.ramps.length?' <button type="button" class="rd-link" onclick="rnProgView(\'ran\')">Сегменти</button>':''):'<span class="rp-un">не е потвърдена</span>')
       +' <button type="button" class="'+(ran?'rd-link':'fchip rp-ok')+'" id="rp-ran-btn" onclick="rnRanOpen()">'+(ran?'Промени':'Потвърди коя е пусната')+'</button></div>';
   }
   var pkH='';
@@ -10838,14 +10840,28 @@ function _rnProgHtml(r){
     var d=r.peakTemp!=null&&ref!=null?r.peakTemp-ref:null;
     pkH='<div class="rp-line"><span class="l">Отчетен пик</span> '+(r.peakTemp!=null?r.peakTemp+' °C'+(d!=null?(Math.abs(d)>5?' <b class="rp-dif">':' <span>')+(d>0?'+':d<0?'−':'±')+Math.abs(d)+' °C спрямо '+ref+' °C ('+refL+')'+(Math.abs(d)>5?'</b>':'</span>'):''):'<span class="rp-un">не е отчетен</span>')+'</div>';
   }
-  var note=ran&&rpk!=null&&pk!=null&&rpk!==pk?'<div class="rp-n">Проверката е по планирания профил ('+pk+' °C).</div>':'';
+  // v1.46.3: „различна“ = друг профил, ръчна програма, или снимката вече не съвпада с планирания профил
+  // (напр. профилът е редактиран след потвърждението) — независимо дали пикът е същият.
+  var note='';
+  if(ran&&_rpDiffers(r,ran,fp)){
+    var CR=_rpRanPeak(ran)!=null?_rnCompat(r,ran):null;
+    note='<div class="rp-n" id="rp-plan-note">Проверка по планирания профил'+(fp?' „'+_pdE(fp.name)+'“':'')+' — не по стартираната програма.</div>'
+      +(CR?'<button type="button" class="rp-c lc-v '+CR.verdict.code+'" id="rp-ran-c" onclick="rnCompatView(\'ran\')"><span><small>По стартираната програма:</small> '+_pdE(CR.verdict.text)+'</span><span class="go">›</span></button>'
+        :'<div class="rp-n">Стартираната програма няма пик — отделна проверка по нея не е възможна.</div>');
+  }
   return '<div class="rp" id="rp"><div class="rp-h">Програма и съвместимост</div>'+prof+ranH+pkH
     +'<button type="button" class="rp-c lc-v '+C.verdict.code+'" onclick="rnCompatView()"><span>'+_pdE(C.verdict.text)+'</span><span class="go">›</span></button>'+note+'</div>';
 }
+function _rpDiffers(r,ran,fp){
+  if(!ran)return false;if(ran.as!=='planned'||!fp||ran.profileId!==fp.id)return true;
+  return JSON.stringify(Array.isArray(ran.ramps)?ran.ramps:[])!==JSON.stringify(_fpRamps(fp));
+}
 function _rpCur(){return DB.firingRuns.find(function(x){return x.id===curRun;})||null;}
-function rnCompatView(){
-  var r=_rpCur();if(!r)return;
-  document.getElementById('rpc-body').innerHTML=_rnCompatHtml(r).replace('id="lc"','id="lc-mo"')
+function rnCompatView(which){
+  var r=_rpCur();if(!r)return;var ran=which==='ran'?_rpRan(r):null;if(which==='ran'&&(!ran||_rpRanPeak(ran)==null))return;
+  document.getElementById('rpc-t').textContent=ran?'Съвместимост — по стартираната програма':'Съвместимост на зареждането';
+  document.getElementById('rpc-body').innerHTML=(ran?'<div class="rp-n">По потвърдената стартирана програма'+(Array.isArray(ran.ramps)&&ran.ramps.length?' (записаните ѝ сегменти)':' (само пикът — скорости и задръжки не са известни)')+'. Планирането остава по планирания профил.</div>':'')
+    +_rnCompatHtml(r,ran).replace('id="lc"','id="lc-mo"')
     +'<div class="btn-row"><button class="btn bg" onclick="closeMo(\'mo-rcompat\')">Затвори</button></div>';
   openMo('mo-rcompat');
 }
