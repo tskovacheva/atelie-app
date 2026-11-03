@@ -6,16 +6,22 @@
 // глина — затова всичко тук говори с „вероятно“. Минаването на праг не значи, че
 // реакцията е приключила: степента зависи от време, задръжка, атмосфера, едрина и маса.
 
+// v1.48.1: три вида етапи. general — общи за глините; cond — само при определен състав
+// (органика, карбонати, Ca-силикати); body — встъкляването: интервалите са ориентир от
+// изследвани нискотемпературни глини, всяка маса има свой (решават тестовете ѝ и
+// препоръчаната температура). Етапите „body“ не се отчитат като „минати“.
+export const FIRE_KINDS = { general: 'Общи процеси', cond: 'При определен състав', body: 'Встъкляване — зависи от масата' };
+export const FIRE_BODY_NOTE = 'Интервалите на встъкляване са от изследвани нискотемпературни глини (Maniatis & Tite 1981), не са общи за всички маси. Каменина и порцелан встъкляват много по-късно; за всяка маса решават нейните тестове и препоръчаната температура.';
 export const FIRE_SCALE = [
-  { code: 'water', l: 'Свободна вода', lo: 20, hi: 200, clay: 'all', src: 'общо познание', how: 'парата излиза; бързо загряване може да пукне дебели стени' },
-  { code: 'organics', l: 'Органика и въглерод', lo: 200, hi: 900, clay: 'all', src: 'Maggetti 2011', how: 'черно ядро в счупването, ако не е изгоряло' },
-  { code: 'dehydrox', l: 'Дехидроксилация → керамизация', lo: 450, hi: 700, clay: 'all', src: 'общо познание', how: 'парче, което не се разкисва във вода' },
-  { code: 'quartz', l: 'Кварцов скок', lo: 573, hi: 573, clay: 'all', src: 'общо познание', how: 'пукнатини при бързо минаване (нагряване и охлаждане)' },
-  { code: 'carbonate', l: 'Разпад на карбонати (пукане на вар ~750–850)', lo: 650, hi: 900, clay: 'calc', src: 'Leicht 1977; Maggetti 2011', how: 'бели точки и отложено пукане след овлажняване' },
-  { code: 'vitr-start', l: 'Начало на встъкляване', lo: 800, hi: 900, clay: 'all', red: -50, src: 'Maniatis & Tite 1981', how: 'по-звънък звук, по-малко водопопиваемост' },
-  { code: 'ca-silicates', l: 'Ca-силикати, относително стабилен интервал', lo: 850, hi: 1050, clay: 'calc', src: 'Maniatis & Tite 1981', how: 'свиването и водопопиваемостта се менят слабо' },
-  { code: 'vitr-ext', l: 'Разширено встъкляване', lo: 950, hi: 1100, clay: 'noncalc', src: 'Maniatis & Tite 1981', how: 'водопопиваемостта пада ясно' },
-  { code: 'vitr-full', l: 'Напреднало встъкляване; при преизпичане — подуване', lo: 1100, hi: 1300, clay: 'all', red: -50, src: 'Maniatis & Tite 1981', how: 'стъкловидно счупване; мехури и деформация при преизпичане; зависи силно от флюсите и масата' }
+  { code: 'water', kind: 'general', l: 'Свободна вода', lo: 20, hi: 200, clay: 'all', src: 'общо познание', how: 'парата излиза; бързо загряване може да пукне дебели стени' },
+  { code: 'organics', kind: 'cond', when: 'при органика', l: 'Органика и въглерод', lo: 200, hi: 900, clay: 'all', src: 'Maggetti 2011', how: 'черно ядро в счупването, ако не е изгоряло' },
+  { code: 'dehydrox', kind: 'general', l: 'Дехидроксилация → керамизация', lo: 450, hi: 700, clay: 'all', src: 'общо познание', how: 'парче, което не се разкисва във вода' },
+  { code: 'quartz', kind: 'general', l: 'Кварцов скок', lo: 573, hi: 573, clay: 'all', src: 'общо познание', how: 'пукнатини при бързо минаване (нагряване и охлаждане)' },
+  { code: 'carbonate', kind: 'cond', l: 'Разпад на карбонати (пукане на вар ~750–850)', lo: 650, hi: 900, clay: 'calc', src: 'Leicht 1977; Maggetti 2011', how: 'бели точки и отложено пукане след овлажняване' },
+  { code: 'vitr-start', kind: 'body', l: 'Начало на встъкляване', lo: 800, hi: 900, clay: 'all', red: -50, src: 'Maniatis & Tite 1981 — нискотемпературни варовити и неваровити глини', how: 'по-звънък звук, по-малко водопопиваемост' },
+  { code: 'ca-silicates', kind: 'cond', l: 'Ca-силикати, относително стабилен интервал', lo: 850, hi: 1050, clay: 'calc', src: 'Maniatis & Tite 1981', how: 'свиването и водопопиваемостта се менят слабо' },
+  { code: 'vitr-ext', kind: 'body', l: 'Разширено встъкляване', lo: 950, hi: 1100, clay: 'noncalc', src: 'Maniatis & Tite 1981 — неваровити глини от изследването', how: 'водопопиваемостта пада ясно' },
+  { code: 'vitr-full', kind: 'body', l: 'Напреднало встъкляване; при преизпичане — подуване', lo: 1100, hi: 1300, clay: 'all', red: -50, src: 'общо познание; зависи от масата', how: 'стъкловидно счупване; мехури и деформация при преизпичане; зависи силно от флюсите и масата' }
 ];
 // Открити методи: пикът е ориентир (в един съд разликата стига до стотици °C).
 export const FIRE_OPEN = { pit: 1, barrel: 1, sawdust: 1, obvara: 1, other: 1 };
@@ -25,16 +31,19 @@ const CALC = { strong: 1, weak: 1, possible: 1 };
 function num(v) { if (v == null || v === '') return null; var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : null; }
 
 // Етапите спрямо пика. atmosphere 'reduction' мести встъкляването с −50 °C.
-// → {passed, active, ahead}: списъци с етапи {code, l, lo, hi, clay, partial?}
+// → {passed, active, ahead, body}: етапи {code, l, lo, hi, clay, kind, partial?}; body — встъкляването, с pos
 export function _fireStages(peak, atmosphere, method, holdMin) {
   var p = num(peak); if (p == null) return null;
-  var red = atmosphere === 'reduction', out = { passed: [], active: [], ahead: [] };
+  var red = atmosphere === 'reduction', out = { passed: [], active: [], ahead: [], body: [] };
   var hold = num(holdMin), shortOpen = !!FIRE_OPEN[method] && (hold == null || hold < 20);
   FIRE_SCALE.forEach(function (s) {
     var d = red && s.red ? s.red : 0, lo = s.lo + d, hi = s.hi + d;
-    var x = { code: s.code, l: s.l, lo: lo, hi: hi, clay: s.clay };
+    var x = { code: s.code, l: s.l, lo: lo, hi: hi, clay: s.clay, kind: s.kind };
     if (s.code === 'carbonate' && (red || shortOpen) && p >= lo) x.partial = true; // вероятно частичен
-    if (p > hi) out.passed.push(x); else if (p >= lo) out.active.push(x); else out.ahead.push(x);
+    var pos = p > hi ? 'passed' : p >= lo ? 'active' : 'ahead';
+    // v1.48.1: встъкляването — само положение спрямо литературния интервал, не „минато“
+    if (s.kind === 'body') { x.pos = pos; out.body.push(x); return; }
+    out[pos].push(x);
   });
   return out;
 }
