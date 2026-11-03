@@ -1038,6 +1038,15 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .qk-ctx{font-size:12.5px;color:var(--tx2);margin:-4px 0 8px;line-height:1.45}.qk-ctx:empty{display:none}.qk-cur{font-size:13.5px;margin-bottom:6px;line-height:1.4}.qk-cur .no{color:var(--tx3);font-style:italic}.qk-cur b{font-weight:600}
 .qk-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.qk-list .qk-lb{width:100%;font-size:11px;color:var(--tx3);margin-top:2px}.qk-list button{border:1.5px solid var(--bdr2);background:var(--surface);border-radius:999px;padding:7px 12px;min-height:38px;font-family:inherit;font-size:13px;color:var(--text);cursor:pointer;max-width:100%;text-align:left;overflow-wrap:anywhere}.qk-list button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}.qk-list button small{color:var(--tx3)}
 .qk-hint{font-size:11.5px;color:var(--tx3);margin-top:5px;line-height:1.5}.qk-det{margin:10px auto 0;font-size:13px}
+.fsx{--heat:linear-gradient(90deg,#4b3b33 0%,#6e2b1b 38%,#b0401f 56%,#dc742c 72%,#e9a23a 88%,#efc257 100%);margin:2px 0 8px}
+.fsx-ax,.fsx-r{display:grid;grid-template-columns:minmax(170px,32%) 1fr;gap:4px 14px;align-items:center}
+.fsx-heat{position:relative;display:block;height:32px}.fsx-heat i{position:absolute;left:0;right:0;top:0;height:10px;border-radius:5px;background:var(--heat)}.fsx-heat span{position:absolute;top:13px;transform:translateX(-50%);font-size:11.5px;color:var(--tx3);font-variant-numeric:tabular-nums}.fsx-heat span.z{transform:none}
+.fsx-r{width:100%;text-align:left;border:0;background:none;padding:7px 6px;margin:0;border-radius:10px;font-family:inherit;color:var(--text);cursor:pointer;min-height:44px;box-sizing:border-box}.fsx-r:hover{background:var(--bg2)}.fsx-r.on{background:var(--primary-soft)}
+.fsx-l{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}.fsx-l b{font-size:13.5px;font-weight:600;line-height:1.3}.fsx-l small{font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.fsx-l em{font-style:normal;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--bg2);color:var(--tx2)}.fsx-l em.calc{background:var(--warnbg);color:var(--warn)}
+.fsx-tr{position:relative;display:block;height:18px;border-radius:9px;background-color:var(--bg2);background-image:linear-gradient(90deg,var(--bdr) 1px,transparent 1px);background-size:calc(100% * 200 / 1300) 100%}
+.fsx-b{position:absolute;top:0;bottom:0;border-radius:9px;background-image:var(--heat);background-repeat:no-repeat;box-shadow:0 1px 2px rgba(0,0,0,.18)}.fsx-b.pt{border-radius:50%;min-width:18px}
+@media (max-width:640px){.fsx-ax,.fsx-r{grid-template-columns:1fr}.fsx-ax .fsx-l{display:none}.fsx-r{padding:8px 6px 10px}}
 </style>
 </head>
 <body>
@@ -3036,7 +3045,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.47.0';
+const APP_VERSION = 'v1.47.1';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -10806,13 +10815,30 @@ function _rnCompatDraw(r){var a=document.getElementById('drn-compat'),b=document
 // Библиотека → Инструменти → Огнена скала
 function openFireScale(){
   var ms=DB.materials.filter(function(m){return m&&!m.archivedAt&&(m.cat==='mass'||m.cat==='clays')&&_massCurvePts(m.id).length>=2;});
-  document.getElementById('fs-body').innerHTML='<div class="fs-wrap">'+_fireScaleSvg(null,{full:true})+'</div>'
-    +'<div class="mf-n">Интервалите са от литературата за определени маси, не константи. Докосни лента за подробности. Цвят: всички · варовити · безкарбонатни.</div>'
+  document.getElementById('fs-body').innerHTML=_fireScaleHtml()
+    +'<div class="mf-n">Интервалите са от литературата за определени маси, не константи. Докосни етап за подробности.</div>'
     +'<div class="fs-cards">'+FIRE_SCALE.map(function(st){return '<div class="fs-card" id="fsc-'+st.code+'"><b>'+_pdE(st.l)+'</b><span>'+st.lo+(st.hi!==st.lo?'–'+st.hi:'')+' °C'+(st.red?' (редукция '+st.red+')':'')+' · '+({all:'всички',calc:'варовити',noncalc:'безкарбонатни'}[st.clay])+'</span><div>Как го разпознаваш: '+_pdE(st.how)+'</div><small>'+_pdE(st.src)+'</small></div>';}).join('')+'</div>'
     +(ms.length?'<div class="ds-t" style="margin-top:14px">Криви на масите</div>'+ms.map(function(m){return '<button type="button" class="pd-li" style="width:100%;text-align:left" onclick="closeMo(\'mo-fscale\');openMatDet(\''+m.id+'\')"><div class="b"><div class="t">'+_pdE(m.name)+'</div><div class="s">'+_massCurvePts(m.id).length+' теста</div></div></button>';}).join(''):'');
   openMo('mo-fscale');
 }
-function fsCard(code){var e=document.getElementById('fsc-'+code);if(!e)return;document.querySelectorAll('.fs-card.on').forEach(function(x){x.classList.remove('on');});e.classList.add('on');e.scrollIntoView({block:'nearest',behavior:'smooth'});}
+// v1.47.1: пълната скала — ред на етап (име, интервал, лента върху обща ос 0–1300 °C).
+// Без хоризонтално превъртане: на тесен екран името е над лентата, на широк — вляво.
+// Лентата е отрязък от топлинния градиент; за кои глини е — с думи, не само с цвят.
+var FS_MAX=1300;
+function _fireScaleHtml(){
+  var pc=function(t){return (Math.max(0,Math.min(FS_MAX,t))/FS_MAX*100).toFixed(2)+'%';};
+  var ticks=[0,200,400,600,800,1000,1200].map(function(t){return '<span style="left:'+pc(t)+'"'+(t===0?' class="z"':'')+'>'+t+'</span>';}).join('');
+  var rows=FIRE_SCALE.map(function(st){
+    var w=Math.max(st.hi-st.lo,0),pt=w<20,lo=pt?st.lo-10:st.lo,ww=pt?20:w;
+    var bs=(FS_MAX/ww*100).toFixed(1)+'% 100%',bp=(FS_MAX-ww>0?lo/(FS_MAX-ww)*100:0).toFixed(2)+'% 0';
+    var tag=st.clay==='calc'?'<em class="calc">варовити</em>':st.clay==='noncalc'?'<em class="noncalc">безкарбонатни</em>':'';
+    return '<button type="button" class="fsx-r" id="fsr-'+st.code+'" data-code="'+st.code+'" onclick="fsCard(\''+st.code+'\')">'
+      +'<span class="fsx-l"><b>'+_pdE(st.l.split(' (')[0].split(';')[0])+'</b><small>'+st.lo+(st.hi!==st.lo?'–'+st.hi:'')+' °C'+(st.red?' · редукция '+st.red:'')+'</small>'+tag+'</span>'
+      +'<span class="fsx-tr"><span class="fsx-b'+(pt?' pt':'')+'" style="left:'+pc(lo)+';width:'+pc(ww)+';background-size:'+bs+';background-position:'+bp+'"></span></span></button>';
+  }).join('');
+  return '<div class="fsx" role="list" aria-label="Огнена скала"><div class="fsx-ax"><span class="fsx-l"></span><span class="fsx-heat"><i></i>'+ticks+'</span></div>'+rows+'</div>';
+}
+function fsCard(code){var e=document.getElementById('fsc-'+code);if(!e)return;document.querySelectorAll('.fs-card.on,.fsx-r.on').forEach(function(x){x.classList.remove('on');});e.classList.add('on');var r=document.getElementById('fsr-'+code);if(r)r.classList.add('on');e.scrollIntoView({block:'nearest',behavior:'smooth'});}
 // тест на маса: наблюдения (факти), тълкуване, проверки за пукане на вар
 var SLAKE_L={ok:'не се разкисва',softens:'омеква по ръба',falls:'разпада се'},CORE_L={even:'еднородно',grey:'сиво',black:'черно'},LIMER_L={none:'няма',spots:'петна / изпъкване',pops:'пукане'};
 function _tBodyMat(t){var id=String(t&&t.bodyRef||'').replace(/^mat:/,'');return id?DB.materials.find(function(m){return m.id===id;}):null;}
