@@ -1,7 +1,7 @@
 # Глина — Functional Specification
 
-**Version:** v1.40.0 · `atelie-v103`
-**Last revised:** October 2026
+**Version:** v1.47.0 · `atelie-v118`
+**Last revised:** November 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
 
@@ -219,6 +219,14 @@ an error inside it and nothing is changed.
 **v1.45.1.** A missing shrinkage component is never zero. `_toWetFactor(stage, s)` returns `{f:[lo,hi], exact, missing}`: dry sizes need the drying share (only firing or only the total known → drying 4–8 %); bisque sizes = dry plus up to 2 % (capped by the measured firing shrinkage); fired sizes need both parts or the total (one part known → the other 4–8 %). Non-exact factors widen the clay range, are named in the assumptions and flag the estimate „Ориентировъчно“. In the shrinkage tool one known component gives ranges for the affected sizes, the source is shown as „Частично (измерено)“, and „Приложи размерите“ is refused until both parts or the total are known.
 
 **v1.46.0 (Огнена скала).** Implements the approved spec „Глина — Огнена скала“: raw materials carry `raw.carbonate` (none/weak/strong; empty = unknown), `carbonateGrain`, `carbonateNote`; a mass's carbonate is computed (`_massCarbonate`): one component ≈100 % inherits, a mix with a calcareous component is „possible“ with that component's share (never the component's level for the whole mix), CaCO3 by formula counts as strong. Run detail (Подготовка): „Съвместимост на зареждането“ and „Огнена скала“ over the same clay groups (plan units, attached pieces, tests). Compatibility per clay: the bisque or final-firing value as entered, `fireMeta` (kind maker/own/approx, status, source, note, optional `rateMax`/`holdMin`/`coolMax`), result Потвърдено / По непотвърдени данни / Потенциален конфликт / Неизвестно; confirmed-only intersection and a separate one with unconfirmed values; the contradicting pair when there is none; no average; single values stay points; single-fire uses final-firing data as orientation only (never positive); non-kiln methods give no categorical verdict. Profile segments are checked only against documented limits; a segment without rate or free cooling is unknown. Fire scale: mini-scale with the peak (open methods: a ±100 °C band labelled conditional), probable stages, the seven rules per clay group. Body tests: `slake`, `fractureCore`, `fractureRim`, `limeChecks[]` (+1/+7/+30 days suggested, computed; filter „Чака проверка“); observations shown apart from the interpretation chip (`_testFireStage`, „вероятно…“, relative to ≥3 tests of the same mass). Mass detail: water absorption and total shrinkage vs °C from its tests. Library → Tools → „Огнена скала“. Masses get bisque/final temperatures and `fireMeta`. Nothing computed is stored; schemaVersion stays 6; no migration.
+
+**v1.46.1.** The cooling limit `coolMax {from, to, max}` is matched with its bounds normalized (either order), only against descending profile segments after the peak; a segment that crosses part of the interval counts; free cooling (no rate) stays unknown.
+
+**v1.46.2.** Firing detail: a compact „Програма и съвместимост“ block above the tabs in every state — planned profile, its set peak, the firing type and the short `_rnCompat()` verdict; tapping opens the segments (rate, target, hold, cooling, curve, estimated duration) or the existing detailed analysis. The started program is stored only when the user confirms it: `run.ranProgram {as: planned|other|manual, profileId?, name, ramps? (snapshot), peak?, note?, at}` — the planned profile and the history are not rewritten; the recorded peak (`peakTemp`) stays separate. A re-fire does not copy it.
+
+**v1.46.3.** The confirmed program counts as different when it is another profile, a manual program, or its snapshot no longer equals the planned profile's segments (e.g. the profile was edited later) — regardless of the peak; then the block says the check is by the planned profile and, when the program has a peak, adds a separate verdict `_rnCompat(r, ranProgram)` (its snapshot peak and segments, `peakSrc: 'ran'`). „Сегменти“ opens the snapshot for every confirmed choice.
+
+**v1.47.0.** Quick piece entry is a compact mode of the same piece form (`mo-piece`, `savePiece`): hidden fields `pi-qk` (new|made), `pi-qk-full`, `pi-qk-unk` keep the mode in drafts. „Започвам ново“: name, clay, count, date, photo. „Вече изработено“: + real stage, the stage date, note — saved as one dated `stage` step; „Изпечено“ needs a firing type and is saved as one `firing` step `{firingPurpose}` with no run and no method. Clay: search by name and manufacturer, recently used (by record creation) offered, never preselected; „Неизвестна“ leaves the field empty; legacy names stay as is. „Запази и добави още“ reopens empty in the same mode with an explicit „Пак „…““ choice. Opened from „+“, „Моето ателие“, a material (clay prefilled) or a recipe (glaze prefilled). A second „Запази“ after the form closed is ignored. No schema change.
 
 **v1.40.4.** Adding a piece or series to an earlier firing (from the firing or as a step in the piece): the firing step gets the firing's end date (an own step of the same day is taken over); if the record's stage is held by the form (no dated stage-moving steps) and is ahead of what the firing gives or is an outcome, it is first written as a stage step dated today, so the older firing does not move it back; a stage behind it moves forward; dated newer steps keep winning by date. A record cannot get a second step for the same firing. Piece detail: the clay/mass is a link. Firing detail: the profile is a link; profile detail lists its firings. Firing lists show codes next to names. A test linked to a firing takes its empty date, profile, peak and hold from it (in the form and when attached from the firing). Mass/clay detail: „+ Тест на маса“, „+ Изделие“; glaze test detail: „Нова версия на рецептата“ (over the test). Taking a test out of a firing asks; ending a firing without pieces or tests warns.
 
@@ -647,6 +655,15 @@ section for firing method / atmosphere / purpose and a decoration technique. On
 save these become real events, unlinked to any firing run. This supports
 retrospective entry — recording a piece whose history was never captured.
 
+### Quick entry (v1.47.0)
+
+„+ Ново изделие“ (catalog, „Моето ателие“, a material or a recipe) opens the piece
+modal in a compact mode with two entries: **„Започвам ново“** (name, clay, count,
+date, photo) and **„Вече изработено“** (+ the real stage, the stage date and a note,
+saved as one dated stage step; „Изпечено“ asks the firing type and is saved as one
+firing step without a run). Same record and same save as the full form;
+„Подробно въвеждане“ shows every field. Details in the v1.47.0 note above.
+
 ### Add-piece modal
 
 Two-tier:
@@ -974,7 +991,7 @@ untouched — nothing empty is saved — and the next open seeds it.
 
 **Also housed here:**
 
-- **Backup** — export the whole database as a JSON file (`schemaVersion`, now 4 —
+- **Backup** — export the whole database as a JSON file (`schemaVersion`, now 6 —
   including firingRuns since v1.17.0 and series since v1.20.0); import to
   restore. Import **replaces**; it does not merge. A guard warns when the imported
   file is older than the latest local change. A staleness reminder (v1.17.0) shows
