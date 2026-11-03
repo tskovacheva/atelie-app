@@ -1003,6 +1003,31 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 .cl-tab tr.in td{color:var(--tx2);}.cl-tab tr.calc td{font-weight:600;color:var(--primary);}
 .cl-est{font-size:13px;line-height:1.45;margin:0 0 8px;}.cl-est:empty{display:none;}.cl-est .k{font-size:11px;color:var(--tx3);}.cl-est .s{font-size:12px;color:var(--tx2);}
 #pi-calc{margin:0 0 12px;}
+/* v1.46.0: Огнена скала, съвместимост, наблюдения */
+.fm-d{margin:-4px 0 12px;font-size:13px;}.fm-d summary{cursor:pointer;color:var(--primary);font-size:12px;padding:2px 0 6px;}
+.fm-l{font-size:11px;color:var(--tx3);margin:4px 0 4px;}
+.mf-r{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:13.5px;}.mf-r small{min-width:88px;color:var(--tx3);font-size:12px;}.mf-r .s{font-size:12px;color:var(--tx2);margin-top:2px;}
+.mf-n{font-size:12px;color:var(--tx3);line-height:1.5;margin-top:6px;}
+.mf-c{font-size:13.5px;line-height:1.5;}.mf-c.strong,.mf-c.possible{color:var(--warn);}
+.mc-w{display:flex;flex-wrap:wrap;gap:10px;}.mc{flex:1;min-width:220px;}.mc-t{font-size:12px;color:var(--tx2);margin-bottom:2px;}
+.mc-s{width:100%;height:auto;}.mc-s .ax{stroke:var(--bdr2);}.mc-s .ln{fill:none;stroke:var(--primary);stroke-width:2;}.mc-s .pt{fill:var(--primary);}.mc-s .pt.red{fill:var(--warn);}.mc-s .tx{font-size:10px;fill:var(--tx3);}
+.fs-svg{width:100%;height:auto;display:block;margin:6px 0 2px;}.fs-svg .fs-b{fill:var(--primary);opacity:.55;}.fs-svg .fs-b.calc{fill:var(--warn);}.fs-svg .fs-b.noncalc{fill:#7d8f6a;}
+.fs-svg .fs-pk{stroke:var(--text);stroke-width:4;}.fs-svg .fs-pk.open{stroke-dasharray:10 8;}.fs-svg .fs-band{fill:var(--warn);opacity:.15;}
+.fs-svg.full .fs-b{cursor:pointer;}.fs-svg .fs-l{font-size:22px;fill:var(--tx2);}.fs-svg .fs-t{font-size:20px;fill:var(--tx3);}
+.fs-wrap{overflow-x:auto;}.fs-wrap .fs-svg.full{min-width:640px;}
+.fs-st{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 12px;font-size:13px;margin:8px 0;}.fs-st small{display:block;color:var(--tx3);font-size:11px;}
+.fw{border-top:1px solid var(--bdr);padding:8px 0;font-size:13px;line-height:1.45;}.fw-n{font-weight:600;margin-bottom:2px;}.fw-warn{color:var(--warn);}.fw-note{color:var(--tx2);}.fw small{color:var(--tx3);}
+.fs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px;}.fs-card{background:var(--bg2);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;border:1.5px solid transparent;}.fs-card.on{border-color:var(--primary);}.fs-card span{display:block;color:var(--tx2);font-size:12px;}.fs-card small{color:var(--tx3);}
+.lc-v{font-size:14px;font-weight:600;padding:8px 10px;border-radius:10px;background:var(--bg2);margin-bottom:6px;}.lc-v.conflict{background:var(--warnbg);color:var(--warn);}.lc-v.ok{background:var(--primary-soft);color:var(--primary);}
+.lc-pk,.lc-i{font-size:12.5px;color:var(--tx2);line-height:1.5;margin-bottom:6px;}
+.lc-r{border-top:1px solid var(--bdr);padding:8px 0;}.lc-h{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:14px;}.lc-h .n{color:var(--tx3);font-size:12px;}
+.lc-s{margin-left:auto;font-size:11.5px;font-weight:600;border-radius:6px;padding:1px 7px;background:var(--bg2);color:var(--tx2);}.lc-s.ok{background:var(--primary-soft);color:var(--primary);}.lc-s.conflict{background:var(--warnbg);color:var(--warn);}.lc-s.unknown{border:1px dashed var(--bdr2);}
+.lc-d{font-size:12.5px;color:var(--tx2);line-height:1.5;margin-top:2px;}.lc-q.conflict{color:var(--warn);}.lc-q.unknown{color:var(--tx3);}
+.tf{margin-top:10px;}.tf-t{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px;}
+.tf-chip{display:inline-block;font-size:12.5px;border-radius:99px;padding:2px 10px;background:var(--bg2);border:1px dashed var(--bdr2);}
+.tf-due{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;}.tf-due span{font-size:12px;border-radius:8px;padding:2px 8px;background:var(--bg2);}.tf-due .due{background:var(--warnbg);color:var(--warn);}.tf-due .done{color:var(--primary);}
+.tf-l{font-size:13px;padding:3px 0;}
+.pd-fs{padding:0 12px 8px;}.pd-fs .fs-svg{margin:0;}
 </style>
 </head>
 <body>
@@ -1167,6 +1192,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
   <div style="margin:12px 16px 16px;padding:14px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bdr);">
     <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:10px;" data-t="ui.instrumenti">Инструменти</div>
     <button onclick="openSgCalc()" class="btn bg btn-sm" style="width:100%;padding:10px;" data-t="ui.kalkulator-za-platnost-sg">🧪 Калкулатор за плътност (SG)</button>
+    <button onclick="openFireScale()" class="btn bg btn-sm" id="lib-fire-scale" style="width:100%;padding:10px;margin-bottom:8px;">🔥 Огнена скала</button>
     <button onclick="openClayCalc()" class="btn bg btn-sm" id="lib-clay-calc" style="width:100%;padding:10px;margin-top:8px;">⚖️ Количество глина и свиване</button>
   </div>
   <div style="padding-top:4px;" id="lib-list"></div>
@@ -1309,6 +1335,8 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <div class="ds" id="drn-alt-row" style="display:none"><div class="ds-t" data-t="ui.alternativno-izpichane">Алтернативно изпичане</div><div id="drn-alt"></div></div>
       <div id="drn-pick"></div>
       <div id="drn-pva"></div>
+      <div id="drn-compat"></div>
+      <div id="drn-fire"></div>
       <div class="ds"><div class="ds-t" style="display:flex;align-items:center;justify-content:space-between;">
         <span data-t="ui.testove">Тестове</span>
         <button onclick="openRunTestAttach()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;" data-t="ui.dobavi">+ Добави</button>
@@ -1624,7 +1652,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
   </div>
   <div class="det-body">
-    <div class="ds" id="dtest-body-row"><div class="ds-t">Резултат на масата</div><div id="dtest-res" class="md-kv"></div></div>
+    <div class="ds" id="dtest-body-row"><div class="ds-t">Резултат на масата</div><div id="dtest-res" class="md-kv"></div><div id="dtest-fire"></div></div>
     <div class="ds"><div class="ds-t">Изпичане и основа</div><div id="dtest-params" class="md-kv"></div></div>
     <div class="ds" id="dtest-layers-row"><div class="ds-t">Наслоени глазури</div><div id="dtest-layers" class="rd-notes"></div></div>
     <div class="ds"><div class="ds-t" data-t="ui.izvodi">Изводи</div><div id="dtest-notes" class="rd-notes"></div><div id="dtest-upd" class="rd-upd"></div></div>
@@ -1654,6 +1682,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
     <div id="dmat-stock"></div>
     <div id="dmat-warns"></div>
+    <div id="dmat-fire"></div>
     <div class="rd-acts">
       <button type="button" class="rd-btn" onclick="editMat()" data-t="ui.redaktiray">Редактирай</button>
       <span id="dmat-acts"></span>
@@ -2083,6 +2112,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
         <div class="f"><label data-t="ui.zvuk-pri-pochukvane">Звук при почукване</label>
           <select id="ti-sound"><option value="">—</option><option value="звънък" data-t="opt.zvanak-spechena">Звънък (спечена)</option><option value="глух" data-t="opt.gluh-porozna">Глух (порьозна)</option><option value="пукнат" data-t="opt.puknat">Пукнат</option></select>
         </div>
+        <!-- v1.46.0: наблюдения за керамизация — факти; тълкуването е в детайла -->
+        <div class="cl-row"><div class="f"><label>Накисване 24 ч</label><select id="ti-slake"><option value="">— не е правено —</option><option value="ok">Не се разкисва</option><option value="softens">Омеква по ръба</option><option value="falls">Разпада се</option></select></div>
+          <div class="f"><label>Ядро в счупването</label><select id="ti-core"><option value="">—</option><option value="even">Еднородно</option><option value="grey">Сиво</option><option value="black">Черно</option></select></div>
+          <div class="f"><label>Светъл ръб, mm</label><input type="text" inputmode="decimal" id="ti-rim"></div></div>
         <div class="f"><label data-t="ui.lime-popping-goreshta-tabletka-v-s">Lime popping (гореща таблетка в студена вода)</label>
           <select id="ti-lime"><option value="">— не е отбелязано —</option><option value="няма" data-t="opt.nyama">Няма</option><option value="слабо" data-t="opt.slabo">Слабо</option><option value="силно" data-t="opt.silno">Силно</option></select>
         </div>
@@ -2166,7 +2199,9 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
       <!-- Clay specific -->
       <div id="mi-clay-f">
         <div class="f"><label data-t="ui.temperatura-biskvit-c">Температура — бисквит (°C)</label><input type="text" id="mi-fire-bisque" data-tp="ph.napr-900-1000" placeholder="напр. 900–1000"></div>
+        <details class="fm-d"><summary>Произход и изисквания</summary><div class="cl-row"><div class="f"><label>Произход</label><select id="mi-fmb-kind"><option value="">— не е посочен —</option><option value="maker">Препоръка на производителя</option><option value="own">Лично проверена</option><option value="approx">Ориентировъчна</option></select></div><div class="f"><label>Статус</label><select id="mi-fmb-status"><option value="">Непотвърдено</option><option value="confirmed">Потвърдено</option></select></div></div><div class="f"><label>Източник</label><input type="text" id="mi-fmb-src" placeholder="напр. технически лист 2025, с. 4"></div><div class="f"><label>Бележка / изисквания (свободен текст)</label><input type="text" id="mi-fmb-note" placeholder="не се проверява автоматично"></div><div class="fm-l">Документирани ограничения — по избор; проверяват се спрямо профила</div><div class="cl-row"><div class="f"><label>Нагряване от, °C</label><input type="text" inputmode="decimal" id="mi-fmb-rf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="mi-fmb-rt"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="mi-fmb-rm"></div></div><div class="cl-row"><div class="f"><label>Задръжка на пика поне, min</label><input type="text" inputmode="decimal" id="mi-fmb-hold"></div></div><div class="cl-row"><div class="f"><label>Охлаждане от, °C</label><input type="text" inputmode="decimal" id="mi-fmb-cf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="mi-fmb-ct"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="mi-fmb-cm"></div></div></details>
         <div class="f"><label data-t="ui.temperatura-glazurno-c">Температура — глазурно (°C)</label><input type="text" id="mi-fire-glaze" data-tp="ph.napr-1220-1280" placeholder="напр. 1220–1280"></div>
+        <details class="fm-d"><summary>Произход и изисквания</summary><div class="cl-row"><div class="f"><label>Произход</label><select id="mi-fmg-kind"><option value="">— не е посочен —</option><option value="maker">Препоръка на производителя</option><option value="own">Лично проверена</option><option value="approx">Ориентировъчна</option></select></div><div class="f"><label>Статус</label><select id="mi-fmg-status"><option value="">Непотвърдено</option><option value="confirmed">Потвърдено</option></select></div></div><div class="f"><label>Източник</label><input type="text" id="mi-fmg-src" placeholder="напр. технически лист 2025, с. 4"></div><div class="f"><label>Бележка / изисквания (свободен текст)</label><input type="text" id="mi-fmg-note" placeholder="не се проверява автоматично"></div><div class="fm-l">Документирани ограничения — по избор; проверяват се спрямо профила</div><div class="cl-row"><div class="f"><label>Нагряване от, °C</label><input type="text" inputmode="decimal" id="mi-fmg-rf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="mi-fmg-rt"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="mi-fmg-rm"></div></div><div class="cl-row"><div class="f"><label>Задръжка на пика поне, min</label><input type="text" inputmode="decimal" id="mi-fmg-hold"></div></div><div class="cl-row"><div class="f"><label>Охлаждане от, °C</label><input type="text" inputmode="decimal" id="mi-fmg-cf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="mi-fmg-ct"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="mi-fmg-cm"></div></div></details>
         <div class="f"><label data-t="ui.shamot">Шамот</label><input type="text" id="mi-grog" data-tp="ph.napr-0-2-mm-20" placeholder="напр. 0–2 мм, 20%"></div>
         <div class="f"><label data-t="ui.svivaemost">Свиваемост (%)</label><input type="number" id="mi-shrink"></div>
         <div class="f"><label data-t="ui.cvyat-sled-izpichane">Цвят след изпичане</label><input type="text" id="mi-color" data-tp="ph.napr-tamnosiv-cheren" placeholder="напр. тъмносив/черен"></div>
@@ -2204,6 +2239,13 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
             <div class="f" style="flex:1;margin-bottom:8px;"><label style="font-size:10px;" data-t="ui.nachalno-suho-teglo-g">Начално сухо тегло (г)</label><input type="number" id="mi-raw-weight" data-tp="ph.napr-4500" placeholder="напр. 4500"></div>
           </div>
           <div class="f" style="margin-bottom:0;"><label style="font-size:10px;" data-t="ui.geolozhki-pravni-belezhki">Геоложки / правни бележки</label><textarea id="mi-raw-geonotes" rows="2" data-tp="ph.napr-plio-pleystocen-sino-siva-une" placeholder="напр. плио-плейстоцен, синьо-сива, UNESCO геопарк; два пласта — сив (фин) и кафяв (песъчлив)"></textarea></div>
+        </div>
+        <!-- v1.46.0: варовитост на находището (Огнена скала) -->
+        <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--primary);font-weight:600;letter-spacing:.05em;margin-bottom:8px;">КАРБОНАТИ (ВАРОВИТОСТ)</div>
+          <div class="cl-row"><div class="f"><label>Тест с оцет / HCl</label><select id="mi-raw-carb"><option value="">Неизвестно</option><option value="none">Няма шумене</option><option value="weak">Слабо шумене</option><option value="strong">Силно шумене</option></select></div>
+            <div class="f"><label>Едрина</label><select id="mi-raw-grain"><option value="">—</option><option value="invisible">Невидими</option><option value="small">Видими, под 1 mm</option><option value="coarse">Над 1 mm</option></select></div></div>
+          <div class="f" style="margin-bottom:0"><label>Бележка</label><input type="text" id="mi-raw-carbnote" placeholder="напр. бели частици от черупки"></div>
         </div>
         <div style="font-size:11px;color:var(--tx3);font-style:italic;margin-bottom:6px;" data-t="ui.procesnata-biografiya-promivki-pre">Процесната биография (промивки, пресяване, отлежаване) се записва в детайлния изглед след запазване.</div>
       </div>
@@ -2615,6 +2657,24 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
     </div>
   </div>
 </div>
+<!-- v1.46.0: Огнена скала (Библиотека) и проверка за пукане на вар -->
+<div class="mo" id="mo-fscale" onclick="closeBg(event,'mo-fscale')">
+  <div class="mo-sh"><div class="mo-c" onclick="event.stopPropagation()"><div class="mo-h"></div>
+    <div class="mo-hdr"><div class="mo-t">Огнена скала на глината</div><button class="mo-x" onclick="closeMo('mo-fscale')">×</button></div>
+    <div class="mo-b"><div id="fs-body"></div><button class="btn bg" onclick="closeMo('mo-fscale')" style="margin-top:12px;">Затвори</button></div>
+  </div></div>
+</div>
+<div class="mo" id="mo-lime" onclick="closeBg(event,'mo-lime')">
+  <div class="mo-sh"><div class="mo-c" onclick="event.stopPropagation()"><div class="mo-h"></div>
+    <div class="mo-hdr"><div class="mo-t">Проверка за пукане на вар</div><button class="mo-x" onclick="closeMoAsk('mo-lime')">×</button></div>
+    <div class="mo-b">
+      <div class="cl-row"><div class="f"><label>Дата</label><input type="date" id="lm-date"></div>
+        <div class="f"><label>Резултат</label><select id="lm-res"><option value="none">Няма</option><option value="spots">Петна / изпъкване</option><option value="pops">Пукане (отчупени късчета)</option></select></div></div>
+      <div class="f"><label>Бележка</label><input type="text" id="lm-note" placeholder="по избор"></div>
+      <div class="btn-row"><button class="btn bg" onclick="closeMoAsk('mo-lime')">Откажи</button><button class="btn bp" id="lm-ok" onclick="saveLimeCheck()">Запази</button></div>
+    </div>
+  </div></div>
+</div>
 <!-- MODAL: SG калкулатор (v1.14.0) -->
 <div class="mo" id="mo-sg" onclick="closeBg(event,'mo-sg')">
   <div class="mo-sh">
@@ -2788,6 +2848,10 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
           <div class="f" style="flex:1"><label data-t="ui.gotova-na">Готова на</label><input type="date" id="ms-readydate"></div>
         </div>
 
+        <!-- v1.46.0: температурите на масата — за „Съвместимост на зареждането“ -->
+        <div class="cl-row"><div class="f"><label>Температура — бисквит (°C)</label><input type="text" id="ms-fire-bisque" placeholder="напр. 950-980"></div>
+          <div class="f"><label>Температура — окончателно (°C)</label><input type="text" id="ms-fire-glaze" placeholder="напр. 1100-1150"></div></div>
+        <div class="cl-row"><div style="flex:1;min-width:0"><details class="fm-d"><summary>Бисквит — произход</summary><div class="cl-row"><div class="f"><label>Произход</label><select id="ms-fmb-kind"><option value="">— не е посочен —</option><option value="maker">Препоръка на производителя</option><option value="own">Лично проверена</option><option value="approx">Ориентировъчна</option></select></div><div class="f"><label>Статус</label><select id="ms-fmb-status"><option value="">Непотвърдено</option><option value="confirmed">Потвърдено</option></select></div></div><div class="f"><label>Източник</label><input type="text" id="ms-fmb-src" placeholder="напр. технически лист 2025, с. 4"></div><div class="f"><label>Бележка / изисквания (свободен текст)</label><input type="text" id="ms-fmb-note" placeholder="не се проверява автоматично"></div><div class="fm-l">Документирани ограничения — по избор; проверяват се спрямо профила</div><div class="cl-row"><div class="f"><label>Нагряване от, °C</label><input type="text" inputmode="decimal" id="ms-fmb-rf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="ms-fmb-rt"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="ms-fmb-rm"></div></div><div class="cl-row"><div class="f"><label>Задръжка на пика поне, min</label><input type="text" inputmode="decimal" id="ms-fmb-hold"></div></div><div class="cl-row"><div class="f"><label>Охлаждане от, °C</label><input type="text" inputmode="decimal" id="ms-fmb-cf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="ms-fmb-ct"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="ms-fmb-cm"></div></div></details></div><div style="flex:1;min-width:0"><details class="fm-d"><summary>Окончателно — произход</summary><div class="cl-row"><div class="f"><label>Произход</label><select id="ms-fmg-kind"><option value="">— не е посочен —</option><option value="maker">Препоръка на производителя</option><option value="own">Лично проверена</option><option value="approx">Ориентировъчна</option></select></div><div class="f"><label>Статус</label><select id="ms-fmg-status"><option value="">Непотвърдено</option><option value="confirmed">Потвърдено</option></select></div></div><div class="f"><label>Източник</label><input type="text" id="ms-fmg-src" placeholder="напр. технически лист 2025, с. 4"></div><div class="f"><label>Бележка / изисквания (свободен текст)</label><input type="text" id="ms-fmg-note" placeholder="не се проверява автоматично"></div><div class="fm-l">Документирани ограничения — по избор; проверяват се спрямо профила</div><div class="cl-row"><div class="f"><label>Нагряване от, °C</label><input type="text" inputmode="decimal" id="ms-fmg-rf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="ms-fmg-rt"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="ms-fmg-rm"></div></div><div class="cl-row"><div class="f"><label>Задръжка на пика поне, min</label><input type="text" inputmode="decimal" id="ms-fmg-hold"></div></div><div class="cl-row"><div class="f"><label>Охлаждане от, °C</label><input type="text" inputmode="decimal" id="ms-fmg-cf"></div><div class="f"><label>до, °C</label><input type="text" inputmode="decimal" id="ms-fmg-ct"></div><div class="f"><label>най-много °C/h</label><input type="text" inputmode="decimal" id="ms-fmg-cm"></div></div></details></div></div>
         <div class="f"><label data-t="ui.belezhki">Бележки</label><textarea id="ms-notes" rows="2" data-tp="ph.napr-otlezhava-v-naylon" placeholder="напр. отлежава в найлон"></textarea></div>
         <div class="f"><label data-t="ui.snimka">Снимка</label>
           <div id="ms-prev" class="ph-prev"></div>
@@ -2916,7 +2980,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.45.1';
+const APP_VERSION = 'v1.46.0';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -4754,6 +4818,7 @@ function openMassMo(m){
   var b=(m&&m.blend)||{};
   if(Array.isArray(b.components))massComps=b.components.map(function(c){return {ref:c.ref,pct:c.pct};});
   document.getElementById('ms-mixdate').value=b.mixDate||'';
+  _clSet('ms-fire-bisque',m&&m.fireBisqueTemp||'');_clSet('ms-fire-glaze',m&&m.fireGlazeTemp||'');_fmFill('ms-fmb',m&&m.fireMeta&&m.fireMeta.bisque);_fmFill('ms-fmg',m&&m.fireMeta&&m.fireMeta.glaze); // v1.46.0
   document.getElementById('ms-readydate').value=b.readyDate||'';
   document.getElementById('ms-notes').value=m?(m.notes||''):'';
   msPh=(m&&m.photo)?[m.photo]:[];
@@ -4780,6 +4845,8 @@ function saveMass(){
   var rdy=document.getElementById('ms-readydate').value;
   if(mix)m.blend.mixDate=mix;
   if(rdy)m.blend.readyDate=rdy;
+  var _mb=document.getElementById('ms-fire-bisque').value.trim(),_mg=document.getElementById('ms-fire-glaze').value.trim();if(_mb)m.fireBisqueTemp=_mb;if(_mg)m.fireGlazeTemp=_mg;
+  var _mfm=_fmPair('ms-fmb','ms-fmg');if(_mfm)m.fireMeta=_mfm; // v1.46.0
   if(curMassEditId){
     var old=DB.materials.find(function(x){return x.id===curMassEditId;});
     if(old&&old.createdAt)m.createdAt=old.createdAt;
@@ -6392,7 +6459,7 @@ var TEST_IC={
   // тест на маса: пробна пластина с маркировка за свиване
   body:'<svg class="tk-ic" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2.5"/><path d="M7 10v4M12 10v4M17 10v4"/></svg>'
 };
-var TS={view:'gal',recs:[],clays:[],temps:[],surf:[],def:'',rat:'',photo:'',cmp:false,picked:[],side:false,onlyDiff:false,hi:0};
+var TS={wait:false,view:'gal',recs:[],clays:[],temps:[],surf:[],def:'',rat:'',photo:'',cmp:false,picked:[],side:false,onlyDiff:false,hi:0};
 (function(){try{var v=JSON.parse(localStorage.getItem('glina.tests')||'null');if(!v)return;if(v.view)TS.view=v.view;['recs','clays','temps','surf'].forEach(function(k){if(Array.isArray(v[k]))TS[k]=v[k];});['def','rat','photo'].forEach(function(k){if(typeof v[k]==='string')TS[k]=v[k];});if(v.f&&typeof v.f==='object')activeFilters.test=v.f;if(v.sort)activeSort.test=v.sort;}catch(e){}})();
 function _tsSave(){try{localStorage.setItem('glina.tests',JSON.stringify({view:TS.view,recs:TS.recs,clays:TS.clays,temps:TS.temps,surf:TS.surf,def:TS.def,rat:TS.rat,photo:TS.photo,f:activeFilters.test,sort:activeSort.test}));}catch(e){}}
 function _tRec(t){return t&&t.recipeId?DB.recipes.find(function(r){return r.id===t.recipeId;})||null:null;}
@@ -6433,6 +6500,7 @@ function _tsMatch(t,q,skip){
   if(!_arcOk('test',t))return false; // v1.42.0
   if(f.glaze&&testKind(t)!=='glaze')return false;
   if(f.body&&testKind(t)!=='body')return false;
+  if(TS.wait&&skip!=='wait'&&!_tLimeWaiting(t))return false; // v1.46.0
   if(skip!=='recs'&&TS.recs.length&&TS.recs.indexOf(_tKey(t))<0)return false;
   if(skip!=='clays'&&TS.clays.length&&TS.clays.indexOf(testKind(t)==='body'?'(маса)':clayName(t.clay||''))<0)return false;
   if(skip!=='temps'&&TS.temps.length&&TS.temps.indexOf(String(t.temp||''))<0)return false;
@@ -6452,7 +6520,7 @@ function _tsActive(){var a=[],f=activeFilters.test||{};
   TS.clays.forEach(function(v){a.push(['clays',v,v==='(маса)'?'тест на маса':v]);});TS.temps.forEach(function(v){a.push(['temps',v,v?v+'°C':'без температура']);});TS.surf.forEach(function(v){a.push(['surf',v,v]);});
   var def=TS.def||(f.nodef?'none':f.hasdef?'has':'');if(def)a.push(['def','',{none:'Без дефекти (Няма)',has:'С дефекти',unk:'Дефекти не са отбелязани'}[def]]);
   var rat=TS.rat||(f.hiscore?'4':'');if(rat)a.push(['rat','',{4:'★★★★ и повече',low:'★★ и по-малко',none:'Без оценка'}[rat]]);
-  if(TS.photo)a.push(['photo','',TS.photo==='yes'?'Със снимка':'Без снимка']);return a;}
+  if(TS.photo)a.push(['photo','',TS.photo==='yes'?'Със снимка':'Без снимка']);if(TS.wait)a.push(['wait','','Чака проверка']);return a;}
 function _tsSideHtml(q){
   var cnt=function(skip,fn){return DB.tests.filter(function(t){return _tsMatch(t,q,skip)&&fn(t);}).length;};
   var chipA=function(k,v,label,fn){var on=TS[k].indexOf(v)>=0;return '<button type="button" class="fchip'+(on?' on':'')+'" onclick="tsTog(\''+k+'\','+JSON.stringify(v).replace(/"/g,'&quot;')+')">'+_pdE(label)+' <span class="n">'+cnt(k,fn)+'</span></button>';};
@@ -6467,6 +6535,7 @@ function _tsSideHtml(q){
     +(surfs.length?'<h3>Повърхност</h3><div class="fchips">'+surfs.map(function(v){return chipA('surf',v,v,function(x){return x.surf===v;});}).join('')+'</div>':'')
     +'<h3>Дефекти</h3><div class="fchips">'+chipS('def','none','Без дефекти (Няма)',function(x){return x.def==='Няма';})+chipS('def','has','С дефекти',_tDefBad)+chipS('def','unk','Не са отбелязани',function(x){return testKind(x)==='glaze'&&!x.def;})+'</div>'
     +'<h3>Оценка</h3><div class="fchips">'+chipS('rat','4','★★★★ и повече',function(x){return _tRatN(x)>=4;})+chipS('rat','low','★★ и по-малко',function(x){var n=_tRatN(x);return n&&n<=2;})+chipS('rat','none','Без оценка',function(x){return !_tRatN(x);})+'</div>'
+    +(DB.tests.some(_tLimeWaiting)||TS.wait?'<h3>Пукане на вар</h3><div class="fchips"><button type="button" class="fchip'+(TS.wait?' on':'')+'" id="fc-test-wait" onclick="TS.wait=!TS.wait;renderTests()">Чака проверка <span class="n">'+cnt('wait',_tLimeWaiting)+'</span></button></div>':'')
     +'<h3>Снимка</h3><div class="fchips">'+chipS('photo','yes','Със снимка',function(x){return x.photos&&x.photos.length;})+chipS('photo','no','Без снимка',function(x){return !(x.photos&&x.photos.length);})+'</div>'
     +'<div class="pc-fbar"><button type="button" class="btn bg" onclick="resetTestFilters()">Изчисти</button><button type="button" class="btn bp" onclick="toggleTestFilters()">Покажи</button></div>';
 }
@@ -6518,8 +6587,8 @@ function tsKind(k){activeFilters.test=activeFilters.test||{};activeFilters.test.
 function setTestView(v){TS.view=v==='list'?'list':'gal';renderTests();}
 function tsTog(k,v){var a=TS[k],i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);renderTests();}
 function tsSet(k,v){var f=activeFilters.test||{};if(k==='def'){f.nodef=false;f.hasdef=false;}if(k==='rat')f.hiscore=false;TS[k]=TS[k]===v?'':v;renderTests();}
-function tsUnset(k,v){var f=activeFilters.test||{};if(k==='f'){f[v]=false;}else if(k==='def'){TS.def='';f.nodef=false;f.hasdef=false;}else if(k==='rat'){TS.rat='';f.hiscore=false;}else if(k==='photo')TS.photo='';else TS[k]=TS[k].filter(function(x){return x!==v;});renderTests();}
-function resetTestFilters(){activeFilters.test={};TS.recs=[];TS.clays=[];TS.temps=[];TS.surf=[];TS.def='';TS.rat='';TS.photo='';var si=document.getElementById('test-search');if(si)si.value='';renderTests();}
+function tsUnset(k,v){var f=activeFilters.test||{};if(k==='f'){f[v]=false;}else if(k==='def'){TS.def='';f.nodef=false;f.hasdef=false;}else if(k==='rat'){TS.rat='';f.hiscore=false;}else if(k==='photo')TS.photo='';else if(k==='wait')TS.wait=false;else TS[k]=TS[k].filter(function(x){return x!==v;});renderTests();}
+function resetTestFilters(){activeFilters.test={};TS.recs=[];TS.clays=[];TS.temps=[];TS.surf=[];TS.def='';TS.rat='';TS.photo='';TS.wait=false;var si=document.getElementById('test-search');if(si)si.value='';renderTests();}
 function toggleTestFilters(){_fltOpen('ts-side',!TS.side);}
 function toggleTestCmp(){TS.cmp=!TS.cmp;if(!TS.cmp)TS.picked=[];var d=document.getElementById('det-test');if(TS.cmp&&d.classList.contains('on')&&d.classList.contains('split'))closeDet('det-test');renderTests();}
 function tsTap(id){
@@ -6569,6 +6638,7 @@ function openTestDet(id){
       ['Водопоглъщане',ms.po!=null?_tF(ms.po)+'%'+(b.poroDry!=null&&b.poroWet!=null?' ('+b.poroDry+'г → '+b.poroWet+'г)':''):''],
       ['Цвят',b.color],['Деформация',b.deformation],['Звук',b.sound],['Lime popping',b.limePopping?b.limePopping+(b.limeNote?' — '+b.limeNote:''):''],['Дългосрочно',[b.longTermDate,b.longTerm].filter(Boolean).join(' — ')]]);
   } else document.getElementById('dtest-res').innerHTML='';
+  document.getElementById('dtest-fire').innerHTML=body?_testFireHtml(t):''; // v1.46.0
   _mdShow('dtest-layers-row',!!t.glazeLayers);document.getElementById('dtest-layers').textContent=t.glazeLayers||'';
   document.getElementById('dtest-notes').textContent=t.notes||'—';
   document.getElementById('dtest-upd').textContent=t.updatedAt?'Последно редактирано: '+new Date(t.updatedAt).toLocaleDateString('bg-BG'):'';
@@ -6845,7 +6915,9 @@ function _pdFirings(o,kind){
     if(run)seen[run.id]=1;
     var st=run?_runState(run):'';
     var _rr=run?_rnResFor(run,o):'';
-    rows.push('<div class="pd-li"'+(run?' onclick="openRunResult(\''+run.id+'\',\''+o.id+'\')"':'')+'><div class="b"><div class="t">'+_pdE(run?_runLabel(run):eventLabel(e))+(e._fromSeries?' <span class="pd-chip cat" style="font-size:11.5px;padding:1px 7px">от серията</span>':'')+'</div><div class="s">'+_pdE([e.date,run&&st!=='completed'?RUN_STATES[st]:'',_rr].filter(Boolean).join(' · '))+'</div></div>'+(run?'<div class="li-r">›</div>':'')+'</div>');
+    rows.push('<div class="pd-li"'+(run?' onclick="openRunResult(\''+run.id+'\',\''+o.id+'\')"':'')+'><div class="b"><div class="t">'+_pdE(run?_runLabel(run):eventLabel(e))+(e._fromSeries?' <span class="pd-chip cat" style="font-size:11.5px;padding:1px 7px">от серията</span>':'')+'</div><div class="s">'+_pdE([e.date,run&&st!=='completed'?RUN_STATES[st]:'',_rr].filter(Boolean).join(' · '))+'</div></div>'+(run?'<div class="li-r">›</div>':'')+'</div>'
+      // v1.46.0: самостоятелна стъпка без изпичане — същата мини-скала от своите данни
+      +(!run&&e.data&&parseFloat(e.data.temp)>0?'<div class="pd-fs">'+_fireScaleSvg(e.data.temp,{atmosphere:e.data.atmosphere,open:!!FIRE_OPEN[e.data.method]})+'<div class="mf-n">'+_pdE(_fireStagesShort(e.data.temp,e.data.atmosphere,e.data.method))+'</div></div>':''));
   });
   DB.firingRuns.forEach(function(r){
     if(seen[r.id]||!r.plan||!Array.isArray(r.plan.members))return;
@@ -7816,6 +7888,7 @@ function _mtCard(m){var rc=_mtRecipes(m).length,f=[],sel=curMat===m.id&&document
   if(m.cat==='clays'){var gl=m.fireGlazeTemp||m.fireTemp;if(gl)f.push(gl+'°C');if(m.shrink)f.push('свиване '+m.shrink+'%');if(m.color)f.push(m.color);}
   if(m.cat==='glaze'){if(m.gfire)f.push(m.gfire+'°C');var sL={matte:'Матова',gloss:'Гланцова',satin:'Сатенена',crystal:'Кристална',textured:'Текстурирана'};if(m.surfaceType)f.push(sL[m.surfaceType]||m.surfaceType);}
   if(m.cat==='raw'&&m.raw&&m.raw.location)f.push(m.raw.location);
+  var _cb=(m.cat==='raw'||m.cat==='mass')?_matCarb(m):null;if(_cb&&_cb.level!=='none'&&_cb.level!=='unknown')f.push(_cb.level==='possible'?'с варовит компонент':'варовита'); // v1.46.0
   if(m.chem&&Object.keys(m.chem).length)f.push('анализ');
   if(m.cost!=null)f.push(_mtF(m.cost)+' €');
   return '<div class="li mt-c'+(sel?' sel':'')+'" role="button" tabindex="0" onclick="openMatDet(\''+m.id+'\')"><div class="mt-ch">'+_mtIcon(m)+'<div style="min-width:0"><div class="mt-nm">'+_pdE(m.name)+'</div><div class="li-s">'+_pdE(_mtSub(m)||MAT_CS[m.cat]||'')+'</div></div></div>'
@@ -7946,6 +8019,7 @@ function openMatDet(id){
   document.getElementById('dmat-tests-val').innerHTML=ts.map(function(t){return '<div class="li rd-li" onclick="openTestDet(\''+t.id+'\')"><div class="li-ic">'+(t.photos&&t.photos[0]?'<img src="'+t.photos[0]+'" style="width:100%;height:100%;object-fit:cover">':K(20))+'</div><div class="li-body"><div class="li-t" style="font-size:14px">'+(t.bodyRef?'Тест на маса':'Тест')+'</div><div class="li-s">'+_pdE([t.date,t.temp?t.temp+'°C':'',t.rat].filter(Boolean).join(' · '))+'</div></div><div class="li-r">›</div></div>';}).join('');
   // дивата глина и масата — съществуващите функции
   _renderRawSection(m);_renderMassSection(m);
+  document.getElementById('dmat-fire').innerHTML=_matFireHtml(m); // v1.46.0
   var ev=(m.raw&&Array.isArray(m.raw.events))?m.raw.events.length:0;document.getElementById('dmat-proc-n').textContent=m.cat==='raw'?ev+(ev===1?' стъпка':' стъпки'):'';
   _mdSecsDraw();
   var d=document.getElementById('det-mat'),sp=window.innerWidth>=1100&&cur==='materials';
@@ -9189,7 +9263,7 @@ function openTestMo(t){
   _set('ti-color',_b.color);
   _set('ti-deform',_b.deformation);
   _set('ti-sound',_b.sound);
-  _set('ti-lime',_b.limePopping);
+  _set('ti-lime',_b.limePopping);_set('ti-slake',_b.slake);_set('ti-core',_b.fractureCore);_set('ti-rim',_b.fractureRim!=null?String(_b.fractureRim).replace('.',','):''); // v1.46.0
   _set('ti-lime-note',_b.limeNote);
   _set('ti-lt-date',_b.longTermDate);
   _set('ti-lt-note',_b.longTerm);
@@ -9264,6 +9338,7 @@ function saveTest(){
     var _df=_s('ti-deform');if(_df)_b.deformation=_df;
     var _sn=_s('ti-sound');if(_sn)_b.sound=_sn;
     var _lm=_s('ti-lime');if(_lm)_b.limePopping=_lm;
+    var _sk=_s('ti-slake');if(_sk)_b.slake=_sk;var _co=_s('ti-core');if(_co)_b.fractureCore=_co;var _ri=_dec(_s('ti-rim'));if(_ri!=null&&!isNaN(_ri)&&_ri>=0)_b.fractureRim=_ri; // v1.46.0
     var _ln=_s('ti-lime-note');if(_ln)_b.limeNote=_ln;
     var _ltd=_s('ti-lt-date');if(_ltd)_b.longTermDate=_ltd;
     var _lt=_s('ti-lt-note');if(_lt)_b.longTerm=_lt;
@@ -9335,6 +9410,7 @@ function openMatMo(m){
   document.getElementById('mi-notes').value=m?.notes||'';
   var _fbq=document.getElementById('mi-fire-bisque');if(_fbq)_fbq.value=(m&&m.fireBisqueTemp)||'';
   var _fgl=document.getElementById('mi-fire-glaze');if(_fgl)_fgl.value=(m&&(m.fireGlazeTemp||m.fireTemp))||'';
+  _fmFill('mi-fmb',m&&m.fireMeta&&m.fireMeta.bisque);_fmFill('mi-fmg',m&&m.fireMeta&&m.fireMeta.glaze); // v1.46.0
   document.getElementById('mi-grog').value=m?.grog||'';
   document.getElementById('mi-shrink').value=m?.shrink||'';
   document.getElementById('mi-color').value=m?.color||'';
@@ -9362,6 +9438,7 @@ function openMatMo(m){
   var _rd=document.getElementById('mi-raw-date');if(_rd)_rd.value=_raw.date||'';
   var _rw=document.getElementById('mi-raw-weight');if(_rw)_rw.value=_raw.weight!=null?_raw.weight:'';
   var _rg=document.getElementById('mi-raw-geonotes');if(_rg)_rg.value=_raw.geonotes||'';
+  ['carb:carbonate','grain:carbonateGrain','carbnote:carbonateNote'].forEach(function(x){var e=document.getElementById('mi-raw-'+x.split(':')[0]);if(e)e.value=_raw[x.split(':')[1]]||'';}); // v1.46.0
   toggleMatFields();
   document.getElementById('mi-cat').onchange=toggleMatFields;
   matTabF('basic');var _ce0=document.getElementById('mi-chem-err');if(_ce0)_ce0.textContent='';
@@ -9439,6 +9516,7 @@ function saveMat(){
     m.grog=document.getElementById('mi-grog').value;
     m.shrink=document.getElementById('mi-shrink').value;
     m.color=document.getElementById('mi-color').value;
+    var _fm=_fmPair('mi-fmb','mi-fmg');if(_fm)m.fireMeta=_fm; // v1.46.0
   }
   if(cat==='glaze'){
     m.gfire=document.getElementById('mi-gfire').value;
@@ -9470,6 +9548,7 @@ function saveMat(){
     var _rd=document.getElementById('mi-raw-date');if(_rd&&_rd.value)raw.date=_rd.value;
     var _rw=document.getElementById('mi-raw-weight');if(_rw&&_rw.value!==''){var rw=parseFloat(_rw.value);if(!isNaN(rw)&&rw>=0)raw.weight=rw;}
     var _rg=document.getElementById('mi-raw-geonotes');if(_rg&&_rg.value.trim())raw.geonotes=_rg.value.trim();
+    ['carb:carbonate','grain:carbonateGrain','carbnote:carbonateNote'].forEach(function(x){var e=document.getElementById('mi-raw-'+x.split(':')[0]),v=e?String(e.value).trim():'';if(v)raw[x.split(':')[1]]=v;}); // v1.46.0
     // Preserve existing process events if editing
     if(editId){
       var _existing=DB.materials.find(function(x){return x.id===editId;});
@@ -9794,7 +9873,7 @@ window.addEventListener('beforeunload',function(e){
 var _moSnap={};
 // Пикери и справки, не формуляри — там няма работа за губене, а изборът се прави
 // пак с два тапа.
-var _MO_NO_GUARD={'mo-clay':1,'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1,'mo-rn-pick':1};
+var _MO_NO_GUARD={'mo-fscale':1,'mo-clay':1,'mo-storage-analysis':1,'mo-run-attach':1,'mo-run-tests':1,'ev-type-popup':1,'mo-rn-pick':1};
 
 function _moSnapshot(id){
   var el=document.getElementById(id);if(!el)return '';
@@ -10527,6 +10606,179 @@ function clApplySize(){
   document.getElementById('pi-size-at').value='wet';
   closeMo('mo-clay');toast('Размерите при изработване са във формуляра');
 }
+
+// ══ v1.46.0: ОГНЕНА СКАЛА И СЪВМЕСТИМОСТ НА ЗАРЕЖДАНЕТО ══
+// Логиката е в domain/fire.js (чисти функции). Тук — само четене на данните и екрани.
+// Нищо от проверките не се записва и нищо не блокира запис или зареждане.
+var CARB_L={none:'няма шумене',weak:'слабо шумене',strong:'силно шумене',unknown:'неизвестно',possible:'възможно — има варовит компонент'};
+var GRAIN_L={invisible:'невидими',small:'видими, под 1 mm',coarse:'над 1 mm'};
+var LC_L={ok:'Потвърдено',unconf:'По непотвърдени данни',conflict:'Потенциален конфликт',unknown:'Неизвестно',orient:'Ориентир'};
+// произход и изисквания: формуляр ↔ запис
+function _fmFill(p,mt){mt=mt||{};var R=mt.rateMax||{},C=mt.coolMax||{};
+  [['kind',mt.kind],['status',mt.status],['src',mt.source],['note',mt.note],['rf',R.from],['rt',R.to],['rm',R.max],['hold',mt.holdMin],['cf',C.from],['ct',C.to],['cm',C.max]].forEach(function(x){var e=document.getElementById(p+'-'+x[0]);if(e)e.value=x[1]==null?'':String(x[1]).replace('.',',');});
+  var d=document.getElementById(p+'-kind');d=d&&d.closest('details');if(d)d.open=!!(mt.kind||mt.status||mt.source||mt.note||mt.rateMax||mt.holdMin!=null||mt.coolMax);}
+function _fmRead(p){
+  var v=function(k){var e=document.getElementById(p+'-'+k);return e?String(e.value).trim():'';},n=function(k){var x=_dec(v(k));return x!=null&&!isNaN(x)&&x>=0?x:null;};
+  var o={};if(v('kind'))o.kind=v('kind');if(v('status')==='confirmed')o.status='confirmed';if(v('src'))o.source=v('src');if(v('note'))o.note=v('note');
+  if(n('rm')!=null)o.rateMax={from:n('rf'),to:n('rt'),max:n('rm')};if(n('hold')!=null)o.holdMin=n('hold');if(n('cm')!=null)o.coolMax={from:n('cf'),to:n('ct'),max:n('cm')};
+  return Object.keys(o).length?o:null;}
+function _fmPair(pb,pg){var b=_fmRead(pb),g=_fmRead(pg),o={};if(b)o.bisque=b;if(g)o.glaze=g;return Object.keys(o).length?o:null;}
+function _matCarb(m){return _massCarbonate(m,function(id){return DB.materials.find(function(x){return x&&x.id===id;});});}
+function _fmMetaText(mt){mt=mt||{};return [mt.kind?FIRE_KIND[mt.kind]:'произход не е посочен',mt.status==='confirmed'?'потвърдено':'непотвърдено',mt.source||''].filter(Boolean).join(' · ');}
+function _fmReqText(mt){mt=mt||{};var a=[];if(mt.rateMax)a.push('нагряване до '+mt.rateMax.max+' °C/h'+(mt.rateMax.from!=null?' в '+mt.rateMax.from+'–'+mt.rateMax.to+' °C':''));if(mt.holdMin!=null)a.push('задръжка поне '+mt.holdMin+' min');if(mt.coolMax)a.push('охлаждане до '+mt.coolMax.max+' °C/h'+(mt.coolMax.from!=null?' в '+mt.coolMax.from+'–'+mt.coolMax.to+' °C':''));return a.join('; ');}
+function _fireRangeText(r){if(!r)return 'няма';if(r.raw)return '„'+r.raw+'“ — не се чете като температура';return (r.t!=null?'единична препоръка '+r.t+' °C':r.lo+'–'+r.hi+' °C')+(r.rest?' · „'+r.rest+'“ (не се тълкува)':'');}
+// варовитостта на материал — изречение с произхода
+function _carbText(c){if(!c)return '';var t=CARB_L[c.level]||c.level;
+  if(c.level==='possible')t+=(c.share!=null?' (около '+c.share+' % от сместа: ':' (')+c.from.filter(function(x){return x.level==='strong'||x.level==='weak'||x.level==='possible';}).map(function(x){return x.name+(x.pct!=null?' '+x.pct+' %':'');}).join(', ')+') — не е доказано за цялата маса';
+  else if(c.from&&c.from.length&&c.level!=='none'&&c.level!=='unknown')t+=' — от „'+c.from[0].name+'“'+(c.added?' (добавен калцит)':'');
+  if(c.grain)t+=' · едрина: '+(GRAIN_L[c.grain]||c.grain);if(c.note)t+=' · '+c.note;return t;}
+function _matFireHtml(m){
+  var h='',isClay=m.cat==='clays'||m.cat==='mass';
+  if(isClay){
+    var row=function(l,txt,mt){var r=_fireRange(txt);return '<div class="mf-r"><small>'+l+'</small><div>'+_pdE(_fireRangeText(r))+'<div class="s">'+_pdE(_fmMetaText(mt))+(mt&&mt.note?' · '+_pdE(mt.note):'')+(_fmReqText(mt)?'<br>Ограничения: '+_pdE(_fmReqText(mt)):'')+'</div></div></div>';};
+    var fm=m.fireMeta||{};
+    h+='<div class="ds"><div class="ds-t">Температури за изпичане</div>'+row('Бисквит',m.fireBisqueTemp,fm.bisque)+row('Окончателно',m.fireGlazeTemp||m.fireTemp,fm.glaze)
+      +'<div class="mf-n">Без посочен произход стойността е „непотвърдено“. Ползва се в „Съвместимост на зареждането“. <button type="button" class="rd-link" onclick="editMat()">Допълни</button></div></div>';
+  }
+  if(m.cat==='raw'||m.cat==='mass'||/CaCO\s*[3₃]/i.test(String(m.formula||''))){var c=_matCarb(m);
+    if(c)h+='<div class="ds"><div class="ds-t">Карбонати (варовитост)</div><div class="mf-c '+_pdE(c.level)+'">'+_pdE(_carbText(c))+'</div>'+(m.cat==='mass'?'<div class="mf-n">Изчислено от състава — не се записва.</div>':'')+'</div>';}
+  if(isClay)h+=_massCurveHtml(m);
+  return h;
+}
+// крива на масата: водопопиваемост и свиване спрямо °C от тестовете й
+function _massCurvePts(id){
+  return DB.tests.filter(function(t){return t&&!t.archivedAt&&testKind(t)==='body'&&t.bodyRef==='mat:'+id&&parseFloat(t.temp)>0;}).map(function(t){
+    var run=t.firingRunId?DB.firingRuns.find(function(r){return r.id===t.firingRunId;}):null,sh=_shrinkPcts(t.body);
+    return {id:t.id,x:parseFloat(t.temp),po:_poroPct(t.body),sh:sh&&sh.total!=null?sh.total:null,red:!!(run&&run.atmosphere==='reduction')};}).sort(function(a,b){return a.x-b.x;});
+}
+function _curveSvg(pts,k,label){
+  var P=pts.filter(function(p){return p[k]!=null;});if(P.length<2)return '';
+  var xs=P.map(function(p){return p.x;}),ys=P.map(function(p){return p[k];}),x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys);
+  if(x1===x0)x1=x0+1;if(y1===y0){y1=y0+1;}
+  var W=300,H=120,L=34,B=22,X=function(v){return L+(v-x0)/(x1-x0)*(W-L-10);},Y=function(v){return H-B-(v-y0)/(y1-y0)*(H-B-12);};
+  var path=P.map(function(p,i){return (i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p[k]).toFixed(1);}).join(' ');
+  return '<div class="mc"><div class="mc-t">'+label+'</div><svg viewBox="0 0 '+W+' '+H+'" class="mc-s" role="img" aria-label="'+label+'"><line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-6)+'" y2="'+(H-B)+'" class="ax"/>'
+    +'<path d="'+path+'" class="ln"/>'+P.map(function(p){var cx=X(p.x),cy=Y(p[k]);return p.red?'<rect x="'+(cx-4)+'" y="'+(cy-4)+'" width="8" height="8" class="pt red"/>':'<circle cx="'+cx+'" cy="'+cy+'" r="4" class="pt"/>';}).join('')
+    +'<text x="'+L+'" y="'+(H-6)+'" class="tx">'+x0+' °C</text><text x="'+(W-8)+'" y="'+(H-6)+'" class="tx" text-anchor="end">'+x1+' °C</text>'
+    +'<text x="'+(L-4)+'" y="'+(Y(y1)+4)+'" class="tx" text-anchor="end">'+_clN(y1)+'</text><text x="'+(L-4)+'" y="'+(Y(y0)+4)+'" class="tx" text-anchor="end">'+_clN(y0)+'</text></svg></div>';
+}
+function _massCurveHtml(m){
+  var pts=_massCurvePts(m.id);if(pts.length<2)return pts.length?'<div class="ds"><div class="ds-t">Крива на масата</div><div class="mf-n">Един тест с температура — кривата се появява от два нагоре.</div></div>':'';
+  var a=_curveSvg(pts,'po','Водопопиваемост, %'),b=_curveSvg(pts,'sh','Свиване общо, %');if(!a&&!b)return '';
+  return '<div class="ds"><div class="ds-t">Крива на масата</div><div class="mc-w">'+a+b+'</div><div class="mf-n">'+pts.length+' теста; ▪ — редукция. Масата се сравнява само със себе си.</div></div>';
+}
+// мини-скала: ленти на етапите и пикът (при открит метод — условна ивица)
+function _fireScaleSvg(peak,o){
+  o=o||{};var W=1000,X=function(t){return Math.max(0,Math.min(W,t/1300*W));},rows=FIRE_SCALE,rh=o.full?14:7,top=o.full?26:4,H=top+rows.length*(rh+2)+(o.full?18:4);
+  var red=o.atmosphere==='reduction',h='<svg viewBox="0 0 '+W+' '+H+'" class="fs-svg'+(o.full?' full':'')+'" role="img" aria-label="Огнена скала">';
+  if(o.full){h+='<defs><linearGradient id="fsg" x1="0" x2="1"><stop offset="0" stop-color="#2b211c"/><stop offset=".42" stop-color="#5a1c10"/><stop offset=".58" stop-color="#b3361a"/><stop offset=".75" stop-color="#e2731f"/><stop offset=".9" stop-color="#f4c04e"/><stop offset="1" stop-color="#fff2c4"/></linearGradient></defs><rect x="0" y="4" width="'+W+'" height="14" rx="4" fill="url(#fsg)"/>';}
+  rows.forEach(function(st,i){var d=red&&st.red?st.red:0,x=X(st.lo+d),w=Math.max(6,X(st.hi+d)-x),y=top+i*(rh+2);
+    h+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+rh+'" rx="2" class="fs-b '+st.clay+'"'+(o.full?' data-code="'+st.code+'" onclick="fsCard(\''+st.code+'\')"':'')+'><title>'+_pdE(st.l)+' · '+st.lo+'–'+st.hi+' °C</title></rect>';
+    if(o.full)h+='<text x="'+Math.min(x+w+6,W-4)+'" y="'+(y+rh-3)+'" class="fs-l"'+(x+w>W-260?' text-anchor="end" x="'+(x-6)+'"':'')+'>'+_pdE(st.l.split(' (')[0].split(';')[0])+'</text>';});
+  var p=parseFloat(peak);
+  if(isFinite(p)){var px=X(p);if(o.open){var a=X(p-FIRE_OPEN_BAND),b=X(p+FIRE_OPEN_BAND);h+='<rect x="'+a+'" y="0" width="'+(b-a)+'" height="'+H+'" class="fs-band"/>';}
+    h+='<line x1="'+px+'" y1="0" x2="'+px+'" y2="'+H+'" class="fs-pk'+(o.open?' open':'')+'"/>';}
+  if(o.full)[0,200,400,600,800,1000,1200].forEach(function(t){h+='<text x="'+X(t)+'" y="'+(H-3)+'" class="fs-t">'+t+'</text>';});
+  return h+'</svg>';
+}
+function _fireStagesHtml(st){if(!st)return '';var f=function(a){return a.map(function(x){return _pdE(x.l.split(' (')[0].split(';')[0])+(x.clay==='calc'?' (варовити)':x.clay==='noncalc'?' (безкарбонатни)':'')+(x.partial?' (вероятно частичен)':'');}).join(', ')||'—';};
+  return '<div class="fs-st"><div><small>Вероятно минати</small>'+f(st.passed)+'</div><div><small>В ход</small>'+f(st.active)+'</div><div><small>Недостигнати</small>'+f(st.ahead)+'</div></div>';}
+// глините в изпичането: от плана (по бройки), закачените и тестовете; по материал
+function _runClayGroups(r){
+  var by={},order=[];
+  var add=function(rec,units,label){var raw=rec&&rec.clay;var m=raw?_clayMat(raw):null,key=m?m.id:'n:'+(raw||'—');
+    var g=by[key];if(!g){g=by[key]={key:key,mat:m,name:m?m.name:(raw?clayName(raw):'без глина'),units:0,labels:[]};order.push(g);}g.units+=units;if(label&&g.labels.indexOf(label)<0)g.labels.push(label);};
+  var inPlan={};
+  _rnPlanMembers(r).forEach(function(pm){var f=pm.ref;if(!f)return;
+    if(f.kind==='series'){var se=findSeries(f.id);if(!se)return;var own=f.unit!=null?_seriesMembers(se.id).find(function(m){return (m.units||[]).map(Number).indexOf(Number(f.unit))>=0;}):null;add(own||se,1,(se.name||'')+(own?'':'')),inPlan['series:'+se.id]=1;if(own)inPlan['piece:'+own.id]=1;}
+    else{var p=DB.pieces.find(function(x){return x.id===f.id;});if(!p)return;add(p,1,p.name);inPlan['piece:'+p.id]=1;}});
+  _runPieces(r.id).forEach(function(x){var k=(x.isSeries?'series:':'piece:')+x.piece.id;if(inPlan[k])return;inPlan[k]=1;add(x.piece,_runRowQty(x),x.piece.name);});
+  _runTests(r.id).forEach(function(t){if(testKind(t)==='body'){var mid=String(t.bodyRef||'').replace(/^mat:/,'');add({clay:mid||null},1,'тест');}else if(t.clay)add({clay:t.clay},1,'тест');});
+  return order;
+}
+function _rnMode(r){return r.purpose==='bisque'?'bisque':'glaze';}
+function _rnCompat(r){
+  var fp=_rnProfile(r),pk=fp?_fpPeak(fp):null,mode=_rnMode(r),G=_runClayGroups(r);
+  var peak=pk!=null?pk:(r.peakTemp!=null?r.peakTemp:null),src=pk!=null?'profile':(r.peakTemp!=null?'run':null);
+  return _loadCompat({mode:mode,single:r.purpose==='single-fire',kiln:_rnKilnMethod(r),peak:peak,peakSrc:src,ramps:fp?_fpRamps(fp):[],
+    clays:G.map(function(g){var m=g.mat;return {key:g.key,name:g.name,units:g.units,matId:m?m.id:null,text:m?(mode==='bisque'?m.fireBisqueTemp:(m.fireGlazeTemp||m.fireTemp)):null,meta:m&&m.fireMeta?m.fireMeta[mode]:null,carb:m?_matCarb(m):null};})});
+}
+function _rnCompatHtml(r){
+  var C=_rnCompat(r),fp=_rnProfile(r),mode=_rnMode(r);
+  var pk='Пик: '+(C.peak!=null?C.peak+' °C '+(C.peakSrc==='profile'?'по профил „'+_pdE(fp.name)+'“ (зададен)':'въведен, не е от профил'):'—')+(r.peakTemp!=null&&C.peakSrc==='profile'?' · отбелязан: '+r.peakTemp+' °C':'')+(r.cones?' · конуси: '+_pdE(r.cones):'')
+    +' · режим: '+(r.purpose==='single-fire'?'еднократно (по данните за окончателно — само ориентир)':mode==='bisque'?'бисквит':'окончателно')+(r.purpose?'':' (видът изпичане не е избран)');
+  var hold=null;if(fp){var rr=_fpRamps(fp);for(var i=rr.length-1;i>=0;i--){if(rr[i].hold!=null){hold=rr[i].hold;break;}}}
+  var rows=C.rows.map(function(x){var g=C.rows.indexOf(x),m=x.matId?DB.materials.find(function(z){return z.id===x.matId;}):null;
+    var det=x.res==='conflict'&&x.diff!=null?Math.abs(x.diff)+' °C '+(x.diff<0?'под':'над')+' '+(x.range.t!=null?'препоръката':'диапазона'):x.edge?'на '+(x.edge==='lo'?'долната':'горната')+' граница':x.exact&&(x.res==='ok'||x.res==='unconf'||x.res==='orient')?'съвпада с единичната препоръка':x.why||'';
+    var carb=m?_matCarb(m):null;
+    return '<div class="lc-r '+x.res+'"><div class="lc-h"><b>'+_pdE(x.name)+'</b><span class="n">'+x.units+' бр.</span><span class="lc-s '+x.res+'">'+LC_L[x.res]+'</span></div>'
+      +'<div class="lc-d">'+(x.matId?_pdE(x.range?_fireRangeText(x.range):'няма стойност')+' · '+_pdE(_fmMetaText(m&&m.fireMeta?m.fireMeta[mode]:null)):'')+(det?'<br>'+_pdE(det):'')
+      +(x.req.length?'<br>'+x.req.map(function(q){return '<span class="lc-q '+q.res+'">'+_pdE(q.text)+'</span>';}).join('<br>'):'')
+      +(x.note?'<br>Бележка: '+_pdE(x.note):'')
+      +(carb&&(carb.level==='strong'||carb.level==='weak'||carb.level==='possible')?'<br>Варовита — виж „Огнена скала“ по-долу.':'')
+      +(x.matId?' <button type="button" class="rd-link" onclick="openMatDet(\''+x.matId+'\')">'+(x.res==='unknown'||x.res==='unconf'?'Допълни':'Материал')+'</button>':'')+'</div></div>';}).join('');
+  var it=C.inter&&!C.inter.none?'Потвърдено общо: '+(C.inter.lo===C.inter.hi?C.inter.lo:C.inter.lo+'–'+C.inter.hi)+' °C':C.inter&&C.inter.none?'Потвърдените стойности нямат общ диапазон: „'+C.inter.a.name+'“ (от '+(C.inter.a.range.t!=null?C.inter.a.range.t:C.inter.a.range.lo)+') срещу „'+C.inter.b.name+'“ (до '+(C.inter.b.range.t!=null?C.inter.b.range.t:C.inter.b.range.hi)+')':'Няма потвърдени стойности';
+  var ia=C.interAll&&!C.interAll.none?'Ако се включат и непотвърдените: '+(C.interAll.lo===C.interAll.hi?C.interAll.lo:C.interAll.lo+'–'+C.interAll.hi)+' °C':C.interAll&&C.interAll.none?'С непотвърдените общ диапазон няма: „'+C.interAll.a.name+'“ (от '+(C.interAll.a.range.t!=null?C.interAll.a.range.t:C.interAll.a.range.lo)+' °C) срещу „'+C.interAll.b.name+'“ (до '+(C.interAll.b.range.t!=null?C.interAll.b.range.t:C.interAll.b.range.hi)+' °C). Средна температура не се предлага.':'';
+  return '<div class="ds" id="lc"><div class="ds-t">Съвместимост на зареждането</div><div class="lc-v '+C.verdict.code+'">'+_pdE(C.verdict.text)+'</div><div class="lc-pk">'+pk+'</div>'
+    +(C.rows.length&&C.verdict.code!=='alt'?'<div class="lc-i">'+_pdE(it)+(ia?'<br>'+_pdE(ia):'')+'</div>':'')
+    +rows+(C.rows.length&&C.verdict.code!=='alt'?'<div class="mf-n">Еднакъв пик не е еднаква топлинна работа'+(hold!=null?' — профилът задържа '+hold+' min':'')+'. Скорости, задръжка и охлаждане се проверяват само при документирани ограничения на масата. Нищо не се променя в материалите.</div>':'')+'</div>';
+}
+function _rnFireHtml(r){
+  var fp=_rnProfile(r),pk=fp?_fpPeak(fp):null,st=_runState(r),peak=(st==='completed'||st==='interrupted')&&r.peakTemp!=null?r.peakTemp:(pk!=null?pk:r.peakTemp);
+  var hold=r.holdMin;if(hold==null&&fp){var rr=_fpRamps(fp);for(var i=rr.length-1;i>=0;i--){if(rr[i].hold!=null){hold=rr[i].hold;break;}}}
+  var open=!!FIRE_OPEN[r.method],G=_runClayGroups(r);
+  var carbs=G.map(function(g){return {g:g,c:g.mat?_matCarb(g.mat):null};});
+  if(peak==null){return carbs.some(function(x){return x.c&&(x.c.level==='strong'||x.c.level==='weak'||x.c.level==='possible');})?'<div class="ds"><div class="ds-t">Огнена скала</div><div class="mf-n">Запиши пика, за да видиш етапите.</div></div>':'';}
+  var by={},keys=[];
+  carbs.forEach(function(x){var W=_fireWarnings({peak:peak,atmosphere:r.atmosphere,method:r.method,holdMin:hold,carb:x.c||{}});var k=JSON.stringify(W);if(!by[k]){by[k]={w:W,names:[]};keys.push(k);}by[k].names.push(x.g.name);});
+  var wh=keys.map(function(k){var b=by[k];if(!b.w.length)return '';return '<div class="fw"><div class="fw-n">'+_pdE(b.names.join(', '))+'</div>'+b.w.map(function(w){return '<div class="fw-'+w.kind+'">'+_pdE(w.text)+(w.src?' <small>'+_pdE(w.src)+'</small>':'')+'</div>';}).join('')+'</div>';}).join('');
+  return '<div class="ds"><div class="ds-t">Огнена скала</div>'+_fireScaleSvg(peak,{atmosphere:r.atmosphere,open:open})
+    +'<div class="mf-n">Пик '+peak+' °C '+((st==='completed'||st==='interrupted')&&r.peakTemp!=null?'(отбелязан)':pk!=null?'(по профил)':'(въведен)')+(open?' — условна ивица ±'+FIRE_OPEN_BAND+' °C, не измерена точност':'')+(r.atmosphere==='reduction'?' · редукция: встъкляването ~−50 °C':'')+'. Етапите са вероятни, не измерени.</div>'
+    +_fireStagesHtml(_fireStages(peak,r.atmosphere,r.method,hold))+wh+'</div>';
+}
+function _fireStagesShort(p,atm,m){var st=_fireStages(p,atm,m,null);if(!st)return '';return 'Вероятно минати: '+(st.passed.map(function(x){return x.l.split(' (')[0].split(';')[0];}).join(', ')||'—')+(FIRE_OPEN[m]?' · пикът е ориентир':'');}
+function _rnCompatDraw(r){var a=document.getElementById('drn-compat'),b=document.getElementById('drn-fire');if(a)a.innerHTML=_rnCompatHtml(r);if(b)b.innerHTML=_rnFireHtml(r);}
+// Библиотека → Инструменти → Огнена скала
+function openFireScale(){
+  var ms=DB.materials.filter(function(m){return m&&!m.archivedAt&&(m.cat==='mass'||m.cat==='clays')&&_massCurvePts(m.id).length>=2;});
+  document.getElementById('fs-body').innerHTML='<div class="fs-wrap">'+_fireScaleSvg(null,{full:true})+'</div>'
+    +'<div class="mf-n">Интервалите са от литературата за определени маси, не константи. Докосни лента за подробности. Цвят: всички · варовити · безкарбонатни.</div>'
+    +'<div class="fs-cards">'+FIRE_SCALE.map(function(st){return '<div class="fs-card" id="fsc-'+st.code+'"><b>'+_pdE(st.l)+'</b><span>'+st.lo+(st.hi!==st.lo?'–'+st.hi:'')+' °C'+(st.red?' (редукция '+st.red+')':'')+' · '+({all:'всички',calc:'варовити',noncalc:'безкарбонатни'}[st.clay])+'</span><div>Как го разпознаваш: '+_pdE(st.how)+'</div><small>'+_pdE(st.src)+'</small></div>';}).join('')+'</div>'
+    +(ms.length?'<div class="ds-t" style="margin-top:14px">Криви на масите</div>'+ms.map(function(m){return '<button type="button" class="pd-li" style="width:100%;text-align:left" onclick="closeMo(\'mo-fscale\');openMatDet(\''+m.id+'\')"><div class="b"><div class="t">'+_pdE(m.name)+'</div><div class="s">'+_massCurvePts(m.id).length+' теста</div></div></button>';}).join(''):'');
+  openMo('mo-fscale');
+}
+function fsCard(code){var e=document.getElementById('fsc-'+code);if(!e)return;document.querySelectorAll('.fs-card.on').forEach(function(x){x.classList.remove('on');});e.classList.add('on');e.scrollIntoView({block:'nearest',behavior:'smooth'});}
+// тест на маса: наблюдения (факти), тълкуване, проверки за пукане на вар
+var SLAKE_L={ok:'не се разкисва',softens:'омеква по ръба',falls:'разпада се'},CORE_L={even:'еднородно',grey:'сиво',black:'черно'},LIMER_L={none:'няма',spots:'петна / изпъкване',pops:'пукане'};
+function _tBodyMat(t){var id=String(t&&t.bodyRef||'').replace(/^mat:/,'');return id?DB.materials.find(function(m){return m.id===id;}):null;}
+function _tCalc(t){var m=_tBodyMat(t),c=m?_matCarb(m):null;return c&&(c.level==='strong'||c.level==='weak'||c.level==='possible')?c:null;}
+function _tLimeChecks(t){var b=(t&&t.body)||{},a=(Array.isArray(b.limeChecks)?b.limeChecks:[]).slice().sort(function(x,y){return String(x.date).localeCompare(String(y.date));});
+  if(b.limePopping)a.unshift({date:t.date||'',legacy:true,result:b.limePopping,note:b.limeNote||''});
+  if(b.longTermDate||b.longTerm)a.push({date:b.longTermDate||'',legacy:true,result:'',note:b.longTerm||''});return a;}
+function _tLimeWaiting(t){if(!t||t.archivedAt||testKind(t)!=='body'||!_tCalc(t))return false;var b=t.body||{};return _limeDue(t.date,b.limeChecks,_todayISO()).some(function(x){return x.due&&!x.done;});}
+function _testFireHtml(t){
+  var b=t.body||{},obs=[];
+  if(b.slake)obs.push(['Накисване 24 ч',SLAKE_L[b.slake]||b.slake]);if(b.fractureCore)obs.push(['Ядро в счупването',CORE_L[b.fractureCore]||b.fractureCore]);if(b.fractureRim!=null)obs.push(['Светъл ръб',_clN(b.fractureRim)+' mm']);
+  var others=DB.tests.filter(function(x){return x&&!x.archivedAt&&testKind(x)==='body'&&x.bodyRef&&x.bodyRef===t.bodyRef;}).map(function(x){return _poroPct(x.body);}).filter(function(v){return v!=null;});
+  var st=_testFireStage({slake:b.slake,poro:_poroPct(b),series:others}),c=_tCalc(t),h='';
+  if(obs.length)h+='<div class="tf"><div class="tf-t">Наблюдения</div>'+_kv(obs)+'</div>';
+  h+='<div class="tf"><div class="tf-t">Тълкуване</div>'+(st?'<span class="tf-chip">'+_pdE(st.text)+'</span><div class="mf-n">Основание: '+_pdE(st.basis)+'. Тълкуване, не измерване; не се записва.</div>':'<div class="mf-n">Няма достатъчно данни за тълкуване'+(others.length&&others.length<3?' — нужни са поне 3 теста на масата с водопопиваемост':'')+'.</div>')+'</div>';
+  var L=_tLimeChecks(t),due=c?_limeDue(t.date,b.limeChecks,_todayISO()):[];
+  if(c||L.length){h+='<div class="tf"><div class="tf-t">Проверки за пукане на вар</div>'
+    +(c?'<div class="mf-n">Масата е '+_pdE(_carbText(c))+'.</div>':'')
+    +(due.length?'<div class="tf-due">'+due.map(function(d){return '<span class="'+(d.done?'done':d.due?'due':'')+'">+'+d.days+' '+(d.days===1?'ден':'дни')+' · '+d.date+(d.done?' ✓':d.due?' — чака':'')+'</span>';}).join('')+'</div>':'')
+    +(L.length?L.map(function(x){return '<div class="tf-l">'+_pdE(x.date||'—')+' · '+_pdE(LIMER_L[x.result]||x.result||'наблюдение')+(x.note?' — '+_pdE(x.note):'')+(x.legacy?' <small>(от теста)</small>':'')+'</div>';}).join(''):'')
+    +'<button type="button" class="rd-btn" id="dtest-lime-add" onclick="openLimeCheck()">+ Проверка</button></div>';}
+  return h;
+}
+function openLimeCheck(){var t=DB.tests.find(function(x){return x.id===curTest;});if(!t)return;document.getElementById('lm-date').value=_todayISO();document.getElementById('lm-res').value='none';document.getElementById('lm-note').value='';openMo('mo-lime');}
+function saveLimeCheck(){
+  var t=DB.tests.find(function(x){return x.id===curTest;});if(!t)return;var d=document.getElementById('lm-date').value;
+  if(!d||!vDate(d)){toast(t2('msg.nevalidna-data'));return;}
+  t.body=t.body||{};t.body.limeChecks=(Array.isArray(t.body.limeChecks)?t.body.limeChecks:[]).concat([{date:d,result:document.getElementById('lm-res').value,note:document.getElementById('lm-note').value.trim()}]);
+  t.updatedAt=new Date().toISOString();save();closeMo('mo-lime');openTestDet(t.id);renderTests();toast('Проверката е записана');
+}
+function t2(k){return window.t(k);}
 // ── SG калкулатор (v1.14.0) ──────────────────────────────────
 // SG = weight of a volume of glaze / weight of the same volume of water.
 // Since 1 ml water = 1 g, SG = weight(g) / volume(ml). No stored state — the
@@ -11335,6 +11587,7 @@ function openRunDet(id){
   document.getElementById('drn-todo').innerHTML=_rnTodoHtml(r);
   document.getElementById('drn-pick').innerHTML=_rnPickHtml(r);
   document.getElementById('drn-pva').innerHTML=_rnPvaHtml(r);
+  _rnCompatDraw(r); // v1.46.0
   _rnLoadExtra(r);_rnResExtra(r);_rnPrepDraw(r);_rnTabsDraw();
   // На широк екран: детайлът стои вдясно от списъка.
   var _d=document.getElementById('det-run'),_sp=window.innerWidth>=1100&&cur==='fp'&&fpTab==='runs';
@@ -11656,7 +11909,7 @@ function rnSetField(f,v){
   else{var n=v===''?null:parseFloat(v.replace(',','.'));if(n==null||isNaN(n))delete r[f];else r[f]=n;}
   r.updatedAt=new Date().toISOString();save();_rnTabsDraw();
   var td=document.getElementById('drn-todo');if(td)td.innerHTML=_rnTodoHtml(r);
-  document.getElementById('drn-pva').innerHTML=_rnPvaHtml(r);renderFiringRuns();
+  document.getElementById('drn-pva').innerHTML=_rnPvaHtml(r);_rnCompatDraw(r);renderFiringRuns();
 }
 function rnAddRunPhotos(inp){
   var r=DB.firingRuns.find(function(x){return x.id===curRun;});if(!r)return;
