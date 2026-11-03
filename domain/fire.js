@@ -141,9 +141,13 @@ export function _fireReqChecks(meta, ramps) {
         : { what: 'hold', res: 'conflict', text: 'Задръжка поне ' + H + ' min — профилът: ' + (h ? h + ' min' : 'без задръжка') });
   }
   if (C && num(C.max) != null) {
-    var cl = num(C.from), ch = num(C.to), cm = num(C.max), cd = S.filter(function (s, i) { return i > iPk && s.to < s.from && Math.max(s.to, cl == null ? -1e9 : cl) < Math.min(s.from, ch == null ? 1e9 : ch); });
+    // v1.46.1: охлаждането се въвежда отгоре надолу (от 600 до 500) — за пресичането
+    // границите се нормализират; сегментът пак трябва да е низходящ (s.to < s.from).
+    var c1 = num(C.from), c2 = num(C.to), both = c1 != null && c2 != null;
+    var cl = both ? Math.min(c1, c2) : c1, ch = both ? Math.max(c1, c2) : c2;
+    var cm = num(C.max), cd = S.filter(function (s, i) { return i > iPk && s.to < s.from && Math.max(s.to, cl == null ? -1e9 : cl) < Math.min(s.from, ch == null ? 1e9 : ch); });
     out.push(!S.length ? { what: 'cool', res: 'unknown', text: 'Охлаждане до ' + cm + ' °C/h — няма профил' }
-      : !cd.length ? { what: 'cool', res: 'unknown', text: 'Охлаждане до ' + cm + ' °C/h' + (cl != null ? ' в ' + cl + '–' + ch + ' °C' : '') + ' — профилът няма управлявано охлаждане (свободното не се знае)' }
+      : !cd.length ? { what: 'cool', res: 'unknown', text: 'Охлаждане до ' + cm + ' °C/h' + (c1 != null && c2 != null ? ' в ' + c1 + '–' + c2 + ' °C' : '') + ' — профилът няма управлявано охлаждане (свободното не се знае)' }
         : cd.some(function (s) { return s.rate == null; }) ? { what: 'cool', res: 'unknown', text: 'Охлаждане до ' + cm + ' °C/h — свободно охлаждане, скоростта не се знае' }
           : cd.some(function (s) { return s.rate > cm; }) ? { what: 'cool', res: 'conflict', text: 'Охлаждане до ' + cm + ' °C/h — профилът: ' + cd.map(function (s) { return s.rate + ' °C/h'; }).join(', ') }
             : { what: 'cool', res: 'ok', text: 'Охлаждане до ' + cm + ' °C/h — в границата' });
