@@ -36,12 +36,12 @@ function fmt(n) { return String(n).replace('.', ','); }
 // „в12 × Ø8 см“, „в2 × 20 × 15 см“, „Ø22 см“.
 export function _sizeLabel(s) {
   if (!s || typeof s !== 'object') return '';
-  var parts = [];
-  if (s.h != null) parts.push('в' + fmt(s.h));
+  var parts = [], en = typeof globalThis !== 'undefined' && globalThis.LANG === 'en'; // v1.48.0
+  if (s.h != null) parts.push((en ? 'h' : 'в') + fmt(s.h));
   if (s.w != null && s.depth != null) parts.push(fmt(s.w) + ' × ' + fmt(s.depth));
   else if (s.w != null) parts.push('Ø' + fmt(s.w));
-  else if (s.depth != null) parts.push('д' + fmt(s.depth));
-  return parts.length ? parts.join(' × ') + ' см' : '';
+  else if (s.depth != null) parts.push((en ? 'd' : 'д') + fmt(s.depth));
+  return parts.length ? parts.join(' × ') + (en ? ' cm' : ' см') : '';
 }
 
 // Размерите от свободния текст („в8 × ⌀6“, „⌀22“, „20×15×8“), в см. Ползва се
