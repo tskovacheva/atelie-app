@@ -1,0 +1,73 @@
+-
+  ID: 131996
+  Name: 'Lynette''s Opal'
+  Created By:
+    Name: 'Olivier Hermia'
+    ID: 8023
+  Date Created: '2021-03-15'
+  Date Modified: '2026-11-03'
+  Type: 'Recipe'
+  State: 'Testing'
+  Subtype: 'Glaze - Blue - Rutile'
+  Cone: '6'
+  Surface: 'Glossy'
+  Transparency: 'Translucent'
+  Country: 'Belgium'
+  Atmospheres: ['Oxidation']
+  Description: 'A personal favourite. As expected we got some very fun, fluid and soft glazes. Looks pretty much the exact same in cone 5 as it does 6.'
+  Ingredients:
+    -
+      ID: 15349
+      Name: 'Nepheline Syenite'
+      Percentage: 38
+    -
+      ID: 15400
+      Name: 'Silica'
+      Percentage: 25
+    -
+      ID: 15252
+      Name: 'Gerstley Borate'
+      Percentage: 10
+    -
+      ID: 15137
+      Name: 'EP Kaolin'
+      Percentage: 8
+    -
+      ID: 15457
+      Name: 'Whiting'
+      Percentage: 7
+    -
+      ID: 15433
+      Name: 'Talc'
+      Percentage: 5
+    -
+      ID: 15467
+      Name: 'Zinc Oxide'
+      Percentage: 5
+    -
+      ID: 15458
+      Name: 'Wollastonite'
+      Percentage: 2
+    -
+      ID: 15393
+      Name: 'Rutile'
+      Percentage: 8
+      Additional: true
+    -
+      ID: 15072
+      Name: 'Bentonite'
+      Percentage: 2
+      Additional: true
+  Percent Analysis:
+    SiO2: 53.2678
+    Al2O3: 11.2228
+    B2O3: 2.4363
+    Na2O: 3.809
+    K2O: 1.6693
+    MgO: 1.8454
+    CaO: 6.4845
+    P2O5: 0.028
+    TiO2: 6.5824
+    Fe2O3: 0.9097
+    ZnO: 4.5455
+    LOI: 7.1994

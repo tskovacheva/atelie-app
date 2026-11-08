@@ -78,7 +78,9 @@ const MIG_BAD = `({id:'test-bad',schema:5,
       // What an older version legitimately does not show: the schema number it
       // writes, codes on the cards (v1.31.0), and the data hash (new fields kept).
       const strip = s => Object.assign({}, s, { dbHash: null, migrations: null, backup: Object.assign({}, s.backup, { schemaVersion: null }),
-        ui: { cards: (s.ui.cards || []).map(c => c.replace(/GL-\d{4}-\d{3,}(\/\d+(?:[–,] ?\d+)*)?( · в архива)?/g, '').slice(0, 45)) } });
+        // v1.36.0: the catalog cards are redesigned, so their text is not comparable
+        // across versions; the derived data (stages, counts, backup) still is.
+        ui: null });
       check('rollback: previous version opens the data without errors' + V, !prev.broken && !rb.log.errors.length, rb.log);
       const fd = (a, b, p) => { p = p || ''; if (JSON.stringify(a) === JSON.stringify(b)) return null; if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set(Object.keys(a).concat(Object.keys(b)))) { const d = fd(a[k], b[k], p + '.' + k); if (d) return d; } } return p + ': ' + JSON.stringify(a).slice(0, 120) + ' vs ' + JSON.stringify(b).slice(0, 120); };
       check('rollback: previous version derives the same results' + V, same(strip(prev), strip(mine)), fd(strip(prev), strip(mine)));
