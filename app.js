@@ -17,8 +17,10 @@ import * as traits from './domain/traits.js'; // v1.31.1
 import * as kiln from './domain/kiln.js'; // v1.32.0
 import * as kilnplan from './domain/kilnplan.js'; // v1.33.0
 import * as fire from './domain/fire.js'; // v1.46.0
+import * as glazy from './domain/glazy.js'; // v1.52.0
+import * as stock from './domain/stock.js'; // v1.53.0
 
-const bridge = Object.assign({}, merge, shrink, clay, profile, units, traits, kiln, fire);
+const bridge = Object.assign({}, merge, shrink, clay, profile, units, traits, kiln, fire, glazy, stock);
 Object.keys(bridge).forEach(k => { window[k] = bridge[k]; });
 // v1.33.0: геометрията на пещта е с кратки имена (num, check, stack…), затова
 // влиза в моста като едно пространство, не поотделно.
@@ -26,6 +28,6 @@ window.KilnPlan = Object.freeze(Object.assign({}, kilnplan));
 
 // v1.32.1: версията на модулите — index.html я сравнява със своята (APP_VERSION).
 // Сменя се заедно с APP_VERSION и CACHE_NAME (tests/versions.test.js).
-window.__glinaModulesVersion = 'v1.51.0';
+window.__glinaModulesVersion = 'v1.53.0';
 window.__glinaModulesBridged = true;
 if (typeof window.__glinaModulesReady === 'function') window.__glinaModulesReady();

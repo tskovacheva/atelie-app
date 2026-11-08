@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.47.0 · `atelie-v118`
+**Version:** v1.53.0 · `atelie-v126`
 **Last revised:** November 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -227,6 +227,22 @@ an error inside it and nothing is changed.
 **v1.46.3.** The confirmed program counts as different when it is another profile, a manual program, or its snapshot no longer equals the planned profile's segments (e.g. the profile was edited later) — regardless of the peak; then the block says the check is by the planned profile and, when the program has a peak, adds a separate verdict `_rnCompat(r, ranProgram)` (its snapshot peak and segments, `peakSrc: 'ran'`). „Сегменти“ opens the snapshot for every confirmed choice.
 
 **v1.47.0.** Quick piece entry is a compact mode of the same piece form (`mo-piece`, `savePiece`): hidden fields `pi-qk` (new|made), `pi-qk-full`, `pi-qk-unk` keep the mode in drafts. „Започвам ново“: name, clay, count, date, photo. „Вече изработено“: + real stage, the stage date, note — saved as one dated `stage` step; „Изпечено“ needs a firing type and is saved as one `firing` step `{firingPurpose}` with no run and no method. Clay: search by name and manufacturer, recently used (by record creation) offered, never preselected; „Неизвестна“ leaves the field empty; legacy names stay as is. „Запази и добави още“ reopens empty in the same mode with an explicit „Пак „…““ choice. Opened from „+“, „Моето ателие“, a material (clay prefilled) or a recipe (glaze prefilled). A second „Запази“ after the form closed is ignored. No schema change.
+
+**v1.47.1.** The full fire scale (Library → Tools) is HTML, not SVG: one row per stage (name, range, reduction shift, clay type as a word tag) and an 18 px bar on a shared 0–1300 °C axis with 200 °C gridlines; the bar is the matching slice of the heat gradient. On narrow screens the name sits above the bar; no horizontal scroll. Tapping a row highlights it and its card. The mini scale in firings and steps is unchanged.
+
+**v1.48.0 (Е7 + Е8, stage 1).** English interface, switched in Library („Език · Language“), stored in `localStorage.atelie_lang`, applied at boot and on switch (current screen and open detail redraw). `DICT.en` covers every key of `DICT.bg`. Labels assembled in JS and static HTML labels without a key use the Bulgarian text as the key: `tx(bg)` / `txf(bg,{n})` return it unchanged in Bulgarian and the `EN_TX` entry in English; static elements carry `data-tx` (`data-txp/-txt/-txa` for placeholder/title/aria-label) and keep the original in `data-bg`. Built-in values stored as Bulgarian text (technique options, standard categories) are translated only on display via `tv()`; translated `<option>`s have explicit values, so saved data never depend on the language. `_sizeLabel` writes h/d/cm in English. Covered in stage 1: navigation, „Моето ателие“, the catalog (gallery, list, filters), piece and series detail, units, splitting, quick and full piece form, process steps. Not translated by design: names, notes, all user data, guides, fire-scale texts. Firings/kilns, materials/recipes/tests and tools follow in later stages.
+
+**v1.48.1.** `FIRE_SCALE` stages carry `kind`: `general` (free water, dehydroxylation, quartz), `cond` (organics — when present; carbonates and Ca-silicates — calcareous), `body` (the three vitrification stages: intervals from studied low-fired clays, each body has its own). `_fireStages` keeps `body` stages out of passed/active/ahead and returns them in `body` with their position against the literature interval; the run detail shows them apart with `FIRE_BODY_NOTE`, the standalone step adds „встъкляването зависи от масата“. Sources: Maniatis & Tite 1981 only for low-fired calcareous/non-calcareous clays and Ca-silicates; advanced vitrification is general knowledge, body-dependent. The full scale is grouped „Общи процеси / При определен състав / Встъкляване — зависи от масата“. Intervals, lime-popping rules and load compatibility are unchanged.
+
+**v1.49.0 (Е8, stage 2).** English for firings, kilns, profiles, the kiln plan (levels, scheme, exact), the program/compatibility block and its modals, run results and „At the kiln“. Values inside module messages (kiln plan checks, kiln warnings, compatibility requirements and reasons, the run change log) are translated by `txn()`: numbers become `#` and names in „…“ become „@“ in the key, then are put back. The compatibility verdict is phrased in English from its code and rows (`_lcVt`), without changing `domain/fire.js`. `domain/kiln.js` and `domain/profile.js` write h/cm/L and h/min in English. Stored values stay as before: run results and cone results keep their Bulgarian value (explicit `<option value>`), wrapping keys, and the change log is written in Bulgarian and shown translated. Terminology: „Separate units“ (отделяне на бройки), stage „Bisque-fired“ (the firing itself stays „Bisque“).
+
+**v1.50.0 (Е8, stage 3).** English for materials (catalog, groups, stock, detail, clay bodies, raw materials and their processing history, firing temperatures and carbonates), recipes (catalog, detail, mixing, versions, form), tests (catalog, detail, comparison, lime-popping checks, form) and the low-stock alerts. Values stored as the text or value of a list option (test surface, flow, defects, plasticity, deformation, sound, legacy lime results) are shown translated by `tvd()` (reverse lookup of the option or dictionary text); free text stays as typed. Material and recipe names, notes, formulas and the seed materials are data and are not translated.
+
+**v1.53.0.** Stock check in the batch calculator and in „Приготви“ — read-only.
+
+**v1.52.0.** Recipe import from Glazy YAML and Глина files with a preview; additives above the base; material `aliases`; recipe export as JSON and YAML; „Източник“ in the recipe detail.
+
+**v1.51.0 (Е8, stage 4 — complete).** English for the Library (backup, auto-backup, device storage analysis, article form), „About and help“, the SG calculator, the clay amount and shrinkage calculator (shapes, errors, estimates), the frame of the fire scale, drafts, the new-version bar, relative dates and the storage/boot warnings. Switching the language also redraws the auto-backup box, the backup reminder and the storage label. The whole interface is now bilingual; by decision the guides, the fire-scale stage texts and the seed materials/recipes stay in Bulgarian, and user data are never translated.
 
 **v1.40.4.** Adding a piece or series to an earlier firing (from the firing or as a step in the piece): the firing step gets the firing's end date (an own step of the same day is taken over); if the record's stage is held by the form (no dated stage-moving steps) and is ahead of what the firing gives or is an outcome, it is first written as a stage step dated today, so the older firing does not move it back; a stage behind it moves forward; dated newer steps keep winning by date. A record cannot get a second step for the same firing. Piece detail: the clay/mass is a link. Firing detail: the profile is a link; profile detail lists its firings. Firing lists show codes next to names. A test linked to a firing takes its empty date, profile, peak and hold from it (in the form and when attached from the firing). Mass/clay detail: „+ Тест на маса“, „+ Изделие“; glaze test detail: „Нова версия на рецептата“ (over the test). Taking a test out of a firing asks; ending a firing without pieces or tests warns.
 
@@ -691,9 +707,46 @@ Glaze recipes — mixtures that get **applied** to a surface.
 
 ```
 id, name*, photo, temp, cone, glazeType, notes,
-recommendedFiringProfileId, fav, ingredients[{matId, pct}],
-lineageId, version, versionNote
+recommendedFiringProfileId, fav, ingredients[{matId, pct, add?, srcName?, srcId?}],
+lineageId, version, versionNote, source?
 ```
+
+- `add: true` — an **additive** above the base (Glazy's `Additional`). The Σ shown
+  everywhere is the base only; additives are listed apart. Grams of an additive are
+  its percent of the dry base, so a 1000 g base with +8 % rutile weighs 1080 g.
+- `srcName`, `srcId` — the ingredient's name and id in the source (Glazy), kept when
+  it was linked to a material with another name.
+- `source` — where an imported recipe came from: `{kind:'glazy', id, url, author,
+  authorId, created, modified, type, state, subtype, cone, surface, transparency,
+  country, atmospheres[], description, analysis{oxide: %}, importedAt}`. Shown in the
+  detail as „Източник“, read-only. The oxide analysis is Glazy's, for reference;
+  Глина does not recalculate it.
+
+### Import and export (v1.52.0)
+
+**Import** („Внос“ in the recipes catalog) reads a Glazy YAML file — one or many
+recipes — or a file exported from Глина (YAML or JSON). Nothing is written until
+„Внеси“ in the preview. Per ingredient:
+
+- an **exact** name (case and bracket-insensitive) or a **remembered** other name
+  (`material.aliases`) links by itself;
+- related names (e.g. Silica → silica flour or quartz flour; EP Kaolin → kaolin)
+  are only **candidates** and wait for a choice; materials that are chemically
+  different (a frit for Gerstley Borate, sand for silica, a ready-made glaze) are
+  never offered;
+- the default for anything unresolved is **name only** (`matId: '__c'`); the other
+  choices are any material or **a new Wishlist material** (no stock);
+- choosing a material for a non-exact name offers „Запомни“ — the source name is
+  added to that material's `aliases`, so the next import links it by itself.
+
+A recipe already imported (same Glazy ID, or the same Глина id for Глина files) is
+skipped; if Glazy's `Date Modified` is newer, it can be imported as a **new version**
+of that lineage. Nothing existing is overwritten; stock never changes.
+
+**Export** (recipe detail → „Износ“) writes one recipe: **JSON** — the full record
+with the photo (`format: 'glina-recipes'`); **YAML** — Glazy's keys at the top level
+plus a `Glina` block with the fields Glazy has no place for, no photo. Both import
+back without loss of the recipe's fields. The full backup is unchanged.
 
 ### Versions
 
@@ -723,8 +776,17 @@ from an existing recipe to make a different glaze.
 
 ### Other features
 
-- **Batch calculator** — enter a batch size in grams, get each ingredient's
-  weight. Read-only, non-destructive.
+- **Batch calculator** — enter a batch size (the dry base) in grams, get each
+  ingredient's weight; additives are added on top (base, additives, total).
+  Read-only, non-destructive.
+- **Stock check (v1.53.0)** — with a batch entered, each ingredient shows how it
+  stands against its material's stock (grams): *enough* (and what is left),
+  *not enough* (and how much is missing), *amount not entered* (empty stock is not
+  zero), *Wishlist — not in the studio*, or *no material*. A summary counts them and,
+  only when every ingredient is linked and every amount is known, gives the largest
+  dry base the stock allows and which material limits it. The same check is in
+  „Приготви“. It only reads: stock changes only by editing the material (a future
+  explicit „used“ action may deduct it).
 - Favourites flag with a favourites-only filter
 - Links to a recommended firing profile
 - Filter by temperature band; sort by name
@@ -753,7 +815,8 @@ Nine tabs.
 
 ```
 id, name*, cat, formula, brand, stock, alertAt,
-notes, photo, wishlist, cost, costUnit, chem
+notes, photo, wishlist, cost, costUnit, chem, aliases?
+# aliases (v1.52.0) — other names, e.g. ["EP Kaolin"]; edited in the form, used by recipe import
 ```
 
 - `stock` in grams, with an `alertAt` low-stock threshold and a ⚠️ badge. Stock is

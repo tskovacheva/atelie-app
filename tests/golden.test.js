@@ -48,7 +48,9 @@ async function archiveCase(h, name, json) {
   clean(app, name);
   if (snap.broken) bad(name + ' boots', 'storage reported broken'); else ok(name + ' boots');
   golden(name, snap);
-  const keys = await app.idbKeys();
+  // пренасянето е асинхронно след отварянето — чакаме го (до 3 s), вместо да хващаме средата му
+  let keys = await app.idbKeys();
+  for (let i = 0; i < 30 && !(keys.atelie_layout && keys['rec:meta']); i++) { await new Promise(r => setTimeout(r, 100)); keys = await app.idbKeys(); }
   (keys.atelie_layout && keys['rec:meta']) ? ok(name + ' — moved to per-record storage') : bad(name + ' — per-record storage', Object.keys(keys).join(','));
   await app.reload();
   const again = await app.snapshot();

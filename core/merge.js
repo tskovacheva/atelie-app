@@ -20,13 +20,15 @@ export const _EDIT_OWNS={
   // v1.46.0: fireMeta (произход и изисквания на температурите), карбонати в raw,
   // температури на масата, наблюдения за керамизация в теста. limeChecks не е тук:
   // пише се от детайла, затова редакцията го пази.
+  // v1.52.0: рецептата — source (откъде е внесена) не е във формуляра, затова
+  // редакцията го пази; add/srcName/srcId живеят в съставките, които формулярът носи цели.
   // v1.45.0: clayEst — прогнозата за глина (отделно от startMass — реалното).
   piece:['id','name','photos','type','clay','technique','recipe','material','bisqueTemp','glazeTemp','date','stage','notes','dimensions','weight','events','updatedAt','size','startMass','wall','base','categories','clayEst'],
   series:['id','name','photos','type','clay','technique','recipe','material','bisqueTemp','glazeTemp','date','stage','notes','dimensions','weight','events','updatedAt','count','size','startMass','wall','base','categories','clayEst'],
   recipe:['id','name','updatedAt','temp','notes','glazeType','cone','recommendedFiringProfileId','fav','photo','ingredients'],
   test:['id','kind','updatedAt','recipeId','materialId','firingProfileId','clay','date','temp','hold','flow','surf','def','rat','notes','glazeLayers','photos','firingRunId','bodyRef','body'],
   testBody:['plasticity','plasticityNote','shrMarked','shrDry','shrFired','poroDry','poroWet','color','deformation','sound','limePopping','limeNote','longTermDate','longTerm','slake','fractureCore','fractureRim'],
-  material:['id','name','updatedAt','cat','wishlist','formula','brand','stock','alertAt','notes','photo','fireBisqueTemp','fireGlazeTemp','grog','shrink','color','gfire','gcolor','surfaceType','foodsafe','chem','cost','costUnit','raw','fireMeta'],
+  material:['id','name','updatedAt','cat','wishlist','formula','brand','stock','alertAt','notes','photo','fireBisqueTemp','fireGlazeTemp','grog','shrink','color','gfire','gcolor','surfaceType','foodsafe','chem','cost','costUnit','raw','fireMeta','aliases'], // v1.52.0: aliases — други имена
   materialChem:['sio2','al2o3','fe2o3','cao','k2o','na2o','mgo','tio2'],
   materialRaw:['location','coords','date','weight','geonotes','carbonate','carbonateGrain','carbonateNote'],
   mass:['id','name','cat','blend','notes','photo','updatedAt','fireBisqueTemp','fireGlazeTemp','fireMeta'],

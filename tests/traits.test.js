@@ -34,7 +34,7 @@ const ok = (n, c, info) => { if (c) { passed++; console.log('  ok   ' + n); } el
     ok('old fields untouched: description, weight, history, code', p.dimensions === before.dimensions && p.weight === before.weight && p.events.length === before.events && p.code === before.code, p);
 
     // --- shown in the detail and the card; searchable by category ---
-    const det = await E(async () => { openPieceDet('p-ocarina'); await new Promise(r => setTimeout(r, 50)); return document.getElementById('dpi-info').innerText; });
+    const det = await E(async () => { openPieceDet('p-ocarina'); await new Promise(r => setTimeout(r, 50)); return document.getElementById('det-piece').textContent; });
     ok('detail shows size with stage and "approximate"', /в12,5 × Ø8 см \(Сухо, приблизително\)/.test(det) && /Начална глина\s*450 г/.test(det) && /Стена \/ дъно\s*6 \/ 8 мм/.test(det) && /За концерт/.test(det), det);
     ok('detail still shows the free description', /Размери — описание/.test(det), det);
     const found = await E(async () => { closeDet('det-piece'); document.getElementById('pc-search').value = 'концерт'; renderPieces(); const n = Array.from(document.querySelectorAll('#pieces-grid .pc')).map(x => x.textContent); document.getElementById('pc-search').value = ''; renderPieces(); return n; });
