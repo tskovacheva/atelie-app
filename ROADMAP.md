@@ -1,656 +1,1684 @@
-# Roadmap
+# Глина — План за развитие
 
-**What remains.** History was moved to `CHANGELOG.md` in the 1.0.0-rc23 documentation
-audit; completed items are not repeated here. For the reasoning behind any decision,
-`FUNCTIONAL_SPEC.md` is the source of truth.
+**Текуща версия:** v1.53.0 · `atelie-v126`
+**Последна ревизия:** ноември 2026
+**Текуща опашка:** виж ЧАСТ Ж — към версия 1.0
 
-## Editorial redesign — merged into 1.0.0-rc99, branch closed
-
-- **Package 1 — done (1.1.0-design.1, §14a):** palette roles, local Geist and Source
-  Serif 4, the two-row bar and the phone drawer, controls, fields, dialogs.
-- **Package 2 — done (1.1.0-design.2, §14b):** the reference modules in the prototype's
-  composition; the kicker; glossary as a definition list; calculators as cards.
-- **Package 3 — done (1.1.0-design.3, §14c):** the diary — My work, Fabrics, preparation,
-  group actions, the work form, the result and the history.
-- **Package 4 — done (1.1.0-design.4, §14d):** the pigments' surfaces, the screens without
-  a mockup, the edge states, Home, and the phone — including the work card's progress
-  strip, which had squeezed the card's name to nothing at 320px.
-- **Package 5 — done (1.1.0-design.5, §14e):** the approved composition applied on real
-  data — the trial detail, the plant, the Reference's result cards, the work list, and the
-  technique's read-before-edit flow.
-- **Merged.** rc99 is rc98 plus the five packages; `design/editorial-redesign` is closed and
-  main is the only line again. The `1.1.0-design.*` numbers were package identifiers.
-- **rc100:** the preparation baths, madder and the aluminium acetate workflow are seeded, and
-  chains are a pack. Open from it: the source for the six preparation recipes is the studio's
-  own guide and wants the owner's confirmation; a chain still cannot choose its first step by
-  fibre.
-- **rc105:** the pigment batch simplified to a journal entry (§13fg) — the pigments' own model,
-  which the design packages never covered, is done for 1.0.
-- **rc144:** a plan's line names its pieces (their stage and the works that used them shown, the piece lists the plan) and carries free-text details (§13gt). Next: „Start a work from this line". Open: cutting one piece into two records (her 3S/6S halves) — the split of §13bd is for batches only.
-- **rc143:** preparing a working solution is not a treatment of the cloth — `recipe_output: solution`, the aluminium acetate preparation marked; M reads every mordant since the last wash, „AA + CaCO₃" on label, sheet, summary and trail (§13gs). Open: her own recipes cannot be marked yet — the recipe form does not offer `output`.
-- **rc142:** a finishing dated before the work's date or its pieces' preparation is caught on saving and offered a move (bath by bath) or a manual correction; the mark's date follows the finishing; the piece's record says so; one reading of „finished" (§13gr). Found on П-023.
-- **rc141:** a sheet of studio labels on A4 — 21 of 63.5 × 38.1 mm, filled for the pieces ticked in Fabrics (in tag order, or one page per stage for coloured paper) or blank to write by hand (§13gq).
-- **rc140:** the automatic archive — a folder chosen once, two files written in turn, held rather than written when her records fall unexplained; to be tried on the owner's Samsung (staging first) for whether the permission survives a restart (§13gp).
-- **rc139:** persistent storage asked at every start and shown on Home when refused; a database that vanished is reported and offered a restore; a database that will not open writes nothing (§13go). After the production data loss of 16 October 2026.
-- **rc138:** a screen opens at its top; going back up returns to the place in the list (§13gn).
-- **rc137:** the phone's Back in the installed app goes up and asks before leaving; the licence screen drops a stale activation message; the device label carries the time; the print check presses the button itself; Chandra Rice's Library entry in the owner's words (§13gm). Next, a separate version: the Library's shorthand notes rewritten and the missing authors of nine papers, each checked against the paper.
-- **rc136:** the licence screen's reason covers every case Polar answers "not found" for (§13gl).
-- **rc135:** a piece of work is called by its cloth on every screen; a rename takes back copies of the old name; welcome line counts the sources (§13gk).
-- **rc134:** the licence — activation screen, Licence in the menu under Backup, silent weekly check that never locks on failure, Pages Function for /api/license; Git-connected Pages (§13gj).
-- **rc133:** the installed app starts on Cloudflare — shell cached as ./, redirected responses never served; hosting is Workers + Static Assets (§13gi).
-- **rc132:** recipe cards on a phone keep long values inside the card (§13gh).
-- **rc131:** merge keeps the newer version of her records — a plan's source and picture no longer lost to an older copy (§13gg).
-- **rc130:** legacy finished pieces show the stage their work proves; neutral studio label, one Print (§13gf).
-- **rc129:** Studio Process Summary v1 — derived, never stored (§13ge). v1.1 candidate: keep a recipe's chosen alternative.
-- **rc128:** kept sappanwood record shows its photograph again — repointed by hash; plant-photos table checked against the release (§13gd).
-- **rc127:** Studio System v1 — stage colours, working label, process trail, code dictionary (§13gc).
-- **rc126:** Bagra in English; Plans v1.1 (read view, source, one picture); pigment colour in the list (§13gb).
-- **rc125:** production readiness — `_headers` in the artifact (revalidate everything, CSP), update matrix under production headers, try-production.mjs, runbook (§13ga). Open: §42.
-- **rc124:** sumac photograph restored — CC BY-SA 3.0, cropped and credited as such; 57 photographs (§13fz).
-- **rc123:** photograph licences — CC alternatives for the two GFDL, sumac withdrawn, deed link and „resized" on every credit (§13fy).
-- **rc122:** Commercial content package 3 — release artifact `dist/` from an allowlist; Library provenance notes neutral; asset licences registered and gated (§13fx). Open: §41.
-- **rc121:** no activation while any window holds unsaved work; manifest `id` pinned (§13fv); deep-check's waiting made deterministic (§13fw).
-- **rc120:** Production Update & Release Safety package 2 — the release is one cache, no mixed pages; update matrix U1–U7 in the gate; rollback rule (§13fu). Open: §40.
-- **rc119:** Commercial Data Safety package 1 — the merge-migration P0 fixed; round-trip test onto a clean install; older-backup restore in the release gate (§13ft). Open: §39.
-- **rc118:** the commercial recipe library — 16 recipes, studio-credited; 7 handed to the owner (§13fs).
-- **rc117:**- **rc117:** pH colours, the chalk bath's wording, reliability order (§13fr).
-- **rc116:**- **rc116:** the AA working solution reworded; Nicoleta's Al/Fe impregnation added (§13fq). Open: recipe `usedFor` / `standardised` (item 37).
-- **rc115:**- **rc115:** Reference shows linked observations; Records search and sort (§13fp). Later, perhaps: link an observation to a record from Reference.
-- **rc114:**- **rc114:** a change of box saves only itself; „unwashed" is not a change (§13fo).
-- **rc113:**- **rc113:** one washing rule for a piece and a group (§13fn).
-- **rc112:**- **rc112:** group washing without a recipe; nothing moved back to washed (§13fm).
-- **rc111:**- **rc111:** eco-print bundle bottom to top, blanket preparation, relative leaf side, whole sprig, heat labels, two bug fixes (§13fl).
-- **rc110:**- **rc110:** a plan's tick saves itself; Plans vs Trials and backup direction written down (§13fk).
-- **rc109:** Plans v1- **rc109:** Plans v1 (§13fj) — intent before work, a checklist per plan. Next, when wanted: a line → a trial.
-- **rc108:** English on a first opening; the backup check sees references that no longer resolve
-  (§13fi). The owner's backup has one — a finished action naming a trial that is gone — reported,
-  not repaired.
-- **rc107:** the release gate passes again (§13fh). It had been red since rc100 at the latest
-  for four reasons unrelated to the application (`DOCUMENTATION_DECISIONS_NEEDED.md` item 33).
-- **Still open, for the main line:** the packs screen is still the stub it was; „undefined" sources on an empty home
-  screen (found in package 1, left for main).
-- **Decided:** the phone's bottom bar stays gone (owner, package 2).
-- **For the main line, not this branch:** „undefined" sources on an empty home screen.
-
-Three lists, kept apart on purpose:
-
-- **A — required before a paid v1.0.** Only what actually remains. Mostly not features:
-  completeness of the shipped data, attribution, translation, units, legal and safety
-  text, and where the data lives.
-- **B — after v1.0.** Sensible, and not blocking a release.
-- **C — deliberately not planned.** Kept only where recording the decision stops it being
-  proposed again.
-
-An item moves from B to A by decision, never by drift. Anything listed here is
-outstanding unless a line says otherwise.
+Какво прави приложението днес: [`FUNCTIONAL_SPEC.md`](FUNCTIONAL_SPEC.md)
 
 ---
 
-# Part A — required before a paid v1.0
+## Философия
 
-## A1. The library — **DONE at rc36**
+Приложението е направено за ателие-базирана керамична практика. Не цели общ
+керамичен CRM, нито комерсиална част.
 
-Plant Library v1 meets every clause of the Definition of Done, and
-`scripts/audit-library.mjs` runs it as a layer of the check suite so it stays met (§13db).
+Развитието следва йерархия на реалните нужди — всеки етап се прави **само след**
+реална употреба на предишния. Критерият за всяко ново нещо е един: **прави ли
+практиката по-добра?**
 
-```
-plants with a full basic profile      57/57
-plants with at least one combination   55/57   (lavender and medlar documented)
-combination records                    163     (55 eco print)
-intentional nulls                       54     eco print records with no fibre named
-unresolved gaps                         28     immersion records with no fibre named
-sources registered                      45
-invalid codes                            0
-```
+## Обхват
 
-**Post-v1, continuous enrichment** — none of it foundation: the compositional role for the
-remaining 24 plants, `printingSide`, a bibliography per row, a swatch for every literature
-combination, more combinations per plant.
+**Глина се развива като приложение за керамици** (решение от 27.10.2026). До тогава
+беше личен инструмент; задълбочеността, с която е правена за едно ателие, остава
+мярката — продуктът не се опростява до общ знаменател.
 
-## A2. Sources and attribution
+Последицата е конкретна: работата по „втвърдяване за продукт“ от ЧАСТ Г вече не е
+паркирана. Част от нея е направена (v1.29–v1.30), част е за 1.0, част остава за
+по-късно. Клиенти, поръчки, фактури и облачна синхронизация остават извън плана.
+Виж ЧАСТ Ж.
 
-- ~~**The register is thin.**~~ **57 sources are seeded** (it said ten). Recipes and
-  substances carry a list of codes that resolve in the register, checked by the audit —
-  settled at rc59, §13ea.
-- **Traceability of a claim.** When a buyer reads *lightfastness 4/5* it must be visible
-  whether that came from literature, from a compilation, from the owner's own trial, or is
-  unverified. The confidence model exists per field; what is missing is that every
-  significant claim reaches a named source with title, author, year and page.
-- ~~**Does attribution move onto the record?**~~ **Settled at rc59 (§13ea):** the record
-  carries a LIST of source codes — recipes and substances as combinations already did — and
-  the register stays the one place a source is described. What is deliberately NOT modelled
-  is which source came first: „Garcia's, as Kelly gives it" is a relationship between
-  sources, not a field, and it lives in the recipe's own words.
-- **rc80 (§13eu): source, version used and authorship are kept apart.** A code in
-  `sourceCodes` means the library drew on that source; a formula's author is named only where
-  established, and a relationship between sources („Kelly states she adapted Garcia") is written
-  in the recipe's words. All fourteen recipes done at rc81.
-- **Still open under this heading:** every significant claim reaching a named source with
-  page. The plant library's own figures are the gap — a bibliography per row is post-1.0
-  enrichment (A1, clause 8).
-- **Photographs are settled** — 57 of 57 carry author, licence and source, and the import
-  script refuses one without an author. This is the standard the rest should meet.
+## Твърдо ограничение: офлайн
 
-## A3. Language and terminology
+Приложението трябва да работи напълно офлайн. Не зависи от мрежа при никакви
+обстоятелства.
 
-- **The English of the plant library is a translation, not a second voice.** 342 sections,
-  made by the developer and kept in `seed/en/` so corrections survive later imports. **The
-  owner reads it before anything is distributed.**
-- **One name per thing, in both languages.** Found in use: one record carried three
-  Bulgarian names („Нова работа", „Тест", „Ново изпитание"), settled on „опит" in rc20.
-  Others reported and not yet looked at: „Справочна част", „Моята работа", and vocabulary
-  labels written as codes first and translated afterwards.
-  - **„Екстракт" was rejected deliberately.** The root already carries three jobs —
-    `recipe_output: extract` is „извлек", the glossary term is „Извличане / екстракция",
-    and one method is „алкална екстракция". A fourth sense would empty the word.
-  - The English needs an editorial pass **as a second original**, not a synchronisation
-    phrase by phrase. §13cb did this for the glossary; nothing else has had it.
-- Personal notes are never translated.
+Това отписва цял клас решения — всичко cloud-first, където локалното е кеш на
+сървъра. Архитектурата вече е от правилната страна: няма backend, няма акаунти,
+IndexedDB е истината, service worker кешира всичко.
 
-## A4. Units — **DONE at rc37**
-
-Built, having been moved out of the blocking set at rc25 so the decision could be taken
-deliberately rather than inherited from a list — and then taken.
-
-- **Metric / imperial, stored canonically** in grams, millilitres, degrees Celsius and
-  grams per square metre, rendered per preference (§13dc). Two switches beside the two
-  language switches, not a preferences system.
-- **The choice belongs to the device**, like the language, and survives a snapshot restore.
-- **A ratio never converts** — percent WOF, liquor ratio, solution strength — and the code
-  says so through named functions rather than by staying silent.
-- The round trip closes at every magnitude from one gram to twelve kilograms, which it did
-  not at first: a fixed two decimal places turned 1 g into „0.04 oz" and back into 1.13 g.
-
-## A5. Where the data lives
-
-The one item that is a decision rather than work.
-
-- **Today: local only.** IndexedDB is the source of truth; no account, no server. This is
-  the strongest position the product has — *no account, no cloud, your studio data stays on
-  your device* — and it removes authentication, password recovery, cloud bills, account
-  deletion, sync conflicts and much of GDPR at a stroke.
-- **The two problems it leaves**, to be solved without a cloud if possible:
-  1. **Data loss.** Clearing site data wipes everything; a private window stores nothing.
-     Backup exists and reports how stale it is. Consider making a backup a condition of an
-     update.
-  2. **Two devices.** Work is recorded on the phone in the studio and read on the laptop.
-     Today that is a JSON file carried by hand — honest, and tedious.
-- **The decision:** whether 1.0 ships local-only with file transfer, or whether an optional
-  sync is worth becoming a data controller for. **Recommended: local-only for 1.0**, sync
-  considered only if buyers ask. Sync should not be a prerequisite for selling anything.
-
-### What happened on 16 October 2026, and what it reopens
-
-Production lost a day of the owner's work on her phone (98 % full): the site's storage was evicted
-and the app opened as a first install. rc139 (§13go) asks for persistent storage at every start and
-reports a vanished database instead of hiding it. **Neither is the durable answer.** Persistence does
-nothing against a person clearing the browser, a reinstall, a lost phone or a fault; detection
-recovers nothing. The owner's position: an application people pay for must not depend on them
-remembering a backup. Open, to be decided as its own piece of work:
-
-- **An automatic copy outside the browser.** File System Access (one file, rewritten, two
-  alternating files so an interrupted write cannot take the only copy; never overwritten with fewer
-  of her records without asking). Works on desktop Chrome and Edge; on Android Chrome since 132,
-  untested here — writes are not atomic and whether the permission survives a restart is unknown;
-  absent on iPhone and in Firefox.
-- **An encrypted copy on our server, tied to the licence.** Encrypted in the browser, one direction,
-  no sync and no conflicts, restorable on any device with the key and a passphrase. The only option
-  that covers every browser. Costs: „no cloud" becomes „optional, encrypted"; privacy texts; storage
-  (photographs are stored as base64 in the database); a lost passphrase is an unreadable copy.
-- **The decision:** whether the second is a condition of selling 1.0. Recommended: yes.
-
-**Decided, 16 October 2026:** the automatic archive first — the first option, built in rc140 (§13gp),
-as a folder with two files in turn. Still open:
-- **Google Drive as a destination.** It appears in Android's folder picker. A write there with no
-  connection is untested: it may fail, or Drive may hold it and upload later. The local folder works
-  offline and stays the primary; Drive would be a second copy, and the way to carry a backup from the
-  laptop to the phone. Its own piece of work, after the Samsung trial of rc140.
-- **The encrypted server copy** — still the only answer for iPhone and Firefox, and for a lost phone.
-
-### What happened on 10 September 2026, and what it settles
-
-The owner's employer's proxy classified `tskovacheva.github.io` as **Newly Seen Domains** and
-blocked it. Глина would not open from the work laptop. Багра, on `bagra-ten.vercel.app`, kept
-working — a different origin, not yet caught by the same filter.
-
-The block lifted by itself on the 11th and everything was found intact. What it cost was a
-day, and what it proved is not what the list above assumes.
-
-**The two problems in this section are the wrong two.** They are about losing data and about
-carrying it between devices. Neither happened. The data sat whole on the disk the entire
-time — 10.7 MB, counted and seen — and could not be reached.
-
-**Availability, not integrity.** The owner put it plainly and the point is hers: data that
-exists and cannot be reached is not available, and a record you cannot open when you need it
-is no better than one you do not have. Everything else — the features, the interface, the
-library — rests on the application opening when it is wanted.
-
-**What this does NOT settle.** It is not an argument for a cloud. A server behind the same
-proxy fails the same way and takes the application AND the data with it; at least a local
-copy can be carried to another machine. The choice is not local versus cloud. It is whether
-a second copy exists **by design rather than by remembering**.
-
-**A third problem, found the same day and worse than either.** Chrome's storage listing
-showed Багра on **three origins**: `tskovacheva.github.io`, `bagra-ten.vercel.app`, and two
-Vercel preview addresses. Each origin is its own database. The github.io one held 23 fabrics,
-6 trials, 2 chains, 14 recipes and 4 batch actions — real work, invisible from the other.
-Nothing warned her. A link opened from history on a preview URL is an afternoon of records
-written into a database nobody will look in again. **This has nothing to do with the proxy
-and was there all along.**
-
-### What A5 becomes
-
-Four items. The first three are the work; the fourth is the decision that no longer needs
-taking.
-
-1. **A backup that does not depend on remembering.** Not a stronger warning — a file that
-   leaves the browser profile on its own, after N changes or once a day. Google Drive is
-   already permitted on the work laptop and already connected; falling back to Downloads when
-   it is not reachable. This breaks „no runtime dependencies", which is a fixed decision, and
-   that is the trade to be argued rather than assumed.
-2. **The backup file must be usable WITHOUT the application.** If Багра cannot open, a file
-   only Багра can read leaves you exactly where you started. Plain JSON with legible names
-   and a short header saying what it is and how to put it back. *Stated as a requirement by
-   the owner, and it is the right one.*
-3. **One declared origin.** The application knows which address it is meant to be served
-   from and says so, loudly, when it is opened from another. Silent divergence across three
-   databases is the fault that cost most and was noticed least.
-4. **Restore must merge, not overwrite.** Today a restore replaces. With records on a phone
-   and on a laptop, that makes combining them impossible and makes restoring dangerous. This
-   is independent of everything above and is wanted regardless of what is decided about
-   copies.
-
-**Audited at rc119 (§13ft).** Backup covers every store of hers, replace is an atomic snapshot,
-merge now repairs what it brings in, and both are tested onto a clean installation. What is
-left of A5 for 1.0 is in DOCUMENTATION_DECISIONS_NEEDED §39: when persistent storage is asked
-and what the screen promises, and a manual Safari check of the download.
-
-Not decided here: whether any of the four ships before 1.0. Item 4 is the cheapest and the
-most clearly correct; item 1 is the largest and touches a fixed decision.
-
-## A6. Release hygiene
-
-None of this is a feature; all of it is a condition of taking money.
-
-- ~~**About and version · Help or a short onboarding · Terms · Privacy · Licence · a safety
-  and chemical-handling disclaimer · a way to report a bug.**~~ **Written at rc66** (§13eg).
-  The licence ships as a draft and the report address is not set; both are in A7.
-- **Migration tests as a release blocker.** Before each release: a backup from the previous
-  version, update, open, verify. The expensive bug is not a crooked button — it is eighty
-  trials and six hundred photographs gone after an update. **Partly done at rc26**: the
-  restore path itself is now covered by `scripts/try-backup-restore.mjs`, which runs a real
-  export, real work on top of it and a real restore, in both directions (§13co). What is
-  still missing is the other half — a backup written by an OLDER version, opened by this
-  one.
-- **Referential integrity — done at rc28.** A record the history points at can no longer be
-  deleted (§13cq). What is NOT done, and is now a decision rather than a task: whether cloth
-  gets a *retired* state, and whether reference entities get archiving at all. Both are in
-  `DOCUMENTATION_DECISIONS_NEEDED.md`.
-- **Attribution is protected like the rest of the history — done at rc29.** A source that
-  glossary terms, recipes or colour swatches credit cannot be deleted (§13ct). Four of the
-  ten sources are named only by colour swatches, which the review had not listed.
-- **A release run can be made by a machine — done at rc30.** `check.sh --release` runs on
-  push to main, on pull requests and on demand (§13cy). It does not deploy; a gate and a
-  deployment are separate decisions. The two screen defects that kept it red were fixed at
-  rc31, and the gate has passed at every release since.
-- **Numerical tests on the calculators — DONE at rc37.** The aluminium acetate
-  stoichiometry is verified against three independently published recipes, and every molar
-  mass recomputed from atomic weights (§13dd). `scripts/try-calculators.mjs` runs it.
-
-- **Release process:** `main` plus short-lived branches, release tags, semantic versioning.
-  Never release from the working copy — development, then a candidate the owner uses for a
-  while, then production.
-- **The documents ship inside the release ZIP**, at the same version as the code.
-- **The screen check runs, and the code passes it — done at rc31.** It needed
-  `puppeteer-core`, which was never installed, so every layout decision from rc13 to rc25
-  was verified by reading rather than by rendering and `check.sh` left with status 0
-  regardless. The release gate (§13cp) closed that; the first release run turned up six
-  failures present in rc25 byte for byte, four of them one stale route in the harness. The
-  remaining two — the finger target on „Виж всички →" and the overflowing *use now* tiles —
-  were corrected in rc31 (§13cz). **`sh check.sh --release` now passes all six layers.**
-- **A release run is now a different run.** `sh check.sh --release` fails where a
-  development run skips a layer for a missing dependency. The invariant: a candidate cannot
-  be called checked if a layer of its release policy never started. §13cp
-- **README and ROADMAP are read before each release.** README claimed 48 plants and a Stock
-  module long after both had changed. Audited at rc23; the habit is the point.
-
-## A7. What is left before 1.0 — the whole list, 14 September 2026
-
-Written after an audit of all five documents against the code, because „what is left" was
-spread across A2, A3, A6 and the decisions file and could not be read in one place.
-
-**Nothing may be added to this list without saying so.** It is the release's scope.
-
-1. ~~**A6's texts.**~~ **WRITTEN at rc66** (§13eg), at `#/about` in four tabs. Two things are
-   still the owner's:
-   - **the licence**, which ships marked as a draft and is hers to accept, change or replace;
-   - **the address a fault is reported to**, which is not set — `CONTACT` in
-     `modules/about.js` is empty and the screen says so rather than inventing one.
-   Both, and the English of all seven texts, fall under her reading (item 3).
-2. **The other half of the migration tests** — a backup written by an OLDER version, opened by
-   this one. The restore path itself was covered at rc26.
-   **Built after rc66; the files ship in rc67, NOT yet wired into `check.sh`.** The §19 fix waits for
-   a version of the language package, by the owner's decision.
-   `scripts/try-restore-older.mjs` and three fixtures in `test/older-backups/` (rc6, rc45,
-   rc56). Each fixture was written by that version's own code: checked out of git, its own
-   deep-check run, its own `exportAll()`. rc45 and rc56 pass whole. **rc6 found one fault** —
-   see DOCUMENTATION_DECISIONS_NEEDED §19. What remains, in order:
-   - the fix for §19 (`website` read as `site` when drawn, the record left as it is);
-   - the harness wired into `check.sh --release` — NOT before the fix, because a release
-     layer that fails on a known fault teaches people to walk past it;
-   - a line in the specification (§11.4) and in CHANGELOG;
-   - **known limit, say it in the release notes:** the three fixtures are thin on work —
-     3 cloths, 6 trials, no cloth actions, no batches, no photographs, no pigment batches.
-     They prove the old FORMAT is read; they do not prove a large studio database is. A rich
-     fixture means driving an old version's screens, and is separate work.
-3. **The owner's reading of the English.** 342 plant sections, the recipes and the vocabulary
-   labels: a translation by the developer, not a second authorial voice, and marked for her
-   review before anything is distributed (A3). **This has not started**, and it is the one
-   item on this list nobody but the owner can do.
-4. **The recipe pack, reviewed as a whole.** Fourteen recipes now (it said sixteen). The owner
-   decides which ship in 1.0 and which are hers alone — `distributable` is the field and it has
-   never been gone through record by record.
-   **rc80 (§13eu):** the audit's stage 3 went through eight of them — Cliffe's three pastes and
-   Kelly's five — for provenance and wording. **rc81 (§13ev):** the remaining six likewise; all
-   fourteen are through stage 3. Five still carry no `distributable` value — a proposal for each
-   is in DECISIONS §29a, waiting on the owner. **rc82 (§13ew):** the five are laid out for her in
-   `docs/attribution/rc82-five-for-approval.md`; the field turned out to control nothing that ships,
-   and a release check is proposed (DECISIONS §30a).
-5. ~~**The pH scale, drawn rather than listed.**~~ **DONE at rc65** (§13ef): one bar from 1 to
-   14, with the band names kept as a legend under it.
-6. **A last read of README and ROADMAP**, which is the habit A6 already names.
-7. **ADDED 16 September 2026, by the owner: the language and terminology package.** Five steps,
-   each its own release, none started before the previous one is accepted:
-   1. ~~guards~~ **DONE at rc67** (§13eh) — two ratchets with 641 file findings and 531 lines of
-      Bulgarian on the English screen listed by name; 1.0 needs both lists empty (`--strict`);
-   2. ~~the interface dictionary and the vocabulary~~ **DONE at rc68** (§13ei) — terminology,
-      the ten duplicate keys, the audit's English edits checked against their screens, the
-      botanical names; the source names wait on a structure decision (DECISIONS §20);
-      **corrected at rc69** (§13ej): „закрепител" replaces „мордант" in the Bulgarian interface,
-      and 204 places in reference prose join steps 3 to 5, which now also cover the prose of
-      substances, techniques and sources;
-   3. ~~English for the plants (296 fields)~~ **DONE at rc70** (§13ek) — filled, the existing English
-      reviewed, „мордант" out of the plant prose, doubtful claims in `docs/language/science-audit-flags.md`;
-   **Intermittent deep-check failure seen at rc70** (§13ek, last paragraph): `readWork` with a null
-   `draft` after the harness's `reset` in the pH match test, once in five runs. Not fixed; investigate
-   before 1.0 together with the `stages` flake from rc66. **A third, seen at rc82:** `strip` — „a twice-printed
-   piece shows 0 shots" — once in five runs, with nothing in the release touching photographs.
-   4. ~~English for the combinations (307)~~ **DONE at rc71** (§13el) — the 121 notes classified and
-      acted on, English filled, „мордант" out; 6 lines of Bulgarian left on the English screen, all §20;
-   5. ~~the language of the recipes~~ **DONE at rc72** (§13em) — and substances, techniques, sources;
-      source names bilingual; both language lists empty and strict on release. **The package is complete
-      pending the independent check and the owner's editorial read of the English (item 3).**
-   An independent check of the implementation and an editorial read of the English follow the
-   whole package. This does not close item 3: the English stays a translation by the developer
-   until the owner has read it.
-
-Deliberately NOT in 1.0, and each recorded where it belongs: cloud sync (A5, Part C), pack
-export (B5), a vocabulary editor (B6c), an update button for Sources and the Glossary (B6d),
-the visual pass and global search (B7), and the open model questions (B4).
-
-**Open with the owner, from the paste work (§13ed):** a paste covers only part of the cloth
-and the combination key does not know it. „Cotton, alum, paste" reads the same as a fully
-mordanted piece. Three ways out — leave it to the work's own words, split the process in two,
-or give the combination a coverage field. It blocks nothing in the diary; it matters when the
-reference half is taken up.
+Всяка бъдеща синхронизация може да бъде само от вида „локалното е истината,
+синхронизацията е помирение на файлове".
 
 ---
 
-# Part B — after v1.0
+## Принципи на работа
 
-## B1. Re-working a finished piece — **built, and this entry was wrong**
-
-Checked against the code at rc25 and corrected. `trials.workAgain` — „Работи пак върху това
-парче" — is on the finished card, the picker excludes cloth that is already busy, and the
-record shows the earlier runs on the same piece with dates. It shipped in 0.99.2 and §13bj
-records both faults found on the way: a handoff that asked to discard work it had just
-saved, and a button that made a rival record every time it was pressed.
-
-This entry claimed the diary had no way to say a second trial happened to a finished piece.
-It has had one for six versions. **The roadmap was being written from the specification
-rather than from the code**, which is exactly what the rc23 audit was supposed to stop.
-
-What is genuinely still open is smaller and worth keeping:
-
-- **The second trial does not point at the first.** The earlier runs are found by looking
-  up the cloth, not by a link on the trial. That is the no-reverse-links rule working as
-  intended, and it is fine — but it means a trial read on its own does not know it was a
-  re-working.
-- **There is no word for it on the trial.** A re-working and a first dyeing look identical
-  in the diary list.
-
-## B2. Discharge printing
-
-A third kind of record, keyed by plant × dyestuff, distinguishing true discharge — the dye
-destroyed — from a pH shift that only moves the colour. The two look alike on cloth and are
-not the same thing. Heat alone discharges madder above 60 °C, so steaming onto a madder
-ground always shifts it; `softMaxTempC` is the field, and whether it is filled for madder
-wants checking.
-
-**The glossary term went with it in rc13** (§13cb): „Изтегляне" was a definition for a
-practice no screen can record, which is a promise the application does not keep. It returns
-with the method, under a title that says what it is — **„Печат чрез отнемане на цвят"**.
-The rc12 text is in git history and already drew the distinction this section asks for.
-
-## B3. The phone, and the diary screens
-
-An active trial reads as a form and should read as a story. Wants walking through on a real
-phone rather than in jsdom, which has no camera and no narrow viewport. Two such walks have
-already found faults no check caught.
-
-## B4. Model questions still open
-
-- **Can a piece be finished without a trial?** Tannin as a final colour is the case.
-- **Does the season belong in the combination key?**
-- **Should the chemistry vocabulary include technologically important non-pigments?**
-  Oxalates in rhubarb leaf are the case. §13bu
-- **Does the extraction method belong in the combination key?** Deferred in rc14 on the
-  same grounds as dye strength: the key widens when there is something to fill it with. Two
-  groups are already set aside because of this. §13cc, §13cl
-- **Does `dosing` need a base — WOF or WOA?** Stopka's chart is WOA and the doses are WOF, a
-  factor of ten. Either the field gains a base and both sit honestly side by side, or the
-  chart belongs only to the pigment module, where the base *is* the alum. The second reads
-  as the truer one. §13ci
-- **A term met on another screen should reach its glossary entry.** The more valuable half
-  of the Library, and it touches every screen. §13bt
-
-## B5. Packs — export
-
-Installing a pack works. Making one does not: no export, no versioned publication, no way
-for the owner to ship a library update to someone who has bought the application. Parked
-rather than deferred — needed the moment a second person owns a copy.
-
-## B6. Home screen and navigation tidying — **the tiles are done (rc25)**
-
-The „Източници" tile was a button that did nothing: `data-go="sources"` with no module of
-that id, the register having moved into the Library (§13bt). The „Наличности" tile pointed
-at a hidden module — the old Stock address kept alive so saved links resolve (§11b). Both
-are gone and the Library takes their place, which is where a person pressing either was
-trying to arrive.
-
-**Two more of the same shape, found at rc46 and fixed (§13dm).** „Направи архив" in the
-attention block carried `data-go="tools"` and landed on the calculators; the backup has its
-own address and the button did not use it. „Инсталирай пакетите" on a first launch had a
-worse target — there has never been a packs screen in the calculators at all — and now goes
-to Plants. Neither was a rendering fault: both buttons drew correctly and arrived at a real
-wrong screen, which no layer that asks whether a screen is real can see.
-
-**„Инструменти" versus „Калкулатори" is settled (§13dm).** One destination had three words
-across four places, because `nav.tools` and `nav.calculators` were both live and
-`t('nav.' + id)` is built at run time, so layer 3b could not see the duplication. One key
-now, saying „Калкулатори" everywhere. This was the terminology pass reaching one word;
-the rest of A3 stands.
-
-What remains here is the wider question, and it belongs with the terminology pass (A3): the
-screen still speaks the shape the model had two versions ago, in more places than these.
-
-## B6a. Requested at rc46, after 1.0
-
-Four items, none of which loses knowledge by waiting.
-
-- **A pH scale that is a scale.** The Library's pH tab draws five rows, each a small square
-  beside a range. It is a list wearing the words of a table. The colours are fixed in
-  `PH_BANDS` and are **ours, from the palette** — deliberately not the colours a test strip
-  prints, which belong to whoever printed it, and deliberately not the colours a dye turns,
-  which belong to the plant. Any prototype for this must keep those nine values; they are
-  the one place the interface is allowed to be coloured and they are argued (§13bt).
-- **Sorting the columns in Fabrics.** Eight columns, fixed on last-changed. The sort has to
-  survive the tick boxes for a group action (§13bd) — selecting five pieces and then
-  re-sorting must not silently change which five are selected.
-- **Cleaning the combination notes.** Twenty-two condition labels — „с железни соли",
-  „кора, алуминиев мордант" — landed in the prose field from an old import. The text is
-  correct; it is in the wrong field.
-- **The eco print block on the plant screen.** Waits on the `printingSide` decision
-  (`DOCUMENTATION_DECISIONS_NEEDED.md`, item 13).
-
-## B6b. The pigment module, finished — agreed at rc46, after A6
-
-The model is written out in full in `DOCUMENTATION_DECISIONS_NEEDED.md` item 17 and is
-agreed. It is not built. In rough order of dependency:
-
-- ~~**Two substance categories**~~ — **DONE at rc47.** `binder` and `filler`, chalk moved out
-  of `auxiliary` into `filler`, slaked lime into `modifier`. The six new substances are NOT
-  done and are deliberately not in that release: a substance record carries hazard, handling
-  and purpose, and writing those is making claims that need a source. They start as a
-  workbook, the way the plants did.
-- ~~**Two ingredient roles**~~ — **DONE at rc47.** `plasticiser` and `carrier`.
-- ~~**A basis of per cent of the carrier's weight**~~ — **DONE at rc48.** The lake recipe
-  computes: 10 g of alum, 5 g of soda, madder root at 500% of the carrier. Only madder of
-  Stopka's three figures — logwood is not in the library and „жълтениче" is ambiguous
-  between two species. The remaining figures wait on a workbook.
-- **A fourth scale mode, by output** — attempted at rc49 and **deferred, blocked on data**.
-  It needs a recipe to declare what it yields and none of the three does; Stopka's „roughly
-  20 pans" is for her recipe, not the one shipped. One workbook line unblocks it: how much
-  the owner's binder makes, in her own measure. The scaling defect it was meant to fix was
-  fixed without it — the gum is now the amount the recipe is measured against.
-
-  The assertion expected to fail here did not, and that is recorded as a fifth way for a
-  guard to lie (§13dp): at 42 g both models agree, so it had never tested what it named.
-- ~~**The batch holds the lines actually used**~~ — **DONE at rc51.** Lines resolve to
-  amounts, carry what the recipe said on the day, and report four departures. A line left
-  out is struck rather than deleted.
-- ~~**Swatches on the batch become a list**~~ — **DONE at rc52.** Kind, substrate, recipe,
-  colour, name. The hex is optional and an unmeasured swatch says so.
-
-**Simplified at rc105 (§13fg).** The stages, the chain, quality, the departure display and the
-swatch's kind, surface and recipe left the batch screen. The lines and the swatch list stay, in
-the simpler form; older batches keep and show what they recorded.
-
-**B6b is complete except for the six substances** — and they do NOT wait on a workbook; see
-B6e and item 18g. Three fields are required of a substance record and the sources already on
-hand support what each of the six is and does. Only the safety fields stay empty, which is
-the normal state for thirteen of the twenty-six records already shipped.
-
-## B6c. A vocabulary editor
-
-`vocab.js` says adding a term is a data change and that the seeded terms are editable in the
-`vocabulary` store. There is no screen that writes to that store, and `backup.js` skips it,
-so a term added by any means is lost on restore.
-
-This is the preferred answer to the open swatch-kind list and was deferred at rc46 only
-because it needs the backup to change as well. Recorded so that a later reader meets the
-reason rather than concluding that a closed list was the design.
-
-## B6d. An update button for Sources and the Glossary
-
-Both packs can gain a record at boot and can never have one corrected: nothing calls
-`seedUI.open` for them, so a fixed source or a reworded glossary term goes out in the ZIP and
-reaches nobody who already has the application. `scripts/try-pack-reachability.mjs` excuses
-them by name at rc47 and the excuse says exactly this.
-
-Deferred rather than done because both live inside the Library, a reading screen with tabs
-and no list of records to stand a button beside. Where it goes — a tab, the Library's own
-head, somewhere else — is a layout decision nobody has taken, and inventing a place for it
-inside a guard's exemption list would have been taking it quietly.
-
-## B6e. The working view — five defects found 11 September 2026
-
-Written up in `DOCUMENTATION_DECISIONS_NEEDED.md` item 18, with the code confirmed for each.
-
-~~**18a**~~ — **DONE at rc53** (§13dt). Changing the amount on the record emptied its
-ingredients and steps in memory. This entry used to say an Edit-then-Save would then write the
-emptied recipe to disk; it would not — Edit reloads the record from the database — and the
-claim is withdrawn. A screen fault, not a data-loss route.
-
-The rest — what the amount field IS, a scaling control on recipes that cannot scale, the
-caret jumping after the first digit, and a record that cannot say the library has a newer
-version of it — are ordinary work, but 18b is a decision before it is a fix.
-
-~~**18e**~~ — **DONE at rc54** (§13du). A seeded record says when the library holds a
-different version of it, compared by content rather than by version, in all five modules
-with a button; the button counts what the preview would tick.
-
-~~**18f**~~ — **DONE at rc55** (§13dv). The pigment recipes' carrier and alkali lines point at
-the library's alum, soda ash and chalk. Raised by it: **18h**, whether the weigh list shows a
-line's note.
-
-~~**18g**~~, ~~**18h**~~ — **DONE at rc56** (§13dw, §13dx). Seven pigment substances, the
-seven recipe lines that named them in prose, and the first sentence of a line's note under
-each weigh line. Raised by them: **18i**, that a substance record has no source field.
-
-**rc63** finished the diary side of paste printing (§13ee): a printing step records what
-actually went in. Still open, and only when the reference half is taken up: a paste covers
-only part of the cloth, and the combination key does not know it. Three ways out were put to
-the owner — leave it to the work's own words, split the process in two, or give the
-combination a coverage field.
-
-**rc62** opened the diary to paste printing (§13ed).
-
-**rc61** added Kelly's four mordant recipes (§13ec). Open from it: whether the library should
-be able to carry a CHAIN — the compound mordant, drying and the bran bath are one sequence,
-and `seed/chains.json` does not exist.
-
-**rc60** added the three Cliffe print pastes (§13eb). **Next, and agreed with the owner: the
-DIARY side of paste printing** — `process:paste` still says „скоро" and a trial cannot choose
-it, so the library now holds recipes the diary cannot record work against. To be planned
-before it is built.
-
-**rc59** settled 18i (§13ea): `sourceCodes` is a list on recipes and substances, checked by the
-audit. Next: the three print pastes from Nicola Cliffe, chosen by the owner on 14 September —
-mordant paste, dye paste without a mordant, ready-to-use dye paste with aluminium acetate.
-
-**rc57** settled the model question the pastel recipe raised: a recipe can be an ingredient of
-a recipe (§13dy). The owner is preparing more recipes; the seed pack is reviewed as a whole
-before 1.0, to decide what ships.
-
-~~**18b, 18c, 18d**~~ — **DONE at rc58** (§13dz). The amount field: offered only where it moves
-something, typeable, comma-tolerant, and its own per recipe. **Item 18 is closed.** 18i — a
-substance record has no source field — is the one open item left from it.
-
-**18g corrects this roadmap.** Entries above said the six substances were content rather than
-code because „a substance record carries hazard, handling and purpose". The schema says
-otherwise: three fields are required, and `safetyNote` appears on three records out of
-twenty-six. The claim was made from memory and deferred work that nothing was blocking.
-
-## B7. Smaller, accepted, not built
-
-- **The visual pass deferred at 0.98.2.** Density, rhythm, the weight of headings. The
-  screen was noted at rc19 as close to too even — everything a beige box of equal weight.
-  The answer is hierarchy by spacing and heading weight, **not** by colour.
-- **Global search.** Cross-module: „жълто" reaching plants, combinations, recipes and
-  swatches, each with its own idea of a match. Worth building, with its own brief. An empty
-  box that searches less than it appears to is worse than none.
+- Без нов state layer — всички нови entity-та са масив в `DB`
+- Архитектурни промени само зад еталонните тестове (`sh tests/check.sh`)
+- Новият код се ражда като ES модул; старият се изнася, когато се пипне
+- Backward compatibility — всеки нов patch работи със стари данни
+- Малки patch-ове
+- Bump на `APP_VERSION` + `CACHE_NAME` при всеки production patch
+- Тествай между фази
+- **Two-phase removal** — миграция в една версия, премахване на legacy code в следващата
+- **Винаги deploy-аеми междинни версии**
+- **Дизайн преди код** при големи промени — архитектурата се обсъжда и решава преди да се пише
+- **Валидация преди deploy** — `sh tests/check.sh`: validate.js, версии, unit, еталони, редакции, миграции и връщане назад, екрани
 
 ---
 
-# Part C — deliberately not planned
+# Ж. КЪМ ВЕРСИЯ 1.0 (октомври 2026)
 
-Recorded so they are not proposed again.
+**Текущата опашка.** Произлиза от одита „Глина — одит и план за развитие (фаза 0)“
+и решенията на собственика от 27.10.2026.
 
-- **No cloud account for 1.0.** See A5. Local-only is a feature, not a limitation.
-- **No colour coding anywhere in the interface, and no green.** Asked for at rc19 — a soft
-  green ground on the seasonal block, a colour per fabric stage — and refused. A person
-  judging „is this the ochre I wanted" must not have five invented colours in the corner of
-  the eye. Not a style preference: it is the reason the workspace is neutral at all. The
-  single exception is a plant's own recorded hex, which is data.
-- **No emoji.** They render differently on every platform and would arrive in a bilingual
-  offline application as a third typeface nobody chose.
-- **No hero image on the home screen.** A third of the first screen, the same picture every
-  day, pushing the work below the fold. The first thing you see should be your own work.
-- **Seasons as a filter.** „Лято" puts elder flower in June and walnut husks in September
-  in one bucket. Months only. §13cd
-- **Bath strength as a key dimension.** „Слаба баня", „концентрирана баня" are notes on the
-  record. §13br
-- **Reverse links in the data.** Related lists are derived on opening, never stored.
-- **A second plant list for the seasonal filter.** The same list with a month filter in the
-  address. Two lists of plants are two lists that eventually disagree.
+## Решенията
+
+1. Глина се развива като приложение за други керамици, без да губи спецификата и
+   задълбочеността на сегашния инструмент. Платено или безплатно — не е решено.
+2. Архитектурата на Багра е проверен образец; моделът на данните и домейн логиката
+   на Глина се запазват.
+3. Рефакторингът е постепенен, на малки версии, без цялостно пренаписване.
+4. Новите функционалности се изграждат като самостоятелни ES модули.
+5. Публичният адрес е glina.crafty.place. Преместването на данните от
+   `tskovacheva.github.io` е отделна, контролирана операция (експорт → импорт;
+   IndexedDB не се пренася между адреси).
+6. За 1.0: тестове, миграции, модуларизация, неутрални стартови данни, безопасен
+   импорт, политика за поверителност, двуезичен интерфейс.
+7. Клиенти, поръчки, фактури и облачна синхронизация не са част от плана.
+8. Планирането на изпичане няма право да мени етапа на изделията преди
+   действителното изпичане.
+9. Кодът на изделието е постоянен работен идентификатор, отделен от вътрешния UUID.
+10. v0 се ползва за целенасочени UI/UX прототипи, не за замяна на кода.
+11. QR кодове няма.
+
+## Фазите
+
+| Фаза | Резултат | Състояние |
+|---|---|---|
+| 0. Одит | Карта на кода, рискове, модел на данните, план | ✅ 27.10.2026 |
+| 1а. Минимална основа | Тестова среда и еталони; редакцията слива; наръчниците извън `index.html`; версия на схемата и миграции; първи модули | ✅ v1.29.0 + v1.30.0 |
+| 2. Пещ | Запис на пещта (Kittec CB 80 Double, Ø51 × 38 см); изпичане „подрежда се“ / „изпечено“, което не мести етапа преди изпичането; нива с очаквана температура и контролен конус; позиция по участие (`event.data.place`); 2б — изглед отгоре | ✅ v1.32.0 – v1.35.0 |
+| 3. Калкулатор | Свиване в двете посоки от теста на масата; количество глина като диапазон; тегло на буцата за калибриране | ✅ v1.45.0 |
+| 4. Проследимост | Код `GL-ГГ-NNNN`, места, етикети за печат | частично — кодове и номера на бройките v1.31.0 |
+| 5. UI и адреси | Дизайн система от сегашния CSS, прототипи с v0, изнасяне на екраните, адрес `#/…` | |
+
+**Критерият за всяка версия** е `sh tests/check.sh`: еталонните архиви дават същия
+резултат, празната редакция не губи нищо, предишната версия отваря данните, и
+екраните показват същия текст, освен където промяната е целта.
+
+## Какво остава отворено за 1а → 2
+
+- Решенията за собственика от одита (13 на брой) — 1–4 са взети на 27.10; 6–9 трябват
+  преди фаза 2–3.
+- `CLAY_NAMES`, `DEF_MATS`, `DEF_REC` са лични стартови данни в кода — неутралните
+  стартови данни са за 1.0, не за фаза 2.
+- Наръчниците: авторство и точност за публичен продукт — отделен преглед преди 1.0.
+
+---
+
+# А. ОДОБРЕНИ
+
+**Списъкът е изпълнен (v1.9.0 – v1.22.0).** Запазен като запис на какво беше
+решено и защо.
+
+| | Какво | Версия |
+|---|---|---|
+| А1 | Firing runs — изпичането като запис | v1.11.0 |
+| А2 | Решение за склада — приспадането махнато | v1.9.0 |
+| А3 | Версии на рецептите | v1.10.0 |
+| А4 | Slider vs events — една истина за етапа | v1.9.0 |
+| А5 | Премахване на застоялото localStorage копие | v1.9.0 |
+| А6 | Присъединяване на изделия/тестове от изпичането | v1.12.0 |
+| А7 | Серии от изделия — партида с общ процес | v1.19.0 – v1.22.0 |
+
+Мотивите са в „Завършени арки" по-долу.
+
+Новите одобрени (SG калкулатор, счупено/бракувано, размери, крива на профила) са
+в група Б с етикет „одобрен — чака ред", защото са малки и без строг спусък —
+влизат при първа възможност, не чакат конкретно събитие.
+
+---
+
+## А7. Серии от изделия
+
+**Спусъкът:** десет чинии от един вид и размер минават по един поток — заедно на
+бисквит, заедно декорирани, заедно на глазурно. Днес това са десет записа с десет
+пъти преписан процес, или един запис, който лъже за броя.
+
+**Разграничението, което носи дизайна:** партидата има общ процес, но парчетата се
+разминават — една чиния е жълта, друга синя, трета се пука на сухо. Значи серията
+не е изделие с брой, а **споделен процес над няколко реални парчета**.
+
+### Решения
+
+- **Серията е нов entity** `series` — самоличността на партидата (вид, глина,
+  техника, размери, дата, бележки, снимки „на всички наведнъж"), `count` и
+  **собствен timeline от събития** в същата форма като `piece.events`.
+- **Изделието получава `seriesId`, `qty`, `seriesNo`** — три опционални полета.
+  Липсата им означава точно днешното поведение; нищо не мигрира.
+- **Списъкът с членове е изведен**, не съхранен — сканиране по `seriesId`, както
+  изпичането намира парчетата си. Неразграничените са `count − Σ qty`, тоест не са
+  записи изобщо.
+- **Отделянето е при нужда, не при създаване.** Парче се отделя в момента, в който
+  се разграничи; дотогава серията е еднородна.
+- **Отделеното носи брой.** „4 жълти" е един запис, не четири. Ако после една от
+  четирите се счупи, отделя се от нея: 3 + 1. Един жест, приложим рекурсивно.
+  Обратното сливане не се прави — то е поправка на грешка при въвеждане, а за това
+  има триене.
+- **Именуване:** авто-номер (`#1`, `#2`), който може да се презапише.
+- **Timeline-ът на отделено парче е сливане** — `series.events` + `piece.events`,
+  подредени по дата. Общите се маркират като идващи от серията и се редактират
+  само от нейния екран. Етапът се преизчислява върху слятия списък, затова общото
+  глазурно изпичане достига до всички.
+- **Спирачка:** парче с изходно състояние спира да поема общи събития. Без това
+  счупената чиния би се „изпекла" заедно с останалите. Оттук идва зависимостта от
+  Б2.
+- **В списъка серията е една карта** → отделен екран. Етапът ѝ е обобщение; при
+  разминаване показва „смесен" с разбивка.
+- **Входът е едно поле „брой"** в добавянето на изделие. Остане ли 1 — днешното
+  поведение. Няма втори бутон и втори поток.
+
+### Отхвърлени варианта
+
+- **Серия като един запис с брой** — разминаването така или иначе иска подзаписи и
+  ги преоткрива по-зле.
+- **Членовете като вложени обекти** вместо истински изделия — тогава парчето не се
+  вижда в списъка, не може да се закачи за изпичане и не може да бъде сочено от
+  тест. Губи се всичко построено досега.
+
+### Фази
+
+| | Какво | Версия |
+|---|---|---|
+| 1 | Изходни състояния (Б2) — предпоставка за спирачката | ✅ v1.19.0 |
+| 2 | Серия като еднородна партида: модел, брой при добавяне, екран, карта, бекъп v4 | ✅ v1.20.0 |
+| 3 | Отделяне с брой, слят timeline, смесен етап | ✅ v1.21.0 |
+| 4 | Изпичане на цяла серия, добив | ✅ v1.22.0 |
+
+**А7 е изпълнена.** Остава да живее и да покаже къде стиска на реална работа.
+
+---
+
+# Е. ПЛАН ПО РЕД (август 2026)
+
+Подредена опашка, съставена след сравнение с **Багра** — другото приложение на
+същия автор, за естествено багрене. Двете решават еднакви задачи в различни
+занаяти, затова разминаванията им са полезни.
+
+Причината за подреждането е събитие, не идея: **Глина отива при втори потребител.**
+Принцип 5 („личен инструмент, не продукт") не е отменен — може да бъде отменен от
+търсене, не от предпочитание. Но втори човек прави законни точно три неща, които
+досега бяха под въпрос: защита срещу изгубена работа, заключване на вградените
+наръчници и обяснение какво е приложението.
+
+Опашката е за ред, не за срок. Ново намерено при тестването на сериите изпреварва
+всичко в нея.
+
+## Е1. Защита срещу изгубена работа ✅ v1.24.0
+
+Днес редакция по средата изчезва без дума, ако натиснеш назад. Ти познаваш навика
+и го избягваш; втори потребител — не. Това е най-вероятното първо оплакване.
+
+**Форма:** една защита над цялото приложение (както `dirty.js` в Багра), не правило,
+което всеки диалог спазва поотделно. Отбелязва „има незапазено", пита при напускане,
+чисти при запис.
+
+**Първа е, защото:** малка е, не зависи от нищо и покрива най-големия риск.
+
+## Е2. Уеднаквени бутони + геометрична проверка ✅ v1.24.0
+
+Два реда, свързани. Първо се оправят познатите разминаващи се размери на
+Редактирай / Изтрий / Дублирай в edit диалозите. После се добавя слой към
+`validate.js`, който **рендерира екраните на ширина на телефон и проверява 44px
+target** — както шестият слой на Багра.
+
+**Защо проверката, а не само поправката:** размерите се откриват с око, на телефона,
+и се развалят пак. Проверката е скъпата част (иска jsdom или headless браузър, а
+`validate.js` досега е само статичен анализ), но е единственото, което спира
+повторението.
+
+## Е3. Цветовият преглед
+
+Багра има правило: **никъде зелено**, защото приложението е за преценка на цвят и
+интерфейсът не бива да слага мнение за цвят до снимка на боядисан плат.
+
+Същото важи за Глина и там го няма. Чиповете за етап са шалфейно-зелени и стоят на
+сантиметър от снимката на глазирано изделие. Правилото вече е взето веднъж, за
+другия занаят на същия автор.
+
+**Форма:** предложение за палитра от мен, решение — на телефон, от теб. Естетическите
+решения се вземат на екран, не от инспекция на код.
+
+## Е4. Заключване на вградените наръчници ✅ v1.25.0
+
+Беше В3 („под въпрос"). **Повишено:** щом друг човек редактира, „едно редактиране
+унищожава наръчник и не може да се върне" вече не е хипотетично. Виж В3 за формата.
+
+## Е5. За приложението и Помощ ✅ v1.25.0
+
+Глина няма нито ред обяснение какво е и как се ползва. На теб не ти трябва. На нея
+ще ѝ трябва.
+
+**Форма:** кратко „За приложението" (какво е, чие е, версия) и една страница помощ —
+шестте етапа, какво е Процес, откъде идва етапът, как работи архивът. Не е онбординг
+и не е тур.
+
+## Е6. Разделяне речник / авторски текст ✅ v1.26.0 + v1.27.0
+
+**Предпоставка за Б7, не част от нея.** Багра получава двуезичността почти даром,
+защото речникът е кодове, резолвирани при рендер, а авторската проза е `{bg, en}`
+двойка.
+
+Ключовото разграничение, което Глина още няма: **бележките ти не се превеждат,
+интерфейсът се превежда.** Днес „Кожна влажност" и бележката ти за пукнатината
+живеят на едно и също равнище. Стойностите вече са кодове (`leather-hard`) — това е
+половината. Липсва изнасянето на надписите.
+
+**Без видима промяна.** Структурен проход, който прави следващите две възможни.
+
+**Разделен на две, защото не се побира в един безопасен проход.**
+
+- **Е6а ✅ v1.26.0 — речникът.** Затвореният списък кодове (етапи, изходи, цели и
+  методи на изпичане, атмосфера, декорации, типове профили) вече живее в `DICT` и
+  се резолвира при рендер през `t(key)`. Списъците се строят от `buildVocabulary()`
+  и се пре-строяват при смяна на езика — затова са функция, а не литерал.
+- **Е6б ✅ v1.27.0 — надписите.** 647 места, 473 ключа. Изнесени машинно с
+  `data-t` / `data-tp` / `t()`. Остават на ръка **31 сглобени съобщения** — тези с
+  брой или условие вътре (`n+' парчета са отделени'`, `editId?'Обновено':'Добавено!'`).
+  Те не се превеждат поотделно, а заедно с реда на думите, и това е решение за Е8.
+  Остават и **9 смесени възела** — абзаци с `<b>` вътре, повечето в екрана Помощ.
+
+**Записаното разграничение (три вида текст):** речник (кодове — превежда се),
+надписи на интерфейса (превежда се), и авторски текст — имена, бележки, съдържание
+на статиите, свободните полета — който **никога** не се превежда.
+
+## Е7. Проверка за липсващ превод ✅ v1.48.0
+
+Изпълнено като `tests/i18n.test.js`: всеки ключ на речника, всеки `tx()` текст и всеки
+статичен надпис без ключ имат английски; на английски екраните от етапа нямат български
+извън данните.
+
+Слой във `validate.js`: ключ без превод в **който и да е** от двата езика е грешка.
+Багра го има като част от третия си слой.
+
+**Преди Б7, не след нея.** Иначе двуезичността се доставя с дупки, които се откриват
+при ползване.
+
+## Е8. Двуезичност (изпълнение на Б7) ✅ v1.48.0 – v1.51.0
+
+На етапи по модули (решение от 3.11): 1 — навигация, начало, изделия и серии, формулярът,
+стъпките (v1.48.0); 2 — изпичания, пещи, профили (v1.49.0); 3 — материали, рецепти, тестове;
+4 — инструменти и останалото. Наръчниците и текстовете на Огнената скала остават на
+български засега.
+
+Виж Б7 за обхвата. Стои тук, а не по-рано, защото Е6 и Е7 трябва да са налице.
+
+## Е9. Увереност по поле
+
+Багра записва увереност по поле: `literature · own_trial · practitioner ·
+needs_testing`. В Глина рецепта от книга и рецепта, пекла двайсет пъти, изглеждат
+еднакво.
+
+Занаятчийска идея, не продуктова. Последна е, защото е добавка, не липса.
+
+(Двата дребни дефекта, които стояха тук, са поправени в v1.23.1. Опашката вече е
+само доработки.)
+
+## Отложено заедно с архитектурата
+
+**Адрес за всеки екран.** В Багра `#/module/arg` е състоянието и се чете на едно
+място. В Глина състоянието е в променливи (`curPiece`, `curSeries`, `curRun`), а
+историята е симулирана с overlay стек. За потребителя разликата е презареждане,
+което връща в началото; за разработката е цял клас грешки — в сесията за сериите
+`curSeries` и `curPiece` можеха да се сбият и трябваше `_evSubject`, за да реши кой
+притежава стъпката. При адрес този въпрос не съществува.
+
+Голямо е и не се прави отделно. Влиза във фаза 5 (ЧАСТ Ж), когато екраните се
+изнасят като модули.
+
+## Не се заимства от Багра
+
+**Обновено (октомври 2026).** Схемното версиониране, модулите и тестовете вече се
+заимстват — решението за продукт отмени Принцип 5. Не се заимстват: лаптопът като
+основна форма (Глина живее на телефон в ателието) и моделът на данните (Багра е
+справочник, Глина е дневник). Регистърът на източниците — само за наръчниците, ако
+останат в публичния продукт.
+
+## Какво Глина дава на Багра
+
+Обратната посока, записана да не се загуби: изведеното състояние с един собственик,
+решен от данните (пряк отговор на отворения въпрос в §13bd на Багра — кой притежава
+завършването); слетият timeline със спирачката за изход; отпечатъкът за свиване на
+данните; и авто-архивът от v1.23.0, който е доставена алтернатива на sync-а за
+приложение, което иска да остане само локално.
+
+---
+
+# Б. КОЛЕБАЕМ СЕ
+
+Част са **одобрени и чакат ред** — малки, верни на практиката, влизат при първа
+възможност. Останалите **чакат конкретен спусък** — не дойде ли, елементът си стои
+тук, което е приемливо състояние, не дълг.
+
+## Б1. SG калкулатор (специфично тегло на глазурата) ✅ v1.14.0
+
+Съотношението вода / сух прах определя дебелината на слоя при потапяне. Керамикът
+въвежда желаната плътност (напр. 1.45 g/ml) и инструментът пресмята колко вода да
+добави към дадено количество суха смес.
+
+Излезе независимо от два анализа (ChatGPT и Gemini) — двоен сигнал. Малък, ляга
+до тестовете и рецептите, керамична всекидневна работа.
+
+## Б2. Счупено / бракувано като финал ✅ v1.19.0
+
+„Готово" не е единственият край на едно изделие. Неуспехът е ценни данни — коя
+маса се пука, коя глазура лази. Нов изход, не нов модул.
+
+**Формата, както излезе:** четири изходни състояния — счупено, бракувано,
+подарено, продадено — като стойност на `piece.stage`, редом със седемте етапа, но
+в отделен списък `OUTCOMES`. Етапите са прогресия; изходите я прекратяват.
+Изделието спира дотам, но записът остава, вижда се в списъка и се филтрира.
+
+Подареното и продаденото са само етикет — без купувач, цена или дата на продажба.
+Всичко отвъд това е проследяване на клиенти и поръчки, което е в ЧАСТ Д.
+
+В детайла изходът заменя точковия индикатор: точките чертаят път, а изходът е
+спиране.
+
+## Б3. Размери и тегло на изделието ✅ v1.13.0
+
+Не критично за всичко, но полезно за скулптура, съдове, музикални инструменти,
+изложби — и за проследяване на реалното свиване върху готово парче (не само върху
+тестова таблетка).
+
+**Форма:** незадължителни полета на изделието. Дребно.
+
+## Б4. Произволни ramp сегменти + визуална крива на профила ✅ v1.16.0
+
+Две страни на едно и също. Реалните контролери поддържат повече от два ramp
+сегмента; и профилът заслужава да се вижда като крива, не само като числа.
+
+**Ramp сегментите.** Приложението Kiln (разгледано на телефон, юли 2026)
+поддържа произволни firing schedules — потвърждава, че липсата е реална за
+електрическа пещ с по-сложна крива.
+
+Форма: `ramps` като масив от `{rate, to, hold}` вместо фиксирани `ramp1`/`ramp2`.
+Backward compatible — интерфейсът рендерира редове динамично.
+
+**Кривата.** Керамикът чете крива по-бързо от таблица. Само за **профила**, не за
+изпичането: профилът пази ramp-овете, значи планираната крива е чертаема, заедно
+с **калкулирана обща продължителност**. Изпичането пази само пикова + задръжка,
+не крива по минути — чертане на реалното случило се би искало въвеждане на точки
+на телефон, което не си струва.
+
+Форма: SVG от съществуващите данни. Щом ramp-овете станат масив, кривата
+рендерира N сегмента вместо два — затова двете вървят заедно.
+
+## Б5. Quick-final → два режима ✅ v1.47.0
+
+Изпълнено като „Бързо въвеждане на изделия“ — „Започвам ново“ / „Вече изработено“
+в същия формуляр и със същото записване. Записът по-долу остава като мотив.
+
+Преименуване вместо премахване: „Започвам ново изделие" / „Добавям вече завършено
+изделие", като и двата създават еднакви entities и events. Не втора система, а
+два входа към една.
+
+По-добра рамка от сегашната, но козметична, докато навикът е ретроспективно
+въвеждане — точно това, за което quick-final съществува.
+
+**Спусък:** смяна на навика към въвеждане от началото на изделието.
+
+## Б6. Личен sync между устройства
+
+**Разграничение:** акаунти + encrypted multi-user sync е продуктова инфраструктура
+(ЧАСТ Г). Личният sync е един потребител, едно хранилище, собствени данни.
+
+**Реалният модел на работа е асиметричен, не паралелен:**
+
+- **Телефон, в ателието** — процес, снимки, стъпки. Единственото устройство там.
+- **Лаптоп, на бюрото** — зареждане на материали, дълъг текст. Клавиатура и копи-пейст.
+
+Не непрекъсната синхронизация, а „от време на време искам да въведа обем на
+клавиатура".
+
+**Сегашното състояние:** импортът заменя, не слива. Работи строго последователно —
+експорт от телефона → работа на лаптопа → импорт в телефона, без пипане на
+телефона междувременно. Защитата предупреждава при по-стар файл, но не хваща
+тънкия случай: запис на телефона в 11:00, докато копието на лаптопа е от 10:00,
+после импорт на файл от 14:00 — файлът е по-нов, няма предупреждение, записът от
+11:00 изчезва.
+
+**Изходи, ако стане нужно:** дисциплина и документиран цикъл (сега) · истинско
+сливане при импорт · файлов Google Drive обмен.
+
+**Спусък:** ако ръчният цикъл започне да струва работа.
+
+## Б7. Двуезичност (Български / Английски) — виж Е6–Е8 за реда
+
+Обсъдена при UX review (v1.5.x), отложена тогава. **Важна за потребителя.** Стои
+последна в Б, защото е по-голяма от останалите — но е одобрена посока, не под
+въпрос.
+
+**Разграничение:** пълна i18n рамка за много езици е продуктова работа (ЧАСТ Г).
+BG/EN за собствена употреба е друго — за показване на чуждестранен колега или на
+работата навън.
+
+**Ефорт:** по-малък, отколкото изглежда. Стойностите в данните вече са стабилни
+кодове (`leather-hard`, не „Кожна влажност"), така че речникът пипа само
+интерфейса. Нито един запис не мърда. Работата е изнасяне на надписи в речник +
+превключвател, не рефакторинг на данни.
+
+**Спусък:** одобрена — чака ред, след останалите в Б.
+
+---
+
+# В. ПОД ВЪПРОС
+
+По-скоро не, но не са мъртви.
+
+## В1. Cost tracking ЕТАП 2+
+
+Цената за единица влезе в v1.5.4 (`cost` + `costUnit`, EUR).
+
+Останалото от стария план — доставчик, линк, история на покупките, cost per
+recipe, разход за изпичане — стои непокътнато. Отворен въпрос дали цената за
+единица не е достатъчна.
+
+## В2. Backup надеждност / Google Drive — ЧАСТИЧНО (v1.16.2, v1.17.0)
+
+**Вече не е хипотетична.** През юли 2026 Android изчисти хранилището на телефона
+между сесии (2.40 MB → 0.42 MB), с реална загуба на данни. Оттам защитата стана
+спешна.
+
+**Направено (v1.16.2):**
+- Заявка за устойчиво съхранение (`navigator.storage.persist()`) при старт — спира
+  браузъра да чисти без разрешение
+- Защитна мрежа: отпечатък от броя записи в localStorage; при рязко смаляване
+  приложението предупреждава и подканва за възстановяване от архив, преди да се
+  въвеждат нови данни
+
+**Направено (v1.17.0) — Ниво 1:**
+- Авто-напомняне за бекъп: меко съобщение в Backup панела, когато последният архив
+  е отпреди 7+ дни, или има 25+ промени, или още няма архив на устройството.
+  Експорт/импорт нулира броячите. Напомня, не блокира.
+- Освен това: **изпичанията (`firingRuns`) вече влизат в бекъпа** — дотогава бяха
+  пропуснати (добавени във v1.11.0, но експортът не беше обновен), значи архивите
+  не съдържаха изпичания. schemaVersion 2→3.
+
+**Направено (v1.23.0) — Ниво 2, но не както беше замислено:**
+
+Формулировката „периодично сваля скрит файл в Downloads" се оказа неизпълнима.
+PWA не може да пише мълчаливо във файловата система: или минава през диалог, или
+през сваляне, което потребителят вижда, а автоматичните сваляния без жест браузърът
+блокира. Замисълът беше грешен, не имплементацията.
+
+Работещата форма е по-добра от замислената: **File System Access API**. Избираш
+файл веднъж; браузърът връща handle, който се пази в IndexedDB и позволява повторно
+писане в СЪЩИЯ файл без нов диалог. Един файл, презаписва се на място — не се трупат
+стотици архива в Downloads.
+
+- Пише при отваряне на приложението и после при 5 промени или 15 минути, което
+  дойде първо
+- Ръчният експорт и авто-архивът сглобяват съдържанието на едно място
+  (`_backupPayload`), за да не изостане едното мълчаливо, както изпичанията
+  изостанаха до v1.17.0
+- Пресен авто-архив (под 24 ч) заглушава напомнянето от Ниво 1
+- Няма ли браузърът File System Access API — бутонът не се показва и се казва
+  честно, че остава ръчният експорт
+
+**Ограничения, записани нарочно:** разрешението може да изтече при рестарт на
+браузъра; тогава писането спира мълчаливо и панелът показва „Обнови сега".
+Разрешение не се иска без потребителски жест, защото браузърът така или иначе би го
+отказал. Handle-ът живее в IndexedDB, значи изчистване на данните го губи — но
+файлът оцелява, което е целият смисъл.
+
+**Остава:**
+- **Ниво 3** — експорт направо в личния Google Drive
+
+Нито едно от нивата не бива да чупи офлайн-принципа. **Свързано с Б6** (личен sync) —
+и двете опират до излизане на данните извън едно устройство.
+
+**Отделно от бекъпа:** самото изтриване на IndexedDB от Android между сесии остава
+структурно нерешено. `persist()` не го спря; нивата 2 и 3 изнасят данните навън, но
+не премахват причината. Води се като отделна тема, не като част от тази.
+
+## В3. Заключване на вградените наръчници — ✅ изпълнено като Е4 (v1.25.0)
+
+Сега са редактируеми и неразличими от потребителските статии. Едно редактиране не
+може да се върне.
+
+## В4. Параметризация (потребителски настройки)
+
+Custom етапи, техники, методи на изпичане.
+
+Съмнителна стойност за личен инструмент — списъците са дефинирани според
+собствената практика. Параметризацията решава проблем на **чужди** потребители,
+което е ЧАСТ Г.
+
+## В5. Дребни от стария план
+
+| Идея | Оценка |
+|---|---|
+| Draft auto-save в модалите | нисък приоритет |
+| Aggregate reports („колко изделия Q1") | вероятно не |
+| Calendar view | вероятно не |
+| PDF export на изделие | може би, ако потрябва за изложба |
+| Idea wishlist (техники за пробване) | може би |
+
+---
+
+## В6. Формула vs партида при масите
+
+„Съставът T2" и „осемте килограма, замесени на 20 юли от партида Xi Beach #1" не
+са едно и също.
+
+Днес съвпадат — всяка маса се замесва веднъж. Разликата започва да има значение
+при **втори замес на същия състав**, когато се появяват два записа с еднакъв
+състав и различни дати.
+
+Междинен изход, който вече работи: нова маса със същите компоненти.
+
+**Спусък:** втори замес на съществуващ състав.
+
+## В7. Лимити за снимки
+
+5 за изделие / event / тест / raw event / изпичане. 1 за рецепта и материал. Няма
+принцип зад разделението.
+
+**Спусък:** ако разликата започне да пречи.
+
+## В8. Image lightbox
+
+Click на снимка → fullscreen overlay със swipe.
+
+**Спусък:** ако снимките на таблетки и изпичания станат достатъчно много.
+
+---
+
+# Г. ЗА ПУБЛИЧЕН ПРОДУКТ — отключено (октомври 2026)
+
+Беше „паркирано, не отложено“. Решението за продукт го отключи. Направено досега:
+версия на схемата, миграции с дневник, копия преди миграция, връщане при неуспех,
+тестови архиви, начало на модуларизацията, автоматизирани тестове (v1.29–v1.30).
+За 1.0 — виж ЧАСТ Ж; останалото е след 1.0.
+
+### Данни и надеждност
+- `schemaVersion` в root DB + формални последователни миграции + migration log
+- Validation на всяка entity, orphan report, repair tool
+- Backup validation + версия на архивния файл
+- Import preview, избор replace vs merge, откриване на дублирани ID
+- Автоматични локални snapshots
+- Възстановяване след неуспешна миграция
+- Blob storage за снимките вместо base64 в обекта — технически правилно, но не
+  спешно при ~1GB въздух в IndexedDB
+- Export на снимките като отделен архив
+- Тестови архиви от всяка стара версия
+
+### Код
+- Модуларизация (ES modules, без bundler, без framework)
+- Автоматизирани тестове на основните операции
+
+### Продукт
+- **Пълна i18n рамка** за много езици, формати за дата/число/валута (BG/EN за
+  собствена употреба е Б6)
+- Конфигурируемост: етапи, техники, методи, °C/°F, мерни единици, валута, конуси,
+  типове изделия, категории
+- Onboarding, demo данни, празен режим
+- Privacy policy, ясна export guarantee
+- Feedback и error reporting
+- Beta група от 15–30 керамици
+
+### По-късно
+- Optional account
+- **Акаунти + encrypted multi-user sync** (личен sync между собствени устройства
+  е Б6)
+- App Store / Play wrapper (Capacitor)
+- Import/export към Glazy или CSV
+
+**Забележка за модуларизацията (обновена).** За личен инструмент не беше
+убедителна. За продукт е: 1 MB файл, 301 inline обработчика и 72 глобални
+променливи са цената на всяка нова функция. Прави се постепенно — виж ЧАСТ Ж.
+
+---
+
+# Д. ОТХВЪРЛЕНИ ЗАВИНАГИ
+
+- **Клиенти, поръчки, продажби, фактури** — product-centric flow
+- **Multi-user / sharing / permissions** — извън плана: един човек, едно устройство, свои данни
+- **Community feed / marketplace / social** — не е продуктът
+- **AI асистент за препоръки** — premature
+- **Пълна химическа система като Glazy** (UMF, Si:Al, Target & Solve, material
+  substitution) — друга лига, няма смисъл да се пресъздава
+- **Автоматично изчисление на firing kWh от физически модел** — неточно
+- **Календар за класове**
+- **Пълна себестойност на изделие**
+- **Framework migration** — vanilla JS е ограничение по избор, не пропуск
+
+---
+
+# ЗАВЪРШЕНИ АРКИ
+
+## Piece Model Evolution ✅ (v1.3 → v1.4.3)
+
+Event-based модел на изделието. Schema (v1.4.0) → read-only timeline (v1.4.1) →
+add/edit/delete (v1.4.2.x) → firing events с 13 метода и 2 атмосфери (v1.4.3).
+
+Спецификация на event типовете: [`EVENT_SCHEMA.md`](EVENT_SCHEMA.md)
+
+## Storage ✅ (v1.4.7 → v1.5.0)
+
+Диагностика на паметта → миграция localStorage → IndexedDB със sync wrapper.
+PH_MAX_DIM 1000→800.
+
+**Контекст:** базата беше 1.99 MB, ~98% снимки, при 5 MB лимит. base64 в
+localStorage струва ~2× заради UTF-16.
+
+## UX ревизия ✅ (v1.5.1 → v1.5.4.2)
+
+Външен UX review (Gemini + ChatGPT) → dots slider вместо CTA бутони, свиваеми
+филтри, двустепенен Add Piece, човешки storage екран, цена на материал, stage
+context за декорации.
+
+## Material Model Evolution ✅ (v1.6 → v1.8)
+
+Контекст: ~4-5 кг морска глина от Xi Beach, Кефалония. Модулът „Материали"
+приемаше готови материали; дивата глина сама е експеримент с биография.
+
+**v1.6.0 Суровина** — категория `raw`, identity полета, процесен timeline с 5 типа.
+- *Решение:* отделен опростен engine, не споделен с piece events — полетата са
+  твърде специфични (ppm, mesh, вода/глина).
+- *Решение:* пластовете от един добив са един запис с бележки, не две партиди —
+  обработката тече паралелно.
+- ✅ Валидиран с реална употреба (юли 2026).
+
+**v1.7.0 Маса** — материал, който знае от какво е направен.
+- *Решение:* суровината не е директно избираема; ползва се през маса (100% ако е
+  без добавки). Причина: една партида може да влезе в няколко тела, значи не може
+  едновременно да е и чистата версия, и версията с шамот.
+- *Решение:* името е „Маса", не „Смес" — Рецепти вече са смеси. Рецепти = смеси,
+  които нанасяш; Маси = смеси, които формуваш.
+- *Решение:* процентите са съвещателни — сборът се показва, но не блокира.
+- *Решение:* масата няма наличност.
+- Рекурсията идва безплатно; пази се само срещу цикъл.
+
+**v1.8.0 Тест на маса** — тестът получава вид (глазурен / на маса).
+- *Решение:* именувани полета, не абстракция (`subjectRefs[]`/`measurements{}`) —
+  видовете са два и протоколът е конкретен.
+- *Решение:* един запис на образец на условие. Маса на 4 температури = 4 записа.
+- Изчисляеми: свиване и водопоглъщане — вход в мм и грамове, изход в проценти.
+
+## Разчистване и довършване ✅ (v1.9 → v1.11)
+
+Списъкът А. Три от петте бяха решения, не строеж.
+
+**v1.9.0** — три премахвания.
+- *Складът:* приспадането при тест махнато. Вадеше при създаване, не връщаше при
+  триене, не преизчисляваше при редакция, нямаше история. Ръчна наличност е
+  по-честна от тиха грешна. Ledger остава истинският отговор, но е модул, не
+  поправка. Полето „Партида глазура" също отпадна — съществуваше само за
+  приспадането и стойността му никога не се записваше.
+- *Етапът:* стрелките на индикатора махнати. Открит е втори писач — менюто в
+  модала пишеше `p.stage` директно и се разминаваше с Процеса. Правилото:
+  Процесът владее етапа при налични stage стъпки, менюто — иначе.
+- *Хранилището:* миграцията от v1.5.0 остави копие в localStorage, замразено в
+  деня на миграцията. Не се четеше, но при провал на IndexedDB щеше да бъде
+  сервирано като текущо. Изтрито след проверка, че IDB държи данните. Флаг
+  `atelie_idb_active` позволява честен отказ вместо тиха лъжа.
+
+**v1.10.0 Версии на рецептите.**
+- *Проблем:* смяна на състава прави старите тестове подвеждащи — точно
+  проследимостта, заради която приложението съществува.
+- *Решение:* версията е отделна рецепта с родословие, не вложена структура.
+  Тестът сочи към `recipeId`, всяка версия има свой `id` → тестовият модел не се
+  пипа изобщо.
+- *Решение:* пазач при запис. Гръмва само когато съставът се е сменил И има
+  свързани тестове.
+- Без статуси като Glazy — за един човек е церемония.
+
+**v1.11.0 Изпичания.**
+- *Разграничение:* профилът е програмата (шаблон, многократен); изпичането е
+  събитието (веднъж, с тези парчета).
+- *Решение:* изпичането не пази списък с парчета. Списъкът се извежда от
+  `event.data.firingRunId`. Оттам идват даром: присъединяването е едно поле,
+  обратната посока не съществува, триенето откача вместо да каскадира.
+- *Решение:* обвиването (голо/фолио/сагар) е по парче, не по изпичане — голо и
+  обвито излизат от един трап неузнаваеми. Избор, не наблюдение → поле, не бележка.
+- *Решение:* позицията в трапа остава бележка на събитието — наблюдение, което
+  никой екран не сравнява.
+- *Решение:* добавките са материал от склада (`mat:<id>`) или свободен текст в
+  един списък — същата форма като материалите на декорациите.
+- *Решение:* quick-final прави самостоятелно събитие, не изпичане. Двайсет
+  ретроспективни изделия иначе биха дали двайсет изпичания с по едно парче.
+
+---
+
+# ЗА СЛЕДВАЩ DEVELOPER
+
+Пълен модел на данните и описание на модулите: [`FUNCTIONAL_SPEC.md`](FUNCTIONAL_SPEC.md)
+
+- `index.html`, ~9700 реда vanilla JS + HTML + inline CSS, плюс ES модули:
+  `app.js` (вход и мост), `core/`, `calc/`, `domain/`; наръчниците в `seed/guides.json`
+- **Storage: IndexedDB** под `atelie_idb` — всеки запис отделен ключ `rec:<колекция>:<id>`,
+  плюс `rec:meta` (ред, миграции, `schema`); библиотеката под `atelie_userlib`
+- DB: `{pieces, recipes, materials, tests, firingProfiles, firingRuns, series, _migrations}`
+- **Тестове:** `sh tests/check.sh` (Node 20+, Playwright с Chromium, jsdom за
+  геометрията). Реален архив за проверка — в `tests/fixtures/private/` (не се качва)
+- Service worker `sw.js`. Bump `CACHE_NAME` при всеки deploy.
+- Deploy: GitHub Pages от https://tskovacheva.github.io/atelie-app/
+
+### Storage layer
+
+Sync wrapper над async store: `bootStorage()` пълни `_storageCache` от IndexedDB
+преди `load()`; `safeLoadJSON` / `safeSaveJSON` четат и пишат кеша синхронно,
+писането отива async към IDB.
+
+### Референции между entity-та
+
+Префиксирани стрингове, резолвени от `_resolveMaterialRef(ref)`: `mat:<id>`,
+`rec:<id>`, fallback raw ID за legacy.
+
+### Ключови helpers
+
+**Piece events:** `ensurePieceEvents`, `recomputePieceStage`, `_hasStageEvents`,
+`getTimelineEvents`, `synthesizeLegacyEvents`, `getLatestPhoto`, `normalizeStageValue`
+
+**Суровина:** `openRawEventMo`, `saveRawEvent`, `deleteRawEvent`,
+`_renderRawSection`, `_renderRawTimeline`, `_rawEventIcon/Label/Sub`
+
+**Маса:** `openMassMo`, `saveMass`, `_massContains` (цикъл guard),
+`_populateMassCompPicker`, `_massSummary`, `_renderMassSection`, `openMassFromRaw`
+
+**Тест:** `testKind`, `onTestKindChange`, `_calcShrink`, `_calcPoro`,
+`_shrinkPcts`, `_poroPct`, `_populateTestBodyPicker`
+
+**Версии на рецепти:** `_recLineage`, `_recVersion`, `_recVersionsOf`,
+`_recIsLatest`, `_recDisplayName`, `_ingredientsEqual`, `_makeRecVersion`,
+`_renderRecVersions`, `newRecipeVersion`
+
+**Изпичания:** `switchFP`, `openRunMo`, `saveRun`, `deleteRun`, `renderFiringRuns`,
+`openRunDet`, `_runPieces`, `_runTests`, `_runLabel`, `_runIsAlt`,
+`onEvFiringRunChange`, `_evFiringRun`, `_evFiringMethod`, `_evFiringTemp`
+
+### Минимални patch принципи
+
+- Inspect before modify
+- Refactor only behind the golden tests
+- New form field → add it to `_EDIT_OWNS` (core/merge.js), or it can't be cleared
+- New module or `seed/*.json` → add it to `PRECACHE_URLS` in `sw.js`
+- Safe guards — null checks, `|| ''` fallbacks
+- Test със стари данни преди deploy
+- Bump на `APP_VERSION` + `CACHE_NAME` задължителен
+- **DOM reference check** — всеки `getElementById` трябва да има съответен `id` в
+  HTML-а. Синтактичната проверка не хваща липсващ елемент: това е валиден код,
+  който гърми чак при изпълнение. Точно този клас грешка причини v1.6.0 бъга, при
+  който material modal-ът не се отваряше изобщо.
+
+---
+
+# ИСТОРИЯ НА РЕЛИЙЗИТЕ
+
+## v1.53.0 (ноември 2026) — Наличност в калкулатора
+За въведена партида всяка съставка казва дали материалът стига; празното количество не е
+нула; най-голямата партида — само когато всичко е известно. Само чете — изразходването
+е отделно, бъдещо действие.
+
+## v1.52.0 (ноември 2026) — Внос и износ на рецепти
+YAML от Glazy и файлове на Глина, с преглед преди запис; материал се свързва сам само
+при точно или запомнено име, сродните чакат избор; добавките са над основата; износ в
+JSON и YAML без загуба. Наличностите не се пипат.
+
+## v1.51.0 (ноември 2026) — Двуезичен интерфейс, етап 4
+Библиотека, помощ, калкулаторите, черновите, обновяването и предупрежденията — целият
+интерфейс е на два езика. Наръчниците и текстовете на скалата остават на български.
+
+## v1.50.0 (ноември 2026) — Двуезичен интерфейс, етап 3
+Материали, рецепти, тестове и известията; `tvd()` за стойностите, пазени като текст на опция.
+
+## v1.49.0 (ноември 2026) — Двуезичен интерфейс, етап 2
+Изпичания, пещи, профили, план; `txn()` за съобщенията със стойности; корекции
+„Separate units“ и „Bisque-fired“.
+
+## v1.48.1 (ноември 2026) — Огнена скала: общо и зависещо от масата
+Етапите в три групи; встъкляването — ориентир, не „минато“; източниците — точно.
+
+## v1.48.0 (ноември 2026) — Двуезичен интерфейс, етап 1
+Превключвател в Библиотеката; английски за навигацията, началото, изделията и сериите,
+формуляра и стъпките. `tx()` с българския текст като ключ; `tv()` за вградените
+стойности, пазени като текст; проверка Е7 в `tests/i18n.test.js`.
+
+## v1.47.1 (ноември 2026) — Огнена скала: четим изглед
+Пълната скала е ред на етап върху обща ос, без превъртане встрани; по-големи ленти.
+
+## v1.47.0 (ноември 2026) — Бързо въвеждане на изделия
+Два режима в същия формуляр („Започвам ново“ / „Вече изработено“), бърз избор на глина,
+серии с брой, „Запази и добави още“, „Подробно въвеждане“; етап към минала дата —
+датирана стъпка, без измислени изпичания. Без промяна на схемата.
+
+## v1.46.3 (ноември 2026) — Проверка по стартираната програма
+Пояснението „по планирания профил“ при всяка различна потвърдена програма; отделна
+проверка по снимката ѝ; „Сегменти“ и при „Същата като планираната“.
+
+## v1.46.2 (ноември 2026) — Програма и съвместимост над разделите
+В детайла на изпичането блок над „Подготовка / Зареждане / Резултати“ при всички
+състояния; преглед на профила и подробностите от `_rnCompat()`; потвърдена стартирана
+програма `ranProgram` (снимка), отделно от планирания профил и отчетения пик.
+
+## v1.46.1 (ноември 2026) — Охлаждане в съвместимостта
+`_fireReqChecks`: границите на `coolMax` се нормализират преди пресичането (посоката
+на сегмента остава низходяща); 600 → 500 при 100 °C/h и граница 50 вече е конфликт.
+
+## v1.46.0 (ноември 2026) — Огнена скала и съвместимост на зареждането
+По спецификацията „Глина — Огнена скала“. `domain/fire.js`: скалата (`FIRE_SCALE`),
+етапите, седемте правила, варовитост на маса (смес с варовит компонент е „възможно“,
+с дела му), четене на температурите, `_loadCompat`, проверки по профила, вероятен етап
+на теста, дати за пукане на вар. Нищо от изчисленото не се записва; нищо не блокира.
+
+## v1.45.1 (ноември 2026) — Калкулатор: частично известно свиване
+`_toWetFactor` връщаше ×1 за сухи размери, когато е известно само изпичането, и
+точен множител за изпечени при една съставка. Сега липсващата съставка е 4–8 %
+(бисквит — до 2 % след сушенето), резултатът е диапазон с „ориентировъчно“; при
+една съставка началният размер не се прилага в изделието.
+
+## v1.45.0 (ноември 2026) — Фаза 3: калкулатор за глина и свиване
+`calc/clay.js`: цилиндър, купа, чиния, правоъгълен съд, плоско; стена и дъно —
+въведени или граници; плътност 1,8–2,0 или въведена; загуби 5–20 %; резултатът е
+диапазон с допусканията; сложна форма — ръчно количество. Свиване: сушене спрямо
+пластичното, изпичане спрямо сухото — множат се, не се събират; от тест на маса
+(с дата и °C, без смесване на температури) или ръчно (ориентировъчно). Изделие и
+серия: предложение от полетата им; прогнозата (`clayEst`) и началните размери —
+само с бутон; реалното количество остава в „Начално количество глина“.
+
+## v1.44.0 (ноември 2026) — Разделяне на отделена група
+Докосване избира точно номера и при група („Цялата група“ — с един бутон). „Раздели
+групата“: една бройка, няколко (поотделно или заедно) или цялата на отделни. Новите
+записи наследяват полетата, снимките и стъпките (като копия), записите в плановете
+за тези номера минават към тях с резултата си. Етап, „Счупено“ и архив над част от
+група разделят като част от действието. Отказ с причина, ако нещо не е по номера.
+
+## v1.43.0 (ноември 2026) — Физическите бройки в серията
+Номерата /1, /2… са избираеми (докосване или „1-15, 20“). Над избраните: „Отдели“
+(точните номера — група или поотделно; бързото по брой остава), „Промени етап“,
+„Счупено“, „Архивирай“ / „Върни от архива“, „Добави към изпичане“ — с преглед.
+Неотделена бройка се отделя само когато с нея се случи нещо; нищо не се преномерира.
+Планирано изпичане — предлага се изваждане от плана; заредено или приключило не се пипа.
+
+## v1.42.0 (ноември 2026) — Одит U8, U14, U15
+Архив за материали, рецепти, тестове, изпичания и профили — както при изделията;
+окончателно изтриване само от архива, със зависимостите. Един избор на глина/маса в
+изделия и тестове; старите имена остават, свързването с материал е само по избор.
+Черновите на формулярите оцеляват след презареждане — „Възстанови“ / „Изхвърли“.
+
+## v1.41.0 (ноември 2026) — Одит U3, U5, U7, U9, U10
+„Моето ателие“ е начален екран и първи бутон в лентата; „Библиотека“ (наръчници,
+архив и бекъп) се отваря от него. Филтрите — един модел: „Филтри (n)“, активни
+чипове, „Изчисти“; на телефон лист („назад“ го затваря), на широк екран карта над
+списъка. Снимките на тестовете — до 1600 px (останалите 800 px; старите не се
+пипат; прекомпресията не ги връща на 800). Формулярът за изпичане — три раздела,
+за профил — два; стъпката „изпичане“ и масата — със секции. На широк екран
+формулярите са в средата, до 720 px.
+
+## v1.40.4 (ноември 2026) — Задна дата; одит U4, U11–U13, U16
+Добавяне на изделие към по-старо изпичане: стъпката е на датата на изпичането; етап,
+зададен без стъпка и по-напред (или изход), първо се записва като стъпка, за да не се
+върне назад; без втора стъпка към същото изпичане. Маса и профил като връзки; профилът
+показва изпичанията си; кодове при еднакви имена; тест в изпичане взема празните си
+полета от него; от маса — „+ Тест на маса“ и „+ Изделие“, от тест — „Нова версия на
+рецептата“; потвърждение при изваждане на тест и при празно изпичане.
+
+## v1.40.3 (ноември 2026) — Алтернативни изпичания (одит A1–A4)
+Резултат по бройка във всяко изпичане, и без план на пещта: резултат, бележка за
+цветове и следи, обвиване и добавки/съдържание на сагара, до 4 снимки. При трап,
+варел, раку, обвара, сагар — без нива и рафтове; „Подготовка по бройки“. Полетата на
+формуляра според метода (редукция при раку, разтвор при обвара, съдържание при сагар;
+без задръжка и конуси). Изпичането е общият запис; изделието показва резултата си и
+води към него; нова стъпка „изпичане“ предлага „+ Ново изпичане“. Старите изпичания
+показват закачените изделия като бройки със старите им бележки и ги записват в плана
+чак при първото въвеждане.
+
+## v1.40.2 (ноември 2026) — Одит Г4–Г7
+„Счупено“ за бройка от серия предлага да я отдели като парче със стъпка „Счупено“ —
+не влиза в следващото изпичане. „Приключено“ и „Прекъснато“ питат за датата (по
+подразбиране — датата на изпичането, не днешната). Изтриването на материал брои и
+тестовете. Махнат е дублираният прозорец „Добави изделия“.
+
+## v1.40.1 (ноември 2026) — Навигация (одит Г1–Г3)
+Един модел за всички преходи: свързаният запис се отваря над текущия, видим е само
+горният детайл (на лаптоп — в десния панел до списъка), „Назад“ връща стъпка по стъпка
+със същия запис. Историята на браузъра следва стека и при „затвори и отвори“ в една
+стъпка. Формулярите се отварят над детайла и след запазване връщат в него. „+ Тест“ и
+„+ Изделие“ от рецепта избират точната версия.
+
+## v1.40.0 (ноември 2026) — Тестове
+По прототипа `tests-v0.html`: галерия (по подразбиране) и списък, филтри, детайл с
+голяма снимка и резултат, връзка към точната версия на рецептата, „Сравни“ 2–4 теста
+(само изглед; на телефон по два), формуляр в четири раздела. Празно поле е „не е
+отбелязано“, не „Няма“. Свиване и водопоглъщане — само от `calc/shrink.js`. Нова икона
+за тест на маса.
+
+## v1.39.0 (октомври 2026) — Материали
+По прототипа `materials-v0.html`: групи, Списък / Карти / Наличности, филтри, две
+колони на лаптоп, детайл с „В рецепти“, „Промени количеството“, формуляр в четири
+раздела. „Безопасна за храна“: Да / Не / Не е посочено. Химичният анализ — 0–100.
+
+## v1.38.0 (октомври 2026) — Рецепти
+По прототипа `recipes-v0.html`: каталог (карти/списък, филтри, две колони на
+лаптоп), детайл с постоянно видим състав и партида, „Приготви“, формуляр в три
+раздела. Непълен ред в състава вече дава грешка. Без промяна в данните.
+
+## v1.37.0 (октомври 2026) — Изпичания
+По прототипа `firing-v0.html`: регистър (две колони на лаптоп), изпичането в три
+раздела, „Какво остава“, „До пещта“. Снимката в детайла на изделие се вижда цялата.
+Без промяна в данните и в процесната логика.
+
+## v1.36.0 (октомври 2026) — Каталог, снимка, Моето ателие
+Каталогът по прототипа `list-v0.html`; снимката в детайла с таван (две колони на
+широко) и голям преглед; „Моето ателие“ като отделен екран. Без промяна в данните.
+
+## v1.35.2 (октомври 2026) — Известието за нова версия
+Поправка: известието беше обикновеният toast с `pointer-events:none` — докосването
+не стигаше до него и то оставаше до следващото отваряне. Сега е лента с „Обнови“ и
+„По-късно“; при отворен формуляр с незапазени промени пита, преди да презареди.
+
+## v1.35.1 (октомври 2026) — Изделие: преглед и редакция
+По прототипа `piece-v0.html` (вариант А за прегледа, Б за формуляра). Само интерфейс.
+- Преглед на изделие и серия: код, вид, категории, етап с лента, размери, глина,
+  техника/бройки; „Последно“ с пряк път към обичайната следваща стъпка (етапът се
+  слага през формуляра на стъпката; изпичане — в план, като „Планирано“); секции
+  Процес, Размери, Материали, Изпичания (и плановете), Серия/Бройки, Тестове,
+  Бележки с резюме в заглавието.
+- Формуляр: раздели Основни данни / Материали / Размери / Допълнително (телефон
+  2 × 2), „Запази“ и „Откажи“ винаги долу; разделите само показват и скриват.
+
+## v1.35.0 (октомври 2026) — След
+- Състояние на изпичането: Планирано → Заредено → Приключено / Прекъснато; „Върни в
+  план“ и „Отвори отново“. Ново изпичане за днес или по-късно — Планирано; за минала
+  дата и всички стари — както досега (приключено).
+- „Заредено — потвърди“: стъпка „изпичане“ за всяко изделие от плана, за серия — с
+  номерата на бройките (стига само до отделени парчета със същите номера). Етапът
+  се мести само при „Приключено“, с датата на края; „Прекъснато“ не го мести.
+- В планирано или заредено изпичане „+ Добави“ слага изделията в плана.
+- Резултат и бележка по бройка, конус и как е паднал по ниво, снимки „след“.
+  „Счупено“ предлага изхода „Счупено“ на изделието (с потвърждение).
+- Дневник на промените след „Заредено“ (ниво, резултат, добавени, извадени) с
+  причина по желание.
+- „Повтори изпичането“: пещ, нива, плочи, подпори, места и изделия — без резултати,
+  конуси, бележки, снимки и дневник.
+
+## v1.34.2 (октомври 2026) — Преглед по нива
+Разделите Ниво 1 / Ниво 2 / Ниво 3 (с брой и ✓ / ⚠ / ✗) показват по едно ниво: схема
+отгоре, изделия с номерата от схемата, височини и предупреждения. В „Нива“ схемата е
+само за поглед (пунктир — възможно място). Изгледът отстрани остава за цялата пещ.
+
+„Предложи нива“ избира реда на нивата така: първо да се събира, после без подпори
+една върху друга, после повече място до капака. В предложението ↑ / ↓ разменят нивата
+и височините се смятат наново.
+
+## v1.34.1 (октомври 2026) — Поправки след теста от 30.10
+- Размерите, въведени след добавянето в плана, се откриват; „Вземи размерите от
+  изделията“ ги прехвърля, без да пипа ръчно сменените. Бройка от серия без свой
+  размер взима размера на серията.
+- „Предложи нива“ не включва изделия без височина или основа — изрежда ги с причина;
+  без никакви размери казва „Няма достатъчно данни“.
+- Изделията от плана се виждат в „Изделия в това изпичане“ като „Планирано“ (етапът
+  и стъпките — както досега).
+- Стандартни категории: Съдове за храна, Музикални инструменти, Декорация,
+  Скулптура, Бижута, Тестови образци, Друго; старите стойности остават.
+- По-едър текст в плана; планът е отделна карта с голям бутон в изпичането.
+
+## v1.34.0 (октомври 2026) — План на пещта: „Схема“ и „Точно“
+Третата стъпка от модула за пещта (план от 29.10).
+
+- **Степен:** превключвател Нива / Схема / Точно за цялото изпичане, с ред какво
+  се записва. Ново изпичане започва от „Нива“.
+- **Схема:** изглед отгоре на всяко ниво — камера, плочи, подпори, изделия.
+  Изделие без място получава предложено (пунктир); „Запиши предложените места“.
+  Избор на изделие (в списъка или на схемата) и докосване на място; влачене.
+  Няколко плочи на ниво: „Цяла плоча“, „Две половинки“, „+ плоча“; подпорите
+  следват плочите отгоре.
+- **Точно:** x, y и завъртане за изделия, плочи и подпори; стрелки със стъпка;
+  „+ подпора“, „Подпори по подразбиране“.
+- **Проверка по място:** фугата между половинки — предупреждение; външният ръб —
+  грешка с колко; застъпване, отстояние, подпора. Изделие без място — само по
+  височина. Нивото казва „✓ Плоча: всички N имат място“ или кое има проблем.
+
+**Данни.** Незадължителни `config.mode` (`scheme` / `exact`), `members[].x/y/rot`,
+`levels[].shelves[]` с място и завъртане, `levels[].posts[]`. Без миграция.
+
+**Тествано.** `tests/scheme.test.js` (24): превключвателят, предложените места,
+половинки (фуга / ръб), докосване и влачене с указател, без място — само височина,
+Точно, обратно към Нива, отваряне наново, връщане към v1.33.2 и обратно.
+
+## v1.33.2 (октомври 2026) — По-ясна навигация
+Само интерфейс; данните и логиката на изпичанията не се променят.
+
+- **Изпичане:** детайлът е в три части — Подготовка (параметри, пещ, профил),
+  Зареждане (план на пещта като ясен бутон, изделия), Резултати (снимки, тестове,
+  бележки). Под разделите Пещи / Изпичания / Профили — по един ред какво е всяко.
+- **Изделие:** формулярът е в четири групи — Основни данни (име, вид изделие,
+  категории, брой, етап, дата), Материали и техника, Размери и физически
+  характеристики (видими — ползват се в плана на пещта), Допълнителна информация
+  (сгъната; отваря се сама при бележки). „Тип“ е „Вид изделие“, с подсказка за
+  разликата от категориите.
+
+## v1.33.1 (октомври 2026) — Обновяване и кешът на браузъра
+Поправка: след качване на v1.33.0 в main всяко отваряне казваше „новата версия не
+се зареди изцяло“. GitHub Pages позволява на браузъра да пази файловете 10 минути;
+v1.32.1 чистеше само кеша на приложението, затова новият index.html тръгваше със
+стария app.js. Данните не са засегнати.
+
+- Service worker-ът пита сървъра всеки път за страницата и кода (`no-cache`; при
+  непроменен файл — кратък отговор 304).
+- При разминаване страницата, app.js и модулите се теглят наново с `reload`
+  (подменя и копието на браузъра), чака се новият service worker и тогава
+  презареждане; второ след 4 с, ако първото е прекъснато.
+
+**Тествано.** `tests/update.test.js` със сървър като GitHub Pages (`max-age=600`):
+обновяване от v1.33.0 — изделията се виждат, без съобщение.
+
+## v1.33.0 (октомври 2026) — План на пещта: „Нива“
+Втората стъпка от модула за пещта (план от 29.10): степента „Нива“. Без
+координати; изделията и етапите им не се пипат — планът живее в изпичането.
+
+- **„План на пещта“** — нов раздел в детайла на изпичането (кратко: пещ, нива,
+  изделия, проблеми) и отделен екран. Избор на пещ от регистъра; отстоянието идва
+  от типа изпичане (бисквит / глазура / друго), просветът — от пещта. Подпори на
+  дъното (p₀).
+- **Изделия в плана:** избор от изделията и сериите (отгоре — тези на етап за
+  изпичането и закачените към него); бройките от серия влизат поотделно („/3“).
+  Размерите се вземат от изделието (v1.31.1, иначе от текста) и се пазят в плана;
+  сменят се там. **Подложка, см** — по желание, добавя се към височината.
+- **Нива:** плоча, подпори над нивото (налични височини и сборове от тях), изделия;
+  мерките на всяко ниво („плочата е на 6,6 + 1,6 = 8,2 см · място 8 см · най-високо
+  6 + 1 см“); проверка по височина и **по място на плочата** („✓ Плоча: всички 5
+  имат място“ / „✗ Не се събират: …“), без процент и без записани координати.
+- **„Предложи нива“:** блок „Допускания“ (плоча, дебелина, подпори на дъното,
+  отстояние, просвет, налични подпори, височина), резултат по нива, всеки проблем и
+  всяко неразположено изделие с причина, и при недостиг — един изход (по-малко
+  отстояние или изделието, което пречи). „Приеми нивата“ ги записва.
+- **Изглед отстрани** и сборът до капака.
+- **Подпора от плана:** „Имам подпора X см“ (и брой) — второ докосване потвърждава
+  добавянето ѝ към оборудването на пещта.
+- **Снимки на нивата:** Blob в отделна база `atelie_photos` (не в записите и не в
+  `atelie_idb`, за да не се вдига версията ѝ). Архивът получава раздел
+  `planPhotos`; внасянето добавя липсващите.
+- `domain/kilnplan.js` — геометрията от прототипа като модул (`window.KilnPlan`),
+  с подложката в проверките.
+
+**Данни.** Незадължителни `firingRun.kilnId`, `config {floorH, gap, clear,
+levels[]}`, `plan.members[]` (`ref` към изделие/бройка, ниво, размери към момента).
+Без миграция и без нова схема (6): по-стара версия пази полетата при редакция
+(сливане, v1.29.0). `state` (план / заредено / приключено) идва с „След“ във
+v1.35.0, където има значение за етапа.
+
+**Тествано.** `tests/kilnplan.test.js` (20) и всички 74 теста на прототипа срещу
+модула: таблицата на височините от 29.10, подложката, мястото на плочата; с
+реалния експорт от 28.10 (само локално): при 4 см „липсват 2,8 см“, при 0 — 2 нива,
+всичко ✓. `tests/plan.test.js` (40): от празно до план, предложение с допускания и
+изход, подпора с потвърждение, мерките, снимка извън записите и обратно от архив,
+редакцията на изпичането пази плана, връщане към v1.32.2 и обратно, нищо по
+изделията не се мени; реалните архиви — всички изделия в един план без грешки.
+
+## v1.32.2 (октомври 2026) — Пещи: потвърден запис
+Поправка във v1.32.0: „Запази“ и „Изтрий“ на пещ затваряха формуляра и казваха
+„Пещта е добавена“ / „Обновено“ / „Изтрито“, без да проверят дали записът е минал.
+
+- Записът се чака (IndexedDB: до потвърдена транзакция). Списъкът в паметта се
+  сменя чак след успех.
+- При неуспех формулярът остава отворен, вътре има ясна грешка („…не мина — нищо не
+  е променено“), нищо не е променено. Същото при хранилище в счупено състояние.
+- Двойно натискане по време на запис не прави втори запис.
+
+**Тествано.** `tests/kilns.test.js` (27): неуспешен запис, добавяне и изтриване
+(формулярът остава, грешка, нищо не е сменено, и след презареждане); счупено
+хранилище; изтриването се пази след презареждане.
+
+## v1.32.1 (октомври 2026) — Безопасно обновяване
+Поправка на грешка от v1.31.1: при първото отваряне след обновяване service worker-ът
+даваше новия `index.html` със стария `app.js` от кеша. Списъкът с изделия гърмеше и
+приложението казваше „Хранилището не се отваря“, макар данните да бяха цели (второ
+отваряне оправяше всичко).
+
+- **Кодът (`.js`, `.json`, манифест) идва първо от мрежата**, кешът е само за офлайн —
+  както беше досега за страницата. Новата страница вече не получава стари модули.
+- **Проверка на версията на модулите.** `app.js` казва коя версия е; ако не съвпада
+  със страницата, приложението изчиства кеша и се презарежда веднъж. Ако пак не
+  съвпада (напр. офлайн със стар кеш) — ясно съобщение „не се зареди изцяло“ и
+  нищо не се записва.
+- **Грешка в кода при стартиране** вече не се представя като проблем с хранилището —
+  съобщението казва, че данните не са пипани, и съветва затваряне и отваряне.
+
+**Тествано.** `tests/update.test.js` (8): истинско обновяване от v1.31.1 с неговия
+service worker — изделието се вижда, без съобщения и грешки; остарял `app.js` —
+едно презареждане, ясно съобщение, нищо записано; `tests/versions.test.js` следи
+версията в `app.js`.
+
+## v1.32.0 (октомври 2026) — Пещи
+Първата стъпка от модула за пещта (план от 29.10): само регистърът. Изпичанията не
+се пипат; подреждането идва във v1.33.0.
+
+- **Раздел „Пещи“** — първи на екрана „Изпичания“ (екранът продължава да се
+  отваря на изпичанията). Пещ: камера (кръгла или правоъгълна, вътрешни размери),
+  обем, мощност, макс. температура, ориентир „12 ч“, „размерите са проверени“.
+- **Готов модел** Kittec CB 80 Double — Ø51 × 38 см, 79 л, 3,6 kW, плоча Ø47,
+  подпори 5/10/15 см. Всичко се редактира — всеки въвежда своята пещ.
+- **Оборудване:** видове плочи (кръгла, половинка, правоъгълна; размер, дебелина,
+  брой), налични подпори (всяка височина, добавят се и махат), дебелина на подпора;
+  отстояния по подразбиране за бисквит, глазура и друго, и под горната плоча.
+- **Предупреждения, не забрани:** плоча по-голяма от камерата, липсваща височина
+  или дебелина.
+- **Съхранение:** отделен ключ `atelie_kilns` (като библиотеката), не колекция
+  `rec:` — по-стара версия не го познава и не го трие при връщане назад. Архивът
+  има раздел `kilns`; схемата е 6. По-стар архив без пещи оставя текущите.
+- **Връщане назад, занапред:** записът вече пипа само колекциите, които версията
+  познава — ключ от нова колекция на по-нова версия не се трие.
+- `domain/kiln.js` — чистите функции.
+
+**Тествано.** `tests/kilns.test.js` (20): готов модел, редакция, плочи, подпори,
+отстояния, сливане, съхранение, архив и внасяне, връщане към v1.31.1 и обратно,
+архив от v1.32.0 във v1.31.1.
+
+## v1.31.1 (октомври 2026) — Основни характеристики
+Незадължителни, структурирани полета на изделие и серия. Без миграция: старите
+записи не се пипат, свободното „Размери“ и „Тегло“ остават.
+
+- **Размери, см:** височина, ширина/Ø, дълбочина (без дълбочина основата е
+  кръгла), етап при измерването, „приблизително“. „Попълни от текста“ взема
+  числата от свободното описание — само при натискане, нищо не се гадае.
+- **Начално количество глина, г** — отделно от текущото тегло; за серия е на една
+  бройка и се пренася при отделяне.
+- **Стена и дъно, мм.**
+- **Категории** — повече от една: стандартни, вече ползвани и свои. „Тип“ остава
+  свободен текст. Търсенето намира по категория и по код.
+- Карта и детайл показват структурирания размер; отделената част и превърнатото в
+  серия изделие ги запазват.
+- Прототипът за пещта чете размера от тези полета (иначе от текста), пропуска
+  архивираните и пази номерата на бройките.
+- `domain/traits.js` — чистите функции. Пълната история на измерванията и
+  калкулаторът — в следващите версии.
+
+**Тествано.** `tests/traits.test.js` (17): формуляр → запис → детайл → търсене →
+повторно отваряне → изчистване, серия и отделяне, изделие → серия, редакция във
+v1.31.0 и обратно. Екраните — като v1.31.0, освен новите полета във формуляра.
+
+## v1.31.0 (октомври 2026) — Идентичност: кодове, бройки, серии
+Първата истинска миграция (схема 5). По FS 2.0 §3.3 и решенията от 28–29.10.
+
+**Кодове.** Всяко изделие и серия има код `GL-<година>-<номер>` (`GL-2026-014`),
+даден по реда на създаване; номерът не се преизползва. Отделените бройки нямат
+собствен код — показват кода на серията и номерата си (`GL-2026-014/3`,
+`…/1–4`). Кодът е в картата и в детайла.
+
+**Номера на бройките.** Всяка физическа бройка в серия има номер. Серията пази
+следващия (`nextUnitNo`) и отписаните (`retiredUnits`); отделеното изделие —
+своите (`units`). Отделянето взима най-ниските свободни. Намаляване на броя
+отписва най-високите неотделени; увеличението дава нови след последния — номер
+никога не се дава втори път.
+
+**Изделие → серия.** При редакция на самостоятелно изделие има поле „Брой“; над 1
+превръща записа в серия със същия id и код. Стъпките, снимките и изпичанията стават
+общи за всички бройки (случаят „забравих да отбележа серия“).
+
+**„Извади от серията“ пази историята.** Общите стъпки до момента се копират в
+изделието (`copiedFrom`), то запазва кода и номерата си (`fromSeries`), серията
+намалява с толкова бройки (FS 2.0 П3). Окончателното триене на серия прави същото
+за всички отделени.
+
+**Архив вместо триене.** „Изтрий“ е „Архивирай“: записът се скрива от списъка, но
+остава в изпичанията, серията и добива. Филтър „Архив“ показва архивираните; там
+има „Върни“ и „Изтрий завинаги“. Номерата на окончателно изтрито се отписват.
+
+**Миграция `2026-10-identity`.** Кодове по датата на създаване, номера по реда на
+отделяне; брой и етап не се пипат; копие на пипнатите записи. Записи, създадени от
+v1.30.0 след връщане назад, и внесени стари архиви се попълват при отваряне по
+същото правило. `domain/units.js` — чистите функции.
+
+**Тествано.** `tests/identity.test.js` (34): миграция, кодове, отделяне, брой,
+изваждане, превръщане, архив, повторно отваряне, връщане към v1.30.0 и обратно,
+внасяне на стар архив. Еталоните (вкл. реалните архиви от 27.10 и 29.10) — само
+новите полета и кодовете в картите. Екраните — като v1.30.0, освен кодовете, полето
+„Брой“ при изделие и „Архивирай“.
+
+## v1.30.0 (октомври 2026) — Основата: наръчници, схема, модули
+Без видима промяна. Втората и последна стъпка от фаза 1а (ЧАСТ Ж).
+
+**Наръчниците извън `index.html`.** 12-те вградени статии бяха един ред от ~500 KB —
+половината файл. Вече са в `seed/guides.json` (268 KB в UTF-8) и се четат при старт.
+`index.html` пада от 1,06 MB на 0,56 MB. Service worker-ът ги кешира, затова работят
+офлайн. Значат нещо само при нова инсталация и при връщане на липсващ наръчник. Не
+се ли прочете файлът (първо отваряне без мрежа), библиотеката не се пипа и нищо
+празно не се записва.
+
+**Версия на схемата и миграции.** `SCHEMA_VERSION` (4) се пише в `rec:meta` и в
+архива. Новите миграции се регистрират в `_SCHEMA_MIGRATIONS`: само добавят, пазят
+копие точно на пипнатите записи (`snap:…`, 7 дни), прилагат се веднъж, при грешка по
+средата връщат записите от копието и спират. `_restoreMigrationSnapshot(id)` връща
+ръчно. Списъкът е празен — основата е готова преди първата миграция, която ще ѝ
+трябва (пещта).
+
+**Първи ES модули.** `app.js` е входната точка; `core/merge.js` (сливането от
+v1.29.0), `calc/shrink.js` (свиване, водопоглъщане), `domain/profile.js` (сегменти,
+пик, времетраене). Класическият код ги вика през мост на `window`. Стартът чака
+модулите; ако някой липсва (недокачен файл), приложението казва това и не пише нищо.
+
+**`validate.js`** има пети слой — модулите съществуват, синтаксисът им е валиден,
+не са дефинирани втори път в `index.html`, и са в `PRECACHE_URLS` на `sw.js`.
+Показано е, че пада във всеки от петте случая.
+
+**Тествано.** `sh tests/check.sh`: 26 unit проверки на модулите; еталоните са
+еднакви с v1.28.0; 50 проверки на редакцията; 20 на миграциите и на връщането към
+v1.28.0 и v1.29.0 и обратно; празна редакция на всеки запис от реален архив; 25
+екрана със същия текст като v1.29.0.
+
+## v1.29.0 (октомври 2026) — Редакцията пази записа
+Без видима промяна. Първа стъпка от фаза 1а (ЧАСТ Ж).
+
+**Проблемът.** Всяка функция за запис (`savePiece`, `saveRecipe`, `saveTest`,
+`saveMat`, `saveMass`, `saveFP`, `saveRun`, `saveEvent`, `saveRawEvent`) сглобяваше
+записа наново от полетата на формуляра и го слагаше на мястото на стария. Поле, което
+живее в записа, но формулярът не го показва, изчезваше при първата редакция. Така
+v1.24.1 губеше членството в серия. По същия начин щяха да се губят позицията в пещта
+(която ще живее в `event.data`) и кодът на изделието. Поправката е предпоставка за
+фаза 2.
+
+**Решението.** `_mergeEdit(стар, от формуляра, притежавани, вложени)` и `_EDIT_OWNS` —
+изричен списък на полетата, които всеки формуляр притежава. Притежаваните се вземат от
+формуляра, включително изчистването: притежавано поле, което формулярът не върне, се
+маха, точно както досега. Всичко останало от стария запис оцелява. Същото правило
+важи едно ниво навътре — `data` на стъпките, `body` на тестовете, `raw` и `chem` на
+материалите, `blend` на масите. Старите `ramp1…`/`holdMin` на профила са притежавани,
+затова редакцията продължава да ги пренася в `ramps`.
+
+**Тествано.** Нова тестова среда в `tests/` — реален Chromium (Playwright), реален
+IndexedDB:
+- еталонни архиви (представителен, стар формат, нова инсталация, личен архив) —
+  етапи, слети процеси, изпичания, добиви, версии, свиване, криви, вид на списъка;
+  еднакви с v1.28.0;
+- 50 проверки на редакцията за 13 вида записи: празна редакция не променя нищо,
+  непознато поле оцелява (и вложено), изчистено поле изчезва. Върху v1.28.0 падат 22;
+- празна редакция на всеки запис от реален архив — нито едно изгубено поле, нито в
+  старата, нито в новата версия: поправката е превантивна;
+- връщане към v1.28.0 върху данни, писани от v1.29.0, и обратно — еднакъв резултат;
+- 25 екрана, раздела и детайла дават същия текст като v1.28.0.
+
+## v1.28.0 (октомври 2026) — Всеки запис отделно
+Големият запис `atelie_v6` (~3 MB) е разделен на отделни ключове — един за всяко
+изделие, рецепта, материал, тест, профил, изпичане и серия, плюс `rec:meta` с реда
+и миграциите. Запазването пише само промененото, в една транзакция. Нечетим запис
+вече струва един запис, не цялата база: пропуска се, съобщава се, не се пипа.
+
+Пренасянето е при първото отваряне: запис → прочитане обратно → сравнение низ по
+низ → чак тогава маркер. При неуспех приложението остава на старата подредба без
+загуба. Старият запис стои 7 дни като резерва и се трие сам — освен ако има
+нечетим запис. Снимките остават вътре в записите (отделянето им е следваща стъпка).
+
+Тествано с jsdom + fake-indexeddb в 28 сценария: пренасяне, повторно отваряне,
+редакция (пише се само един ключ), изтриване, ред, нечетим запис, прекъснато и
+неуспешно пренасяне, изтриване на резервата, нова инсталация, подмяна на всичко.
+Шестте сценария от v1.27.1 минават без промяна.
+
+## v1.27.1 (октомври 2026) — Никога не презаписвай при съмнение
+Поправка след поредна загуба на данни на телефона. Причината беше и в кода: когато
+големият запис `atelie_v6` не се прочете, грешката изглеждаше като празна база и
+`load()` записваше стартовите данни върху истинските. Предупреждението мълчеше,
+защото проверката минаваше след записа.
+
+- Четенето различава „липсва“ от „не се чете“; нечетимото води до спиране, не до
+  празна база. Повреден запис се пази под отделен ключ, не се презаписва.
+- Проверката за срив е преди първия запис и гледа и всяка колекция поотделно.
+- При срив отпечатъкът и авто-архивът замръзват до импорт или изрично „отначало“.
+- Авто-архивът не презаписва сам файл с повече данни от приложението.
+- Записът в IndexedDB се брои за готов на `oncomplete`.
+- Надписът „Заето“ казва дали паметта е защитена от изчистване.
+
+Тествано с jsdom + fake-indexeddb в шест сценария, включително симулирана грешка
+„Failed to read large IndexedDB value“: v1.27.0 презаписва данните, v1.27.1 — не.
+
+## v1.27.0 (август 2026) — Надписите (Е6б)
+Без видима промяна. 647 места в разметката и кода вече четат от речника: 367
+текстови елемента, 210 `<option>`, 70 placeholder-а, 75 извиквания на `toast`.
+473 ключа общо — еднаквите надписи делят ключ.
+
+**82 от option-ите преизползват речниковия ключ** вместо да го дублират: щом
+`value="bisque"` и текстът съвпада с `purpose.bisque`, сочи се съществуващият ключ.
+Иначе речникът щеше да носи по два записа за едно и също нещо, което беше точно
+проблемът, който Е6а реши.
+
+`applyDict()` пипа само елементи с `data-t`, `data-tp` или `data-tt` — авторският
+текст и всичко, което JS рисува сам, остават непокътнати. `setLanguage()` събира
+на едно място трите неща, които трябва да вървят заедно: речникът, списъците и
+надписите.
+
+**Хванато от теста:** HTML entity-тата (`&nbsp;`, `&#10;`) влизаха в речника като
+текст, значи `applyDict()` щеше да изпише „&nbsp;" на екрана. Проверката сравнява
+всеки надпис в речника с текста в разметката и изисква нула разминавания — точно
+защото Е6 обещава нула видима промяна.
+
+**Собствена грешка, отбелязана:** при поправката на entity-тата регулярен израз
+събра целия речник в един ред и развали файла. Възстанових от предишната версия и
+пренаписах прохода атомарно — всички котви се проверяват преди първата промяна,
+файлът се пише веднъж накрая. Частично приложен проход върху 8300 реда е по-лош от
+никакъв.
+
+## v1.26.0 (август 2026) — Речникът (Е6а)
+Без видима промяна. Речниковите надписи бяха закътани на пет отделни места —
+`STAGES`, `OUTCOMES`, `_STAGE_LABELS`, `_FIRING_PURPOSE_LABELS`,
+`_FIRING_METHOD_LABELS`, `_DECORATION_LABELS`, `FP_TYPES` — всяко със собствено
+копие на българския текст. Сега има един `DICT` и `t(key)`; списъците и картите се
+строят от него чрез `buildVocabulary()`.
+
+**Намерена дупка:** атмосферата на изпичане беше речник **без резолвер** —
+надписите ѝ живееха само в `<option>` в разметката, значи не можеше да се покаже
+никъде другаде. Добавени са `_ATMOSPHERE_LABELS` и `atmosphereLabel()`.
+
+**Дефект, хванат от теста:** етапите и изходите пишат в една карта (`piece.stage` е
+едно поле), а попълването я чистеше преди всяко записване — вторият проход триеше
+първия. Изчистването и попълването са разделени.
+
+**Дефект в самите тестове:** новият `t()` на приложението засенчваше помощника
+`t()` в шест тестови файла — те минаваха с нула изхода, което изглеждаше като нула
+провала. Помощникът е преименуван на `chk()`. Тест, който мълчи, не е тест, който
+минава.
+
+## v1.25.0 (август 2026) — Е4 и Е5
+**Заключени наръчници.** Вградените статии стояха в същия масив като собствените
+бележки и бяха неразличими от тях: едно редактиране ги пренаписваше, едно триене
+ги махаше, и нито едното не се връщаше, защото `seedGuides()` зарежда само в
+празна библиотека. Разпознават се по `builtin_` в id-то, което seedGuides вече им
+дава — без ново поле и без миграция.
+
+Наръчникът носи катинар вместо бутони за промяна и предлага **Копирай**: копието е
+обикновена потребителска статия и оттам нататък е нейна. Защитата е и в `editLib`,
+`saveLib` и `delLib`, не само в скритите бутони.
+
+**Връщане на липсващи.** `restoreGuides()` добавя само отсъстващите наръчници и не
+пипа собствените статии. За да работи, излизането в `seedGuides()` се премести
+след дефиницията на масива — дотогава при непразна библиотека масивът изобщо не се
+създаваше. Бутонът ⟳ в Библиотека се показва само когато има какво да се върне.
+
+**За приложението и помощ.** Нов екран, достъпен от Настройки. Обяснява деветте
+неща, които не се виждат от интерфейса: какво е приложението, шестте етапа и
+четирите изхода, кой владее етапа и защо менюто се заключва, как работят сериите и
+отделянето, че изпичането е събитие а не свойство, катинарът в библиотеката, и
+защо архивът има значение. Авторът няма нужда от него; вторият потребител — да.
+
+## v1.24.2 (август 2026) — Снимката изяждаше екрана на лаптоп
+Намерено при ползване. `.det` е `position:fixed; inset:0`, тоест цялата ширина на
+прозореца, а `.det-hero` е `width:100%` с `aspect-ratio:4/3`. На телефон 380px това
+са 285px височина — нормално. На лаптоп 1400px стават **1050px**, по-високо от
+екрана, и всичко останало отиваше под сгъвката. Затова се виждаше само на лаптоп.
+
+Поправено само за широки екрани (`min-width:760px`); телефонът не е пипнат:
+детайлът се събира в колона от 660px, а кадърът минава на 16/9 с таван
+`min(38vh,300px)`. 1400px екран вече дава 300px снимка вместо 1050.
+
+Заодно: четири от седемте детайла имаха тяло с inline `padding:18px 18px 100px`
+вместо класа `.det-body` — същият модел като седемте реда бутони от v1.24.0.
+Уеднаквени.
+
+## v1.24.1 (август 2026) — Редакцията изкарваше парчето от серията
+Намерено при тестване. `savePiece` сглобява записа наново от полетата, значи всяко
+поле, което живее в записа, но не е във формуляра, се губи при редакция. Досега
+това бяха само `events` и те се пазеха изрично. От v1.21.0 членството в серия също
+— `seriesId`, `seriesNo`, `qty` — и редактирането на отделено парче мълчаливо го
+изкарваше от партидата. Видимият симптом беше изчезнала снимка: тя идваше от
+серията през резервния път на `getLatestPhoto`.
+
+Полетата, които се пазят, вече са изброени поименно (`seriesId`, `seriesNo`, `qty`,
+`createdAt`), за да не се повтори същото при следващото ново поле.
+
+Втора половина на същия дефект: `_hasStageMovers` четеше само собствените събития
+на парчето. Член на серия без свои събития изглеждаше със свободно падащо меню за
+етап — тя избираше етап, а `recomputePieceStage` го презаписваше от процеса на
+серията. Заключването вече гледа слетия списък, същия, който решава, а подсказката
+сочи вярното място: етапът идва от процеса на партидата.
+
+## v1.24.0 (август 2026) — Е1 и Е2
+**Защита срещу изгубена работа.** При отваряне на модал се взима отпечатък от
+полетата; при опит за затваряне се сравнява. Сравнение, а не флаг „пипано" —
+писане и изтриване обратно до първоначалното не е незапазена работа. Снимките се
+броят чрез превютата, без base64 в отпечатъка.
+
+Двете затваряния са разделени нарочно: `closeMo` е тихо и програмно (ползва се от
+петнайсетте save() функции), `closeMoAsk` пита и стои зад ×, Откажи, тапа встрани
+и бутона назад. Така нито една save() функция не се пипна и не може да се получи
+„запазих, а то пита дали да отхвърли". Бутонът назад минава през същата защита:
+историята вече е изядена от `back()`, затова при „остани" се връща с `pushState`,
+който не задейства popstate и не прави цикъл. Пикерите и справката за паметта са
+изрично освободени — там няма работа за губене.
+
+**Уеднаквени бутони.** Редът Редактирай / Дублирай / Изтрий беше повторен седем
+пъти с inline стилове и се беше разминал: пет различни разстояния отгоре, а вътре
+в реда първият бутон носеше `margin-top:9px` от `.bg`, докато братята му го гасяха
+с `margin-top:0` — затова не стояха на една линия. Сега е един клас `.btn-row`,
+без нито един inline стил по бутоните. Изпичането ползваше `.bg` с inline цвят за
+Изтрий вместо `.bd` като останалите шест — изравнено.
+
+**Геометрична проверка** — четвърти слой във `validate.js`. Рендерира разметката и
+мери: минимална височина 44px за натискаемото, редове от бутони без собствено
+оформление, и нито един Редактирай/Дублирай/Изтрий извън `.btn-row`. На първия си
+пуск хвана, че **всеки** бутон в приложението е ~40px, под прага — `.btn` вдигнат
+от 13px на 15px padding. `.btn-sm` (вторичните хапчета) остава ~28px и се съобщава
+като бележка, не като провал: 44px би ги направило неразличими от главните бутони,
+а това е решение за Е3, на телефон.
+
+Слоят иска `jsdom`; липсва ли, се пропуска с бележка, вместо проверката да спре да
+работи.
+
+## v1.23.1 (август 2026) — Двата висящи дефекта
+**Триене на материал** предупреждаваше само за рецепти. Материалът обаче се ползва
+и като глина, и като готова глазура на изделие или серия, и като съставка на маса —
+изтриване на глина, под която стоят двайсет изделия, минаваше без нито дума.
+Предупреждението вече брои и четирите вида връзка и казва изрично, че свързаните
+записи не се трият.
+
+**Филтърът по етап** четеше само `series.stage`, тоест етапа на неразграничения
+остатък. Филтър „Счупено" не намираше партидата, в която две чинии са счупени.
+Серията вече съвпада, ако кой да е етап в разбивката ѝ отговаря на филтъра —
+включително този на остатъка. Изделията се филтрират както преди.
+
+## v1.23.0 (август 2026) — Авто-архив (В2 Ниво 2)
+Копие на данните извън хранилището на приложението, което се обновява само.
+Избираш файл веднъж през системния диалог; handle-ът се пази в IndexedDB и се
+презаписва на място при отваряне и при 5 промени или 15 минути. Android чисти
+IndexedDB между сесии — файл извън origin-а не се чисти с него.
+
+Замисленото „скрито сваляне в Downloads" не е възможно за PWA и беше заменено с
+File System Access API. Виж В2 за разсъжденията и за записаните ограничения.
+
+`_backupPayload` изнесе съдържанието на архива на едно място, за да пишат ръчният
+експорт и авто-архивът едно и също.
+
+## v1.22.1 (август 2026) — Дефекти след А7
+Одит на всяко място, което обхожда `DB.pieces`, за да се види къде сериите са били
+пропуснати. Шест поправки:
+
+- **Снимковият анализ** не сканираше серии — нито собствените им снимки, нито
+  тези по общите стъпки. Точно те са тежките, защото са групови.
+- **Компресията на снимки** имаше същия пропуск: серийните снимки не се
+  компресираха при разчистване.
+- **„Използвана в изделия"** при рецепта и при материал не броеше серии. Партида
+  от 10 чинии с дадена глазура правеше рецептата да изглежда неизползвана.
+- **Триенето на рецепта** предупреждаваше само за изделия, не и за серии.
+- **Автодопълването за тип** не събираше типовете на сериите.
+- **Отпечатъкът за свиване на данните** броеше `series` от v1.20.0, но нито една
+  от трите суми не го събираше — изтрита партида не се броеше за загуба. Полето
+  без сбора е половин защита. Сборът вече се смята на едно място.
+
+## v1.22.0 (август 2026) — Изпичане на серия, добив, чистка (А7 фаза 4)
+`_runPieces` сканира и сериите, затова партида в пещта е **един ред, не десет** —
+общото събитие носи `firingRunId` и говори за цялата серия. Отделено парче не се
+показва втори път, докато серията му е в изпичането: то поема общото събитие през
+сливането. Закачането, изваждането и триенето на изпичане третират серията точно
+както изделие, включително връщането на метода и температурата в стъпката.
+
+**Добивът** се извежда от изходите, не е отделно поле. Връща нищо, докато нищо не
+е приключило — партида в процес няма какво да твърди за добив.
+
+**Намерен и изрязан мъртъв код:** четири функции около присъединяването към
+изпичане (`openRunAttach`, `_renderRunAttachList`, `toggleRunAttach`,
+`confirmRunAttach`) плюс `_runAttachPlan`, `_detachEventFromRun`,
+`detachPieceFromRun` и `detachTestFromRun` бяха дефинирани по два пъти. По-късните
+печелеха, значи по-ранните 149 реда никога не се бяха изпълнявали — включително
+двурежимен пикер за изделия и тестове, чието заглавие „Добави тестове" не се
+показваше никога. `_attachPieceToRun` беше извикван само оттам, тоест също мъртъв.
+
+**Оправена празна секция:** „Свързани тестове" в изделието четеше `t.pieces` —
+поле, което нищо в приложението не пише. Секцията беше винаги празна. Сега връзката
+се извежда от общата рецепта, същото отношение, което тестът вече показваше от
+своята страна; `t.pieces` се чете само като наследство.
+
+## v1.21.0 (август 2026) — Отделяне и слят процес (А7 фаза 3)
+Парче се отделя от партидата чак когато се разграничи, и носи брой — „4 жълти" е
+един запис, не четири. Отделеното наследява самоличността на серията, но **не и
+събитията ѝ**: копирането би създало втори собственик на общия процес. Вместо това
+`_effectiveEvents` слива при четене — общите (плитко копирани, маркирани
+`_fromSeries`) плюс собствените. `recomputePieceStage`, `getTimelineEvents` и
+`getLatestPhoto` минават през него, затова общото глазурно изпичане мести етапа на
+члена, а парче без свои снимки показва груповата.
+
+**Спирачката:** парче с изход не поема общи събития с по-късна дата от най-ранния
+му изход. Без нея счупената на бисквит чиния би се изпекла глазурно с останалите.
+
+Етапът на серията става обобщение: съвпаднат ли всички — нормалният индикатор;
+разминат ли се — разбивка с числа и надпис „Смесен". Изходите стоят последни.
+Общите редове в процеса на члена носят маркер „от серията" и нямат бутони —
+редактират се само оттам, където им е собственикът. Обратно сливане не се
+предлага; „Извади от серията" прави парчето самостоятелно, като запазва своите
+стъпки и изпуска общите.
+
+## v1.20.0 (август 2026) — Серии, еднородна партида (А7 фаза 2)
+Нов entity `series` — партида изделия с обща самоличност и **собствен Процес** в
+същата форма като `piece.events`, затова `recomputePieceStage`,
+`getTimelineEvents`, `getLatestPhoto` и `eventIcon` работят върху нея без промяна.
+Входът е едно поле „Брой" в добавянето на изделие: 1 прави изделие, повече прави
+серия. В списъка серията е една карта с ред „Серия · N бр." и отваря собствен
+екран. Изделието получава `seriesId`, `qty`, `seriesNo` — опционални, липсата им
+значи точно днешното поведение. Членовете се извеждат чрез сканиране, не се
+съхраняват; неразграничените изобщо не са записи. Триенето на серия не каскадира —
+отделените парчета остават като самостоятелни изделия. `schemaVersion` 3→4;
+сериите влизат в архива и в отпечатъка за свиване на данните.
+
+Индикаторът за етап и редът от timeline са извадени в общи функции
+(`_stageIndicatorHtml`, `_timelineRowHtml`), за да не се разминават двата екрана.
+
+## v1.19.0 (август 2026) — Изходни състояния (Б2, фаза 1 от А7)
+„Готово" вече не е единственият край. Четири изходни състояния — счупено,
+бракувано, подарено, продадено — редом със седемте етапа, като стойност на
+`piece.stage`, с чипове в списъка, филтри и стъпка в Процес. Изделието спира дотам,
+но записът остава. В детайла изходът заменя точковия индикатор. Подареното и
+продаденото са само етикет — без купувач и цена. Това е фаза 1 от серии (А7):
+изходът е това, което после ще спре счупеното парче да поема общите събития на
+серията.
+
+## v1.18.3 (юли 2026) — Визуален език: изглаждане
+Списъкът с изделия стана хоризонтални карти (снимка вляво, име + цветен етап-чип,
+редове с иконки за размер/глина/глазура). По-наситени цветни чипове + липсващият
+чип „Изпечено". SVG placeholder-и вместо emoji при материалите; наличността е
+цветен чип (зелен ок / керемиден нисък). По-едри заглавия. Пробван беше serif
+(Cormorant), но не легна добре на кирилица и беше върнат — заглавията остават
+Tenor Sans, само по-едри. Service worker вече кешира Google Fonts за офлайн.
+
+## v1.17.0 (юли 2026) — Напомняне за бекъп + критична поправка (В2 Ниво 1)
+Меко напомняне в Backup панела при стар архив или много промени. По пътя открита и
+поправена критична дупка: **изпичанията никога не са били в бекъпа** (добавени
+v1.11.0, но експортът не обновен) — архивите не съдържаха изпичания. Backup
+schemaVersion 2→3; изпичанията вече се архивират и възстановяват.
+
+## v1.16.3 (юли 2026) — Поправки по снимки и етап при редакция
+Изпечено изделие, отворено за редакция, показваше „Сурово" в падащото меню (нямаше
+опция „Изпечено", браузърът падаше на първата) и при Запази създаваше празна стъпка
+„Сурово". Добавена е disabled опция „Изпечено (от изпичане)". Изтриването на снимка
+вече не отваря галерията (спрян click bubbling). Списъкът се опреснява веднага след
+добавяне на стъпка.
+
+## v1.16.2 (юли 2026) — Защита от загуба на данни
+След реален инцидент, при който Android изчисти хранилището на телефона между сесии
+(2.40 MB → 0.42 MB). Приложението вече иска устойчиво съхранение
+(`navigator.storage.persist()`) и следи броя записи — при рязко смаляване
+предупреждава силно и подканва за възстановяване от архив, преди да се въвеждат нови
+данни. Прави В2 спешен.
+
+## v1.16.1 (юли 2026) — Добавяне на материал от рецепта
+При търсене на несъществуващ материал в рецепта вече излиза „+ Създай материал",
+което отваря вложения модал и добавя новия материал право в рецептата.
+
+## v1.16.0 (юли 2026) — Произволни ramp сегменти + крива (Б4)
+Профилът пази `ramps` като масив от сегменти вместо два фиксирани. Динамични редове
+в модала, жива SVG крива температура/време с калкулирана обща продължителност.
+Старите профили се четат и мигрират наживо.
+
+## v1.15.1 (юли 2026) — Пояснения за „Изпечено" + козметика
+Две сиви пояснения, че „Изпечено" идва само от стъпка изпичане. Backup и Инструменти
+преместени над списъка с наръчници в Библиотека.
+
+## v1.15.0 (юли 2026) — Изпичането мести етапа + седмо състояние
+Изпичане вече мести етапа по своя тип (бисквит→Бисквит, глазурно/еднопек/
+алтернативно→Изпечено). Ново състояние `fired` (Изпечено) между Глазирано и
+Готово — изпечено ≠ готово. „Готово" остава винаги ръчно. Декорация и прогрес не
+местят етапа. Миграция преизчислява всички стари изделия. Поправя бъг, при който
+парче, изпечено на бисквит и после в трап, оставаше на „Бисквит".
+
+## v1.14.0 (юли 2026) — SG калкулатор (Б1)
+Самостоятелен калкулатор за плътност на глазурата в Библиотека → Инструменти.
+Режим „измери" (тегло/обем→SG) и „коригирай" (сегашно+желано SG→колко вода).
+
+## v1.13.0 (юли 2026) — Размери и тегло (Б3)
+Изделието получава описателни полета размери (текст) + тегло (число). Без
+изчисления — свиваемостта остава в тестовете на маса.
+
+## v1.12.1 (юли 2026) — Back бутон при редакция
+Поправка: при редакция на изделие/рецепта/материал/тест/профил Android back
+излизаше от приложението вместо да върне. Причина: `closeDet` вика async
+`history.back()`, докато `openMo` вече е бутнал ново state синхронно. Детайлът и
+модалът вече делят един history entry при преход за редакция.
+
+## v1.12.0 (юли 2026) — Присъединяване от изпичането
+От детайла на изпичане „+ Добави" отваря избор на изделия/тестове. Логика
+„осинови или създай" — стъпка от същия ден се осиновява, иначе нова. Поправя
+triene на изпичане да връща метода/температурата на стъпките.
+
+## v1.11.0.1 (юли 2026) — Критичен fix + по-строг валидатор
+`firingMethodLabel` се викаше от 4 места, но не съществуваше — чупеше целия екран
+Изпичания. Валидаторът вече проверява и функционални референции, не само DOM.
+
+## v1.11.0 (юли 2026) — Изпичания
+Ново entity `firingRuns` + таб. Профил = програма, изпичане = събитие. Гориво,
+добавки (материал или текст), времетраене за не-електрически. Пикова температура,
+задръжка, конуси. Списъкът с парчета е изведен, не съхранен. Обвиване по парче.
+Тестът получава опционална връзка.
+
+## v1.10.0 (юли 2026) — Версии на рецептите
+`lineageId` + `version`. Пазач при промяна на състав със свързани тестове.
+История на версиите в детайла, бадж в списъка, чип „Всички версии".
+
+## v1.9.0 (юли 2026) — Разчистване
+Приспадането от склада махнато. Стрелките на индикатора махнати + правило за
+собственика на етапа. Застоялото localStorage копие изтрито след проверка + флаг
+за честен отказ.
+
+## v1.8.0 (юли 2026) — Тест на маса
+Тестът получава `kind`. Телесни полета с изчисляеми свиване и водопоглъщане.
+Плюс бутон „Направи маса от тази суровина".
+
+## v1.7.0.x (юли 2026) — Маса
+Категория `mass` + таб. Компоненти с проценти, дати, сбор с предупреждение, цикъл
+guard, кликаеми компоненти → биография.
+
+## v1.6.0.x (юли 2026) — Суровина
+Категория `raw` + таб. Identity полета + процесен timeline с 5 типа.
+v1.6.0.1 поправи критичен бъг: при вмъкването на raw блока беше изтрит блокът
+„Статус", което чупеше material modal-а изцяло. Оттук идва DOM валидацията.
+
+## v1.5.x (юли 2026) — IndexedDB + UX ревизия
+Миграция към IndexedDB. PH_MAX_DIM 1000→800. Android PWA retry при file picker.
+Dots slider, свиваеми филтри, двустепенен Add Piece, storage екран без жаргон,
+цена на материал, stage context.
+
+## v1.4.x (май–юни 2026) — Event model
+Schema → read-only timeline → add/edit/delete → firing events (13 метода) →
+storage диагностика.
+
+## v1.3.x (април 2026) — Фаза А
+Готови глазури, ангоби, подглазурни бои, две температури, hardening + миграции.
+
+## v1.2.x — Design system
+Rebrand „Ателие" → „Глина", sage + terra cotta.
+
+## v1.0.x — v1.1.x (март 2026)
+Foundation: search, filters, sort, related records, duplicate, backup/import.
+
+---
+
+*Документът се обновява при всяко завършване на фаза или промяна в плана.*
