@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.54.0 · `atelie-v127`
+**Version:** v1.54.1 · `atelie-v128`
 **Last revised:** November 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -237,6 +237,8 @@ an error inside it and nothing is changed.
 **v1.49.0 (Е8, stage 2).** English for firings, kilns, profiles, the kiln plan (levels, scheme, exact), the program/compatibility block and its modals, run results and „At the kiln“. Values inside module messages (kiln plan checks, kiln warnings, compatibility requirements and reasons, the run change log) are translated by `txn()`: numbers become `#` and names in „…“ become „@“ in the key, then are put back. The compatibility verdict is phrased in English from its code and rows (`_lcVt`), without changing `domain/fire.js`. `domain/kiln.js` and `domain/profile.js` write h/cm/L and h/min in English. Stored values stay as before: run results and cone results keep their Bulgarian value (explicit `<option value>`), wrapping keys, and the change log is written in Bulgarian and shown translated. Terminology: „Separate units“ (отделяне на бройки), stage „Bisque-fired“ (the firing itself stays „Bisque“).
 
 **v1.50.0 (Е8, stage 3).** English for materials (catalog, groups, stock, detail, clay bodies, raw materials and their processing history, firing temperatures and carbonates), recipes (catalog, detail, mixing, versions, form), tests (catalog, detail, comparison, lime-popping checks, form) and the low-stock alerts. Values stored as the text or value of a list option (test surface, flow, defects, plasticity, deformation, sound, legacy lime results) are shown translated by `tvd()` (reverse lookup of the option or dictionary text); free text stays as typed. Material and recipe names, notes, formulas and the seed materials are data and are not translated.
+
+**v1.54.1.** The Drive sync box is drawn at start, not only on a language switch.
 
 **v1.54.0.** Optional Google Drive sync — Send / Take between one person's devices; see „Drive sync“.
 

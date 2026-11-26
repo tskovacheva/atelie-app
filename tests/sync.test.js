@@ -83,6 +83,9 @@ const addMat = (a, name) => a.eval(n => { DB.materials.push({ id: 'x-' + n, name
     await A.eval(() => { GDRIVE_CLIENT_ID = ''; _renderDriveSync(); }); await B.eval(() => { GDRIVE_CLIENT_ID = ''; _renderDriveSync(); });
     ok('no client id → sync box hidden', !(await box(A)).shown);
     ok('nothing loaded from Google at start', gisLoads === 0 && drive.calls.length === 0, { gisLoads, calls: drive.calls });
+    // v1.54.1: с вписан клиент разделът се вижда веднага след отваряне, без ръчно рисуване
+    const E = await h.open(); await E.reload(); await E.eval(() => show('lib'));
+    ok('v1.54.1: box drawn on app start (installation client id)', (await box(E)).shown && /Включи синхронизацията/i.test((await box(E)).text), await box(E));
     await setId(A); await setId(B);
     ok('client id → box offers "turn on", off by default', /Включи синхронизацията/i.test((await box(A)).text) && !(await A.eval(() => _syncOn())));
 
@@ -92,7 +95,7 @@ const addMat = (a, name) => a.eval(n => { DB.materials.push({ id: 'x-' + n, name
     let d = await press(A, '#sync-send');
     const fA = Object.values(drive.files).find(f => f.name === 'glina-state.json');
     ok('first send: no question, file in appDataFolder', d.length === 0 && !!fA, { d, files: Object.keys(drive.files) });
-    ok('file = same payload as the archive (db + appVersion)', fA && JSON.parse(fA.content).db.materials.length === FIX.materials.length && JSON.parse(fA.content).appVersion === 'v1.54.0');
+    ok('file = same payload as the archive (db + appVersion)', fA && JSON.parse(fA.content).db.materials.length === FIX.materials.length && JSON.parse(fA.content).appVersion === 'v1.54.1');
     ok('meta: device, total, savedAt', fA && fA.appProperties.device && +fA.appProperties.total > 0 && !!fA.appProperties.savedAt, fA && fA.appProperties);
     ok('status: nothing to send', /Няма неизпратени промени/.test((await box(A)).text), (await box(A)).text);
 
