@@ -3120,7 +3120,7 @@ h1,h2,h3,.serif{font-family:'Tenor Sans',sans-serif;}
 <script type="module" src="./app.js"></script>
 <script>
 // ══ DATA ══
-const APP_VERSION = 'v1.54.0';
+const APP_VERSION = 'v1.54.1';
 
 // ── Stage constants ──────────────────────────────────────────
 // ══ РЕЧНИК (v1.26.0, Е6) ═══════════════════════════════════════════════════
@@ -14761,6 +14761,7 @@ Promise.all([bootStorage(),_modulesReady]).then(function(r){
   // v1.23.0: при отваряне пробваме тихо — ако разрешението още важи, файлът се
   // изравнява без нищо да се пита.
   if(typeof _renderAutoArchive==='function')_renderAutoArchive();
+  if(typeof _renderDriveSync==='function')_renderDriveSync(); // v1.54.1: разделът за Drive се рисува и при отваряне
   if(typeof _aaWrite==='function'&&_aaState().enabled){
     _aaWrite(false).then(function(){if(typeof _renderAutoArchive==='function')_renderAutoArchive();});
   }
