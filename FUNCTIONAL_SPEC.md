@@ -1,6 +1,6 @@
 # Глина — Functional Specification
 
-**Version:** v1.53.0 · `atelie-v126`
+**Version:** v1.54.0 · `atelie-v127`
 **Last revised:** November 2026
 **Live:** https://tskovacheva.github.io/atelie-app/
 **Repo:** github.com/tskovacheva/atelie-app
@@ -54,7 +54,7 @@ never translated.
 | Build step | None. What is edited is what runs; GitHub Pages serves it. |
 | Supporting files | `sw.js` (service worker), `app.webmanifest`, icons, `seed/guides.json` (built-in library), `validate.js` and `tests/` (not used at runtime) |
 | Hosting | GitHub Pages, static |
-| Backend | None. No accounts, no server, no sync. |
+| Backend | None. No server. Optional sync to the user's own Google Drive (v1.54.0). |
 | Offline | Full, and required. The application never depends on the network. |
 
 ### Storage
@@ -237,6 +237,8 @@ an error inside it and nothing is changed.
 **v1.49.0 (Е8, stage 2).** English for firings, kilns, profiles, the kiln plan (levels, scheme, exact), the program/compatibility block and its modals, run results and „At the kiln“. Values inside module messages (kiln plan checks, kiln warnings, compatibility requirements and reasons, the run change log) are translated by `txn()`: numbers become `#` and names in „…“ become „@“ in the key, then are put back. The compatibility verdict is phrased in English from its code and rows (`_lcVt`), without changing `domain/fire.js`. `domain/kiln.js` and `domain/profile.js` write h/cm/L and h/min in English. Stored values stay as before: run results and cone results keep their Bulgarian value (explicit `<option value>`), wrapping keys, and the change log is written in Bulgarian and shown translated. Terminology: „Separate units“ (отделяне на бройки), stage „Bisque-fired“ (the firing itself stays „Bisque“).
 
 **v1.50.0 (Е8, stage 3).** English for materials (catalog, groups, stock, detail, clay bodies, raw materials and their processing history, firing temperatures and carbonates), recipes (catalog, detail, mixing, versions, form), tests (catalog, detail, comparison, lime-popping checks, form) and the low-stock alerts. Values stored as the text or value of a list option (test surface, flow, defects, plasticity, deformation, sound, legacy lime results) are shown translated by `tvd()` (reverse lookup of the option or dictionary text); free text stays as typed. Material and recipe names, notes, formulas and the seed materials are data and are not translated.
+
+**v1.54.0.** Optional Google Drive sync — Send / Take between one person's devices; see „Drive sync“.
 
 **v1.53.0.** Stock check in the batch calculator and in „Приготви“ — read-only.
 
@@ -1122,6 +1124,31 @@ something got through without it:
 
 ---
 
+
+## Drive sync (v1.54.0)
+
+Optional, off by default, per device. The Backup panel shows it only when the
+installation has an OAuth client ID (`GDRIVE_CLIENT_ID`).
+
+- **Transport** (`core/gdrive.js`): Google Identity Services token in memory,
+  scope `drive.appdata` (the app's hidden folder only). One file
+  `glina-state.json` with `appProperties` {savedAt, device, total, appVersion};
+  before each upload the current one is copied to `glina-state.prev.json`.
+  Resumable upload (archives with photos exceed 5 MB). The Google library is
+  loaded on the first Send/Take, never at start — the app stays offline-first.
+- **Send** uploads the same payload as the archive (incl. kiln-plan photos).
+- **Take** restores through the same path as file import (`_restorePayload`).
+- **No merge.** `domain/sync.js` decides what would be lost and the app asks:
+  Send — Drive holds a version this device has not taken; far fewer records here.
+  Take — unsent changes here (counted per save since the last Send/Take; unknown
+  right after turning sync on); far fewer records in Drive; data from a newer app
+  version. Take of the same version does nothing. Collapsed data is never sent.
+- **State** (localStorage): `atelie_sync` {on, last.remoteSavedAt, lastOp, lastAt,
+  remote} and `atelie_sync_changes`. Turning off forgets these; the data on the
+  device and in Drive stay.
+- A successful Send/Take also resets the backup reminder (the data exists off the
+  device).
+
 ## 10. Non-goals
 
 Named so they are not mistaken for gaps:
@@ -1130,8 +1157,9 @@ Named so they are not mistaken for gaps:
   work
 - **No scheduling** — no kiln calendar, no reminders, no deadlines
 - **No multi-user** — no accounts, sharing, or permissions
-- **No cloud sync** — outside the current plan; data stays on the device, moved
-  by export/import and the auto-archive file
+- **No automatic cloud sync** — data lives on the device. Optional hand-over
+  through the user's own Google Drive (v1.54.0, below); export/import and the
+  auto-archive file stay
 - **No framework migration** — vanilla JS is a constraint, not an oversight
 
 ---
