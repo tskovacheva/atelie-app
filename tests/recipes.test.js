@@ -40,7 +40,7 @@ const ok = (n, c, info) => { if (c) { passed++; console.log('  ok   ' + n); } el
       return { rows, sum: _recSum(r), ings: r.ingredients.map(i => [i.name, i.pct]), warn: document.getElementById('drec-warn').textContent, tot: document.querySelector('#drec-ings .rd-tot').textContent, sec: [...document.querySelectorAll('#drec-secs .rd-sec')].map(x => x.dataset.sec + ':' + x.classList.contains('open')) }; });
     const exp = s.ings.map(i => (Math.round(parseFloat(i[1]) / 100 * 500 * 10) / 10).toString().replace('.', ',') + ' г');
     ok('composition always shown; grams = % of the batch (existing calculator)', s.rows.length === s.ings.length && s.rows.every((r, i) => r.g === exp[i]), [s.rows, exp]);
-    ok('sections: tests and notes open, the rest folded', s.sec.join() === 'tests:true,notes:true,ver:false,pcs:false', s.sec);
+    ok('sections: batches (v1.55.0), tests and notes open, the rest folded', s.sec.join() === 'bat:true,tests:true,notes:true,ver:false,pcs:false', s.sec);
     s = await E(() => { const r = DB.recipes.find(x => x.id === 'rec-ash-2'); r.ingredients.push({ matId: '__c', name: 'Проба', pct: '3' }); openRecipeDet(r.id); document.getElementById('drec-batch').value = '1000'; calcG();
       const o = { warn: document.getElementById('drec-warn').textContent, tot: document.querySelector('#drec-ings .rd-tot').textContent, sum: _recSum(r), pcts: r.ingredients.map(i => i.pct) }; r.ingredients.pop(); openRecipeDet(r.id); return o; });
     ok('sum ≠ 100%: a clear warning with the real total weight; nothing normalized', /Сборът е 103%/.test(s.warn) && /1030 г/.test(s.warn) && /1030 г/.test(s.tot) && s.pcts[s.pcts.length - 1] === '3', s);

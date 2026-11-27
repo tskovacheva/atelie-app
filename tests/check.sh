@@ -42,6 +42,7 @@ echo "== 4ю. i18n — двуезичен интерфейс, етап 1 (v1.48.
 echo "== 4я. glazy — внос и износ на рецепти, добавки над основата, други имена на материал (v1.52.0)"; node tests/glazy.test.js
 echo "== 4я2. stock — стига ли наличното за партидата, само проверка (v1.53.0)"; node tests/stock.test.js
 echo "== 4я3. sync — синхронизация с Google Drive: по избор, Изпрати/Вземи, без тихо презаписване (v1.54.0)"; node tests/sync.test.js
+echo "== 4я4. batch — партиди на рецептата: реални грамове, запис, наличности, останало (v1.55.0)"; node tests/batch.test.js
 echo "== 5. edits — всяка редакция пази записа"; node tests/edits.test.js
 echo "== 6. migrate — схема, миграции, връщане към предишната версия"; node tests/migrate.test.js
 echo "== 6б. edits-real — празна редакция на всеки запис от частните архиви"; node tests/edits-real.test.js
