@@ -95,7 +95,7 @@ const addMat = (a, name) => a.eval(n => { DB.materials.push({ id: 'x-' + n, name
     let d = await press(A, '#sync-send');
     const fA = Object.values(drive.files).find(f => f.name === 'glina-state.json');
     ok('first send: no question, file in appDataFolder', d.length === 0 && !!fA, { d, files: Object.keys(drive.files) });
-    ok('file = same payload as the archive (db + appVersion)', fA && JSON.parse(fA.content).db.materials.length === FIX.materials.length && JSON.parse(fA.content).appVersion === 'v1.54.1');
+    ok('file = same payload as the archive (db + appVersion)', fA && JSON.parse(fA.content).db.materials.length === FIX.materials.length && /^v1\.\d+\.\d+$/.test(JSON.parse(fA.content).appVersion));
     ok('meta: device, total, savedAt', fA && fA.appProperties.device && +fA.appProperties.total > 0 && !!fA.appProperties.savedAt, fA && fA.appProperties);
     ok('status: nothing to send', /Няма неизпратени промени/.test((await box(A)).text), (await box(A)).text);
 

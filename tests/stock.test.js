@@ -57,7 +57,7 @@ const ING = [
     let s = await E(() => { openRecipeDet('sr-1'); document.getElementById('drec-batch').value = '1000'; calcG();
       return { rows: [...document.querySelectorAll('#drec-ings .rd-ing .n small')].map(x => x.textContent), sum: document.getElementById('drec-grams').innerText.replace(/\s+/g, ' ') }; });
     ok('detail: each ingredient says how it stands', s.rows.join('|') === '✓ има 1000 г · остават 500 г|✓ има 250 г · остават 0 г|? количеството не е въведено|Wishlist — няма го в ателието|✗ няма го в материалите|✓ има 100 г · остават 20 г|+ добавка над основата', s.rows);
-    ok('summary: counts by state, no largest batch, read-only note', /стигат: 3/.test(s.sum) && /без количество: 1/.test(s.sum) && /няма ги в ателието: 1/.test(s.sum) && /без материал: 1/.test(s.sum) && /не се смята/.test(s.sum) && /не се променят/.test(s.sum), s.sum);
+    ok('summary: counts by state, no largest batch, read-only note', /стигат: 3/.test(s.sum) && /без количество: 1/.test(s.sum) && /няма ги в ателието: 1/.test(s.sum) && /без материал: 1/.test(s.sum) && /не се смята/.test(s.sum) && /(не се променят|се променят едва)/.test(s.sum), s.sum);
     s = await E(() => { document.getElementById('drec-batch').value = '1500'; calcG(); return [...document.querySelectorAll('#drec-ings .rd-ing .n small.no')].map(x => x.textContent); });
     ok('larger batch: missing grams shown', s.join('|') === '⚠ липсват 125 г (има 250 г)|✗ няма го в материалите|⚠ липсват 20 г (има 100 г)', s);
     s = await E(() => { const r = DB.recipes.find(x => x.id === 'sr-1'); r.ingredients = r.ingredients.filter(i => ['sm-neph', 'sm-sil', 'sm-rut'].indexOf(i.matId) >= 0); openRecipeDet('sr-1'); calcG(); return document.getElementById('drec-grams').innerText.replace(/\s+/g, ' '); });

@@ -348,7 +348,7 @@ export function _glazyRecipe(draft, links) {
 }
 
 // ── Износ ───────────────────────────────────────────────────────────────────
-var _EXPORT_DROP = ['lineageId', 'version', 'fav', 'recommendedFiringProfileId', 'archivedAt'];
+var _EXPORT_DROP = ['lineageId', 'version', 'fav', 'recommendedFiringProfileId', 'archivedAt', 'batches']; // v1.55.0: партидите са на ателието, не на рецептата
 export function _recipeExportJson(recipes, meta) {
   return {
     format: 'glina-recipes', formatVersion: 1, appVersion: meta && meta.appVersion || '', exportedAt: meta && meta.now || '',
